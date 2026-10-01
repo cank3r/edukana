@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import type { ReactNode } from "react";
 import type { ActionState } from "@/app/dashboard/actions";
-import { createAssignment, createExam, createGradebook, createLesson, createQuestion, createSection, issueCertificate, markLessonComplete, reviewSubmission, saveAttendance, saveScheduleSlot, submitAssignment, submitExam, togglePublication } from "@/app/dashboard/academico/actions";
+import { createAssignment, createExam, createGradebook, createLesson, createQuestion, createSection, issueCertificate, markLessonComplete, reviewExamAttempt, reviewSubmission, saveAttendance, saveScheduleSlot, submitAssignment, submitExam, togglePublication } from "@/app/dashboard/academico/actions";
 
 const initial: ActionState = { ok: false, message: "" };
 const input = "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500";
@@ -60,6 +60,12 @@ export function ExamAttemptForm({ examId, questions }: { examId: string; questio
   return <Form action={submitExam}><Hidden name="examId" value={examId} />{questions.map((q, index) => <fieldset className="rounded-xl border p-4" key={q.id}><legend className="px-2 font-semibold">{index + 1}. {q.prompt} ({q.points} pts)</legend>{q.type === "SHORT_ANSWER" ? <textarea className={input} name={`question_${q.id}`} required /> : <div className="space-y-2">{(Array.isArray(q.options) ? q.options : []).map((option) => <label className="flex gap-2" key={String(option)}><input type="radio" name={`question_${q.id}`} value={String(option)} required /> {String(option)}</label>)}</div>}</fieldset>)}</Form>;
 }
 
+
+type ExamReviewAnswer = { id: string; prompt: string; response: string | null; points: number; score: number | null; feedback: string | null };
+export function ExamReviewForm({ attemptId, answers }: { attemptId: string; answers: ExamReviewAnswer[] }) {
+  return <Form action={reviewExamAttempt}><Hidden name="attemptId" value={attemptId} />{answers.map((answer) => <fieldset className="rounded-xl border p-3" key={answer.id}><legend className="px-2 font-semibold">{answer.prompt}</legend><p className="mb-2 whitespace-pre-wrap text-sm text-slate-700">{answer.response || "Sin respuesta"}</p><div className="grid gap-2 sm:grid-cols-2"><Field label={`Puntuación / ${answer.points}`} name={`score_${answer.id}`} type="number" min="0" max={String(answer.points)} step="0.01" defaultValue={answer.score ?? undefined} required /><Field label="Retroalimentación" name={`feedback_${answer.id}`} defaultValue={answer.feedback ?? ""} /></div></fieldset>)}</Form>;
+}
+
 export function ScheduleForm({ courseId }: { courseId: string }) {
   return <Form action={saveScheduleSlot}><Hidden name="courseId" value={courseId} /><div className="grid gap-3 sm:grid-cols-2"><label className="block text-sm font-medium">Día<select className={`${input} mt-1`} name="weekday">{["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"].map((day, i) => <option key={day} value={i + 1}>{day}</option>)}</select></label><Field label="Aula" name="classroom" required /><Field label="Inicio (minutos desde 00:00)" name="startMinutes" type="number" defaultValue={480} min="0" max="1439" /><Field label="Fin (minutos desde 00:00)" name="endMinutes" type="number" defaultValue={540} min="1" max="1440" /></div></Form>;
 }
@@ -72,6 +78,28 @@ export function ProgressForm({ lessonId }: { lessonId: string }) { return <Form 
 export function CertificateForm({ enrollmentId }: { enrollmentId: string }) { return <Form action={issueCertificate} className="inline-flex items-center gap-2"><Hidden name="enrollmentId" value={enrollmentId} /></Form>; }
 
 export function AssetUpload({ courseId, lessonId, assignmentId, submissionId, kind }: { courseId: string; lessonId?: string; assignmentId?: string; submissionId?: string; kind: "DOCUMENT" | "VIDEO" }) {
-  const [message, setMessage] = useState(""); const [pending, setPending] = useState(false);
-  return <form className="space-y-2" onSubmit={async (event) => { event.preventDefault(); setPending(true); setMessage(""); const data = new FormData(event.currentTarget); const response = await fetch("/api/assets", { method: "POST", body: data }); const payload = await response.json() as { error?: string; retrievalUrl?: string }; setMessage(response.ok ? `Carga completa: ${payload.retrievalUrl}` : payload.error ?? "Error de carga"); setPending(false); if (response.ok) event.currentTarget.reset(); }}><Hidden name="courseId" value={courseId} /><Hidden name="kind" value={kind} />{lessonId && <Hidden name="lessonId" value={lessonId} />}{assignmentId && <Hidden name="assignmentId" value={assignmentId} />}{submissionId && <Hidden name="submissionId" value={submissionId} />}<input className={input} type="file" name="file" accept={kind === "VIDEO" ? "video/mp4,video/webm" : ".pdf,.docx,.pptx,.txt"} required /><button className={button} disabled={pending}>{pending ? "Subiendo…" : kind === "VIDEO" ? "Subir video" : "Subir documento"}</button>{message && <p className="text-xs text-slate-600">{message}</p>}</form>;
+  const [message, setMessage] = useState("");
+  const [pending, setPending] = useState(false);
+  return <form className="space-y-2" onSubmit={async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const file = new FormData(form).get("file");
+    if (!(file instanceof File)) return;
+    setPending(true); setMessage("");
+    let assetId: string | undefined;
+    try {
+      const prepared = await fetch("/api/assets", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: file.name, type: file.type, size: file.size, kind, courseId, lessonId, assignmentId, submissionId }) });
+      const intent = await prepared.json() as { error?: string; assetId?: string; uploadUrl?: string; retrievalUrl?: string };
+      if (!prepared.ok || !intent.assetId || !intent.uploadUrl) throw new Error(intent.error ?? "No se pudo autorizar la carga");
+      assetId = intent.assetId;
+      const body = new FormData(); body.append("cacheControl", "3600"); body.append("", file);
+      const uploaded = await fetch(intent.uploadUrl, { method: "PUT", headers: { "x-upsert": "false" }, body });
+      if (!uploaded.ok) throw new Error("Supabase rechazó el archivo");
+      const confirmed = await fetch(`/api/assets/${intent.assetId}`, { method: "PATCH" });
+      const result = await confirmed.json() as { error?: string; retrievalUrl?: string };
+      if (!confirmed.ok) throw new Error(result.error ?? "No se pudo confirmar la carga");
+      setMessage(`Carga completa: ${result.retrievalUrl}`); form.reset();
+    } catch (error) { if (assetId) await fetch(`/api/assets/${assetId}`, { method: "DELETE" }).catch(() => undefined); setMessage(error instanceof Error ? error.message : "Error de carga"); }
+    finally { setPending(false); }
+  }}><input className={input} type="file" name="file" accept={kind === "VIDEO" ? "video/mp4,video/webm" : ".pdf,.docx,.pptx,.txt"} required /><button className={button} disabled={pending}>{pending ? "Subiendo…" : kind === "VIDEO" ? "Subir video" : "Subir documento"}</button>{message && <p className="text-xs text-slate-600">{message}</p>}</form>;
 }

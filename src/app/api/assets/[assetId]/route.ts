@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { createPrivateAssetUrl } from "@/lib/storage";
+import { createPrivateAssetUrl, inspectPrivateAsset, removePrivateAsset } from "@/lib/storage";
 
 export async function GET(_request: Request, context: { params: Promise<{ assetId: string }> }) {
   const session = await auth();
@@ -20,4 +20,43 @@ export async function GET(_request: Request, context: { params: Promise<{ assetI
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : "Storage no disponible" }, { status: 503 });
   }
+}
+
+
+
+export async function PATCH(_request: Request, context: { params: Promise<{ assetId: string }> }) {
+  const session = await auth();
+  const user = session?.user;
+  if (!user?.id || !user.institutionId) return Response.json({ error: "No autorizado" }, { status: 401 });
+  const { assetId } = await context.params;
+  const asset = await db.storageAsset.findFirst({
+    where: { id: assetId, institutionId: user.institutionId, uploaderId: user.id },
+    select: { id: true, bucket: true, objectPath: true, mimeType: true, sizeBytes: true },
+  });
+  if (!asset) return Response.json({ error: "Carga no encontrada" }, { status: 404 });
+  try {
+    const stored = await inspectPrivateAsset(asset.bucket, asset.objectPath);
+    if (stored.size !== asset.sizeBytes || stored.contentType !== asset.mimeType) {
+      await removePrivateAsset(asset.bucket, asset.objectPath).catch(() => undefined);
+      await db.storageAsset.delete({ where: { id: asset.id } });
+      return Response.json({ error: "El archivo recibido no coincide con la carga autorizada" }, { status: 409 });
+    }
+    await db.storageAsset.update({ where: { id: asset.id }, data: { checksum: stored.etag } });
+    return Response.json({ ok: true, retrievalUrl: `/api/assets/${asset.id}` });
+  } catch (error) {
+    return Response.json({ error: error instanceof Error ? error.message : "No se pudo confirmar la carga" }, { status: 503 });
+  }
+}
+
+
+export async function DELETE(_request: Request, context: { params: Promise<{ assetId: string }> }) {
+  const session = await auth();
+  const user = session?.user;
+  if (!user?.id || !user.institutionId) return Response.json({ error: "No autorizado" }, { status: 401 });
+  const { assetId } = await context.params;
+  const asset = await db.storageAsset.findFirst({ where: { id: assetId, institutionId: user.institutionId, uploaderId: user.id }, select: { id: true, bucket: true, objectPath: true } });
+  if (!asset) return Response.json({ error: "Carga no encontrada" }, { status: 404 });
+  await removePrivateAsset(asset.bucket, asset.objectPath).catch(() => undefined);
+  await db.storageAsset.delete({ where: { id: asset.id } });
+  return new Response(null, { status: 204 });
 }
