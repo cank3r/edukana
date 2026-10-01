@@ -1,5 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
+import { createClient } from "@supabase/supabase-js";
 import { safeObjectName } from "@/lib/lms";
 
 function config() {
@@ -10,32 +11,32 @@ function config() {
   return { url: url.replace(/\/$/, ""), key, bucket };
 }
 
-function headers(key: string, contentType?: string) {
-  return { Authorization: `Bearer ${key}`, apikey: key, ...(contentType ? { "Content-Type": contentType } : {}) };
+function storageAdmin() {
+  const { url, key } = config();
+  return createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } }).storage;
 }
 
-export async function uploadPrivateAsset(input: { institutionId: string; courseId?: string | null; file: File }) {
-  const { url, key, bucket } = config();
-  const objectPath = `${input.institutionId}/${input.courseId ?? "institucion"}/${randomUUID()}-${safeObjectName(input.file.name)}`;
-  const response = await fetch(`${url}/storage/v1/object/${bucket}/${objectPath}`, {
-    method: "POST",
-    headers: { ...headers(key, input.file.type), "x-upsert": "false" },
-    body: await input.file.arrayBuffer(),
-  });
-  if (!response.ok) throw new Error(`Storage rechazó la carga (${response.status}).`);
-  return { bucket, objectPath };
+export async function createPrivateAssetUpload(input: { institutionId: string; courseId: string; fileName: string }) {
+  const { bucket } = config();
+  const objectPath = `${input.institutionId}/${input.courseId}/${randomUUID()}-${safeObjectName(input.fileName)}`;
+  const { data, error } = await storageAdmin().from(bucket).createSignedUploadUrl(objectPath, { upsert: false });
+  if (error) throw new Error(`Storage rechazó la preparación (${error.message}).`);
+  return { bucket, objectPath, signedUrl: data.signedUrl };
+}
+
+export async function inspectPrivateAsset(bucket: string, objectPath: string) {
+  const { data, error } = await storageAdmin().from(bucket).info(objectPath);
+  if (error) throw new Error(`No se pudo verificar la carga (${error.message}).`);
+  return { size: data.size ?? null, contentType: data.contentType ?? null, etag: data.etag ?? null };
+}
+
+export async function removePrivateAsset(bucket: string, objectPath: string) {
+  const { error } = await storageAdmin().from(bucket).remove([objectPath]);
+  if (error) throw new Error(`No se pudo limpiar la carga (${error.message}).`);
 }
 
 export async function createPrivateAssetUrl(bucket: string, objectPath: string, expiresIn = 300) {
-  const { url, key } = config();
-  const response = await fetch(`${url}/storage/v1/object/sign/${bucket}/${objectPath}`, {
-    method: "POST",
-    headers: headers(key, "application/json"),
-    body: JSON.stringify({ expiresIn }),
-  });
-  if (!response.ok) throw new Error(`No se pudo autorizar la descarga (${response.status}).`);
-  const payload = (await response.json()) as { signedURL?: string; signedUrl?: string };
-  const signed = payload.signedURL ?? payload.signedUrl;
-  if (!signed) throw new Error("Storage no devolvió una URL firmada.");
-  return signed.startsWith("http") ? signed : `${url}/storage/v1${signed}`;
+  const { data, error } = await storageAdmin().from(bucket).createSignedUrl(objectPath, expiresIn);
+  if (error) throw new Error(`No se pudo autorizar la descarga (${error.message}).`);
+  return data.signedUrl;
 }

@@ -55,8 +55,9 @@ Completa `C:\Users\crami\workspace\edukana\.env.local` sin confirmarlo en Git. E
 
 1. Ejecuta `npx prisma migrate deploy`: en Supabase, la migración crea o endurece automáticamente el bucket privado `edukana` con los MIME y límites del MVP.
 2. Configura `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` y `SUPABASE_STORAGE_BUCKET` solo en el servidor.
-3. No hagas público el bucket. `POST /api/assets` valida sesión, tenant, relación con curso/entrega, MIME y tamaño.
-4. `GET /api/assets/:id` autoriza de nuevo y redirige a una URL firmada por 5 minutos.
+3. No hagas público el bucket. `POST /api/assets` autoriza usuario, tenant, curso y recurso; luego emite una URL firmada específica.
+4. El navegador sube directamente a Supabase, evitando el límite de 4.5 MB de Vercel Functions. `PATCH /api/assets/:id` confirma tamaño y MIME en Storage.
+5. `GET /api/assets/:id` autoriza de nuevo y redirige a una URL firmada de lectura por 5 minutos.
 
 Límites MVP: documentos PDF/DOCX/PPTX/TXT hasta 20 MB; videos MP4/WebM hasta 100 MB. El registro conserva MIME, tamaño, SHA-256, cargador, tenant y ruta con prefijo de tenant.
 

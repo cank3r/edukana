@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { autoScoreAnswer, calculateWeightedGrade, createCertificateIdentity, findScheduleConflicts, progressPercentage, validateUpload, verifyCertificateIdentity } from "../src/lib/lms";
+import { autoScoreAnswer, calculateWeightedGrade, createCertificateIdentity, findScheduleConflicts, progressPercentage, reviewedExamScore, validateUpload, verifyCertificateIdentity } from "../src/lib/lms";
 
 test("calcula categorías ponderadas y descarta la nota más baja", () => {
   const grade = calculateWeightedGrade([
@@ -45,4 +45,12 @@ test("limita formatos y tamaños de documentos y videos", () => {
   assert.equal(validateUpload({ name: "clase.mp4", type: "video/mp4", size: 1024 }, "VIDEO"), null);
   assert.match(validateUpload({ name: "script.exe", type: "application/x-msdownload", size: 1024 }, "DOCUMENT")!, /no permitido/);
   assert.match(validateUpload({ name: "enorme.mp4", type: "video/mp4", size: 101 * 1024 * 1024 }, "VIDEO")!, /100 MB/);
+});
+
+
+
+test("consolida la corrección automática y manual del examen", () => {
+  assert.equal(reviewedExamScore([{ automaticScore: 5, points: 5 }, { automaticScore: null, manualScore: 8, points: 10 }]), 13);
+  assert.equal(reviewedExamScore([{ automaticScore: null, points: 10 }]), null);
+  assert.equal(reviewedExamScore([{ automaticScore: null, manualScore: 11, points: 10 }]), null);
 });

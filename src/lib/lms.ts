@@ -56,6 +56,17 @@ export function autoScoreAnswer(type: "MULTIPLE_CHOICE" | "TRUE_FALSE" | "SHORT_
   return { score: isCorrect ? points : 0, isCorrect };
 }
 
+
+export function reviewedExamScore(answers: Array<{ automaticScore: number | null; manualScore?: number; points: number }>) {
+  let total = 0;
+  for (const answer of answers) {
+    const score = answer.automaticScore ?? answer.manualScore;
+    if (score == null || !Number.isFinite(score) || score < 0 || score > answer.points) return null;
+    total += score;
+  }
+  return total;
+}
+
 export function progressPercentage(completed: number, total: number) {
   if (total <= 0) return 0;
   return Math.round(Math.max(0, Math.min(1, completed / total)) * 10000) / 100;

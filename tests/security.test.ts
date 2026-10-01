@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { canAccessDashboardPath, isPublicPath } from "../src/lib/access";
 import { loginSchema } from "../src/lib/validation";
 
@@ -36,4 +38,16 @@ test("reserva el portal personal para estudiantes", () => {
   assert.equal(canAccessDashboardPath("/dashboard/portal", "STUDENT"), true);
   assert.equal(canAccessDashboardPath("/dashboard/portal", "ADMIN"), false);
   assert.equal(canAccessDashboardPath("/dashboard/aula", "TEACHER"), true);
+});
+
+
+
+test("usa cargas directas firmadas y restringe quién puede prepararlas", () => {
+  const route = readFileSync(join(process.cwd(), "src", "app", "api", "assets", "route.ts"), "utf8");
+  const form = readFileSync(join(process.cwd(), "src", "components", "dashboard", "AcademicForms.tsx"), "utf8");
+  assert.match(route, /createPrivateAssetUpload/);
+  assert.match(route, /staffRoles\.has\(user\.role\)/);
+  assert.doesNotMatch(route, /request\.formData\(\)/);
+  assert.match(form, /intent\.uploadUrl/);
+  assert.match(form, /method: "PATCH"/);
 });

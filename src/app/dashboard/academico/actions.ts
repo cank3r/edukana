@@ -2,7 +2,7 @@
 
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { autoScoreAnswer, createCertificateIdentity, findScheduleConflicts, progressPercentage } from "@/lib/lms";
+import { autoScoreAnswer, createCertificateIdentity, findScheduleConflicts, progressPercentage, reviewedExamScore } from "@/lib/lms";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { ActionState } from "@/app/dashboard/actions";
@@ -183,7 +183,7 @@ export async function submitExam(_state: ActionState, fd: FormData): Promise<Act
   try {
     const user = await requireUser(["STUDENT"]);
     const examId = text(fd, "examId");
-    const exam = await db.exam.findFirst({ where: { id: examId, institutionId: user.institutionId, isPublished: true, course: { enrollments: { some: { studentId: user.id, status: "ACTIVE" } } } }, include: { questions: { include: { bankItem: true }, orderBy: { order: "asc" } }, attempts: { where: { studentId: user.id }, select: { attemptNumber: true } }, gradeItem: { select: { id: true } } } });
+    const exam = await db.exam.findFirst({ where: { id: examId, institutionId: user.institutionId, isPublished: true, course: { enrollments: { some: { studentId: user.id, status: "ACTIVE" } } } }, include: { questions: { include: { bankItem: true }, orderBy: { order: "asc" } }, attempts: { where: { studentId: user.id }, select: { attemptNumber: true } }, gradeItem: { select: { id: true } }, course: { select: { teacherId: true } } } });
     if (!exam || !exam.questions.length || exam.attempts.length >= exam.maxAttempts) return failed("Examen no disponible o intentos agotados.");
     const now = new Date();
     if ((exam.opensAt && now < exam.opensAt) || (exam.closesAt && now > exam.closesAt)) return failed("El examen está fuera de su ventana de disponibilidad.");
@@ -198,11 +198,50 @@ export async function submitExam(_state: ActionState, fd: FormData): Promise<Act
       return { bankItemId: bankItem.id, response, score: result.score, isCorrect: result.isCorrect };
     });
     const attempt = await db.examAttempt.create({ data: { institutionId: user.institutionId, examId: exam.id, enrollmentId: enrollment.id, studentId: user.id, attemptNumber: Math.max(0, ...exam.attempts.map((a) => a.attemptNumber)) + 1, status: needsReview ? "SUBMITTED" : "GRADED", score, maxScore: total, submittedAt: now, answers: { create: answers } } });
-    if (!needsReview && exam.gradeItem) await db.gradeEntry.upsert({ where: { gradeItemId_enrollmentId: { gradeItemId: exam.gradeItem.id, enrollmentId: enrollment.id } }, create: { institutionId: user.institutionId, gradeItemId: exam.gradeItem.id, enrollmentId: enrollment.id, score, gradedById: user.id }, update: { score, gradedById: user.id, gradedAt: now } });
+    if (!needsReview && exam.gradeItem) await db.gradeEntry.upsert({ where: { gradeItemId_enrollmentId: { gradeItemId: exam.gradeItem.id, enrollmentId: enrollment.id } }, create: { institutionId: user.institutionId, gradeItemId: exam.gradeItem.id, enrollmentId: enrollment.id, score, gradedById: exam.course.teacherId }, update: { score, gradedById: exam.course.teacherId, gradedAt: now } });
     revalidatePath(`/dashboard/aula/${exam.courseId}`);
     return success(needsReview ? `Intento ${attempt.attemptNumber} enviado para revisión.` : `Intento calificado: ${score}/${total}.`);
   } catch { return failed(); }
 }
+
+export async function reviewExamAttempt(_state: ActionState, fd: FormData): Promise<ActionState> {
+  try {
+    const user = await requireUser(staffRoles);
+    const attemptId = text(fd, "attemptId");
+    const attempt = await db.examAttempt.findFirst({
+      where: { id: attemptId, institutionId: user.institutionId, status: "SUBMITTED", exam: { course: { institutionId: user.institutionId, ...(user.role === "TEACHER" ? { teacherId: user.id } : {}) } } },
+      include: {
+        answers: { include: { bankItem: { select: { type: true } } } },
+        exam: { select: { courseId: true, gradeItem: { select: { id: true } }, questions: { select: { bankItemId: true, points: true } } } },
+      },
+    });
+    if (!attempt) return failed("Intento no encontrado o ya revisado.");
+    const points = new Map(attempt.exam.questions.map((question) => [question.bankItemId, question.points]));
+    const reviewed = attempt.answers.map((answer) => ({
+      answer,
+      points: points.get(answer.bankItemId) ?? 0,
+      automaticScore: answer.score,
+      manualScore: answer.bankItem.type === "SHORT_ANSWER" ? (text(fd, `score_${answer.id}`) ? Number(text(fd, `score_${answer.id}`)) : undefined) : undefined,
+      feedback: answer.bankItem.type === "SHORT_ANSWER" ? text(fd, `feedback_${answer.id}`) : answer.feedback ?? "",
+    }));
+    const score = reviewedExamScore(reviewed.map((answer) => ({ automaticScore: answer.automaticScore, manualScore: answer.manualScore, points: answer.points })));
+    if (score == null) return failed("Completa todas las puntuaciones dentro de su rango permitido.");
+    await db.$transaction(async (tx) => {
+      for (const answer of reviewed.filter((item) => item.answer.bankItem.type === "SHORT_ANSWER")) {
+        await tx.examAnswer.update({ where: { id: answer.answer.id }, data: { score: answer.manualScore, feedback: answer.feedback || null } });
+      }
+      await tx.examAttempt.update({ where: { id: attempt.id }, data: { status: "GRADED", score } });
+      if (attempt.exam.gradeItem) await tx.gradeEntry.upsert({
+        where: { gradeItemId_enrollmentId: { gradeItemId: attempt.exam.gradeItem.id, enrollmentId: attempt.enrollmentId } },
+        create: { institutionId: user.institutionId, gradeItemId: attempt.exam.gradeItem.id, enrollmentId: attempt.enrollmentId, score, gradedById: user.id },
+        update: { score, gradedById: user.id, gradedAt: new Date() },
+      });
+    });
+    revalidatePath(`/dashboard/aula/${attempt.exam.courseId}`);
+    return success(`Examen revisado: ${score}/${attempt.maxScore ?? score}.`);
+  } catch { return failed(); }
+}
+
 
 export async function saveScheduleSlot(_state: ActionState, fd: FormData): Promise<ActionState> {
   try {
@@ -268,7 +307,7 @@ export async function issueCertificate(_state: ActionState, fd: FormData): Promi
     const secret = process.env.CERTIFICATE_SECRET ?? process.env.AUTH_SECRET;
     if (!secret) return failed("Falta CERTIFICATE_SECRET o AUTH_SECRET.");
     const identity = createCertificateIdentity(enrollment.id, enrollment.courseId, secret);
-    const certificate = await db.certificate.upsert({ where: { enrollmentId_courseId: { enrollmentId: enrollment.id, courseId: enrollment.courseId } }, create: { institutionId: user.institutionId, courseId: enrollment.courseId, enrollmentId: enrollment.id, issuedById: user.id, verificationCode: identity.code, verificationHash: identity.verificationHash, metadata: { studentName: enrollment.student.name } }, update: { revokedAt: null } });
+    const certificate = await db.certificate.upsert({ where: { enrollmentId_courseId: { enrollmentId: enrollment.id, courseId: enrollment.courseId } }, create: { institutionId: user.institutionId, courseId: enrollment.courseId, enrollmentId: enrollment.id, issuedById: user.id, verificationCode: identity.code, verificationHash: identity.verificationHash, metadata: { studentName: enrollment.student.name } }, update: { issuedById: user.id, verificationCode: identity.code, verificationHash: identity.verificationHash, issuedAt: new Date(), revokedAt: null, metadata: { studentName: enrollment.student.name } } });
     revalidatePath(`/dashboard/aula/${enrollment.courseId}`);
     return success(`Certificado emitido: ${certificate.verificationCode}`);
   } catch { return failed(); }
