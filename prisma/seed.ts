@@ -3,14 +3,29 @@ import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
-function required(name: "SEED_ADMIN_PASSWORD" | "SEED_TEACHER_PASSWORD" | "SEED_STUDENT_PASSWORD") { const value = process.env[name]; if (!value || value.length < 12) throw new Error(`${name} debe existir y tener al menos 12 caracteres.`); return value; }
+type SeedPasswordName = "SEED_ADMIN_PASSWORD" | "SEED_TEACHER_PASSWORD" | "SEED_STUDENT_PASSWORD";
+
+function optionalPassword(name: SeedPasswordName) {
+  const value = process.env[name];
+  if (value && value.length < 12) throw new Error(`${name} debe tener al menos 12 caracteres.`);
+  return value;
+}
+
+async function ensureDemoUser(input: { institutionId: string; name: string; email: string; role: "ADMIN" | "TEACHER" | "STUDENT"; passwordName: SeedPasswordName }) {
+  const existing = await prisma.user.findUnique({ where: { institutionId_email: { institutionId: input.institutionId, email: input.email } } });
+  if (existing) return prisma.user.update({ where: { id: existing.id }, data: { name: input.name, role: input.role, status: "ACTIVE" } });
+  const password = optionalPassword(input.passwordName);
+  if (!password) throw new Error(`${input.passwordName} es obligatorio para crear ${input.email}.`);
+  return prisma.user.create({ data: { institutionId: input.institutionId, name: input.name, email: input.email, password: await bcrypt.hash(password, 12), role: input.role } });
+}
 
 async function main() {
   const institution = await prisma.institution.upsert({ where: { slug: "demo" }, update: {}, create: { name: "Instituto Demo Edukana", slug: "demo", type: "SCHOOL", timezone: "America/Santo_Domingo", language: "es", plan: "FREE" } });
-  const [adminPassword, teacherPassword, studentPassword] = await Promise.all([bcrypt.hash(required("SEED_ADMIN_PASSWORD"), 12), bcrypt.hash(required("SEED_TEACHER_PASSWORD"), 12), bcrypt.hash(required("SEED_STUDENT_PASSWORD"), 12)]);
-  const admin = await prisma.user.upsert({ where: { institutionId_email: { institutionId: institution.id, email: "admin@demo.edukana" } }, update: { password: adminPassword, status: "ACTIVE" }, create: { institutionId: institution.id, name: "Administrador Demo", email: "admin@demo.edukana", password: adminPassword, role: "ADMIN" } });
-  const teacher = await prisma.user.upsert({ where: { institutionId_email: { institutionId: institution.id, email: "docente@demo.edukana" } }, update: { password: teacherPassword, status: "ACTIVE" }, create: { institutionId: institution.id, name: "Docente Demo", email: "docente@demo.edukana", password: teacherPassword, role: "TEACHER" } });
-  const student = await prisma.user.upsert({ where: { institutionId_email: { institutionId: institution.id, email: "estudiante@demo.edukana" } }, update: { password: studentPassword, status: "ACTIVE" }, create: { institutionId: institution.id, name: "Estudiante Demo", email: "estudiante@demo.edukana", password: studentPassword, role: "STUDENT" } });
+  const [admin, teacher, student] = await Promise.all([
+    ensureDemoUser({ institutionId: institution.id, name: "Administrador Demo", email: "admin@demo.edukana", role: "ADMIN", passwordName: "SEED_ADMIN_PASSWORD" }),
+    ensureDemoUser({ institutionId: institution.id, name: "Docente Demo", email: "docente@demo.edukana", role: "TEACHER", passwordName: "SEED_TEACHER_PASSWORD" }),
+    ensureDemoUser({ institutionId: institution.id, name: "Estudiante Demo", email: "estudiante@demo.edukana", role: "STUDENT", passwordName: "SEED_STUDENT_PASSWORD" }),
+  ]);
   const period = await prisma.academicPeriod.upsert({ where: { id: "period-demo-2026" }, update: { institutionId: institution.id }, create: { id: "period-demo-2026", institutionId: institution.id, name: "2026-I", startDate: new Date("2026-01-15"), endDate: new Date("2026-12-15"), isActive: true } });
   const course = await prisma.course.upsert({ where: { id: "course-demo-matematica" }, update: { institutionId: institution.id, periodId: period.id, teacherId: teacher.id }, create: { id: "course-demo-matematica", institutionId: institution.id, periodId: period.id, teacherId: teacher.id, name: "Matemática I", code: "MAT-101", description: "Fundamentos de álgebra y cálculo diferencial.", completionThreshold: 100 } });
   const enrollment = await prisma.enrollment.upsert({ where: { studentId_courseId: { studentId: student.id, courseId: course.id } }, update: { status: "COMPLETED", progressPercent: 100, finalGrade: 92, completedAt: new Date("2026-09-30") }, create: { studentId: student.id, courseId: course.id, status: "COMPLETED", progressPercent: 100, finalGrade: 92, completedAt: new Date("2026-09-30") } });
