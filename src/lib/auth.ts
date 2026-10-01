@@ -1,43 +1,35 @@
 import NextAuth from "next-auth";
-import { PrismaAdapter } from "@auth/prisma-adapter";
 import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
-import { z } from "zod";
-
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-});
+import { loginSchema } from "@/lib/validation";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(db),
+  secret: process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET,
+  trustHost: true,
   session: { strategy: "jwt" },
-  pages: {
-    signIn: "/login",
-  },
+  pages: { signIn: "/login" },
   providers: [
     Credentials({
-      name: "credentials",
+      name: "Credenciales",
       credentials: {
-        email: { label: "Email", type: "email" },
+        email: { label: "Correo", type: "email" },
         password: { label: "Contraseña", type: "password" },
       },
       async authorize(credentials) {
         const parsed = loginSchema.safeParse(credentials);
         if (!parsed.success) return null;
 
-        const { email, password } = parsed.data;
-
-        const user = await db.user.findFirst({
-          where: { email, status: "ACTIVE" },
-          include: { institution: true },
+        const matches = await db.user.findMany({
+          where: { email: parsed.data.email, status: "ACTIVE" },
+          include: { institution: { select: { slug: true } } },
+          take: 2,
         });
+        if (matches.length !== 1 || !matches[0].password) return null;
 
-        if (!user || !user.password) return null;
-
-        const passwordMatch = await bcrypt.compare(password, user.password);
-        if (!passwordMatch) return null;
+        const user = matches[0];
+        const passwordHash = user.password;
+        if (!passwordHash || !(await bcrypt.compare(parsed.data.password, passwordHash))) return null;
 
         return {
           id: user.id,
@@ -51,21 +43,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    jwt({ token, user }) {
       if (user) {
-        token.role = (user as any).role;
-        token.institutionId = (user as any).institutionId;
-        token.institutionSlug = (user as any).institutionSlug;
+        token.role = user.role;
+        token.institutionId = user.institutionId;
+        token.institutionSlug = user.institutionSlug;
       }
       return token;
     },
-    async session({ session, token }) {
-      if (token) {
-        session.user.id = token.sub!;
-        (session.user as any).role = token.role;
-        (session.user as any).institutionId = token.institutionId;
-        (session.user as any).institutionSlug = token.institutionSlug;
-      }
+    session({ session, token }) {
+      session.user.id = token.sub ?? "";
+      if (typeof token.role === "string") session.user.role = token.role as typeof session.user.role;
+      if (typeof token.institutionId === "string") session.user.institutionId = token.institutionId;
+      if (typeof token.institutionSlug === "string") session.user.institutionSlug = token.institutionSlug;
       return session;
     },
   },

@@ -1,207 +1,61 @@
+import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import {
-  Users,
-  BookOpen,
-  CalendarCheck,
-  TrendingUp,
-  Bell,
-  ChevronRight,
-} from "lucide-react";
+import { Bell, BookOpen, CalendarCheck, ChevronRight, CreditCard, TrendingUp, Users } from "lucide-react";
 
 export default async function DashboardPage() {
   const session = await auth();
-  const user = session?.user as any;
+  const user = session!.user;
+  const iid = user.institutionId;
 
-  // Stats básicos según el rol
-  let stats = { students: 0, courses: 0, announcements: 0 };
-
-  if (user?.institutionId) {
+  let cards: Array<{ label: string; value: number; color: string; bg: string; icon: React.ReactNode }> = [];
+  if (["ADMIN", "COORDINATOR", "SUPER_ADMIN"].includes(user.role)) {
     const [students, courses, announcements] = await Promise.all([
-      db.user.count({
-        where: { institutionId: user.institutionId, role: "STUDENT", status: "ACTIVE" },
-      }),
-      db.course.count({
-        where: { institutionId: user.institutionId },
-      }),
-      db.announcement.count({
-        where: { institutionId: user.institutionId },
-      }),
+      db.user.count({ where: { institutionId: iid, role: "STUDENT", status: "ACTIVE" } }),
+      db.course.count({ where: { institutionId: iid } }),
+      db.announcement.count({ where: { institutionId: iid } }),
     ]);
-    stats = { students, courses, announcements };
+    cards = [
+      { label: "Estudiantes activos", value: students, color: "var(--blue)", bg: "var(--blue-light)", icon: <Users size={20} /> },
+      { label: "Cursos activos", value: courses, color: "var(--cyan)", bg: "var(--cyan-light)", icon: <BookOpen size={20} /> },
+      { label: "Anuncios publicados", value: announcements, color: "var(--coral)", bg: "var(--coral-light)", icon: <Bell size={20} /> },
+    ];
+  } else if (user.role === "TEACHER") {
+    const [courses, students, tasks] = await Promise.all([
+      db.course.count({ where: { institutionId: iid, teacherId: user.id } }),
+      db.enrollment.count({ where: { status: "ACTIVE", course: { institutionId: iid, teacherId: user.id } } }),
+      db.assignment.count({ where: { course: { institutionId: iid, teacherId: user.id }, isPublished: true } }),
+    ]);
+    cards = [
+      { label: "Mis cursos", value: courses, color: "var(--blue)", bg: "var(--blue-light)", icon: <BookOpen size={20} /> },
+      { label: "Estudiantes", value: students, color: "var(--green)", bg: "var(--green-light)", icon: <Users size={20} /> },
+      { label: "Tareas publicadas", value: tasks, color: "var(--coral)", bg: "var(--coral-light)", icon: <CalendarCheck size={20} /> },
+    ];
+  } else if (user.role === "STUDENT") {
+    const [courses, pendingTasks, pendingPayments] = await Promise.all([
+      db.enrollment.count({ where: { studentId: user.id, status: "ACTIVE", course: { institutionId: iid } } }),
+      db.assignment.count({ where: { isPublished: true, submissions: { none: { studentId: user.id } }, course: { institutionId: iid, enrollments: { some: { studentId: user.id, status: "ACTIVE" } } } } }),
+      db.paymentConcept.count({ where: { institutionId: iid, studentId: user.id, status: { in: ["PENDING", "OVERDUE", "PARTIAL"] } } }),
+    ]);
+    cards = [
+      { label: "Cursos inscritos", value: courses, color: "var(--blue)", bg: "var(--blue-light)", icon: <BookOpen size={20} /> },
+      { label: "Tareas pendientes", value: pendingTasks, color: "var(--coral)", bg: "var(--coral-light)", icon: <CalendarCheck size={20} /> },
+      { label: "Pagos pendientes", value: pendingPayments, color: "#92400E", bg: "#FEF9C3", icon: <CreditCard size={20} /> },
+    ];
   }
 
-  const greeting = () => {
-    const h = new Date().getHours();
-    if (h < 12) return "Buenos días";
-    if (h < 18) return "Buenas tardes";
-    return "Buenas noches";
-  };
-
-  const roleLabel: Record<string, string> = {
-    SUPER_ADMIN: "Súper administrador",
-    ADMIN: "Administrador",
-    COORDINATOR: "Coordinador",
-    TEACHER: "Docente",
-    STUDENT: "Estudiante",
-    PARENT: "Tutor",
-  };
+  const roleLabel = { SUPER_ADMIN: "Súper administrador", ADMIN: "Administrador", COORDINATOR: "Coordinador", TEACHER: "Docente", STUDENT: "Estudiante", PARENT: "Tutor" }[user.role];
+  const quick = user.role === "STUDENT"
+    ? [{ href: "/dashboard/portal", title: "Mi portal", desc: "Cursos, tareas, calificaciones y pagos", icon: <BookOpen size={18} />, color: "var(--blue)" }, { href: "/dashboard/comunidad", title: "Anuncios", desc: "Comunicados de tu institución", icon: <Bell size={18} />, color: "var(--cyan)" }]
+    : [{ href: "/dashboard/aula", title: "Cursos", desc: "Materias, contenidos y tareas", icon: <BookOpen size={18} />, color: "var(--blue)" }, { href: "/dashboard/comunidad", title: "Anuncios", desc: "Comunicados y novedades", icon: <Bell size={18} />, color: "var(--cyan)" }, { href: "/dashboard/calendario", title: "Calendario", desc: "Eventos y fechas importantes", icon: <CalendarCheck size={18} />, color: "var(--green)" }];
 
   return (
-    <div className="p-8">
-      {/* Header */}
-      <div className="mb-8">
-        <p className="text-sm mb-1" style={{ color: "var(--gray)" }}>
-          {greeting()}, {user?.name?.split(" ")[0]}
-        </p>
-        <h1 className="text-2xl font-bold" style={{ color: "var(--navy)" }}>
-          Tu institución, conectada
-        </h1>
-        <span
-          className="inline-block mt-2 text-xs font-medium px-2.5 py-1 rounded-full"
-          style={{ background: "var(--blue-light)", color: "var(--blue)" }}
-        >
-          {roleLabel[user?.role] ?? user?.role}
-        </span>
-      </div>
-
-      {/* Stats cards */}
-      {(user?.role === "ADMIN" || user?.role === "COORDINATOR" || user?.role === "SUPER_ADMIN") && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          <StatCard
-            icon={<Users size={20} style={{ color: "var(--blue)" }} />}
-            label="Estudiantes activos"
-            value={stats.students}
-            bg="var(--blue-light)"
-          />
-          <StatCard
-            icon={<BookOpen size={20} style={{ color: "var(--cyan)" }} />}
-            label="Cursos activos"
-            value={stats.courses}
-            bg="var(--cyan-light)"
-          />
-          <StatCard
-            icon={<Bell size={20} style={{ color: "var(--coral)" }} />}
-            label="Anuncios publicados"
-            value={stats.announcements}
-            bg="var(--coral-light)"
-          />
-        </div>
-      )}
-
-      {/* Quick actions */}
-      <div className="mb-8">
-        <h2 className="text-base font-semibold mb-3" style={{ color: "var(--navy)" }}>
-          Acceso rápido
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          <QuickAction
-            href="/dashboard/aula"
-            icon={<BookOpen size={18} />}
-            title="Mis cursos"
-            desc="Accede a tus materias y contenidos"
-            color="var(--blue)"
-          />
-          <QuickAction
-            href="/dashboard/comunidad"
-            icon={<Bell size={18} />}
-            title="Anuncios"
-            desc="Comunicados y novedades"
-            color="var(--cyan)"
-          />
-          <QuickAction
-            href="/dashboard/calendario"
-            icon={<CalendarCheck size={18} />}
-            title="Calendario"
-            desc="Eventos y fechas importantes"
-            color="var(--green)"
-          />
-          {(user?.role === "ADMIN" || user?.role === "SUPER_ADMIN") && (
-            <>
-              <QuickAction
-                href="/dashboard/gestion"
-                icon={<Users size={18} />}
-                title="Gestión"
-                desc="Estudiantes, docentes y grupos"
-                color="var(--navy)"
-              />
-              <QuickAction
-                href="/dashboard/admisiones"
-                icon={<TrendingUp size={18} />}
-                title="Admisiones"
-                desc="Pipeline de nuevos aspirantes"
-                color="var(--coral)"
-              />
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Nota de estado del sistema */}
-      <div
-        className="rounded-xl p-4 flex items-start gap-3"
-        style={{ background: "var(--blue-light)", border: "1px solid #C7D7FD" }}
-      >
-        <span className="text-lg">🚀</span>
-        <div>
-          <p className="text-sm font-semibold" style={{ color: "var(--blue)" }}>
-            Edukana MVP — en configuración inicial
-          </p>
-          <p className="text-xs mt-0.5" style={{ color: "#4B6DE0" }}>
-            Tu institución se está configurando. Completa los datos en{" "}
-            <a href="/dashboard/configuracion" className="underline font-medium">
-              Configuración
-            </a>{" "}
-            para activar todos los módulos.
-          </p>
-        </div>
-      </div>
+    <div className="mx-auto max-w-6xl p-4 sm:p-8">
+      <div className="mb-8"><p className="mb-1 text-sm text-slate-500">Hola, {user.name?.split(" ")[0]}</p><h1 className="text-2xl font-bold" style={{ color: "var(--navy)" }}>Tu institución, conectada</h1><span className="mt-2 inline-block rounded-full px-2.5 py-1 text-xs font-medium" style={{ background: "var(--blue-light)", color: "var(--blue)" }}>{roleLabel}</span></div>
+      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">{cards.map((card) => <div key={card.label} className="flex items-center gap-4 rounded-xl border border-slate-200 bg-white p-5"><div className="flex h-10 w-10 items-center justify-center rounded-lg" style={{ background: card.bg, color: card.color }}>{card.icon}</div><div><p className="text-2xl font-bold" style={{ color: "var(--navy)" }}>{card.value}</p><p className="text-xs text-slate-500">{card.label}</p></div></div>)}</div>
+      <h2 className="mb-3 font-semibold" style={{ color: "var(--navy)" }}>Acceso rápido</h2>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">{quick.map((item) => <Link key={item.href} href={item.href} className="group flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 hover:shadow-sm"><div className="flex h-9 w-9 items-center justify-center rounded-lg text-white" style={{ background: item.color }}>{item.icon}</div><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold" style={{ color: "var(--navy)" }}>{item.title}</p><p className="truncate text-xs text-slate-500">{item.desc}</p></div><ChevronRight size={16} className="text-slate-300" /></Link>)}</div>
+      {["ADMIN", "SUPER_ADMIN"].includes(user.role) && <Link href="/dashboard/analitica" className="mt-6 flex items-center gap-2 text-sm font-medium text-blue-600"><TrendingUp size={16} /> Ver analítica institucional</Link>}
     </div>
-  );
-}
-
-function StatCard({ icon, label, value, bg }: { icon: React.ReactNode; label: string; value: number; bg: string }) {
-  return (
-    <div
-      className="rounded-xl p-5 flex items-center gap-4"
-      style={{ background: "white", border: "1px solid #E2E8F0" }}
-    >
-      <div
-        className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-        style={{ background: bg }}
-      >
-        {icon}
-      </div>
-      <div>
-        <p className="text-2xl font-bold" style={{ color: "var(--navy)" }}>{value}</p>
-        <p className="text-xs" style={{ color: "var(--gray)" }}>{label}</p>
-      </div>
-    </div>
-  );
-}
-
-function QuickAction({
-  href, icon, title, desc, color
-}: {
-  href: string; icon: React.ReactNode; title: string; desc: string; color: string;
-}) {
-  return (
-    <a
-      href={href}
-      className="flex items-center gap-3 p-4 rounded-xl transition-all hover:shadow-sm group"
-      style={{ background: "white", border: "1px solid #E2E8F0" }}
-    >
-      <div
-        className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-white"
-        style={{ background: color }}
-      >
-        {icon}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold truncate" style={{ color: "var(--navy)" }}>{title}</p>
-        <p className="text-xs truncate" style={{ color: "var(--gray)" }}>{desc}</p>
-      </div>
-      <ChevronRight size={16} style={{ color: "#CBD5E1" }} className="group-hover:translate-x-0.5 transition-transform" />
-    </a>
   );
 }
