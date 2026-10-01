@@ -1,6 +1,5 @@
-// Edukana — Prisma Schema MVP
-// Multitenancy: row-level via institutionId en cada tabla
-// DB: PostgreSQL (Supabase free tier)
+// Edukana — esquema académico multiinstitución
+// PostgreSQL / Supabase Free: toda entidad de negocio conserva institutionId.
 
 generator client {
   provider = "prisma-client-js"
@@ -12,29 +11,41 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// ─── INSTITUCIÓN ──────────────────────────────────────────────
-
 model Institution {
-  id        String   @id @default(cuid())
-  name      String
-  slug      String   @unique
-  type      InstitutionType @default(SCHOOL)
-  logoUrl   String?
-  domain    String?  @unique
-  timezone  String   @default("America/Santo_Domingo")
-  language  String   @default("es")
-  plan      Plan     @default(FREE)
-  settings  Json     @default("{}")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  users           User[]
-  academicPeriods AcademicPeriod[]
-  courses         Course[]
-  announcements   Announcement[]
-  admissionLeads  AdmissionLead[]
-  paymentConcepts PaymentConcept[]
-  events          CalendarEvent[]
+  id                 String              @id @default(cuid())
+  name               String
+  slug               String              @unique
+  type               InstitutionType     @default(SCHOOL)
+  logoUrl            String?
+  domain             String?             @unique
+  timezone           String              @default("America/Santo_Domingo")
+  language           String              @default("es")
+  plan               Plan                @default(FREE)
+  settings           Json                @default("{}")
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  users              User[]
+  academicPeriods    AcademicPeriod[]
+  courses            Course[]
+  announcements      Announcement[]
+  admissionLeads     AdmissionLead[]
+  paymentConcepts    PaymentConcept[]
+  events             CalendarEvent[]
+  gradingPeriods     GradingPeriod[]
+  gradeCategories    GradeCategory[]
+  gradeItems         GradeItem[]
+  gradeEntries       GradeEntry[]
+  attendanceSessions AttendanceSession[]
+  attendances        Attendance[]
+  sections           CourseSection[]
+  lessons            Lesson[]
+  lessonProgress     LessonProgress[]
+  questionBank       QuestionBankItem[]
+  exams              Exam[]
+  examAttempts       ExamAttempt[]
+  scheduleSlots      ScheduleSlot[]
+  assets             StorageAsset[]
+  certificates       Certificate[]
 
   @@map("institutions")
 }
@@ -54,46 +65,45 @@ enum Plan {
   ENTERPRISE
 }
 
-// ─── USUARIOS ─────────────────────────────────────────────────
-
 model User {
-  id            String    @id @default(cuid())
-  institutionId String
-  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
-
-  name          String
-  email         String
-  emailVerified DateTime?
-  password      String?
-  avatarUrl     String?
-  phone         String?
-  role          Role      @default(STUDENT)
-  status        UserStatus @default(ACTIVE)
-
-  // NextAuth
-  accounts      Account[]
-  sessions      Session[]
-
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  // Relaciones académicas
-  taughtCourses   Course[]        @relation("TeacherCourses")
-  enrollments     Enrollment[]
-  submissions     Submission[]
-  announcements   Announcement[]  @relation("AnnouncementAuthor")
+  id                 String              @id @default(cuid())
+  institutionId      String
+  institution        Institution         @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  name               String
+  email              String
+  emailVerified      DateTime?
+  password           String?
+  avatarUrl          String?
+  phone              String?
+  role               Role                @default(STUDENT)
+  status             UserStatus          @default(ACTIVE)
+  accounts           Account[]
+  sessions           Session[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  taughtCourses      Course[]            @relation("TeacherCourses")
+  enrollments        Enrollment[]
+  submissions        Submission[]
+  announcements      Announcement[]      @relation("AnnouncementAuthor")
+  recordedAttendance AttendanceSession[] @relation("AttendanceRecorder")
+  gradedEntries      GradeEntry[]        @relation("GradeRecorder")
+  examAttempts       ExamAttempt[]
+  scheduleSlots      ScheduleSlot[]      @relation("ScheduleTeacher")
+  uploadedAssets     StorageAsset[]      @relation("AssetUploader")
+  issuedCertificates Certificate[]       @relation("CertificateIssuer")
 
   @@unique([institutionId, email])
+  @@index([institutionId, role])
   @@map("users")
 }
 
 enum Role {
-  SUPER_ADMIN   // Solo Cerkana/Edukana internamente
-  ADMIN         // Director/administrador de institución
-  COORDINATOR   // Coordinador académico
-  TEACHER       // Docente
-  STUDENT       // Estudiante
-  PARENT        // Padre/tutor
+  SUPER_ADMIN
+  ADMIN
+  COORDINATOR
+  TEACHER
+  STUDENT
+  PARENT
 }
 
 enum UserStatus {
@@ -101,8 +111,6 @@ enum UserStatus {
   INACTIVE
   SUSPENDED
 }
-
-// ─── NEXTAUTH ─────────────────────────────────────────────────
 
 model Account {
   id                String  @id @default(cuid())
@@ -117,8 +125,7 @@ model Account {
   scope             String?
   id_token          String? @db.Text
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   @@map("accounts")
@@ -143,60 +150,71 @@ model VerificationToken {
   @@map("verification_tokens")
 }
 
-// ─── GESTIÓN ACADÉMICA ────────────────────────────────────────
-
 model AcademicPeriod {
-  id            String   @id @default(cuid())
-  institutionId String
-  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
-
-  name          String   // "2026-I", "Primer trimestre 2026"
-  startDate     DateTime
-  endDate       DateTime
-  isActive      Boolean  @default(false)
-  createdAt     DateTime @default(now())
-
-  courses       Course[]
+  id              String           @id @default(cuid())
+  institutionId   String
+  institution     Institution      @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  name            String
+  startDate       DateTime
+  endDate         DateTime
+  isActive        Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+  courses         Course[]
   paymentConcepts PaymentConcept[]
+  gradingPeriods  GradingPeriod[]
 
+  @@index([institutionId, startDate])
   @@map("academic_periods")
 }
 
 model Course {
-  id            String   @id @default(cuid())
-  institutionId String
-  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
-  periodId      String
-  period        AcademicPeriod @relation(fields: [periodId], references: [id])
-  teacherId     String
-  teacher       User     @relation("TeacherCourses", fields: [teacherId], references: [id])
+  id                  String              @id @default(cuid())
+  institutionId       String
+  institution         Institution         @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  periodId            String
+  period              AcademicPeriod      @relation(fields: [periodId], references: [id])
+  teacherId           String
+  teacher             User                @relation("TeacherCourses", fields: [teacherId], references: [id])
+  name                String
+  code                String?
+  description         String?
+  schedule            Json?
+  room                String?
+  maxStudents         Int?
+  completionThreshold Int                 @default(100)
+  createdAt           DateTime            @default(now())
+  updatedAt           DateTime            @updatedAt
+  enrollments         Enrollment[]
+  assignments         Assignment[]
+  modules             CourseModule[]
+  sections            CourseSection[]
+  lessons             Lesson[]
+  attendanceSessions  AttendanceSession[]
+  attendances         Attendance[]
+  gradingPeriods      GradingPeriod[]
+  gradeCategories     GradeCategory[]
+  gradeItems          GradeItem[]
+  questionBank        QuestionBankItem[]
+  exams               Exam[]
+  scheduleSlots       ScheduleSlot[]
+  assets              StorageAsset[]
+  certificates        Certificate[]
 
-  name          String
-  code          String?
-  description   String?
-  schedule      Json?    // [{day: "MON", start: "08:00", end: "09:30"}, ...]
-  room          String?
-  maxStudents   Int?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  enrollments   Enrollment[]
-  assignments   Assignment[]
-  modules       CourseModule[]
-
+  @@unique([institutionId, code])
+  @@index([institutionId, teacherId])
   @@map("courses")
 }
 
+// Compatibilidad con contenidos Alpha; las nuevas experiencias usan CourseSection > Lesson.
 model CourseModule {
   id          String   @id @default(cuid())
   courseId    String
   course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-
   title       String
   description String?
   order       Int      @default(0)
-  content     String?  @db.Text  // Rich text / Markdown
-  fileUrls    Json?    // ["url1", "url2"]
+  content     String?  @db.Text
+  fileUrls    Json?
   isPublished Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -204,21 +222,77 @@ model CourseModule {
   @@map("course_modules")
 }
 
+model CourseSection {
+  id            String      @id @default(cuid())
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  courseId      String
+  course        Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title         String
+  description   String?
+  order         Int         @default(0)
+  isPublished   Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  lessons       Lesson[]
+
+  @@unique([courseId, order])
+  @@index([institutionId, courseId])
+  @@map("course_sections")
+}
+
+model Lesson {
+  id               String           @id @default(cuid())
+  institutionId    String
+  institution      Institution      @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  courseId         String
+  course           Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  sectionId        String
+  section          CourseSection    @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  title            String
+  summary          String?
+  content          String?          @db.Text
+  type             LessonType       @default(TEXT)
+  order            Int              @default(0)
+  estimatedMinutes Int              @default(10)
+  isPublished      Boolean          @default(false)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  assets           StorageAsset[]
+  progress         LessonProgress[]
+
+  @@unique([sectionId, order])
+  @@index([institutionId, courseId])
+  @@map("lessons")
+}
+
+enum LessonType {
+  TEXT
+  VIDEO
+  DOCUMENT
+  ACTIVITY
+}
+
 model Enrollment {
-  id        String   @id @default(cuid())
-  studentId String
-  student   User     @relation(fields: [studentId], references: [id])
-  courseId  String
-  course    Course   @relation(fields: [courseId], references: [id])
-
-  status      EnrollmentStatus @default(ACTIVE)
-  finalGrade  Float?
-  enrolledAt  DateTime @default(now())
-
-  attendances Attendance[]
-  submissions Submission[]
+  id              String           @id @default(cuid())
+  studentId       String
+  student         User             @relation(fields: [studentId], references: [id])
+  courseId        String
+  course          Course           @relation(fields: [courseId], references: [id])
+  status          EnrollmentStatus @default(ACTIVE)
+  finalGrade      Float?
+  progressPercent Float            @default(0)
+  enrolledAt      DateTime         @default(now())
+  completedAt     DateTime?
+  attendances     Attendance[]
+  submissions     Submission[]
+  gradeEntries    GradeEntry[]
+  lessonProgress  LessonProgress[]
+  examAttempts    ExamAttempt[]
+  certificates    Certificate[]
 
   @@unique([studentId, courseId])
+  @@index([courseId, status])
   @@map("enrollments")
 }
 
@@ -229,17 +303,42 @@ enum EnrollmentStatus {
   FAILED
 }
 
+model AttendanceSession {
+  id            String       @id @default(cuid())
+  institutionId String
+  institution   Institution  @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  courseId      String
+  course        Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  date          DateTime     @db.Date
+  title         String?
+  recordedById  String
+  recordedBy    User         @relation("AttendanceRecorder", fields: [recordedById], references: [id])
+  createdAt     DateTime     @default(now())
+  records       Attendance[]
+
+  @@unique([courseId, date])
+  @@index([institutionId, date])
+  @@map("attendance_sessions")
+}
+
 model Attendance {
-  id           String   @id @default(cuid())
-  enrollmentId String
-  enrollment   Enrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  id            String            @id @default(cuid())
+  institutionId String
+  institution   Institution       @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  courseId      String
+  course        Course            @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  sessionId     String
+  session       AttendanceSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  enrollmentId  String
+  enrollment    Enrollment        @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  date          DateTime          @db.Date
+  classSession  String?
+  status        AttendanceStatus  @default(PRESENT)
+  notes         String?
+  recordedAt    DateTime          @default(now())
 
-  date         DateTime
-  classSession String?  // "Clase 1 - Introducción"
-  status       AttendanceStatus @default(PRESENT)
-  notes        String?
-  recordedAt   DateTime @default(now())
-
+  @@unique([sessionId, enrollmentId])
+  @@index([institutionId, courseId, date])
   @@map("attendances")
 }
 
@@ -250,51 +349,138 @@ enum AttendanceStatus {
   EXCUSED
 }
 
-// ─── AULA ─────────────────────────────────────────────────────
+model GradingPeriod {
+  id               String          @id @default(cuid())
+  institutionId    String
+  institution      Institution     @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  courseId         String
+  course           Course          @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  academicPeriodId String
+  academicPeriod   AcademicPeriod  @relation(fields: [academicPeriodId], references: [id])
+  name             String
+  startDate        DateTime
+  endDate          DateTime
+  weight           Float           @default(100)
+  isPublished      Boolean         @default(false)
+  publishedAt      DateTime?
+  categories       GradeCategory[]
+  items            GradeItem[]
+
+  @@unique([courseId, name])
+  @@index([institutionId, courseId])
+  @@map("grading_periods")
+}
+
+model GradeCategory {
+  id              String        @id @default(cuid())
+  institutionId   String
+  institution     Institution   @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  courseId        String
+  course          Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  gradingPeriodId String
+  gradingPeriod   GradingPeriod @relation(fields: [gradingPeriodId], references: [id], onDelete: Cascade)
+  name            String
+  weight          Float
+  dropLowest      Int           @default(0)
+  items           GradeItem[]
+
+  @@unique([gradingPeriodId, name])
+  @@index([institutionId, courseId])
+  @@map("grade_categories")
+}
+
+model GradeItem {
+  id              String        @id @default(cuid())
+  institutionId   String
+  institution     Institution   @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  courseId        String
+  course          Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  gradingPeriodId String
+  gradingPeriod   GradingPeriod @relation(fields: [gradingPeriodId], references: [id], onDelete: Cascade)
+  categoryId      String
+  category        GradeCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  assignmentId    String?       @unique
+  assignment      Assignment?   @relation(fields: [assignmentId], references: [id], onDelete: SetNull)
+  examId          String?       @unique
+  exam            Exam?         @relation(fields: [examId], references: [id], onDelete: SetNull)
+  title           String
+  maxScore        Float         @default(100)
+  weight          Float         @default(1)
+  isPublished     Boolean       @default(false)
+  dueDate         DateTime?
+  entries         GradeEntry[]
+
+  @@index([institutionId, courseId])
+  @@map("grade_items")
+}
+
+model GradeEntry {
+  id            String      @id @default(cuid())
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  gradeItemId   String
+  gradeItem     GradeItem   @relation(fields: [gradeItemId], references: [id], onDelete: Cascade)
+  enrollmentId  String
+  enrollment    Enrollment  @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  score         Float?
+  feedback      String?     @db.Text
+  isExcused     Boolean     @default(false)
+  gradedById    String
+  gradedBy      User        @relation("GradeRecorder", fields: [gradedById], references: [id])
+  gradedAt      DateTime    @default(now())
+
+  @@unique([gradeItemId, enrollmentId])
+  @@index([institutionId, enrollmentId])
+  @@map("grade_entries")
+}
 
 model Assignment {
-  id          String   @id @default(cuid())
-  courseId    String
-  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  id           String         @id @default(cuid())
+  courseId     String
+  course       Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title        String
+  description  String?        @db.Text
+  instructions String?        @db.Text
+  dueDate      DateTime?
+  maxScore     Float          @default(100)
+  type         AssignmentType @default(TASK)
+  aiGenerated  Boolean        @default(false)
+  isPublished  Boolean        @default(false)
+  publishedAt  DateTime?
+  allowLate    Boolean        @default(true)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  submissions  Submission[]
+  gradeItem    GradeItem?
+  assets       StorageAsset[]
 
-  title       String
-  description String?  @db.Text
-  dueDate     DateTime?
-  maxScore    Float    @default(100)
-  type        AssignmentType @default(TASK)
-  aiGenerated Boolean  @default(false)
-  isPublished Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  submissions Submission[]
-
+  @@index([courseId, dueDate])
   @@map("assignments")
 }
 
 enum AssignmentType {
-  TASK      // Tarea
-  QUIZ      // Cuestionario
-  EXAM      // Examen
-  PROJECT   // Proyecto
+  TASK
+  QUIZ
+  EXAM
+  PROJECT
 }
 
 model Submission {
-  id           String   @id @default(cuid())
+  id           String           @id @default(cuid())
   assignmentId String
-  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  assignment   Assignment       @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   studentId    String
-  student      User     @relation(fields: [studentId], references: [id])
+  student      User             @relation(fields: [studentId], references: [id])
   enrollmentId String
-  enrollment   Enrollment @relation(fields: [enrollmentId], references: [id])
-
-  content     String?  @db.Text
-  fileUrls    Json?    // ["url1", "url2"]
-  score       Float?
-  feedback    String?  @db.Text
-  status      SubmissionStatus @default(SUBMITTED)
-  submittedAt DateTime @default(now())
-  gradedAt    DateTime?
+  enrollment   Enrollment       @relation(fields: [enrollmentId], references: [id])
+  content      String?          @db.Text
+  fileUrls     Json?
+  score        Float?
+  feedback     String?          @db.Text
+  status       SubmissionStatus @default(SUBMITTED)
+  submittedAt  DateTime         @default(now())
+  gradedAt     DateTime?
+  assets       StorageAsset[]
 
   @@unique([assignmentId, studentId])
   @@map("submissions")
@@ -307,54 +493,258 @@ enum SubmissionStatus {
   RETURNED
 }
 
-// ─── ADMISIONES ───────────────────────────────────────────────
+model QuestionBankItem {
+  id            String         @id @default(cuid())
+  institutionId String
+  institution   Institution    @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  courseId      String
+  course        Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  type          QuestionType
+  prompt        String         @db.Text
+  options       Json?
+  answerKey     String         @db.Text
+  explanation   String?        @db.Text
+  defaultPoints Float          @default(1)
+  createdAt     DateTime       @default(now())
+  examQuestions ExamQuestion[]
+  answers       ExamAnswer[]
 
-model AdmissionLead {
-  id            String   @id @default(cuid())
+  @@index([institutionId, courseId, type])
+  @@map("question_bank_items")
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  SHORT_ANSWER
+}
+
+model Exam {
+  id              String         @id @default(cuid())
+  institutionId   String
+  institution     Institution    @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  courseId        String
+  course          Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title           String
+  instructions    String?        @db.Text
+  opensAt         DateTime?
+  closesAt        DateTime?
+  durationMinutes Int?
+  maxAttempts     Int            @default(1)
+  isPublished     Boolean        @default(false)
+  showReview      Boolean        @default(true)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  questions       ExamQuestion[]
+  attempts        ExamAttempt[]
+  gradeItem       GradeItem?
+
+  @@index([institutionId, courseId])
+  @@map("exams")
+}
+
+model ExamQuestion {
+  id         String           @id @default(cuid())
+  examId     String
+  exam       Exam             @relation(fields: [examId], references: [id], onDelete: Cascade)
+  bankItemId String
+  bankItem   QuestionBankItem @relation(fields: [bankItemId], references: [id])
+  order      Int
+  points     Float
+
+  @@unique([examId, bankItemId])
+  @@unique([examId, order])
+  @@map("exam_questions")
+}
+
+model ExamAttempt {
+  id            String        @id @default(cuid())
+  institutionId String
+  institution   Institution   @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  examId        String
+  exam          Exam          @relation(fields: [examId], references: [id], onDelete: Cascade)
+  enrollmentId  String
+  enrollment    Enrollment    @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  studentId     String
+  student       User          @relation(fields: [studentId], references: [id])
+  attemptNumber Int
+  status        AttemptStatus @default(IN_PROGRESS)
+  score         Float?
+  maxScore      Float?
+  startedAt     DateTime      @default(now())
+  submittedAt   DateTime?
+  answers       ExamAnswer[]
+
+  @@unique([examId, studentId, attemptNumber])
+  @@index([institutionId, examId])
+  @@map("exam_attempts")
+}
+
+enum AttemptStatus {
+  IN_PROGRESS
+  SUBMITTED
+  GRADED
+}
+
+model ExamAnswer {
+  id         String           @id @default(cuid())
+  attemptId  String
+  attempt    ExamAttempt      @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  bankItemId String
+  bankItem   QuestionBankItem @relation(fields: [bankItemId], references: [id])
+  response   String?          @db.Text
+  isCorrect  Boolean?
+  score      Float?
+  feedback   String?          @db.Text
+
+  @@unique([attemptId, bankItemId])
+  @@map("exam_answers")
+}
+
+model ScheduleSlot {
+  id            String      @id @default(cuid())
   institutionId String
   institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  courseId      String
+  course        Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  teacherId     String
+  teacher       User        @relation("ScheduleTeacher", fields: [teacherId], references: [id])
+  weekday       Int
+  startMinutes  Int
+  endMinutes    Int
+  classroom     String
+  startsOn      DateTime?   @db.Date
+  endsOn        DateTime?   @db.Date
+  createdAt     DateTime    @default(now())
 
+  @@index([institutionId, weekday, startMinutes])
+  @@index([teacherId, weekday])
+  @@map("schedule_slots")
+}
+
+enum AssetKind {
+  DOCUMENT
+  VIDEO
+  IMAGE
+  OTHER
+}
+
+enum AssetVisibility {
+  COURSE
+  PRIVATE
+  INSTITUTION
+}
+
+model StorageAsset {
+  id            String          @id @default(cuid())
+  institutionId String
+  institution   Institution     @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  courseId      String?
+  course        Course?         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessonId      String?
+  lesson        Lesson?         @relation(fields: [lessonId], references: [id], onDelete: SetNull)
+  assignmentId  String?
+  assignment    Assignment?     @relation(fields: [assignmentId], references: [id], onDelete: SetNull)
+  submissionId  String?
+  submission    Submission?     @relation(fields: [submissionId], references: [id], onDelete: SetNull)
+  uploaderId    String
+  uploader      User            @relation("AssetUploader", fields: [uploaderId], references: [id])
+  bucket        String          @default("edukana")
+  objectPath    String          @unique
+  originalName  String
+  mimeType      String
+  sizeBytes     Int
+  kind          AssetKind
+  visibility    AssetVisibility @default(COURSE)
+  checksum      String?
+  createdAt     DateTime        @default(now())
+
+  @@index([institutionId, courseId])
+  @@map("storage_assets")
+}
+
+model LessonProgress {
+  id                  String      @id @default(cuid())
+  institutionId       String
+  institution         Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  enrollmentId        String
+  enrollment          Enrollment  @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  lessonId            String
+  lesson              Lesson      @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  completed           Boolean     @default(false)
+  watchedSeconds      Int         @default(0)
+  lastPositionSeconds Int         @default(0)
+  updatedAt           DateTime    @updatedAt
+  completedAt         DateTime?
+
+  @@unique([enrollmentId, lessonId])
+  @@index([institutionId, lessonId])
+  @@map("lesson_progress")
+}
+
+model Certificate {
+  id               String      @id @default(cuid())
+  institutionId    String
+  institution      Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  courseId         String
+  course           Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  enrollmentId     String
+  enrollment       Enrollment  @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+  issuedById       String
+  issuedBy         User        @relation("CertificateIssuer", fields: [issuedById], references: [id])
+  verificationCode String      @unique
+  verificationHash String
+  issuedAt         DateTime    @default(now())
+  revokedAt        DateTime?
+  metadata         Json        @default("{}")
+
+  @@unique([enrollmentId, courseId])
+  @@index([institutionId, issuedAt])
+  @@map("certificates")
+}
+
+model AdmissionLead {
+  id              String         @id @default(cuid())
+  institutionId   String
+  institution     Institution    @relation(fields: [institutionId], references: [id], onDelete: Cascade)
   name            String
   email           String
   phone           String?
   programInterest String?
   stage           AdmissionStage @default(INTERESTED)
-  documents       Json?    // [{name: "Cédula", url: "...", status: "pending"}]
-  notes           String?  @db.Text
-  source          String?  // "web", "whatsapp", "referral"
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  documents       Json?
+  notes           String?        @db.Text
+  source          String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
   @@map("admission_leads")
 }
 
 enum AdmissionStage {
-  INTERESTED    // Interesado
-  DOCUMENTS     // Enviando documentos
-  REVIEW        // En revisión
-  ACCEPTED      // Aceptado
-  ENROLLED      // Matriculado
-  REJECTED      // Rechazado
+  INTERESTED
+  DOCUMENTS
+  REVIEW
+  ACCEPTED
+  ENROLLED
+  REJECTED
 }
 
-// ─── PAGOS ────────────────────────────────────────────────────
-
 model PaymentConcept {
-  id            String   @id @default(cuid())
+  id            String          @id @default(cuid())
   institutionId String
-  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
-  studentId     String?  // null = aplica a grupo/todos
+  institution   Institution     @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  studentId     String?
   periodId      String?
   period        AcademicPeriod? @relation(fields: [periodId], references: [id])
-
-  concept       String   // "Matrícula Enero 2026", "Mensualidad Febrero"
+  concept       String
   amount        Float
-  currency      String   @default("DOP")
+  currency      String          @default("DOP")
   dueDate       DateTime?
   paidAt        DateTime?
-  status        PaymentStatus @default(PENDING)
+  status        PaymentStatus   @default(PENDING)
   notes         String?
-  createdAt     DateTime @default(now())
+  createdAt     DateTime        @default(now())
 
   @@map("payment_concepts")
 }
@@ -367,57 +757,50 @@ enum PaymentStatus {
   PARTIAL
 }
 
-// ─── COMUNIDAD ────────────────────────────────────────────────
-
 model Announcement {
-  id            String   @id @default(cuid())
+  id            String               @id @default(cuid())
   institutionId String
-  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  institution   Institution          @relation(fields: [institutionId], references: [id], onDelete: Cascade)
   authorId      String
-  author        User     @relation("AnnouncementAuthor", fields: [authorId], references: [id])
-
+  author        User                 @relation("AnnouncementAuthor", fields: [authorId], references: [id])
   title         String
-  content       String   @db.Text
+  content       String               @db.Text
   audience      AnnouncementAudience @default(ALL)
-  audienceId    String?  // courseId o grupoId si audience != ALL
-  isPinned      Boolean  @default(false)
-  publishedAt   DateTime @default(now())
-  createdAt     DateTime @default(now())
+  audienceId    String?
+  isPinned      Boolean              @default(false)
+  publishedAt   DateTime             @default(now())
+  createdAt     DateTime             @default(now())
 
   @@map("announcements")
 }
 
 enum AnnouncementAudience {
-  ALL       // Toda la institución
-  COURSE    // Una materia específica
-  ROLE      // Un rol (solo docentes, solo estudiantes)
+  ALL
+  COURSE
+  ROLE
 }
 
 model CalendarEvent {
-  id            String   @id @default(cuid())
+  id            String      @id @default(cuid())
   institutionId String
   institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
-
   title         String
   description   String?
   startDate     DateTime
   endDate       DateTime?
-  allDay        Boolean  @default(true)
-  color         String?  @default("#2457F5")
-  createdAt     DateTime @default(now())
+  allDay        Boolean     @default(true)
+  color         String?     @default("#2457F5")
+  createdAt     DateTime    @default(now())
 
   @@map("calendar_events")
 }
-
-// ─── AUDITORÍA ────────────────────────────────────────────────
 
 model AuditLog {
   id            String   @id @default(cuid())
   institutionId String?
   userId        String?
-
-  action        String   // "CREATE", "UPDATE", "DELETE", "LOGIN"
-  entity        String   // "User", "Course", "Enrollment"
+  action        String
+  entity        String
   entityId      String?
   changes       Json?
   ipAddress     String?

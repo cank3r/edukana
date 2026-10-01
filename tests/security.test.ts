@@ -17,9 +17,10 @@ test("rechaza credenciales con formato inválido", () => {
   assert.equal(loginSchema.safeParse({ email: "correo-invalido", password: "123" }).success, false);
 });
 
-test("solo considera pública la ruta de login", () => {
+test("solo considera públicas las rutas de login y certificados verificables", () => {
   assert.equal(isPublicPath("/login"), true);
   assert.equal(isPublicPath("/login/ayuda"), true);
+  assert.equal(isPublicPath("/certificados/EDU-ABC123"), true);
   assert.equal(isPublicPath("/login-falso"), false);
   assert.equal(isPublicPath("/dashboard"), false);
 });

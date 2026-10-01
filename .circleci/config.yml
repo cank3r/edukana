@@ -8,37 +8,28 @@ jobs:
       DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/edukana
       DIRECT_URL: postgresql://ci:ci@127.0.0.1:5432/edukana
       AUTH_SECRET: circleci-build-only-secret-at-least-32-characters
+      CERTIFICATE_SECRET: circleci-certificate-secret-at-least-32-characters
       AUTH_URL: http://127.0.0.1:3000
     steps:
       - checkout
       - restore_cache:
           keys:
-            - npm-v1-{{ checksum "package-lock.json" }}
-            - npm-v1-
-      - run:
-          name: Instalar dependencias
-          command: npm ci
+            - npm-v2-{{ checksum "package-lock.json" }}
+            - npm-v2-
+      - run: { name: Instalar dependencias, command: npm ci }
       - save_cache:
-          key: npm-v1-{{ checksum "package-lock.json" }}
-          paths:
-            - ~/.npm
-      - run:
-          name: Validar Prisma
-          command: npx prisma validate
-      - run:
-          name: Ejecutar pruebas
-          command: npm test
-      - run:
-          name: Ejecutar ESLint
-          command: npm run lint
-      - run:
-          name: Verificar TypeScript
-          command: npm run typecheck
-      - run:
-          name: Compilar producción
-          command: npm run build
+          key: npm-v2-{{ checksum "package-lock.json" }}
+          paths: [~/.npm]
+      - run: { name: Validar Prisma, command: npx prisma validate }
+      - run: { name: Generar Prisma Client, command: npx prisma generate }
+      - run: { name: Ejecutar pruebas, command: npm test }
+      - run: { name: Smoke tests autenticados y RBAC, command: npm run test:auth }
+      - run: { name: Ejecutar ESLint, command: npm run lint }
+      - run: { name: Verificar TypeScript, command: npm run typecheck }
+      - run: { name: Compilar producción, command: npm run build }
+      - run: { name: Auditar dependencias de producción, command: npm audit --omit=dev --audit-level=high }
+      - run: { name: Verificar integridad del diff, command: git diff --check origin/master...HEAD }
 
 workflows:
-  validate-mvp:
-    jobs:
-      - validate
+  validate-real-mvp:
+    jobs: [validate]

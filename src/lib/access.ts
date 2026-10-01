@@ -1,6 +1,6 @@
 import type { EdukanaRole } from "@/types/next-auth";
 
-const PUBLIC_ROUTES = ["/login"] as const;
+const PUBLIC_ROUTES = ["/login", "/certificados"] as const;
 
 const DASHBOARD_ACCESS: ReadonlyArray<{
   prefix: string;
