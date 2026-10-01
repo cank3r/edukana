@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
+import Image from "next/image";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { z } from "zod";
@@ -15,6 +16,10 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
+  return <Suspense fallback={<div className="min-h-screen" style={{ background: "var(--cloud)" }} />}><LoginForm /></Suspense>;
+}
+
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
@@ -52,18 +57,14 @@ export default function LoginPage() {
         style={{ background: "var(--navy)" }}
       >
         <div>
-          {/* Logo */}
-          <div className="flex items-center gap-2">
-            <span
-              className="text-2xl font-bold tracking-tight"
-              style={{ color: "white", fontFamily: "var(--font-inter)" }}
-            >
-              edu<span style={{ color: "var(--cyan)" }}>kana</span>
-            </span>
-            <span className="text-xs" style={{ color: "#4B5B8A" }}>
-              by Cerkana
-            </span>
-          </div>
+          {/* Logo fondo oscuro */}
+          <Image
+            src="/logos/edukana_horizontal_color_fondo_oscuro.svg"
+            alt="Edukana"
+            width={180}
+            height={48}
+            priority
+          />
         </div>
 
         <div>
@@ -91,13 +92,14 @@ export default function LoginPage() {
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="w-full max-w-sm">
           {/* Logo móvil */}
-          <div className="lg:hidden mb-8 text-center">
-            <span
-              className="text-2xl font-bold tracking-tight"
-              style={{ color: "var(--navy)" }}
-            >
-              edu<span style={{ color: "var(--blue)" }}>kana</span>
-            </span>
+          <div className="lg:hidden mb-8 flex justify-center">
+            <Image
+              src="/logos/edukana_horizontal_color.svg"
+              alt="Edukana"
+              width={160}
+              height={42}
+              priority
+            />
           </div>
 
           <h1

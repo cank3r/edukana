@@ -1,40 +1,26 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
-  LayoutDashboard,
-  Users,
-  BookOpen,
-  Calendar,
-  Megaphone,
-  UserPlus,
-  CreditCard,
-  BarChart2,
-  Settings,
-  LogOut,
-  ChevronRight,
-  GraduationCap,
+  BarChart2, BookOpen, Calendar, ChevronRight, CreditCard, GraduationCap,
+  LayoutDashboard, LogOut, Megaphone, Settings, UserPlus, Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { EdukanaRole } from "@/types/next-auth";
 
 interface SidebarUser {
   name?: string | null;
   email?: string | null;
-  role: string;
+  role: EdukanaRole;
   institutionSlug: string;
 }
 
-interface NavItem {
-  label: string;
-  href: string;
-  icon: React.ElementType;
-  roles?: string[];
-}
-
-const NAV_ITEMS: NavItem[] = [
+const NAV_ITEMS: Array<{ label: string; href: string; icon: React.ElementType; roles?: EdukanaRole[] }> = [
   { label: "Inicio", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Mi portal", href: "/dashboard/portal", icon: GraduationCap, roles: ["STUDENT"] },
   { label: "Gestión", href: "/dashboard/gestion", icon: Users, roles: ["ADMIN", "COORDINATOR", "SUPER_ADMIN"] },
   { label: "Aula", href: "/dashboard/aula", icon: BookOpen },
   { label: "Comunidad", href: "/dashboard/comunidad", icon: Megaphone },
@@ -42,85 +28,44 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Pagos", href: "/dashboard/pagos", icon: CreditCard, roles: ["ADMIN", "SUPER_ADMIN"] },
   { label: "Calendario", href: "/dashboard/calendario", icon: Calendar },
   { label: "Analítica", href: "/dashboard/analitica", icon: BarChart2, roles: ["ADMIN", "COORDINATOR", "SUPER_ADMIN"] },
+  { label: "Configuración", href: "/dashboard/configuracion", icon: Settings, roles: ["ADMIN", "SUPER_ADMIN"] },
 ];
 
 export default function Sidebar({ user }: { user: SidebarUser }) {
   const pathname = usePathname();
-
-  const visibleItems = NAV_ITEMS.filter(
-    (item) => !item.roles || item.roles.includes(user.role)
-  );
+  const visibleItems = NAV_ITEMS.filter((item) => !item.roles || item.roles.includes(user.role));
 
   return (
-    <aside
-      className="w-60 flex flex-col h-full border-r"
-      style={{ background: "var(--navy)", borderColor: "rgba(255,255,255,0.06)" }}
-    >
-      {/* Logo */}
-      <div className="px-5 py-5 border-b" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <GraduationCap size={22} style={{ color: "var(--cyan)" }} />
-          <span className="text-lg font-bold tracking-tight" style={{ color: "white" }}>
-            edu<span style={{ color: "var(--cyan)" }}>kana</span>
-          </span>
+    <aside className="flex h-full w-16 shrink-0 flex-col border-r md:w-60" style={{ background: "var(--navy)", borderColor: "rgba(255,255,255,0.06)" }}>
+      <div className="flex h-[73px] items-center justify-center border-b px-3 md:justify-start md:px-5" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+        <Link href="/dashboard" aria-label="Ir al inicio de Edukana">
+          <Image className="hidden md:block" src="/logos/edukana_horizontal_color_fondo_oscuro.svg" alt="Edukana" width={140} height={38} priority />
+          <Image className="md:hidden" src="/logos/edukana_isotipo_color.svg" alt="Edukana" width={34} height={34} priority />
         </Link>
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+      <nav aria-label="Navegación principal" className="flex-1 space-y-0.5 overflow-y-auto px-2 py-4 md:px-3">
         {visibleItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+          const active = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
           return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all group",
-                isActive
-                  ? "text-white"
-                  : "text-gray-400 hover:text-white hover:bg-white/5"
-              )}
-              style={isActive ? { background: "var(--blue)", color: "white" } : {}}
-            >
-              <Icon size={17} />
-              <span className="flex-1">{item.label}</span>
-              {isActive && <ChevronRight size={14} className="opacity-60" />}
+            <Link key={item.href} href={item.href} title={item.label} aria-current={active ? "page" : undefined}
+              className={cn("group flex items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all md:justify-start", active ? "text-white" : "text-gray-400 hover:bg-white/5 hover:text-white")}
+              style={active ? { background: "var(--blue)", color: "white" } : {}}>
+              <Icon size={18} aria-hidden="true" /><span className="hidden flex-1 md:block">{item.label}</span>{active && <ChevronRight size={14} className="hidden opacity-60 md:block" />}
             </Link>
           );
         })}
       </nav>
 
-      {/* Bottom: user + settings */}
-      <div className="px-3 pb-4 border-t pt-3 space-y-0.5" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-        <Link
-          href="/dashboard/configuracion"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all"
-        >
-          <Settings size={17} />
-          <span>Configuración</span>
-        </Link>
-
-        <button
-          onClick={() => signOut({ callbackUrl: "/login" })}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all"
-        >
-          <LogOut size={17} />
-          <span>Cerrar sesión</span>
+      <div className="space-y-2 border-t px-2 pb-4 pt-3 md:px-3" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+        <button onClick={() => signOut({ callbackUrl: "/login" })} title="Cerrar sesión" aria-label="Cerrar sesión"
+          className="flex w-full items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-400 transition-all hover:bg-white/5 hover:text-white md:justify-start">
+          <LogOut size={18} /><span className="hidden md:block">Cerrar sesión</span>
         </button>
-
-        {/* User chip */}
-        <div className="mt-3 flex items-center gap-3 px-3 py-2.5 rounded-lg" style={{ background: "rgba(255,255,255,0.04)" }}>
-          <div
-            className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-            style={{ background: "var(--blue)", color: "white" }}
-          >
-            {user.name?.charAt(0).toUpperCase() ?? "U"}
-          </div>
-          <div className="overflow-hidden">
-            <p className="text-sm font-medium text-white truncate">{user.name}</p>
-            <p className="text-xs truncate" style={{ color: "#6B7DA8" }}>{user.email}</p>
-          </div>
+        <div className="hidden items-center gap-3 rounded-lg px-3 py-2.5 md:flex" style={{ background: "rgba(255,255,255,0.04)" }}>
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ background: "var(--blue)" }}>{user.name?.charAt(0).toUpperCase() ?? "U"}</div>
+          <div className="min-w-0"><p className="truncate text-sm font-medium text-white">{user.name}</p><p className="truncate text-xs" style={{ color: "#6B7DA8" }}>{user.email}</p></div>
         </div>
       </div>
     </aside>
