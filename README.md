@@ -53,7 +53,7 @@ Completa `C:\Users\crami\workspace\edukana\.env.local` sin confirmarlo en Git. E
 
 ## Storage privado
 
-1. Crea un bucket privado llamado `edukana` en Supabase Storage.
+1. Ejecuta `npx prisma migrate deploy`: en Supabase, la migración crea o endurece automáticamente el bucket privado `edukana` con los MIME y límites del MVP.
 2. Configura `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` y `SUPABASE_STORAGE_BUCKET` solo en el servidor.
 3. No hagas público el bucket. `POST /api/assets` valida sesión, tenant, relación con curso/entrega, MIME y tamaño.
 4. `GET /api/assets/:id` autoriza de nuevo y redirige a una URL firmada por 5 minutos.

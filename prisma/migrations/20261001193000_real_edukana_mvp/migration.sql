@@ -567,3 +567,34 @@ ALTER TABLE "certificates" ADD CONSTRAINT "certificates_enrollmentId_fkey" FOREI
 
 -- AddForeignKey
 ALTER TABLE "certificates" ADD CONSTRAINT "certificates_issuedById_fkey" FOREIGN KEY ("issuedById") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- ProvisionSupabaseStorage
+-- Creates or hardens the private bucket when the database exposes Supabase's storage schema.
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.tables
+        WHERE table_schema = 'storage' AND table_name = 'buckets'
+    ) THEN
+        INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+        VALUES (
+            'edukana',
+            'edukana',
+            false,
+            104857600,
+            ARRAY[
+                'application/pdf',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                'text/plain',
+                'video/mp4',
+                'video/webm'
+            ]::text[]
+        )
+        ON CONFLICT (id) DO UPDATE SET
+            public = false,
+            file_size_limit = EXCLUDED.file_size_limit,
+            allowed_mime_types = EXCLUDED.allowed_mime_types;
+    END IF;
+END $$;
