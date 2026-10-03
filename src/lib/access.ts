@@ -13,6 +13,7 @@ const DASHBOARD_ACCESS: ReadonlyArray<{
   { prefix: "/dashboard/pagos", capability: "finance.manage" },
   { prefix: "/dashboard/analitica", capability: "analytics.view" },
   { prefix: "/dashboard/configuracion", capability: "tenant.settings.manage" },
+  { prefix: "/dashboard/calendario", capability: "schedule.view" },
   { prefix: "/dashboard/aula", capability: "course.view" },
 ];
 

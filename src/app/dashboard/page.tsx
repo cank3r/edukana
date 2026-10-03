@@ -58,7 +58,7 @@ export default async function DashboardPage() {
       },
     });
     attention = announcements > 0 ? [{ href: "/dashboard/comunidad", title: "Leer avisos", detail: `${announcements} avisos publicados`, icon: <Megaphone size={18} /> }] : [];
-    continueItems = [{ href: "/dashboard/calendario", title: "Consultar calendario", detail: "Fechas de la institución", icon: <CalendarCheck size={18} /> }];
+    continueItems = [{ href: "/dashboard/comunidad", title: "Consultar avisos", detail: "Comunicaciones dirigidas a tutores", icon: <Megaphone size={18} /> }];
     summary = [{ label: "Avisos", value: announcements, href: "/dashboard/comunidad" }];
   }
 
