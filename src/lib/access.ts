@@ -26,3 +26,7 @@ export function canAccessDashboardPath(pathname: string, role: EdukanaRole) {
   const rule = DASHBOARD_ACCESS.find(({ prefix }) => matchesPrefix(pathname, prefix));
   return !rule || rule.roles.includes(role);
 }
+
+export function canModifyCourseEnrollment(status: string | null | undefined) {
+  return status === "ACTIVE";
+}

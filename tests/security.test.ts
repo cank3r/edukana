@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { canAccessDashboardPath, isPublicPath } from "../src/lib/access";
+import { canAccessDashboardPath, canModifyCourseEnrollment, isPublicPath } from "../src/lib/access";
 import { loginSchema } from "../src/lib/validation";
 
 test("normaliza un login válido", () => {
@@ -40,7 +40,12 @@ test("reserva el portal personal para estudiantes", () => {
   assert.equal(canAccessDashboardPath("/dashboard/aula", "TEACHER"), true);
 });
 
-
+test("permite escribir solo en matrículas activas", () => {
+  assert.equal(canModifyCourseEnrollment("ACTIVE"), true);
+  assert.equal(canModifyCourseEnrollment("COMPLETED"), false);
+  assert.equal(canModifyCourseEnrollment("WITHDRAWN"), false);
+  assert.equal(canModifyCourseEnrollment(null), false);
+});
 
 test("usa cargas directas firmadas y restringe quién puede prepararlas", () => {
   const route = readFileSync(join(process.cwd(), "src", "app", "api", "assets", "route.ts"), "utf8");
