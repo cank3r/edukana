@@ -20,7 +20,7 @@ function Feedback({ state }: { state: ActionState }) {
 }
 
 function Submit({ pending, children }: { pending: boolean; children: React.ReactNode }) {
-  return <button className={button} disabled={pending} type="submit">{pending ? "Guardando…" : children}</button>;
+  return <button className={button} disabled={pending} type="submit">{pending ? "Procesando…" : children}</button>;
 }
 
 export function CourseModuleForm({ courseId }: { courseId: string }) {
@@ -32,7 +32,7 @@ export function CourseModuleForm({ courseId }: { courseId: string }) {
       <div><label className="mb-1 block text-sm font-medium" htmlFor="module-description">Descripción</label><input className={input} id="module-description" name="description" maxLength={500} /></div>
       <div><label className="mb-1 block text-sm font-medium" htmlFor="module-content">Contenido</label><textarea className={input} id="module-content" name="content" required minLength={10} maxLength={20000} rows={5} /></div>
       <label className="flex items-center gap-2 text-sm"><input name="isPublished" type="checkbox" defaultChecked /> Publicar inmediatamente</label>
-      <Feedback state={state} /><Submit pending={pending}>Guardar contenido</Submit>
+      <Feedback state={state} /><Submit pending={pending}>Crear contenido</Submit>
     </form>
   );
 }
@@ -94,7 +94,7 @@ export function InstitutionForm({ institution }: { institution: { name: string; 
       <div><label className="mb-1 block text-sm font-medium" htmlFor="institution-domain">Dominio</label><input className={input} defaultValue={institution.domain ?? ""} id="institution-domain" name="domain" maxLength={160} placeholder="institucion.edu" /></div>
       <div><label className="mb-1 block text-sm font-medium" htmlFor="institution-timezone">Zona horaria</label><input className={input} defaultValue={institution.timezone} id="institution-timezone" name="timezone" required maxLength={80} /></div>
       <div><label className="mb-1 block text-sm font-medium" htmlFor="institution-language">Idioma</label><select className={input} defaultValue={institution.language} id="institution-language" name="language"><option value="es">Español</option><option value="en">Inglés</option></select></div>
-      <div className="space-y-3 sm:col-span-2"><Feedback state={state} /><Submit pending={pending}>Guardar configuración</Submit></div>
+      <div className="space-y-3 sm:col-span-2"><Feedback state={state} /><Submit pending={pending}>Actualizar institución</Submit></div>
     </form>
   );
 }
