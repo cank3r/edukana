@@ -1,0 +1,12 @@
+# 13 · Marketplace — Tareas
+- [ ] 1. Sitio público del espacio y constructor de inicio. _Req 1_
+- [ ] 2. Catálogo y página de curso con SEO. _Req 1_
+- [ ] 3. Flujo de publicación y revisión. _Req 2_
+- [ ] 4. Pedidos, checkout y cumplimiento. _Req 3_
+- [ ] 5. Cupones. _Req 4_
+- [ ] 6. Reseñas y moderación. _Req 5_
+- [ ] 7. Reembolsos. _Req 6_
+- [ ] 8. Ganancias, liquidaciones y panel del instructor. _Req 7_
+- [ ] 9. Experiencia del alumno y preguntas por lección. _Req 8_
+- [ ] 10. Comisión de plataforma. _Req 9_
+- [ ] 11. Pruebas. _Todos_

@@ -1,0 +1,13 @@
+# 00 · Fundaciones — Tareas
+- [ ] 1. Infraestructura de pruebas de integración con Postgres y semilla multi-espacio. _Req 6.3_
+- [ ] 2. Catálogo de permisos y plantillas de roles tipados. _Req 2_
+- [ ] 3. `getRequestContext` y `can()` con resolutores de relación y motivos. _Req 2_
+- [ ] 4. `definePage` / `defineAction` + reglas ESLint; migrar todas las páginas y acciones existentes. _Req 1, 2_
+- [ ] 5. DAL: mover todas las consultas Prisma de páginas y acciones a `src/server/data`. _Req 3_
+- [ ] 6. Dividir la página de curso en rutas por pestaña con vistas por rol. _Req 3_
+- [ ] 7. Quitar pagos de la ficha del estudiante salvo `finance.view.all`. _Req 3.2_
+- [ ] 8. Separar progreso de estado; script de reparación de matrículas. _Req 4_
+- [ ] 9. Correcciones puntuales 5.1 a 5.7. _Req 5_
+- [ ] 10. Auditoría y registro de errores en todas las acciones. _Req 6.1, 6.2_
+- [ ] 11. Reemplazar pruebas basadas en lectura de fuente; matriz de autorización y guardas de ruta en CI. _Req 6.3_
+- [ ] 12. E2E por rol: URL directa y manipulación de ID. _Req 1, 3_

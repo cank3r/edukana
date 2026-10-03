@@ -1,0 +1,13 @@
+# 12 · Finanzas — Tareas
+- [ ] 1. Modelos y migración desde `PaymentConcept`. _Req 1, 2_
+- [ ] 2. Planes de pago, asignación y generación de cargos. _Req 1_
+- [ ] 3. Descuentos y becas. _Req 1.3_
+- [ ] 4. Registro de pagos, asignación, recibo PDF, anulación. _Req 2_
+- [ ] 5. Cierre de caja. _Req 2.4_
+- [ ] 6. `PaymentGateway` + Azul + CardNET + configuración por espacio con prueba de conexión. _Req 3_
+- [ ] 7. Pago desde estado de cuenta (estudiante y tutor). _Req 3.4, 4.1_
+- [ ] 8. Conciliación. _Req 3.5_
+- [ ] 9. Job de vencimientos, recargos y recordatorios; restricciones por deuda. _Req 1.4, 4_
+- [ ] 10. Reportes por moneda. _Req 5_
+- [ ] 11. `FiscalProvider` manual. _Req 2.2_
+- [ ] 12. Pruebas. _Todos_

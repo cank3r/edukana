@@ -1,0 +1,11 @@
+# 02 · Identidad y acceso — Tareas
+- [ ] 1. Migración a `User` global + `Membership` con fusión de duplicados. _Req 1_
+- [ ] 2. Sesión con `sessionVersion` y carga de permisos por petición. _Req 5_
+- [ ] 3. Selector de rol y de espacio. _Req 1.3, 1.4_
+- [ ] 4. Invitaciones: enviar, aceptar, reenviar, revocar; acceso con usuario temporal. _Req 2_
+- [ ] 5. Login con marca, Google/Microsoft, límite de intentos. _Req 3_
+- [ ] 6. 2FA TOTP con códigos de recuperación. _Req 3.4_
+- [ ] 7. Recuperación y cambio de contraseña con invalidación de sesiones. _Req 4_
+- [ ] 8. Registro público condicionado al catálogo + verificación de correo. _Req 6_
+- [ ] 9. Pantallas de Mi cuenta. _Req 7_
+- [ ] 10. Pruebas de integración y E2E de acceso. _Todos_
