@@ -7,8 +7,10 @@ import { breadcrumbLabel, COURSE_MORE_AREAS, COURSE_TABS, navigationForRole, spa
 test("muestra módulos claros y propios de cada rol", () => {
   assert.deepEqual(navigationForRole("STUDENT").map((item) => item.label), ["Inicio", "Mi aprendizaje", "Cursos", "Avisos", "Calendario"]);
   assert.equal(navigationForRole("TEACHER").some((item) => item.href === "/dashboard/gestion"), false);
+  assert.equal(navigationForRole("PARENT").some((item) => item.href === "/dashboard/aula"), false);
   assert.ok(navigationForRole("ADMIN").some((item) => item.label === "Cobros"));
   assert.equal(navigationForRole("COORDINATOR").some((item) => item.href === "/dashboard/pagos"), false);
+  assert.equal(navigationForRole("COORDINATOR").some((item) => item.href === "/dashboard/analitica"), false);
 });
 
 test("localiza estados visibles y conserva un fallback legible", () => {
@@ -48,7 +50,7 @@ test("la navegación móvil muestra destinos con etiquetas legibles", () => {
 test("el selector móvil del curso expone las ocho áreas sin desplazamiento horizontal", () => {
   const tabs = readFileSync(join(process.cwd(), "src", "components", "dashboard", "CourseTabs.tsx"), "utf8");
   assert.match(tabs, /htmlFor="course-section-selector"/);
-  assert.match(tabs, /COURSE_TABS\.map/);
+  assert.match(tabs, /visibleTabs\.map/);
   assert.match(tabs, /COURSE_MORE_AREAS\.map/);
   assert.match(tabs, /md:hidden/);
 });

@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth";
+import { hasCapability } from "@/lib/capabilities";
 import { db } from "@/lib/db";
 import { createPrivateAssetUpload } from "@/lib/storage";
 import { validateUpload } from "@/lib/lms";
@@ -6,7 +7,6 @@ import { z } from "zod";
 
 export const runtime = "nodejs";
 
-const staffRoles = new Set(["SUPER_ADMIN", "ADMIN", "COORDINATOR", "TEACHER"]);
 const requestSchema = z.object({
   name: z.string().min(1).max(255),
   type: z.string().min(1).max(160),
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   const session = await auth();
   const user = session?.user;
   if (!user?.id || !user.institutionId) return Response.json({ error: "No autorizado" }, { status: 401 });
-  if (!staffRoles.has(user.role) && user.role !== "STUDENT") return Response.json({ error: "Permisos insuficientes" }, { status: 403 });
+  if (!hasCapability(user.role, "course.manage") && !hasCapability(user.role, "course.participate")) return Response.json({ error: "Permisos insuficientes" }, { status: 403 });
 
   const parsed = requestSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "Solicitud de carga inválida" }, { status: 400 });
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
       where: {
         id: input.submissionId,
         ...(isStudent ? { studentId: user.id } : {}),
-        assignment: { course: { institutionId: user.institutionId, ...(user.role === "TEACHER" ? { teacherId: user.id } : {}) } },
+        assignment: { course: { institutionId: user.institutionId, ...(user.role === "TEACHER" ? { teacherId: user.id } : {}), ...(isStudent ? { enrollments: { some: { studentId: user.id, status: "ACTIVE" } } } : {}) } },
       },
       select: { assignmentId: true, assignment: { select: { courseId: true } } },
     });

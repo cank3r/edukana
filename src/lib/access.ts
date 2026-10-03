@@ -1,17 +1,19 @@
+import { hasCapability, type Capability } from "@/lib/capabilities";
 import type { EdukanaRole } from "@/types/next-auth";
 
 const PUBLIC_ROUTES = ["/login", "/certificados"] as const;
 
 const DASHBOARD_ACCESS: ReadonlyArray<{
   prefix: string;
-  roles: readonly EdukanaRole[];
+  capability: Capability;
 }> = [
-  { prefix: "/dashboard/portal", roles: ["STUDENT"] },
-  { prefix: "/dashboard/gestion", roles: ["SUPER_ADMIN", "ADMIN", "COORDINATOR"] },
-  { prefix: "/dashboard/admisiones", roles: ["SUPER_ADMIN", "ADMIN", "COORDINATOR"] },
-  { prefix: "/dashboard/pagos", roles: ["SUPER_ADMIN", "ADMIN"] },
-  { prefix: "/dashboard/analitica", roles: ["SUPER_ADMIN", "ADMIN", "COORDINATOR"] },
-  { prefix: "/dashboard/configuracion", roles: ["SUPER_ADMIN", "ADMIN"] },
+  { prefix: "/dashboard/portal", capability: "student.portal.view" },
+  { prefix: "/dashboard/gestion", capability: "people.view" },
+  { prefix: "/dashboard/admisiones", capability: "admissions.manage" },
+  { prefix: "/dashboard/pagos", capability: "finance.manage" },
+  { prefix: "/dashboard/analitica", capability: "analytics.view" },
+  { prefix: "/dashboard/configuracion", capability: "tenant.settings.manage" },
+  { prefix: "/dashboard/aula", capability: "course.view" },
 ];
 
 function matchesPrefix(pathname: string, prefix: string) {
@@ -24,5 +26,5 @@ export function isPublicPath(pathname: string) {
 
 export function canAccessDashboardPath(pathname: string, role: EdukanaRole) {
   const rule = DASHBOARD_ACCESS.find(({ prefix }) => matchesPrefix(pathname, prefix));
-  return !rule || rule.roles.includes(role);
+  return !rule || hasCapability(role, rule.capability);
 }
