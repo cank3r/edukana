@@ -17,7 +17,7 @@ const common = {
 export function navigationForRole(role: EdukanaRole): NavigationItem[] {
   if (role === "STUDENT") return [common.home, { label: "Mi aprendizaje", href: "/dashboard/portal", icon: "portal" }, common.courses, common.community, common.calendar];
   if (role === "TEACHER") return [common.home, { ...common.courses, label: "Mis cursos" }, common.community, common.calendar];
-  if (role === "PARENT") return [common.home, common.community, common.calendar];
+  if (role === "PARENT") return [common.home, common.community];
 
   return [
     common.home,
@@ -26,7 +26,7 @@ export function navigationForRole(role: EdukanaRole): NavigationItem[] {
     common.community,
     ...(hasCapability(role, "admissions.manage") ? [{ label: "Admisiones", href: "/dashboard/admisiones", icon: "admissions" } as NavigationItem] : []),
     ...(hasCapability(role, "finance.manage") ? [{ label: "Cobros", href: "/dashboard/pagos", icon: "payments" } as NavigationItem] : []),
-    common.calendar,
+    ...(hasCapability(role, "schedule.view") ? [common.calendar] : []),
     ...(hasCapability(role, "analytics.view") ? [{ label: "Reportes", href: "/dashboard/analitica", icon: "analytics" } as NavigationItem] : []),
     ...(hasCapability(role, "tenant.settings.manage") ? [{ label: "Configuración", href: "/dashboard/configuracion", icon: "settings" } as NavigationItem] : []),
   ];

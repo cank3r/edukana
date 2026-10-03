@@ -35,6 +35,8 @@ test("aplica capacidades coherentes a rutas administrativas y académicas", () =
   assert.equal(canAccessDashboardPath("/dashboard/configuracion", "TEACHER"), false);
   assert.equal(canAccessDashboardPath("/dashboard/aula/curso-1", "STUDENT"), true);
   assert.equal(canAccessDashboardPath("/dashboard/aula/curso-1", "PARENT"), false);
+  assert.equal(canAccessDashboardPath("/dashboard/calendario", "STUDENT"), true);
+  assert.equal(canAccessDashboardPath("/dashboard/calendario", "PARENT"), false);
 });
 
 test("reserva el portal personal para estudiantes", () => {
@@ -81,8 +83,10 @@ test("aísla finanzas y horarios en todas las capas visibles", () => {
   assert.match(analytics, /hasCapability\(user\.role, "analytics\.view"\)/);
   assert.match(studentDetail, /canViewFinance = hasCapability\(user\.role, "finance\.manage"\)/);
   assert.match(studentDetail, /\{canViewFinance && <section>/);
-  assert.match(calendar, /!hasCapability\(user\.role, "schedule\.view"\)/);
+  assert.match(calendar, /if \(!hasCapability\(user\.role, "schedule\.view"\)\) notFound\(\)/);
   assert.match(dashboard, /OR: \[\{ audience: "ALL" \}, \{ audience: "ROLE", audienceId: user\.role \}\]/);
+  assert.doesNotMatch(dashboard, /title: "Consultar calendario"/);
+  assert.match(dashboard, /Comunicaciones dirigidas a tutores/);
 });
 
 
