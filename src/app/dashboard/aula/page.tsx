@@ -14,7 +14,7 @@ export default async function AulaPage() {
   if (user.role === "TEACHER") {
     courses = await db.course.findMany({ where: { institutionId: user.institutionId, teacherId: user.id }, include, orderBy: { createdAt: "desc" } });
   } else if (user.role === "STUDENT") {
-    const enrollments = await db.enrollment.findMany({ where: { studentId: user.id, status: "ACTIVE", course: { institutionId: user.institutionId } }, include: { course: { include } }, orderBy: { enrolledAt: "desc" } });
+    const enrollments = await db.enrollment.findMany({ where: { studentId: user.id, status: { in: ["ACTIVE", "COMPLETED"] }, course: { institutionId: user.institutionId } }, include: { course: { include } }, orderBy: { enrolledAt: "desc" } });
     courses = enrollments.map((enrollment) => enrollment.course);
   } else {
     courses = await db.course.findMany({ where: { institutionId: user.institutionId }, include, orderBy: { createdAt: "desc" }, take: 100 });
