@@ -1,0 +1,12 @@
+# 07 · Tareas y exámenes — Tareas
+- [ ] 1. Migrar `Submission` a intentos y `Assignment` a oferta. _Req 1_
+- [ ] 2. Formulario de tarea con valores por defecto del espacio. _Req 1.1_
+- [ ] 3. Entrega del estudiante con archivos e historial. _Req 1.2, 1.3, 5_
+- [ ] 4. Biblioteca de rúbricas. _Req 2_
+- [ ] 5. Calificador de tres paneles. _Req 1.4_
+- [ ] 6. Banco de preguntas con tipos nuevos, etiquetas e importación. _Req 3_
+- [ ] 7. Compositor de examen. _Req 4.1, 4.2_
+- [ ] 8. Motor de intentos: iniciar, autoguardar, enviar, cierre automático. _Req 4.3–4.7_
+- [ ] 9. Revisión manual y política de nota transaccional. _Req 1.5, 4.7_
+- [ ] 10. Adecuaciones y excusas. _Req 1.6, 4.8_
+- [ ] 11. Pruebas. _Todos_

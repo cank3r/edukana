@@ -1,0 +1,12 @@
+# 05 · Estructura y matrícula — Tareas
+- [ ] 1. Migración curso/oferta, año/período, personal de oferta. _Req 2_
+- [ ] 2. Modelos y CRUD de estructura por tipo + asistente inicial. _Req 1_
+- [ ] 3. Plan de estudios, créditos y prerrequisitos. _Req 1.2_
+- [ ] 4. CRUD de cursos y ofertas; generación en bloque; duplicar. _Req 2_
+- [ ] 5. Horario con detección de choques y vistas por rol. _Req 3_
+- [ ] 6. Función única `enroll` con reglas por tipo y lista de espera. _Req 4_
+- [ ] 7. Pantallas de matrícula del personal (individual, grupo, importación, código). _Req 4_
+- [ ] 8. Autoinscripción universitaria con aprobación de asesor. _Req 4.3_
+- [ ] 9. Reglas de finalización y job. _Req 5_
+- [ ] 10. Cierre de año y promoción. _Req 1.6_
+- [ ] 11. Pruebas. _Todos_
