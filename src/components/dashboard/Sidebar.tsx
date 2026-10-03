@@ -6,9 +6,10 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
   BarChart2, BookOpen, Calendar, ChevronRight, CreditCard, GraduationCap,
-  LayoutDashboard, LogOut, Megaphone, Settings, UserPlus, Users,
+  LayoutDashboard, LogOut, Megaphone, Menu, Settings, UserPlus, Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { navigationForRole } from "@/lib/ux";
 import type { EdukanaRole } from "@/types/next-auth";
 
 interface SidebarUser {
@@ -18,27 +19,51 @@ interface SidebarUser {
   institutionSlug: string;
 }
 
-const NAV_ITEMS: Array<{ label: string; href: string; icon: React.ElementType; roles?: EdukanaRole[] }> = [
-  { label: "Inicio", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Mi portal", href: "/dashboard/portal", icon: GraduationCap, roles: ["STUDENT"] },
-  { label: "Gestión", href: "/dashboard/gestion", icon: Users, roles: ["ADMIN", "COORDINATOR", "SUPER_ADMIN"] },
-  { label: "Aula", href: "/dashboard/aula", icon: BookOpen },
-  { label: "Comunidad", href: "/dashboard/comunidad", icon: Megaphone },
-  { label: "Admisiones", href: "/dashboard/admisiones", icon: UserPlus, roles: ["ADMIN", "COORDINATOR", "SUPER_ADMIN"] },
-  { label: "Pagos", href: "/dashboard/pagos", icon: CreditCard, roles: ["ADMIN", "SUPER_ADMIN"] },
-  { label: "Calendario", href: "/dashboard/calendario", icon: Calendar },
-  { label: "Analítica", href: "/dashboard/analitica", icon: BarChart2, roles: ["ADMIN", "COORDINATOR", "SUPER_ADMIN"] },
-  { label: "Configuración", href: "/dashboard/configuracion", icon: Settings, roles: ["ADMIN", "SUPER_ADMIN"] },
-];
+const ICONS = {
+  home: LayoutDashboard,
+  portal: GraduationCap,
+  people: Users,
+  courses: BookOpen,
+  community: Megaphone,
+  admissions: UserPlus,
+  payments: CreditCard,
+  calendar: Calendar,
+  analytics: BarChart2,
+  settings: Settings,
+};
 
 export default function Sidebar({ user }: { user: SidebarUser }) {
   const pathname = usePathname();
-  const visibleItems = NAV_ITEMS.filter((item) => !item.roles || item.roles.includes(user.role));
+  const visibleItems = navigationForRole(user.role);
 
   return (
-    <aside className="flex h-full w-16 shrink-0 flex-col border-r md:w-60" style={{ background: "var(--navy)", borderColor: "rgba(255,255,255,0.06)" }}>
-      <div className="flex h-[73px] items-center justify-center border-b px-3 md:justify-start md:px-5" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+    <>
+      <header className="relative z-40 flex h-16 w-full shrink-0 items-center justify-between border-b px-4 md:hidden" style={{ background: "var(--navy)", borderColor: "rgba(255,255,255,0.08)" }}>
         <Link href="/dashboard" aria-label="Ir al inicio de Edukana">
+          <Image src="/logos/edukana_horizontal_color_fondo_oscuro.svg" alt="Edukana" width={128} height={34} priority />
+        </Link>
+        <details className="group">
+          <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-lg border border-white/20 px-3 py-2 text-sm font-semibold text-white hover:bg-white/10">
+            <Menu size={20} aria-hidden="true" /> Menú
+          </summary>
+          <div className="absolute right-2 top-[calc(100%-0.25rem)] w-[min(22rem,calc(100vw-1rem))] rounded-xl border border-slate-200 bg-white p-2 shadow-xl">
+            <nav aria-label="Navegación móvil" className="space-y-1">
+              {visibleItems.map((item) => {
+                const Icon = ICONS[item.icon];
+                const active = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+                return <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} onClick={(event) => event.currentTarget.closest("details")?.removeAttribute("open")} className={cn("flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-base font-semibold", active ? "bg-blue-600 text-white" : "text-slate-800 hover:bg-slate-100")}><Icon size={20} aria-hidden="true" /><span>{item.label}</span></Link>;
+              })}
+            </nav>
+            <button onClick={() => signOut({ callbackUrl: "/login" })} className="mt-2 flex min-h-11 w-full items-center gap-3 rounded-lg border-t border-slate-200 px-3 py-2 text-base font-semibold text-slate-700 hover:bg-slate-100">
+              <LogOut size={20} aria-hidden="true" /> Cerrar sesión
+            </button>
+          </div>
+        </details>
+      </header>
+
+      <aside className="hidden h-full w-60 shrink-0 flex-col border-r md:flex" style={{ background: "var(--navy)", borderColor: "rgba(255,255,255,0.06)" }}>
+      <div className="flex h-[73px] items-center justify-center border-b px-3 md:justify-start md:px-5" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+        <Link href="/dashboard" aria-label="Ir al inicio de Edukana" title="Ir al inicio">
           <Image className="hidden md:block" src="/logos/edukana_horizontal_color_fondo_oscuro.svg" alt="Edukana" width={140} height={38} priority />
           <Image className="md:hidden" src="/logos/edukana_isotipo_color.svg" alt="Edukana" width={34} height={34} priority />
         </Link>
@@ -46,7 +71,7 @@ export default function Sidebar({ user }: { user: SidebarUser }) {
 
       <nav aria-label="Navegación principal" className="flex-1 space-y-0.5 overflow-y-auto px-2 py-4 md:px-3">
         {visibleItems.map((item) => {
-          const Icon = item.icon;
+          const Icon = ICONS[item.icon];
           const active = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
           return (
             <Link key={item.href} href={item.href} title={item.label} aria-current={active ? "page" : undefined}
@@ -68,6 +93,7 @@ export default function Sidebar({ user }: { user: SidebarUser }) {
           <div className="min-w-0"><p className="truncate text-sm font-medium text-white">{user.name}</p><p className="truncate text-xs" style={{ color: "#6B7DA8" }}>{user.email}</p></div>
         </div>
       </div>
-    </aside>
+      </aside>
+    </>
   );
 }

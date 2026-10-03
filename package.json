@@ -11,7 +11,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test tests/security.test.ts tests/lms.test.ts tests/schema.test.ts",
+    "test": "tsx --test tests/security.test.ts tests/lms.test.ts tests/schema.test.ts tests/ux.test.ts",
     "test:auth": "tsx --test tests/security.test.ts",
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate dev",
