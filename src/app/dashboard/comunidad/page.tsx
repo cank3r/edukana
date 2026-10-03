@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
+import { hasCapability } from "@/lib/capabilities";
 import { db } from "@/lib/db";
 import { AnnouncementForm } from "@/components/dashboard/MutationForms";
 import { Calendar, Megaphone, Pin } from "lucide-react";
@@ -9,7 +10,7 @@ type AnnouncementWithAuthor = Prisma.AnnouncementGetPayload<{ include: { author:
 export default async function ComunidadPage() {
   const session = await auth();
   const user = session!.user;
-  const canPublish = ["ADMIN", "COORDINATOR", "SUPER_ADMIN"].includes(user.role);
+  const canPublish = hasCapability(user.role, "announcement.publish");
   const courseIds = user.role === "STUDENT"
     ? (await db.enrollment.findMany({ where: { studentId: user.id, status: "ACTIVE", course: { institutionId: user.institutionId } }, select: { courseId: true } })).map((item) => item.courseId)
     : [];

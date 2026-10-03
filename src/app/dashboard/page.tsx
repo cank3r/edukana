@@ -51,7 +51,12 @@ export default async function DashboardPage() {
     continueItems = [{ href: "/dashboard/portal", title: "Continuar aprendiendo", detail: `${courses} cursos activos`, icon: <BookOpen size={18} /> }, { href: "/dashboard/calendario", title: "Ver próximas fechas", detail: "Calendario académico", icon: <CalendarCheck size={18} /> }];
     summary = [{ label: "Cursos activos", value: courses, href: "/dashboard/portal" }, { label: "Tareas pendientes", value: pendingTasks, href: "/dashboard/portal" }, { label: "Pagos pendientes", value: pendingPayments, href: "/dashboard/portal" }];
   } else {
-    const announcements = await db.announcement.count({ where: { institutionId: iid } });
+    const announcements = await db.announcement.count({
+      where: {
+        institutionId: iid,
+        OR: [{ audience: "ALL" }, { audience: "ROLE", audienceId: user.role }],
+      },
+    });
     attention = announcements > 0 ? [{ href: "/dashboard/comunidad", title: "Leer avisos", detail: `${announcements} avisos publicados`, icon: <Megaphone size={18} /> }] : [];
     continueItems = [{ href: "/dashboard/calendario", title: "Consultar calendario", detail: "Fechas de la institución", icon: <CalendarCheck size={18} /> }];
     summary = [{ label: "Avisos", value: announcements, href: "/dashboard/comunidad" }];

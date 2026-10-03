@@ -1,24 +1,25 @@
 "use server";
 
 import { auth } from "@/lib/auth";
+import { hasCapability, type Capability } from "@/lib/capabilities";
 import { db } from "@/lib/db";
 import { autoScoreAnswer, createCertificateIdentity, findScheduleConflicts, progressPercentage, reviewedExamScore } from "@/lib/lms";
+import type { EdukanaRole } from "@/types/next-auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { ActionState } from "@/app/dashboard/actions";
 
-type SessionUser = { id: string; institutionId: string; role: string };
-const staffRoles = ["SUPER_ADMIN", "ADMIN", "COORDINATOR", "TEACHER"];
+type SessionUser = { id: string; institutionId: string; role: EdukanaRole };
 const failed = (message = "No se pudo completar la operación."): ActionState => ({ ok: false, message });
 const success = (message: string): ActionState => ({ ok: true, message });
 const text = (fd: FormData, key: string) => String(fd.get(key) ?? "").trim();
 const optionalDate = (value: string) => value ? new Date(value) : null;
 
-async function requireUser(roles?: string[]): Promise<SessionUser> {
+async function requireUser(capability?: Capability): Promise<SessionUser> {
   const session = await auth();
   const user = session?.user as SessionUser | undefined;
   if (!user?.id || !user.institutionId) throw new Error("No autorizado");
-  if (roles && !roles.includes(user.role)) throw new Error("Permisos insuficientes");
+  if (capability && !hasCapability(user.role, capability)) throw new Error("Permisos insuficientes");
   return user;
 }
 
@@ -31,7 +32,7 @@ async function manageableCourse(user: SessionUser, courseId: string) {
 
 export async function createSection(_state: ActionState, fd: FormData): Promise<ActionState> {
   try {
-    const user = await requireUser(staffRoles);
+    const user = await requireUser("course.manage");
     const parsed = z.object({ courseId: z.string().min(1), title: z.string().min(3).max(120), description: z.string().max(500).optional() }).safeParse({ courseId: text(fd, "courseId"), title: text(fd, "title"), description: text(fd, "description") });
     if (!parsed.success) return failed(parsed.error.issues[0]?.message);
     const course = await manageableCourse(user, parsed.data.courseId);
@@ -45,7 +46,7 @@ export async function createSection(_state: ActionState, fd: FormData): Promise<
 
 export async function createLesson(_state: ActionState, fd: FormData): Promise<ActionState> {
   try {
-    const user = await requireUser(staffRoles);
+    const user = await requireUser("course.manage");
     const parsed = z.object({ sectionId: z.string().min(1), title: z.string().min(3).max(140), summary: z.string().max(500).optional(), content: z.string().max(50000).optional(), type: z.enum(["TEXT", "VIDEO", "DOCUMENT", "ACTIVITY"]), estimatedMinutes: z.coerce.number().int().min(1).max(600) }).safeParse({ sectionId: text(fd, "sectionId"), title: text(fd, "title"), summary: text(fd, "summary"), content: text(fd, "content"), type: text(fd, "type"), estimatedMinutes: text(fd, "estimatedMinutes") || "10" });
     if (!parsed.success) return failed(parsed.error.issues[0]?.message);
     const section = await db.courseSection.findFirst({ where: { id: parsed.data.sectionId, institutionId: user.institutionId, ...(user.role === "TEACHER" ? { course: { teacherId: user.id } } : {}) }, select: { id: true, courseId: true, _count: { select: { lessons: true } } } });
@@ -58,7 +59,7 @@ export async function createLesson(_state: ActionState, fd: FormData): Promise<A
 
 export async function saveAttendance(_state: ActionState, fd: FormData): Promise<ActionState> {
   try {
-    const user = await requireUser(staffRoles);
+    const user = await requireUser("course.manage");
     const courseId = text(fd, "courseId");
     const dateText = text(fd, "date");
     const course = await manageableCourse(user, courseId);
@@ -81,7 +82,7 @@ export async function saveAttendance(_state: ActionState, fd: FormData): Promise
 
 export async function createGradebook(_state: ActionState, fd: FormData): Promise<ActionState> {
   try {
-    const user = await requireUser(staffRoles);
+    const user = await requireUser("course.manage");
     const parsed = z.object({ courseId: z.string().min(1), name: z.string().min(2).max(80), startDate: z.string().date(), endDate: z.string().date(), taskWeight: z.coerce.number().min(0).max(100), examWeight: z.coerce.number().min(0).max(100) }).refine((v) => v.taskWeight + v.examWeight === 100, "Las categorías deben sumar 100%.").safeParse({ courseId: text(fd, "courseId"), name: text(fd, "name"), startDate: text(fd, "startDate"), endDate: text(fd, "endDate"), taskWeight: text(fd, "taskWeight"), examWeight: text(fd, "examWeight") });
     if (!parsed.success) return failed(parsed.error.issues[0]?.message);
     const course = await manageableCourse(user, parsed.data.courseId);
@@ -94,7 +95,7 @@ export async function createGradebook(_state: ActionState, fd: FormData): Promis
 
 export async function createAssignment(_state: ActionState, fd: FormData): Promise<ActionState> {
   try {
-    const user = await requireUser(staffRoles);
+    const user = await requireUser("course.manage");
     const parsed = z.object({ courseId: z.string().min(1), categoryId: z.string().optional(), title: z.string().min(3).max(140), instructions: z.string().min(10).max(30000), dueDate: z.string().optional(), maxScore: z.coerce.number().positive().max(10000) }).safeParse({ courseId: text(fd, "courseId"), categoryId: text(fd, "categoryId"), title: text(fd, "title"), instructions: text(fd, "instructions"), dueDate: text(fd, "dueDate"), maxScore: text(fd, "maxScore") });
     if (!parsed.success) return failed(parsed.error.issues[0]?.message);
     const course = await manageableCourse(user, parsed.data.courseId);
@@ -112,7 +113,7 @@ export async function createAssignment(_state: ActionState, fd: FormData): Promi
 
 export async function submitAssignment(_state: ActionState, fd: FormData): Promise<ActionState> {
   try {
-    const user = await requireUser(["STUDENT"]);
+    const user = await requireUser("course.participate");
     const assignmentId = text(fd, "assignmentId");
     const assignment = await db.assignment.findFirst({ where: { id: assignmentId, isPublished: true, course: { institutionId: user.institutionId, enrollments: { some: { studentId: user.id, status: "ACTIVE" } } } }, select: { id: true, courseId: true, dueDate: true, allowLate: true } });
     if (!assignment) return failed("Asignación no disponible.");
@@ -129,7 +130,7 @@ export async function submitAssignment(_state: ActionState, fd: FormData): Promi
 
 export async function reviewSubmission(_state: ActionState, fd: FormData): Promise<ActionState> {
   try {
-    const user = await requireUser(staffRoles);
+    const user = await requireUser("course.manage");
     const submissionId = text(fd, "submissionId");
     const score = Number(text(fd, "score"));
     const feedback = text(fd, "feedback");
@@ -146,7 +147,7 @@ export async function reviewSubmission(_state: ActionState, fd: FormData): Promi
 
 export async function createQuestion(_state: ActionState, fd: FormData): Promise<ActionState> {
   try {
-    const user = await requireUser(staffRoles);
+    const user = await requireUser("course.manage");
     const parsed = z.object({ courseId: z.string().min(1), type: z.enum(["MULTIPLE_CHOICE", "TRUE_FALSE", "SHORT_ANSWER"]), prompt: z.string().min(5).max(10000), answerKey: z.string().min(1).max(5000), options: z.string().max(5000).optional(), points: z.coerce.number().positive().max(1000) }).safeParse({ courseId: text(fd, "courseId"), type: text(fd, "type"), prompt: text(fd, "prompt"), answerKey: text(fd, "answerKey"), options: text(fd, "options"), points: text(fd, "points") });
     if (!parsed.success) return failed(parsed.error.issues[0]?.message);
     const course = await manageableCourse(user, parsed.data.courseId);
@@ -161,7 +162,7 @@ export async function createQuestion(_state: ActionState, fd: FormData): Promise
 
 export async function createExam(_state: ActionState, fd: FormData): Promise<ActionState> {
   try {
-    const user = await requireUser(staffRoles);
+    const user = await requireUser("course.manage");
     const parsed = z.object({ courseId: z.string().min(1), categoryId: z.string().optional(), title: z.string().min(3).max(140), instructions: z.string().max(20000).optional(), maxAttempts: z.coerce.number().int().min(1).max(10), durationMinutes: z.coerce.number().int().min(1).max(600) }).safeParse({ courseId: text(fd, "courseId"), categoryId: text(fd, "categoryId"), title: text(fd, "title"), instructions: text(fd, "instructions"), maxAttempts: text(fd, "maxAttempts") || "1", durationMinutes: text(fd, "durationMinutes") || "60" });
     if (!parsed.success) return failed(parsed.error.issues[0]?.message);
     const course = await manageableCourse(user, parsed.data.courseId);
@@ -181,7 +182,7 @@ export async function createExam(_state: ActionState, fd: FormData): Promise<Act
 
 export async function submitExam(_state: ActionState, fd: FormData): Promise<ActionState> {
   try {
-    const user = await requireUser(["STUDENT"]);
+    const user = await requireUser("course.participate");
     const examId = text(fd, "examId");
     const exam = await db.exam.findFirst({ where: { id: examId, institutionId: user.institutionId, isPublished: true, course: { enrollments: { some: { studentId: user.id, status: "ACTIVE" } } } }, include: { questions: { include: { bankItem: true }, orderBy: { order: "asc" } }, attempts: { where: { studentId: user.id }, select: { attemptNumber: true } }, gradeItem: { select: { id: true } }, course: { select: { teacherId: true } } } });
     if (!exam || !exam.questions.length || exam.attempts.length >= exam.maxAttempts) return failed("Examen no disponible o intentos agotados.");
@@ -206,7 +207,7 @@ export async function submitExam(_state: ActionState, fd: FormData): Promise<Act
 
 export async function reviewExamAttempt(_state: ActionState, fd: FormData): Promise<ActionState> {
   try {
-    const user = await requireUser(staffRoles);
+    const user = await requireUser("course.manage");
     const attemptId = text(fd, "attemptId");
     const attempt = await db.examAttempt.findFirst({
       where: { id: attemptId, institutionId: user.institutionId, status: "SUBMITTED", exam: { course: { institutionId: user.institutionId, ...(user.role === "TEACHER" ? { teacherId: user.id } : {}) } } },
@@ -245,7 +246,7 @@ export async function reviewExamAttempt(_state: ActionState, fd: FormData): Prom
 
 export async function saveScheduleSlot(_state: ActionState, fd: FormData): Promise<ActionState> {
   try {
-    const user = await requireUser(staffRoles);
+    const user = await requireUser("course.manage");
     const parsed = z.object({ courseId: z.string().min(1), weekday: z.coerce.number().int().min(1).max(7), startMinutes: z.coerce.number().int().min(0).max(1439), endMinutes: z.coerce.number().int().min(1).max(1440), classroom: z.string().min(1).max(100) }).safeParse({ courseId: text(fd, "courseId"), weekday: text(fd, "weekday"), startMinutes: text(fd, "startMinutes"), endMinutes: text(fd, "endMinutes"), classroom: text(fd, "classroom") });
     if (!parsed.success) return failed(parsed.error.issues[0]?.message);
     const course = await manageableCourse(user, parsed.data.courseId);
@@ -263,7 +264,7 @@ export async function saveScheduleSlot(_state: ActionState, fd: FormData): Promi
 
 export async function togglePublication(_state: ActionState, fd: FormData): Promise<ActionState> {
   try {
-    const user = await requireUser(staffRoles);
+    const user = await requireUser("course.manage");
     const entity = text(fd, "entity"); const id = text(fd, "id"); const publish = text(fd, "publish") === "true";
     if (entity === "period") {
       const item = await db.gradingPeriod.findFirst({ where: { id, institutionId: user.institutionId, ...(user.role === "TEACHER" ? { course: { teacherId: user.id } } : {}) }, select: { id: true, courseId: true } });
@@ -282,7 +283,7 @@ export async function togglePublication(_state: ActionState, fd: FormData): Prom
 
 export async function markLessonComplete(_state: ActionState, fd: FormData): Promise<ActionState> {
   try {
-    const user = await requireUser(["STUDENT"]);
+    const user = await requireUser("course.participate");
     const lessonId = text(fd, "lessonId");
     const lesson = await db.lesson.findFirst({ where: { id: lessonId, institutionId: user.institutionId, isPublished: true, section: { isPublished: true }, course: { enrollments: { some: { studentId: user.id, status: "ACTIVE" } } } }, select: { id: true, courseId: true } });
     if (!lesson) return failed("Lección no disponible.");
@@ -300,7 +301,7 @@ export async function markLessonComplete(_state: ActionState, fd: FormData): Pro
 
 export async function issueCertificate(_state: ActionState, fd: FormData): Promise<ActionState> {
   try {
-    const user = await requireUser(staffRoles);
+    const user = await requireUser("course.manage");
     const enrollmentId = text(fd, "enrollmentId");
     const enrollment = await db.enrollment.findFirst({ where: { id: enrollmentId, course: { institutionId: user.institutionId, ...(user.role === "TEACHER" ? { teacherId: user.id } : {}) } }, include: { course: { select: { id: true, completionThreshold: true } }, student: { select: { name: true } } } });
     if (!enrollment || (enrollment.status !== "COMPLETED" && enrollment.progressPercent < enrollment.course.completionThreshold)) return failed("El curso todavía no cumple los criterios de finalización.");
