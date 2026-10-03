@@ -74,3 +74,9 @@ test("el curso no duplica la navegación Volver que ya ofrece el breadcrumb", ()
   const course = readFileSync(join(process.cwd(), "src", "app", "dashboard", "aula", "[courseId]", "page.tsx"), "utf8");
   assert.doesNotMatch(course, /Volver a cursos/);
 });
+
+
+test("Aula conserva visibles los cursos completados del estudiante", () => {
+  const classroom = readFileSync(join(process.cwd(), "src", "app", "dashboard", "aula", "page.tsx"), "utf8");
+  assert.match(classroom, /status: \{ in: \["ACTIVE", "COMPLETED"\] \}/);
+});
