@@ -2,93 +2,91 @@
 
 > La educación evoluciona. Tú también.
 
-MVP multiinstitución para gestión académica, aula, comunidad, admisiones, pagos y analítica. Producto de [Cerkana](https://cerkana.site).
+MVP académico multiinstitución de Cerkana, construido en español con la identidad visual oficial de Edukana. Replica el flujo de aprendizaje por secciones y lecciones, no el diseño ni código de otras plataformas.
 
-## Stack
+## Capacidades del MVP real
 
-- Next.js 16 (App Router), React 19, TypeScript y Tailwind CSS 4
-- Auth.js v5 con credenciales, sesiones JWT y RBAC
-- PostgreSQL en Supabase y Prisma 5
-- Vercel Hobby y Supabase Free compatibles
+1. **Asistencia:** captura por curso y fecha, estados por estudiante y reportes acumulados.
+2. **Libro de calificaciones:** períodos, categorías ponderadas, descarte de notas bajas, elementos publicables y vista del estudiante.
+3. **Asignaciones:** instrucciones, vencimiento, entrega, archivos privados, revisión, retroalimentación y puntuación.
+4. **Exámenes:** banco reutilizable, selección múltiple, verdadero/falso, respuesta corta, intentos, autocalificación y revisión manual.
+5. **Horarios:** vista institucional y por curso con docente, aula y hora; bloquea solapamientos de docente o aula.
+6. **Certificados:** emisión al completar el curso, código público, hash firmado, revocación soportada y verificación HTML/JSON.
+7. **Documentos:** carga validada a bucket privado y recuperación con autorización más URL firmada de 5 minutos.
+8. **Video:** carga MP4/WebM privada y reproducción HTML5 autorizada.
+9. **Ruta de aprendizaje:** curso > secciones > lecciones ordenadas (texto, video, documento, actividad), con progreso individual.
 
-## Funcionalidad MVP
+Todas las entidades sensibles conservan `institutionId`. Las consultas y mutaciones vuelven a comprobar institución, rol, docencia, matrícula o propiedad del recurso; una página visible no se considera autorización suficiente.
 
-- Inicio con indicadores según rol.
-- Gestión y perfil de estudiantes.
-- Cursos, módulos publicados, tareas y acceso limitado por matrícula/docencia.
-- Anuncios institucionales por audiencia.
-- Pipeline y alta de admisiones.
-- Estado de cuenta, registro y actualización de pagos.
-- Analítica institucional.
-- Portal del estudiante con cursos, tareas, notas y pagos.
-- Configuración editable de la institución.
+## Stack e infraestructura sin costo obligatorio
 
-Todas las lecturas y escrituras de negocio se limitan a la institución de la sesión. Las mutaciones validan datos en el servidor y vuelven a comprobar rol y pertenencia.
+- Next.js 16.3 (App Router), React 19, TypeScript y Tailwind CSS 4.
+- Auth.js v5 con credenciales, JWT, tenant y RBAC.
+- Prisma 5 y PostgreSQL en Supabase Free.
+- Supabase Storage Free con bucket **privado**. La aplicación usa su API REST desde el servidor, sin SDK adicional.
+- Vercel Hobby o cualquier host Node.js compatible.
 
-## Desarrollo local
+No se guardan archivos en el filesystem efímero del host y ninguna clave se expone con `NEXT_PUBLIC_`.
 
-Requisitos: Node.js 20.9 o superior, npm y un proyecto PostgreSQL/Supabase.
+## Instalación local
 
-```bash
+Requisitos: Node.js 22, npm y un proyecto Supabase/PostgreSQL.
+
+```powershell
 npm ci
-copy .env.example .env.local
+Copy-Item .env.example .env.local
 npx prisma validate
 npx prisma generate
-npm run db:push
+npx prisma migrate deploy
 npm run db:seed
 npm run dev
 ```
 
-Completa las variables en `.env.local` antes de ejecutar comandos de Prisma. El seed exige tres contraseñas distintas de 12 o más caracteres y no imprime credenciales.
+Completa `C:\Users\crami\workspace\edukana\.env.local` sin confirmarlo en Git. El seed exige tres contraseñas distintas de 12+ caracteres y no las imprime.
 
-## Supabase Free
+## Base de datos
 
-1. Crea el proyecto y copia la URL del **Transaction pooler** a `DATABASE_URL`; conserva `pgbouncer=true&connection_limit=1` para funciones serverless.
-2. Copia la conexión directa o **Session pooler** a `DIRECT_URL`; Prisma la usa para operaciones de esquema.
-3. Ejecuta `npm run db:push` desde un entorno de confianza. No apliques cambios de esquema automáticamente durante el build de Vercel.
-4. Ejecuta `npm run db:seed` solo para entornos demo o desarrollo.
+- `DATABASE_URL`: Transaction Pooler de Supabase (`pgbouncer=true&connection_limit=1`) para runtime.
+- `DIRECT_URL`: conexión directa o Session Pooler para migraciones.
+- La migración versionada está en `C:\Users\crami\workspace\edukana\prisma\migrations\20261001193000_real_edukana_mvp\migration.sql`.
+- Producción usa `npx prisma migrate deploy`; nunca `db push` con pérdida de datos.
 
-El esquema actual no requiere extensiones de pago. Para una base con datos, revisa primero cualquier cambio con `npx prisma migrate diff` y evita `--accept-data-loss`.
+## Storage privado
 
-## Vercel
+1. Ejecuta `npx prisma migrate deploy`: en Supabase, la migración crea o endurece automáticamente el bucket privado `edukana` con los MIME y límites del MVP.
+2. Configura `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` y `SUPABASE_STORAGE_BUCKET` solo en el servidor.
+3. No hagas público el bucket. `POST /api/assets` autoriza usuario, tenant, curso y recurso; luego emite una URL firmada específica.
+4. El navegador sube directamente a Supabase, evitando el límite de 4.5 MB de Vercel Functions. `PATCH /api/assets/:id` confirma tamaño y MIME en Storage.
+5. `GET /api/assets/:id` autoriza de nuevo y redirige a una URL firmada de lectura por 5 minutos.
 
-1. Importa [github.com/cank3r/edukana](https://github.com/cank3r/edukana) en Vercel.
-2. Configura `DATABASE_URL`, `DIRECT_URL`, `AUTH_SECRET` y `AUTH_URL` en Production y Preview. Usa la URL HTTPS canónica para `AUTH_URL`.
-3. No configures variables `SEED_*` en producción y no expongas secretos con el prefijo `NEXT_PUBLIC_`.
-4. Mantén el comando de instalación por defecto (`npm install`) y el build `npm run build`; `postinstall` genera Prisma Client.
-5. Antes del deploy ejecuta:
+Límites MVP: documentos PDF/DOCX/PPTX/TXT hasta 20 MB; videos MP4/WebM hasta 100 MB. El registro conserva MIME, tamaño, SHA-256, cargador, tenant y ruta con prefijo de tenant.
 
-```bash
-npm run lint
-npm run typecheck
+## Demo verificable
+
+Define `SEED_ADMIN_PASSWORD`, `SEED_TEACHER_PASSWORD` y `SEED_STUDENT_PASSWORD`, ejecuta `npm run db:seed` y usa:
+
+- `admin@demo.edukana`: administración y emisión de certificados.
+- `docente@demo.edukana`: asistencia, contenidos, asignaciones, notas, banco, exámenes y horario.
+- `estudiante@demo.edukana`: ruta, progreso, entregas, intentos, notas publicadas y certificado.
+
+Las contraseñas son exclusivamente las que configuraste. Curso demo: **MAT-101 Matemática I**. Certificado demo (si existe `CERTIFICATE_SECRET` o `AUTH_SECRET`): `/certificados/EDU-DEMO2026A`; registro de máquina: `/api/certificados/EDU-DEMO2026A`.
+
+## Validación
+
+```powershell
 npx prisma validate
-npm run build
-```
-
-## Calidad y CI
-
-La suite mínima cubre normalización de credenciales, rutas públicas y permisos por rol. CircleCI ejecuta Prisma, pruebas, ESLint, TypeScript y el build de producción en cada cambio.
-
-```bash
+npx prisma generate
 npm test
+npm run test:auth
 npm run lint
 npm run typecheck
 npm run build
+npm audit --omit=dev --audit-level=high
+git diff --check origin/master...HEAD
 ```
 
-## Scripts
-
-| Comando | Uso |
-|---|---|
-| `npm run dev` | Servidor de desarrollo |
-| `npm run build` | Build de producción |
-| `npm run lint` | ESLint |
-| `npm run typecheck` | TypeScript estricto |
-| `npm test` | Pruebas de validación y RBAC |
-| `npm run db:push` | Sincroniza el esquema sin borrar datos |
-| `npm run db:seed` | Carga datos demo idempotentes |
-| `npm run db:studio` | Abre Prisma Studio |
+CircleCI ejecuta la misma puerta de calidad. Los tests cubren RBAC/rutas, ponderación, conflictos, respuestas objetivas, progreso, certificados, cargas y presencia de todas las entidades multi-tenant.
 
 ## Variables
 
-Consulta `.env.example`. Los únicos valores públicos deben llevar `NEXT_PUBLIC_`; las conexiones, credenciales, tokens y claves permanecen exclusivamente en el servidor.
+Consulta `C:\Users\crami\workspace\edukana\.env.example`. Son secretas: conexiones, `AUTH_SECRET`, `CERTIFICATE_SECRET`, `SUPABASE_SERVICE_ROLE_KEY` y contraseñas de seed. No confirmes archivos `.env*`.

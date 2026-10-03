@@ -1,20 +1,22 @@
 "use server";
 
 import { auth } from "@/lib/auth";
+import { hasCapability, type Capability } from "@/lib/capabilities";
 import { db } from "@/lib/db";
+import type { EdukanaRole } from "@/types/next-auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 export type ActionState = { ok: boolean; message: string };
 const initialError: ActionState = { ok: false, message: "No se pudo completar la operación." };
 
-type SessionUser = { id: string; institutionId: string; role: string };
+type SessionUser = { id: string; institutionId: string; role: EdukanaRole };
 
-async function requireUser(roles?: string[]): Promise<SessionUser> {
+async function requireUser(capability?: Capability): Promise<SessionUser> {
   const session = await auth();
   const user = session?.user as SessionUser | undefined;
   if (!user?.id || !user.institutionId) throw new Error("No autorizado");
-  if (roles && !roles.includes(user.role)) throw new Error("Permisos insuficientes");
+  if (capability && !hasCapability(user.role, capability)) throw new Error("Permisos insuficientes");
   return user;
 }
 
@@ -32,7 +34,7 @@ const moduleSchema = z.object({
 
 export async function createCourseModule(_state: ActionState, formData: FormData): Promise<ActionState> {
   try {
-    const user = await requireUser(["ADMIN", "COORDINATOR", "TEACHER", "SUPER_ADMIN"]);
+    const user = await requireUser("course.manage");
     const parsed = moduleSchema.safeParse(fields(formData));
     if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? initialError.message };
     const course = await db.course.findFirst({
@@ -73,7 +75,7 @@ const announcementSchema = z.object({
 
 export async function createAnnouncement(_state: ActionState, formData: FormData): Promise<ActionState> {
   try {
-    const user = await requireUser(["ADMIN", "COORDINATOR", "SUPER_ADMIN"]);
+    const user = await requireUser("announcement.publish");
     const parsed = announcementSchema.safeParse(fields(formData));
     if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? initialError.message };
     await db.announcement.create({
@@ -105,7 +107,7 @@ const admissionSchema = z.object({
 
 export async function createAdmission(_state: ActionState, formData: FormData): Promise<ActionState> {
   try {
-    const user = await requireUser(["ADMIN", "COORDINATOR", "SUPER_ADMIN"]);
+    const user = await requireUser("admissions.manage");
     const parsed = admissionSchema.safeParse(fields(formData));
     if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? initialError.message };
     await db.admissionLead.create({ data: { institutionId: user.institutionId, ...parsed.data } });
@@ -130,7 +132,7 @@ const paymentSchema = z.object({
 
 export async function savePayment(_state: ActionState, formData: FormData): Promise<ActionState> {
   try {
-    const user = await requireUser(["ADMIN", "SUPER_ADMIN"]);
+    const user = await requireUser("finance.manage");
     const parsed = paymentSchema.safeParse(fields(formData));
     if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? initialError.message };
     const data = parsed.data;
@@ -178,7 +180,7 @@ const institutionSchema = z.object({
 
 export async function updateInstitution(_state: ActionState, formData: FormData): Promise<ActionState> {
   try {
-    const user = await requireUser(["ADMIN", "SUPER_ADMIN"]);
+    const user = await requireUser("tenant.settings.manage");
     const parsed = institutionSchema.safeParse(fields(formData));
     if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? initialError.message };
     const institution = await db.institution.findFirst({ where: { id: user.institutionId }, select: { id: true } });

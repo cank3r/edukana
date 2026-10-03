@@ -32,3 +32,37 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+
+
+/* Accesibilidad y navegación */
+:where(a, button, input, select, textarea, summary):focus-visible {
+  outline: 3px solid #0ea5e9;
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: fixed;
+  left: 1rem;
+  top: 1rem;
+  z-index: 100;
+  transform: translateY(-200%);
+  border-radius: 0.5rem;
+  background: white;
+  padding: 0.75rem 1rem;
+  color: var(--navy);
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgb(15 23 42 / 0.2);
+}
+.skip-link:focus { transform: translateY(0); }
+#contenido-principal:focus { outline: none; }
+section[id] { scroll-margin-top: 5.5rem; }
+
+.mobile-card-list { display: grid; gap: 0.75rem; }
+@media (min-width: 640px) {
+  .mobile-card-list { display: none; }
+  .desktop-table { display: block; }
+}
+@media (max-width: 639px) {
+  .desktop-table { display: none; }
+}

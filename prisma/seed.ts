@@ -1,67 +1,66 @@
+import { createHash } from "node:crypto";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
+type SeedPasswordName = "SEED_ADMIN_PASSWORD" | "SEED_TEACHER_PASSWORD" | "SEED_STUDENT_PASSWORD";
 
-function required(name: "SEED_ADMIN_PASSWORD" | "SEED_TEACHER_PASSWORD" | "SEED_STUDENT_PASSWORD") {
+function optionalPassword(name: SeedPasswordName) {
   const value = process.env[name];
-  if (!value || value.length < 8) throw new Error(`${name} debe existir y tener al menos 8 caracteres.`);
+  if (value && value.length < 12) throw new Error(`${name} debe tener al menos 12 caracteres.`);
   return value;
 }
 
-async function main() {
-  const institution = await prisma.institution.upsert({
-    where: { slug: "demo" },
-    update: {},
-    create: { name: "Instituto Demo Edukana", slug: "demo", type: "SCHOOL", timezone: "America/Santo_Domingo", language: "es", plan: "FREE" },
-  });
+async function ensureDemoUser(input: { institutionId: string; name: string; email: string; role: "ADMIN" | "TEACHER" | "STUDENT"; passwordName: SeedPasswordName }) {
+  const existing = await prisma.user.findUnique({ where: { institutionId_email: { institutionId: input.institutionId, email: input.email } } });
+  if (existing) return prisma.user.update({ where: { id: existing.id }, data: { name: input.name, role: input.role, status: "ACTIVE" } });
+  const password = optionalPassword(input.passwordName);
+  if (!password) throw new Error(`${input.passwordName} es obligatorio para crear ${input.email}.`);
+  return prisma.user.create({ data: { institutionId: input.institutionId, name: input.name, email: input.email, password: await bcrypt.hash(password, 12), role: input.role } });
+}
 
-  const [adminPassword, teacherPassword, studentPassword] = await Promise.all([
-    bcrypt.hash(required("SEED_ADMIN_PASSWORD"), 12),
-    bcrypt.hash(required("SEED_TEACHER_PASSWORD"), 12),
-    bcrypt.hash(required("SEED_STUDENT_PASSWORD"), 12),
+async function main() {
+  const institution = await prisma.institution.upsert({ where: { slug: "demo" }, update: {}, create: { name: "Instituto Demo Edukana", slug: "demo", type: "SCHOOL", timezone: "America/Santo_Domingo", language: "es", plan: "FREE" } });
+  const [admin, teacher, student] = await Promise.all([
+    ensureDemoUser({ institutionId: institution.id, name: "Administrador Demo", email: "admin@demo.edukana", role: "ADMIN", passwordName: "SEED_ADMIN_PASSWORD" }),
+    ensureDemoUser({ institutionId: institution.id, name: "Docente Demo", email: "docente@demo.edukana", role: "TEACHER", passwordName: "SEED_TEACHER_PASSWORD" }),
+    ensureDemoUser({ institutionId: institution.id, name: "Estudiante Demo", email: "estudiante@demo.edukana", role: "STUDENT", passwordName: "SEED_STUDENT_PASSWORD" }),
   ]);
-  const admin = await prisma.user.upsert({
-    where: { institutionId_email: { institutionId: institution.id, email: "admin@demo.edukana" } },
-    update: { password: adminPassword, status: "ACTIVE" },
-    create: { institutionId: institution.id, name: "Administrador Demo", email: "admin@demo.edukana", password: adminPassword, role: "ADMIN", status: "ACTIVE" },
-  });
-  const teacher = await prisma.user.upsert({
-    where: { institutionId_email: { institutionId: institution.id, email: "docente@demo.edukana" } },
-    update: { password: teacherPassword, status: "ACTIVE" },
-    create: { institutionId: institution.id, name: "Docente Demo", email: "docente@demo.edukana", password: teacherPassword, role: "TEACHER", status: "ACTIVE" },
-  });
-  const student = await prisma.user.upsert({
-    where: { institutionId_email: { institutionId: institution.id, email: "estudiante@demo.edukana" } },
-    update: { password: studentPassword, status: "ACTIVE" },
-    create: { institutionId: institution.id, name: "Estudiante Demo", email: "estudiante@demo.edukana", password: studentPassword, role: "STUDENT", status: "ACTIVE" },
-  });
-  const period = await prisma.academicPeriod.upsert({
-    where: { id: "period-demo-2026" },
-    update: { institutionId: institution.id },
-    create: { id: "period-demo-2026", institutionId: institution.id, name: "2026-I", startDate: new Date("2026-01-15"), endDate: new Date("2026-12-15"), isActive: true },
-  });
-  const course = await prisma.course.upsert({
-    where: { id: "course-demo-matematica" },
-    update: { institutionId: institution.id, periodId: period.id, teacherId: teacher.id },
-    create: { id: "course-demo-matematica", institutionId: institution.id, periodId: period.id, teacherId: teacher.id, name: "Matemática I", code: "MAT-101", description: "Fundamentos de álgebra y cálculo diferencial." },
-  });
-  await prisma.enrollment.upsert({
-    where: { studentId_courseId: { studentId: student.id, courseId: course.id } },
-    update: { status: "ACTIVE" },
-    create: { studentId: student.id, courseId: course.id, status: "ACTIVE" },
-  });
-  const moduleExists = await prisma.courseModule.findFirst({ where: { courseId: course.id, title: "Introducción al curso" }, select: { id: true } });
-  if (!moduleExists) await prisma.courseModule.create({ data: { courseId: course.id, title: "Introducción al curso", content: "Objetivos, metodología y recursos iniciales del curso.", order: 0, isPublished: true } });
-  const assignmentExists = await prisma.assignment.findFirst({ where: { courseId: course.id, title: "Actividad diagnóstica" }, select: { id: true } });
-  if (!assignmentExists) await prisma.assignment.create({ data: { courseId: course.id, title: "Actividad diagnóstica", description: "Resuelve los ejercicios iniciales.", dueDate: new Date("2026-12-01"), isPublished: true } });
-  const announcementExists = await prisma.announcement.findFirst({ where: { institutionId: institution.id, title: "Bienvenidos a Edukana" }, select: { id: true } });
-  if (!announcementExists) await prisma.announcement.create({ data: { institutionId: institution.id, authorId: admin.id, title: "Bienvenidos a Edukana", content: "La plataforma ya está disponible para toda la comunidad educativa.", audience: "ALL", isPinned: true } });
-  const paymentExists = await prisma.paymentConcept.findFirst({ where: { institutionId: institution.id, studentId: student.id, concept: "Matrícula 2026" }, select: { id: true } });
-  if (!paymentExists) await prisma.paymentConcept.create({ data: { institutionId: institution.id, studentId: student.id, periodId: period.id, concept: "Matrícula 2026", amount: 5000, currency: "DOP", dueDate: new Date("2026-10-15"), status: "PENDING" } });
-  const leadExists = await prisma.admissionLead.findFirst({ where: { institutionId: institution.id, email: "aspirante@example.com" }, select: { id: true } });
-  if (!leadExists) await prisma.admissionLead.create({ data: { institutionId: institution.id, name: "Aspirante Demo", email: "aspirante@example.com", programInterest: "Bachillerato", source: "web" } });
-  console.log("Seed completado: institución, usuarios y datos MVP verificados.");
+  const period = await prisma.academicPeriod.upsert({ where: { id: "period-demo-2026" }, update: { institutionId: institution.id }, create: { id: "period-demo-2026", institutionId: institution.id, name: "2026-I", startDate: new Date("2026-01-15"), endDate: new Date("2026-12-15"), isActive: true } });
+  const course = await prisma.course.upsert({ where: { id: "course-demo-matematica" }, update: { institutionId: institution.id, periodId: period.id, teacherId: teacher.id }, create: { id: "course-demo-matematica", institutionId: institution.id, periodId: period.id, teacherId: teacher.id, name: "Matemática I", code: "MAT-101", description: "Fundamentos de álgebra y cálculo diferencial.", completionThreshold: 100 } });
+  const enrollment = await prisma.enrollment.upsert({ where: { studentId_courseId: { studentId: student.id, courseId: course.id } }, update: { status: "COMPLETED", progressPercent: 100, finalGrade: 92, completedAt: new Date("2026-09-30") }, create: { studentId: student.id, courseId: course.id, status: "COMPLETED", progressPercent: 100, finalGrade: 92, completedAt: new Date("2026-09-30") } });
+
+  const section = await prisma.courseSection.upsert({ where: { id: "section-demo-algebra" }, update: { institutionId: institution.id, courseId: course.id }, create: { id: "section-demo-algebra", institutionId: institution.id, courseId: course.id, title: "Fundamentos de álgebra", description: "Ruta inicial con teoría, video y actividad.", order: 0, isPublished: true } });
+  const lesson1 = await prisma.lesson.upsert({ where: { id: "lesson-demo-variables" }, update: { institutionId: institution.id, sectionId: section.id, courseId: course.id }, create: { id: "lesson-demo-variables", institutionId: institution.id, sectionId: section.id, courseId: course.id, title: "Variables y expresiones", content: "Una variable representa un valor desconocido. Practica traduciendo frases a expresiones algebraicas.", type: "TEXT", order: 0, estimatedMinutes: 15, isPublished: true } });
+  const lesson2 = await prisma.lesson.upsert({ where: { id: "lesson-demo-ecuaciones" }, update: { institutionId: institution.id, sectionId: section.id, courseId: course.id }, create: { id: "lesson-demo-ecuaciones", institutionId: institution.id, sectionId: section.id, courseId: course.id, title: "Ecuaciones lineales", content: "Video y práctica guiada para resolver ecuaciones de primer grado.", type: "VIDEO", order: 1, estimatedMinutes: 20, isPublished: true } });
+  for (const lesson of [lesson1, lesson2]) await prisma.lessonProgress.upsert({ where: { enrollmentId_lessonId: { enrollmentId: enrollment.id, lessonId: lesson.id } }, update: { completed: true, completedAt: new Date("2026-09-30") }, create: { institutionId: institution.id, enrollmentId: enrollment.id, lessonId: lesson.id, completed: true, completedAt: new Date("2026-09-30") } });
+
+  const grading = await prisma.gradingPeriod.upsert({ where: { courseId_name: { courseId: course.id, name: "Primer período" } }, update: { isPublished: true, publishedAt: new Date() }, create: { institutionId: institution.id, courseId: course.id, academicPeriodId: period.id, name: "Primer período", startDate: new Date("2026-01-15"), endDate: new Date("2026-06-30"), isPublished: true, publishedAt: new Date() } });
+  const taskCategory = await prisma.gradeCategory.upsert({ where: { gradingPeriodId_name: { gradingPeriodId: grading.id, name: "Asignaciones" } }, update: { weight: 40 }, create: { institutionId: institution.id, courseId: course.id, gradingPeriodId: grading.id, name: "Asignaciones", weight: 40 } });
+  const examCategory = await prisma.gradeCategory.upsert({ where: { gradingPeriodId_name: { gradingPeriodId: grading.id, name: "Exámenes" } }, update: { weight: 60 }, create: { institutionId: institution.id, courseId: course.id, gradingPeriodId: grading.id, name: "Exámenes", weight: 60 } });
+  const assignment = await prisma.assignment.upsert({ where: { id: "assignment-demo-diagnostico" }, update: { courseId: course.id, isPublished: true }, create: { id: "assignment-demo-diagnostico", courseId: course.id, title: "Actividad diagnóstica", description: "Resuelve los ejercicios iniciales.", instructions: "Resuelve cinco ecuaciones y explica claramente cada paso de tu procedimiento.", dueDate: new Date("2026-12-01"), maxScore: 100, isPublished: true, publishedAt: new Date() } });
+  const taskItem = await prisma.gradeItem.upsert({ where: { assignmentId: assignment.id }, update: { categoryId: taskCategory.id, gradingPeriodId: grading.id }, create: { institutionId: institution.id, courseId: course.id, gradingPeriodId: grading.id, categoryId: taskCategory.id, assignmentId: assignment.id, title: assignment.title, maxScore: 100, isPublished: true } });
+  const submission = await prisma.submission.upsert({ where: { assignmentId_studentId: { assignmentId: assignment.id, studentId: student.id } }, update: { score: 95, status: "GRADED" }, create: { assignmentId: assignment.id, studentId: student.id, enrollmentId: enrollment.id, content: "Soluciones desarrolladas con verificación por sustitución.", score: 95, feedback: "Procedimiento claro y correcto.", status: "GRADED", gradedAt: new Date() } });
+  await prisma.gradeEntry.upsert({ where: { gradeItemId_enrollmentId: { gradeItemId: taskItem.id, enrollmentId: enrollment.id } }, update: { score: 95 }, create: { institutionId: institution.id, gradeItemId: taskItem.id, enrollmentId: enrollment.id, score: 95, feedback: submission.feedback, gradedById: teacher.id } });
+
+  const q1 = await prisma.questionBankItem.upsert({ where: { id: "question-demo-mc" }, update: {}, create: { id: "question-demo-mc", institutionId: institution.id, courseId: course.id, type: "MULTIPLE_CHOICE", prompt: "¿Cuál es la solución de 2x + 2 = 6?", options: ["x = 1", "x = 2", "x = 3"], answerKey: "x = 2", defaultPoints: 5 } });
+  const q2 = await prisma.questionBankItem.upsert({ where: { id: "question-demo-tf" }, update: {}, create: { id: "question-demo-tf", institutionId: institution.id, courseId: course.id, type: "TRUE_FALSE", prompt: "Una ecuación puede verificarse sustituyendo el resultado.", options: ["Verdadero", "Falso"], answerKey: "Verdadero", defaultPoints: 5 } });
+  const q3 = await prisma.questionBankItem.upsert({ where: { id: "question-demo-short" }, update: {}, create: { id: "question-demo-short", institutionId: institution.id, courseId: course.id, type: "SHORT_ANSWER", prompt: "Explica qué significa despejar una variable.", answerKey: "Aislar la variable", defaultPoints: 10 } });
+  const exam = await prisma.exam.upsert({ where: { id: "exam-demo-algebra" }, update: { isPublished: true }, create: { id: "exam-demo-algebra", institutionId: institution.id, courseId: course.id, title: "Evaluación de álgebra", instructions: "Responde todas las preguntas. La respuesta corta será revisada por el docente.", durationMinutes: 45, maxAttempts: 2, isPublished: true, showReview: true } });
+  for (const [index, question] of [q1, q2, q3].entries()) await prisma.examQuestion.upsert({ where: { examId_bankItemId: { examId: exam.id, bankItemId: question.id } }, update: { order: index, points: question.defaultPoints }, create: { examId: exam.id, bankItemId: question.id, order: index, points: question.defaultPoints } });
+  const examItem = await prisma.gradeItem.upsert({ where: { examId: exam.id }, update: { categoryId: examCategory.id, gradingPeriodId: grading.id }, create: { institutionId: institution.id, courseId: course.id, gradingPeriodId: grading.id, categoryId: examCategory.id, examId: exam.id, title: exam.title, maxScore: 20, isPublished: true } });
+  await prisma.gradeEntry.upsert({ where: { gradeItemId_enrollmentId: { gradeItemId: examItem.id, enrollmentId: enrollment.id } }, update: { score: 18 }, create: { institutionId: institution.id, gradeItemId: examItem.id, enrollmentId: enrollment.id, score: 18, feedback: "Dominio sólido de los conceptos.", gradedById: teacher.id } });
+
+  await prisma.scheduleSlot.upsert({ where: { id: "schedule-demo-monday" }, update: { teacherId: teacher.id, classroom: "Aula A-101" }, create: { id: "schedule-demo-monday", institutionId: institution.id, courseId: course.id, teacherId: teacher.id, weekday: 1, startMinutes: 480, endMinutes: 570, classroom: "Aula A-101" } });
+  const attendanceSession = await prisma.attendanceSession.upsert({ where: { courseId_date: { courseId: course.id, date: new Date("2026-09-28") } }, update: { recordedById: teacher.id }, create: { institutionId: institution.id, courseId: course.id, date: new Date("2026-09-28"), title: "Ecuaciones lineales", recordedById: teacher.id } });
+  await prisma.attendance.upsert({ where: { sessionId_enrollmentId: { sessionId: attendanceSession.id, enrollmentId: enrollment.id } }, update: { status: "PRESENT" }, create: { institutionId: institution.id, courseId: course.id, sessionId: attendanceSession.id, enrollmentId: enrollment.id, date: attendanceSession.date, classSession: attendanceSession.title, status: "PRESENT" } });
+
+  const certificateSecret = process.env.CERTIFICATE_SECRET ?? process.env.AUTH_SECRET;
+  if (certificateSecret) { const code = "EDU-DEMO2026A"; const hash = createHash("sha256").update(`${code}:${enrollment.id}:${course.id}:${certificateSecret}`).digest("hex"); await prisma.certificate.upsert({ where: { enrollmentId_courseId: { enrollmentId: enrollment.id, courseId: course.id } }, update: { verificationHash: hash, revokedAt: null }, create: { institutionId: institution.id, courseId: course.id, enrollmentId: enrollment.id, issuedById: admin.id, verificationCode: code, verificationHash: hash, metadata: { studentName: student.name, demo: true } } }); }
+
+  if (!(await prisma.announcement.findFirst({ where: { institutionId: institution.id, title: "Bienvenidos a Edukana" } }))) await prisma.announcement.create({ data: { institutionId: institution.id, authorId: admin.id, title: "Bienvenidos a Edukana", content: "La plataforma ya está disponible para toda la comunidad educativa.", audience: "ALL", isPinned: true } });
+  if (!(await prisma.paymentConcept.findFirst({ where: { institutionId: institution.id, studentId: student.id, concept: "Matrícula 2026" } }))) await prisma.paymentConcept.create({ data: { institutionId: institution.id, studentId: student.id, periodId: period.id, concept: "Matrícula 2026", amount: 5000, currency: "DOP", dueDate: new Date("2026-10-15"), status: "PENDING" } });
+  console.log("Seed académico completo: ruta, progreso, asistencia, notas, tarea, examen, horario y certificado.");
 }
 
 main().catch((error) => { console.error(error instanceof Error ? error.message : "Error de seed"); process.exitCode = 1; }).finally(() => prisma.$disconnect());

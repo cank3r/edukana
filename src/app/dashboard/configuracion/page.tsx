@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
+import { hasCapability } from "@/lib/capabilities";
 import { db } from "@/lib/db";
 import { InstitutionForm } from "@/components/dashboard/MutationForms";
 import { Settings } from "lucide-react";
@@ -7,7 +8,7 @@ import { Settings } from "lucide-react";
 export default async function ConfiguracionPage() {
   const session = await auth();
   const user = session!.user;
-  if (!["ADMIN", "SUPER_ADMIN"].includes(user.role)) redirect("/dashboard");
+  if (!hasCapability(user.role, "tenant.settings.manage")) redirect("/dashboard");
   const institution = await db.institution.findFirst({ where: { id: user.institutionId } });
   if (!institution) redirect("/dashboard");
   const plan = { FREE: "Plan gratuito", STARTER: "Plan básico", PRO: "Plan profesional", ENTERPRISE: "Plan empresarial" }[institution.plan];
