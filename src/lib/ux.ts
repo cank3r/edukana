@@ -43,6 +43,19 @@ const STATUS_LABELS: Record<string, string> = {
   MULTIPLE_CHOICE: "Selección múltiple", TRUE_FALSE: "Verdadero o falso", SHORT_ANSWER: "Respuesta corta",
 };
 
+const ROLE_LABELS: Record<EdukanaRole, string> = {
+  SUPER_ADMIN: "Súper administrador",
+  ADMIN: "Administrador",
+  COORDINATOR: "Coordinador",
+  TEACHER: "Docente",
+  STUDENT: "Estudiante",
+  PARENT: "Tutor",
+};
+
+export function roleLabel(role: EdukanaRole): string {
+  return ROLE_LABELS[role];
+}
+
 export function spanishLabel(value: string | null | undefined): string {
   if (!value) return "Sin estado";
   return STATUS_LABELS[value] ?? value.toLocaleLowerCase("es").replaceAll("_", " ").replace(/^./, (letter) => letter.toLocaleUpperCase("es"));

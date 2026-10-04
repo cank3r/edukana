@@ -5,6 +5,7 @@ import { join } from "node:path";
 
 const schema = readFileSync(join(process.cwd(), "prisma", "schema.prisma"), "utf8");
 const migration = readFileSync(join(process.cwd(), "prisma", "migrations", "20261001193000_real_edukana_mvp", "migration.sql"), "utf8");
+const announcementMigration = readFileSync(join(process.cwd(), "prisma", "migrations", "20261004111500_advanced_announcements", "migration.sql"), "utf8");
 
 const requiredModels = ["AttendanceSession", "Attendance", "GradingPeriod", "GradeCategory", "GradeItem", "GradeEntry", "Assignment", "Submission", "QuestionBankItem", "Exam", "ExamQuestion", "ExamAttempt", "ExamAnswer", "ScheduleSlot", "Certificate", "StorageAsset", "CourseSection", "Lesson", "LessonProgress"];
 
@@ -31,4 +32,16 @@ test("aprovisiona el bucket académico como privado", () => {
   assert.match(migration, /INSERT INTO storage\.buckets/);
   assert.match(migration, /'edukana',[\s\S]*?false,[\s\S]*?104857600/);
   assert.doesNotMatch(migration, /'edukana',[\s\S]*?true,[\s\S]*?104857600/);
+});
+
+test("normaliza audiencias de anuncios sin romper registros existentes", () => {
+  for (const model of ["OrganizationalUnit", "OrganizationalUnitMembership", "AnnouncementRoleTarget", "AnnouncementCourseTarget", "AnnouncementUserTarget", "AnnouncementUnitTarget", "AnnouncementRelatedCourse", "AnnouncementMention"]) {
+    const body = schema.match(new RegExp(`model ${model} \\{([\\s\\S]*?)\\n\\}`))?.[1] ?? "";
+    assert.match(body, /institutionId\s+String/, `${model} debe incluir institutionId`);
+  }
+  assert.match(schema, /audienceInstitution\s+Boolean/);
+  assert.match(schema, /confirmedAt\s+DateTime\?/);
+  assert.match(announcementMigration, /UPDATE "announcements" SET "audienceInstitution" = true WHERE "audience" = 'ALL'/);
+  assert.match(announcementMigration, /INSERT INTO "announcement_role_targets"/);
+  assert.match(announcementMigration, /INSERT INTO "announcement_course_targets"/);
 });

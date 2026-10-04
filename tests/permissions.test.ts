@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   CAPABILITIES,
+  SYSTEM_ROLE_CAPABILITIES,
   isCapability,
   resolveEffectiveCapabilities,
   type Capability,
@@ -130,4 +131,31 @@ test("solo persiste cambios explícitos y calcula el resultado efectivo", async 
   assert.equal(effective.has("course.view"), true);
   assert.equal(effective.has("announcement.publish"), true);
   assert.equal(effective.has("course.manage"), false);
+});
+
+test("announcement.manage se separa de publicar y no escala desde el editor", async () => {
+  assert.equal(resolveEffectiveCapabilities("SUPER_ADMIN").has("announcement.manage"), true);
+  assert.equal(resolveEffectiveCapabilities("ADMIN").has("announcement.manage"), true);
+  assert.equal(resolveEffectiveCapabilities("COORDINATOR").has("announcement.manage"), true);
+  assert.equal(resolveEffectiveCapabilities("TEACHER").has("announcement.manage"), false);
+  assert.equal(resolveEffectiveCapabilities("TEACHER", [{ capability: "announcement.publish", enabled: true }]).has("announcement.manage"), false);
+
+  const store = new MemoryPermissionStore();
+  const publisher = { ...adminActor("institution-a", "COORDINATOR"), capabilities: new Set<Capability>(["roles.permissions.manage", "announcement.publish"]) };
+  await rejectsPolicy(() => persistRolePermissions(store, { actor: publisher, targetRole: "TEACHER", changes: [{ capability: "announcement.manage", enabled: true }] }), /conceder ni revocar/);
+  assert.equal(store.commits.length, 0);
+});
+
+test("defaults de permisos permanecen exactos y manage no llega a TEACHER", () => {
+  const expected: Record<EdukanaRole, Capability[]> = {
+    SUPER_ADMIN: [...CAPABILITIES],
+    ADMIN: [...CAPABILITIES],
+    COORDINATOR: ["course.view", "course.view.all", "course.manage", "course.roster.view", "schedule.view", "people.view", "admissions.manage", "announcement.publish", "announcement.manage"],
+    TEACHER: ["course.view", "course.manage", "course.roster.view", "schedule.view"],
+    STUDENT: ["student.portal.view", "course.view", "course.participate", "schedule.view"],
+    PARENT: ["child.portal.view", "child.academics.view", "child.attendance.view", "child.schedule.view", "child.announcements.view"],
+  };
+  for (const role of Object.keys(expected) as EdukanaRole[]) {
+    assert.deepEqual([...SYSTEM_ROLE_CAPABILITIES[role]].sort(), expected[role].sort(), role);
+  }
 });

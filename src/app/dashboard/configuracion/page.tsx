@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { getEffectiveCapabilities } from "@/lib/authorization";
 import { db } from "@/lib/db";
 import { InstitutionForm } from "@/components/dashboard/MutationForms";
-import { Settings, ShieldCheck, Users } from "lucide-react";
+import { Building2, Settings, ShieldCheck, Users } from "lucide-react";
 
 export default async function ConfiguracionPage() {
   const session = await auth();
@@ -20,6 +20,7 @@ export default async function ConfiguracionPage() {
       <div className="mb-6 flex items-center gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4"><div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-600 text-white"><Settings size={18} /></div><div><p className="text-sm font-semibold text-blue-700">{plan}</p><p className="text-xs text-blue-600">Configuración compatible con el nivel gratuito de Supabase y Vercel.</p></div></div>
       {capabilities.has("roles.permissions.manage") && <Link href="/dashboard/configuracion/roles" className="mb-6 flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 hover:border-blue-400"><ShieldCheck className="text-blue-700" /><span><span className="block font-semibold text-slate-900">Roles y permisos</span><span className="block text-sm text-slate-500">Configura capacidades por rol para esta institución.</span></span></Link>}
       {capabilities.has("guardianship.manage") && <Link href="/dashboard/configuracion/tutores" className="mb-6 flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 hover:border-blue-400"><Users className="text-blue-700" /><span><span className="block font-semibold text-slate-900">Tutores y estudiantes</span><span className="block text-sm text-slate-500">Crea y administra vínculos explícitos con permisos por área.</span></span></Link>}
+      <Link href="/dashboard/configuracion/unidades" className="mb-6 flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 hover:border-blue-400"><Building2 className="text-blue-700" /><span><span className="block font-semibold text-slate-900">Departamentos y unidades</span><span className="block text-sm text-slate-500">Crea unidades y asigna sus miembros para segmentar anuncios.</span></span></Link>
       <InstitutionForm institution={{ name: institution.name, type: institution.type, domain: institution.domain, timezone: institution.timezone, language: institution.language }} />
       <dl className="mt-6 grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-white p-4 text-sm sm:grid-cols-2"><div><dt className="text-slate-500">Identificador</dt><dd className="font-mono text-xs">{institution.slug}</dd></div><div><dt className="text-slate-500">Creada</dt><dd>{new Intl.DateTimeFormat("es", { dateStyle: "long" }).format(institution.createdAt)}</dd></div></dl>
     </div>

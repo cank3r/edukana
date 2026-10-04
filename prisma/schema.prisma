@@ -48,6 +48,14 @@ model Institution {
   certificates       Certificate[]
   roleCapabilityOverrides RoleCapabilityOverride[]
   guardianships           Guardianship[]
+  organizationalUnits     OrganizationalUnit[]
+  unitMemberships         OrganizationalUnitMembership[]
+  announcementRoleTargets AnnouncementRoleTarget[]
+  announcementCourseTargets AnnouncementCourseTarget[]
+  announcementUserTargets AnnouncementUserTarget[]
+  announcementUnitTargets AnnouncementUnitTarget[]
+  announcementRelatedCourses AnnouncementRelatedCourse[]
+  announcementMentions    AnnouncementMention[]
 
   @@map("institutions")
 }
@@ -98,6 +106,9 @@ model User {
   studentGuardianships    Guardianship[] @relation("GuardianshipStudent")
   createdGuardianships    Guardianship[] @relation("GuardianshipCreator")
   updatedGuardianships    Guardianship[] @relation("GuardianshipUpdater")
+  organizationalMemberships OrganizationalUnitMembership[]
+  announcementTargets     AnnouncementUserTarget[]
+  announcementMentions    AnnouncementMention[]
 
   @@unique([institutionId, email])
   @@index([institutionId, role])
@@ -206,6 +217,8 @@ model Course {
   scheduleSlots       ScheduleSlot[]
   assets              StorageAsset[]
   certificates        Certificate[]
+  announcementTargets AnnouncementCourseTarget[]
+  relatedAnnouncements AnnouncementRelatedCourse[]
 
   @@unique([institutionId, code])
   @@index([institutionId, teacherId])
@@ -654,6 +667,8 @@ model StorageAsset {
   assignment    Assignment?     @relation(fields: [assignmentId], references: [id], onDelete: SetNull)
   submissionId  String?
   submission    Submission?     @relation(fields: [submissionId], references: [id], onDelete: SetNull)
+  announcementId String?
+  announcement  Announcement?   @relation(fields: [announcementId], references: [id], onDelete: Cascade)
   uploaderId    String
   uploader      User            @relation("AssetUploader", fields: [uploaderId], references: [id])
   bucket        String          @default("edukana")
@@ -664,9 +679,11 @@ model StorageAsset {
   kind          AssetKind
   visibility    AssetVisibility @default(COURSE)
   checksum      String?
+  confirmedAt   DateTime?
   createdAt     DateTime        @default(now())
 
   @@index([institutionId, courseId])
+  @@index([institutionId, announcementId])
   @@map("storage_assets")
 }
 
@@ -765,19 +782,29 @@ enum PaymentStatus {
 }
 
 model Announcement {
-  id            String               @id @default(cuid())
-  institutionId String
-  institution   Institution          @relation(fields: [institutionId], references: [id], onDelete: Cascade)
-  authorId      String
-  author        User                 @relation("AnnouncementAuthor", fields: [authorId], references: [id])
-  title         String
-  content       String               @db.Text
-  audience      AnnouncementAudience @default(ALL)
-  audienceId    String?
-  isPinned      Boolean              @default(false)
-  publishedAt   DateTime             @default(now())
-  createdAt     DateTime             @default(now())
+  id                  String               @id @default(cuid())
+  institutionId       String
+  institution         Institution          @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  authorId            String
+  author              User                 @relation("AnnouncementAuthor", fields: [authorId], references: [id])
+  title               String
+  content             String               @db.Text
+  externalUrl         String?
+  audienceInstitution Boolean              @default(false)
+  audience            AnnouncementAudience @default(ALL)
+  audienceId          String?
+  isPinned            Boolean              @default(false)
+  publishedAt         DateTime             @default(now())
+  createdAt           DateTime             @default(now())
+  roleTargets         AnnouncementRoleTarget[]
+  courseTargets       AnnouncementCourseTarget[]
+  userTargets         AnnouncementUserTarget[]
+  unitTargets         AnnouncementUnitTarget[]
+  relatedCourses      AnnouncementRelatedCourse[]
+  mentions            AnnouncementMention[]
+  assets              StorageAsset[]
 
+  @@index([institutionId, publishedAt])
   @@map("announcements")
 }
 
@@ -787,6 +814,114 @@ enum AnnouncementAudience {
   ROLE
 }
 
+model OrganizationalUnit {
+  id            String       @id @default(cuid())
+  institutionId String
+  institution   Institution  @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  parentId      String?
+  parent        OrganizationalUnit? @relation("UnitHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  children      OrganizationalUnit[] @relation("UnitHierarchy")
+  name          String
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  memberships   OrganizationalUnitMembership[]
+  targets       AnnouncementUnitTarget[]
+
+  @@unique([institutionId, name])
+  @@index([institutionId, parentId])
+  @@map("organizational_units")
+}
+
+model OrganizationalUnitMembership {
+  institutionId String
+  institution   Institution       @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  unitId        String
+  unit          OrganizationalUnit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime           @default(now())
+
+  @@id([unitId, userId])
+  @@index([institutionId, userId])
+  @@map("organizational_unit_memberships")
+}
+
+model AnnouncementRoleTarget {
+  institutionId String
+  institution   Institution  @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  announcementId String
+  announcement  Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  role          Role
+
+  @@id([announcementId, role])
+  @@index([institutionId, role])
+  @@map("announcement_role_targets")
+}
+
+model AnnouncementCourseTarget {
+  institutionId String
+  institution   Institution  @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  announcementId String
+  announcement  Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  courseId      String
+  course        Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@id([announcementId, courseId])
+  @@index([institutionId, courseId])
+  @@map("announcement_course_targets")
+}
+
+model AnnouncementUserTarget {
+  institutionId String
+  institution   Institution  @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  announcementId String
+  announcement  Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([announcementId, userId])
+  @@index([institutionId, userId])
+  @@map("announcement_user_targets")
+}
+
+model AnnouncementUnitTarget {
+  institutionId String
+  institution   Institution       @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  announcementId String
+  announcement  Announcement      @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  unitId        String
+  unit          OrganizationalUnit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+
+  @@id([announcementId, unitId])
+  @@index([institutionId, unitId])
+  @@map("announcement_unit_targets")
+}
+
+model AnnouncementRelatedCourse {
+  institutionId String
+  institution   Institution  @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  announcementId String
+  announcement  Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  courseId      String
+  course        Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@id([announcementId, courseId])
+  @@index([institutionId, courseId])
+  @@map("announcement_related_courses")
+}
+
+model AnnouncementMention {
+  institutionId String
+  institution   Institution  @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  announcementId String
+  announcement  Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([announcementId, userId])
+  @@index([institutionId, userId])
+  @@map("announcement_mentions")
+}
 model CalendarEvent {
   id            String      @id @default(cuid())
   institutionId String

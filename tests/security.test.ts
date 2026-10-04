@@ -33,6 +33,8 @@ test("aplica capacidades coherentes a rutas administrativas y académicas", () =
   assert.equal(canAccessDashboardPath("/dashboard/pagos", "COORDINATOR"), false);
   assert.equal(canAccessDashboardPath("/dashboard/analitica", "COORDINATOR"), false);
   assert.equal(canAccessDashboardPath("/dashboard/configuracion", "TEACHER"), false);
+  assert.equal(canAccessDashboardPath("/dashboard/configuracion/unidades", "ADMIN"), true);
+  assert.equal(canAccessDashboardPath("/dashboard/configuracion/unidades", "TEACHER"), false);
   assert.equal(canAccessDashboardPath("/dashboard/aula/curso-1", "STUDENT"), true);
   assert.equal(canAccessDashboardPath("/dashboard/aula/curso-1", "PARENT"), false);
   assert.equal(canAccessDashboardPath("/dashboard/calendario", "STUDENT"), true);
@@ -90,7 +92,7 @@ test("aísla finanzas y horarios en todas las capas visibles", () => {
   assert.match(studentDetail, /canViewFinance = capabilities\.has\("finance\.manage"\)/);
   assert.match(studentDetail, /\{canViewFinance && <section>/);
   assert.match(calendar, /if \(!capabilities\.has\("schedule\.view"\)\) notFound\(\)/);
-  assert.match(dashboard, /OR: \[\{ audience: "ALL" \}, \{ audience: "ROLE", audienceId: user\.role \}\]/);
+  assert.match(dashboard, /getCommunityAnnouncementWhere\(user, \{ canManage:/);
   assert.doesNotMatch(dashboard, /title: "Consultar calendario"/);
   assert.match(dashboard, /Comunicaciones dirigidas a tutores/);
 });
@@ -109,7 +111,7 @@ test("las acciones del servidor usan el registro central de capacidades", () => 
 });
 
 
-test("las 15 páginas del dashboard conservan defensa autoritativa en servidor", () => {
+test("las 16 páginas del dashboard conservan defensa autoritativa en servidor", () => {
   const pages = [
     ["page.tsx"],
     ["admisiones", "page.tsx"],
@@ -120,6 +122,7 @@ test("las 15 páginas del dashboard conservan defensa autoritativa en servidor",
     ["comunidad", "page.tsx"],
     ["configuracion", "page.tsx"],
     ["configuracion", "roles", "page.tsx"],
+    ["configuracion", "unidades", "page.tsx"],
     ["configuracion", "tutores", "page.tsx"],
     ["hijos", "page.tsx"],
     ["gestion", "page.tsx"],
@@ -127,7 +130,7 @@ test("las 15 páginas del dashboard conservan defensa autoritativa en servidor",
     ["pagos", "page.tsx"],
     ["portal", "page.tsx"],
   ];
-  assert.equal(pages.length, 15);
+  assert.equal(pages.length, 16);
   for (const segments of pages) {
     const source = readFileSync(join(process.cwd(), "src", "app", "dashboard", ...segments), "utf8");
     assert.match(source, /getEffectiveCapabilities\(/, segments.join("/") + " debe resolver permisos en servidor");
