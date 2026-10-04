@@ -11,6 +11,7 @@ export const CAPABILITY_CATALOG = {
   "people.view": { group: "Personas", label: "Ver personas", description: "Consulta perfiles estudiantiles dentro del alcance del rol." },
   "admissions.manage": { group: "Administración", label: "Gestionar admisiones", description: "Consulta y registra solicitudes de ingreso." },
   "announcement.publish": { group: "Comunicaciones", label: "Publicar avisos", description: "Publica comunicados para audiencias institucionales." },
+  "announcement.manage": { group: "Comunicaciones", label: "Gestionar todos los avisos", description: "Lee todos los avisos y consulta el desglose completo de sus audiencias.", critical: true },
   "finance.manage": { group: "Finanzas", label: "Gestionar cobros", description: "Consulta y modifica cargos y pagos institucionales." },
   "analytics.view": { group: "Reportes", label: "Ver reportes", description: "Consulta indicadores agregados de la institución." },
   "tenant.settings.manage": { group: "Configuración", label: "Gestionar institución", description: "Modifica los datos generales de la institución.", critical: true },
@@ -36,7 +37,7 @@ const capabilities = (...values: Capability[]) => new Set(values);
 export const SYSTEM_ROLE_CAPABILITIES: Record<EdukanaRole, ReadonlySet<Capability>> = {
   SUPER_ADMIN: capabilities(...CAPABILITIES),
   ADMIN: capabilities(...CAPABILITIES),
-  COORDINATOR: capabilities("course.view", "course.view.all", "course.manage", "course.roster.view", "schedule.view", "people.view", "admissions.manage", "announcement.publish"),
+  COORDINATOR: capabilities("course.view", "course.view.all", "course.manage", "course.roster.view", "schedule.view", "people.view", "admissions.manage", "announcement.publish", "announcement.manage"),
   TEACHER: capabilities("course.view", "course.manage", "course.roster.view", "schedule.view"),
   STUDENT: capabilities("student.portal.view", "course.view", "course.participate", "schedule.view"),
   // Every child capability still requires an ACTIVE Guardianship and its matching per-link flag.
@@ -46,8 +47,8 @@ export const SYSTEM_ROLE_CAPABILITIES: Record<EdukanaRole, ReadonlySet<Capabilit
 export const ROLE_ALLOWED_CAPABILITIES: Record<EdukanaRole, ReadonlySet<Capability>> = {
   SUPER_ADMIN: capabilities(...CAPABILITIES),
   ADMIN: capabilities(...CAPABILITIES),
-  COORDINATOR: capabilities("course.view", "course.view.all", "course.manage", "course.roster.view", "schedule.view", "people.view", "admissions.manage", "announcement.publish", "analytics.view"),
-  TEACHER: capabilities("course.view", "course.manage", "course.roster.view", "schedule.view", "people.view", "announcement.publish"),
+  COORDINATOR: capabilities("course.view", "course.view.all", "course.manage", "course.roster.view", "schedule.view", "people.view", "admissions.manage", "announcement.publish", "announcement.manage", "analytics.view"),
+  TEACHER: capabilities("course.view", "course.manage", "course.roster.view", "schedule.view", "people.view", "announcement.publish", "announcement.manage"),
   STUDENT: capabilities("student.portal.view", "course.view", "course.participate", "schedule.view"),
   PARENT: capabilities("child.portal.view", "child.academics.view", "child.attendance.view", "child.schedule.view", "child.announcements.view", "child.finance.view"),
 };

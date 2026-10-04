@@ -1,5 +1,7 @@
 import "server-only";
 
+import { getAnnouncementRecipient } from "@/lib/announcement-data";
+import { announcementRecipientWhere } from "@/lib/announcements";
 import { db } from "@/lib/db";
 import { canViewGuardianArea, type GuardianLink } from "@/lib/guardianship-policy";
 import type { Capability } from "@/lib/capabilities";
@@ -92,19 +94,20 @@ export async function getParentChildView(parent: ParentIdentity, capabilities: R
     take: 20,
   }) : [];
 
-  const announcementCourseIds = announcementsAllowed
-    ? (await db.enrollment.findMany({ where: { studentId, status: { in: ["ACTIVE", "COMPLETED"] }, course: { institutionId: parent.institutionId } }, select: { courseId: true } })).map((item) => item.courseId)
-    : [];
-  const announcements = announcementsAllowed ? await db.announcement.findMany({
-    where: {
-      institutionId: parent.institutionId,
-      OR: [
-        { audience: "ALL" },
-        { audience: "ROLE", audienceId: "PARENT" },
-        ...(announcementCourseIds.length ? [{ audience: "COURSE" as const, audienceId: { in: announcementCourseIds } }] : []),
-      ],
+  const announcementRecipient = announcementsAllowed ? await getAnnouncementRecipient(parent, [studentId]) : null;
+  const announcements = announcementsAllowed && announcementRecipient ? await db.announcement.findMany({
+    where: announcementRecipientWhere(announcementRecipient),
+    select: {
+      id: true,
+      title: true,
+      content: true,
+      externalUrl: true,
+      publishedAt: true,
+      isPinned: true,
+      mentions: { select: { userId: true } },
+      relatedCourses: { where: { institutionId: parent.institutionId, course: { institutionId: parent.institutionId } }, select: { course: { select: { id: true, name: true, code: true } } } },
+      assets: { where: { confirmedAt: { not: null } }, select: { id: true, originalName: true, mimeType: true } },
     },
-    select: { id: true, title: true, content: true, publishedAt: true, isPinned: true },
     orderBy: [{ isPinned: "desc" }, { publishedAt: "desc" }],
     take: 20,
   }) : [];

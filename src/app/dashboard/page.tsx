@@ -2,6 +2,7 @@ import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { getEffectiveCapabilities } from "@/lib/authorization";
 import { courseWhereForScope, resolveCourseReadScope } from "@/lib/course-scope";
+import { getCommunityAnnouncementWhere } from "@/lib/announcement-data";
 import { db } from "@/lib/db";
 import { AlertCircle, BookOpen, CalendarCheck, ChevronRight, CreditCard, Megaphone, Users } from "lucide-react";
 
@@ -45,11 +46,14 @@ export default async function DashboardPage() {
     if (capabilities.has("course.roster.view")) summary.push({ label: "Estudiantes", value: students, href: "/dashboard/aula" });
     if (capabilities.has("course.manage")) summary.push({ label: "Por calificar", value: submissions, href: "/dashboard/aula" });
   } else if (capabilities.has("people.view") || capabilities.has("course.view") || capabilities.has("admissions.manage")) {
+    const announcementWhere = capabilities.has("announcement.publish")
+      ? await getCommunityAnnouncementWhere(user, { canManage: capabilities.has("announcement.manage"), canPublish: true })
+      : null;
     const [students, courses, admissions, announcements] = await Promise.all([
       capabilities.has("people.view") ? db.user.count({ where: { institutionId: iid, role: "STUDENT", status: "ACTIVE" } }) : 0,
       courseWhere ? db.course.count({ where: courseWhere }) : 0,
       capabilities.has("admissions.manage") ? db.admissionLead.count({ where: { institutionId: iid, stage: { in: ["INTERESTED", "DOCUMENTS", "REVIEW"] } } }) : 0,
-      capabilities.has("announcement.publish") ? db.announcement.count({ where: { institutionId: iid } }) : 0,
+      announcementWhere ? db.announcement.count({ where: announcementWhere }) : 0,
     ]);
     if (capabilities.has("admissions.manage") && admissions > 0) attention.push({ href: "/dashboard/admisiones", title: "Revisar admisiones", detail: `${admissions} solicitudes abiertas`, icon: <AlertCircle size={18} /> });
     if (courseWhere) { continueItems.push({ href: "/dashboard/aula", title: "Gestionar cursos", detail: `${courses} cursos disponibles`, icon: <BookOpen size={18} /> }); summary.push({ label: "Cursos", value: courses, href: "/dashboard/aula" }); }
@@ -61,7 +65,7 @@ export default async function DashboardPage() {
     continueItems = capabilities.has("child.portal.view") ? [{ href: "/dashboard/hijos", title: "Abrir Mis hijos", detail: linkedChildren ? `${linkedChildren} vínculo(s) activo(s)` : "Sin vínculos activos", icon: <Users size={18} /> }] : [];
     summary = capabilities.has("child.portal.view") ? [{ label: "Hijos vinculados", value: linkedChildren, href: "/dashboard/hijos" }] : [];
   } else {
-    const announcements = await db.announcement.count({ where: { institutionId: iid, OR: [{ audience: "ALL" }, { audience: "ROLE", audienceId: user.role }] } });
+    const announcements = await db.announcement.count({ where: await getCommunityAnnouncementWhere(user, { canManage: false, canPublish: false }) });
     attention = announcements > 0 ? [{ href: "/dashboard/comunidad", title: "Leer avisos", detail: `${announcements} avisos publicados`, icon: <Megaphone size={18} /> }] : [];
     continueItems = [{ href: "/dashboard/comunidad", title: "Consultar avisos", detail: "Comunicaciones dirigidas a tutores", icon: <Megaphone size={18} /> }];
     summary = [{ label: "Avisos", value: announcements, href: "/dashboard/comunidad" }];

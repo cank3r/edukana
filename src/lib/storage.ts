@@ -24,6 +24,14 @@ export async function createPrivateAssetUpload(input: { institutionId: string; c
   return { bucket, objectPath, signedUrl: data.signedUrl };
 }
 
+export async function createPrivateAnnouncementAssetUpload(input: { institutionId: string; uploaderId: string; fileName: string }) {
+  const { bucket } = config();
+  const objectPath = `${input.institutionId}/announcements/drafts/${input.uploaderId}/${randomUUID()}-${safeObjectName(input.fileName)}`;
+  const { data, error } = await storageAdmin().from(bucket).createSignedUploadUrl(objectPath, { upsert: false });
+  if (error) throw new Error(`Storage rechazó la preparación (${error.message}).`);
+  return { bucket, objectPath, signedUrl: data.signedUrl };
+}
+
 export async function inspectPrivateAsset(bucket: string, objectPath: string) {
   const { data, error } = await storageAdmin().from(bucket).info(objectPath);
   if (error) throw new Error(`No se pudo verificar la carga (${error.message}).`);

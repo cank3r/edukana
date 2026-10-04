@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { breadcrumbLabel, COURSE_MORE_AREAS, COURSE_TABS, navigationForRole, spanishLabel } from "../src/lib/ux";
+import { breadcrumbLabel, COURSE_MORE_AREAS, COURSE_TABS, navigationForRole, roleLabel, spanishLabel } from "../src/lib/ux";
 
 test("muestra módulos claros y propios de cada rol", () => {
   assert.deepEqual(navigationForRole("STUDENT").map((item) => item.label), ["Inicio", "Mi aprendizaje", "Cursos", "Avisos", "Calendario"]);
@@ -19,6 +19,9 @@ test("localiza estados visibles y conserva un fallback legible", () => {
   assert.equal(spanishLabel("SUBMITTED"), "Entregado");
   assert.equal(spanishLabel("PRESENT"), "Presente");
   assert.equal(spanishLabel("CUSTOM_STATUS"), "Custom status");
+  assert.equal(roleLabel("ADMIN"), "Administrador");
+  assert.equal(roleLabel("TEACHER"), "Docente");
+  assert.equal(roleLabel("PARENT"), "Tutor");
   assert.equal(breadcrumbLabel("analitica"), "Reportes");
 });
 
