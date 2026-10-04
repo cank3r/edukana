@@ -6,6 +6,7 @@ import { join } from "node:path";
 const schema = readFileSync(join(process.cwd(), "prisma", "schema.prisma"), "utf8");
 const migration = readFileSync(join(process.cwd(), "prisma", "migrations", "20261001193000_real_edukana_mvp", "migration.sql"), "utf8");
 const announcementMigration = readFileSync(join(process.cwd(), "prisma", "migrations", "20261004111500_advanced_announcements", "migration.sql"), "utf8");
+const announcementMimeMigration = readFileSync(join(process.cwd(), "prisma", "migrations", "20261004223000_announcement_image_mimes", "migration.sql"), "utf8");
 
 const requiredModels = ["AttendanceSession", "Attendance", "GradingPeriod", "GradeCategory", "GradeItem", "GradeEntry", "Assignment", "Submission", "QuestionBankItem", "Exam", "ExamQuestion", "ExamAttempt", "ExamAnswer", "ScheduleSlot", "Certificate", "StorageAsset", "CourseSection", "Lesson", "LessonProgress"];
 
@@ -44,4 +45,13 @@ test("normaliza audiencias de anuncios sin romper registros existentes", () => {
   assert.match(announcementMigration, /UPDATE "announcements" SET "audienceInstitution" = true WHERE "audience" = 'ALL'/);
   assert.match(announcementMigration, /INSERT INTO "announcement_role_targets"/);
   assert.match(announcementMigration, /INSERT INTO "announcement_course_targets"/);
+});
+
+
+test("el bucket privado admite imágenes y conserva documentos y videos", () => {
+  for (const mime of ["image/jpeg", "image/png", "image/webp", "image/gif", "application/pdf", "video/mp4", "video/webm"]) {
+    assert.match(announcementMimeMigration, new RegExp(`'${mime.replace("/", "\\/")}'`));
+  }
+  assert.match(announcementMimeMigration, /public = false/);
+  assert.match(announcementMimeMigration, /file_size_limit = 104857600/);
 });
