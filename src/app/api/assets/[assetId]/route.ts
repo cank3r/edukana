@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
-import { hasCapability } from "@/lib/capabilities";
+import { getEffectiveCapabilities } from "@/lib/authorization";
+import { courseWhereForScope, resolveCourseReadScope, resolveCourseWriteScope } from "@/lib/course-scope";
 import { db } from "@/lib/db";
 import { createPrivateAssetUrl, inspectPrivateAsset, removePrivateAsset } from "@/lib/storage";
 
@@ -10,11 +11,13 @@ export async function GET(_request: Request, context: { params: Promise<{ assetI
   const { assetId } = await context.params;
   const asset = await db.storageAsset.findFirst({ where: { id: assetId, institutionId: user.institutionId }, select: { bucket: true, objectPath: true, courseId: true, uploaderId: true, visibility: true, submission: { select: { studentId: true } } } });
   if (!asset) return Response.json({ error: "Archivo no encontrado" }, { status: 404 });
-  const staff = hasCapability(user.role, "course.view.all");
-  const teacher = asset.courseId ? Boolean(await db.course.findFirst({ where: { id: asset.courseId, institutionId: user.institutionId, teacherId: user.id }, select: { id: true } })) : false;
-  const enrolled = asset.courseId ? Boolean(await db.enrollment.findFirst({ where: { courseId: asset.courseId, studentId: user.id, status: { in: ["ACTIVE", "COMPLETED"] } }, select: { id: true } })) : false;
+  const capabilities = await getEffectiveCapabilities(user.institutionId, user.role);
+  const readWhere = courseWhereForScope(user.institutionId, resolveCourseReadScope(user, capabilities));
+  const writeWhere = courseWhereForScope(user.institutionId, resolveCourseWriteScope(user, capabilities));
+  const readableCourse = asset.courseId && readWhere ? Boolean(await db.course.findFirst({ where: { id: asset.courseId, ...readWhere }, select: { id: true } })) : false;
+  const manageableCourse = asset.courseId && writeWhere ? Boolean(await db.course.findFirst({ where: { id: asset.courseId, ...writeWhere }, select: { id: true } })) : false;
   const owner = asset.uploaderId === user.id || asset.submission?.studentId === user.id;
-  const allowed = staff || teacher || owner || (asset.visibility !== "PRIVATE" && enrolled);
+  const allowed = owner || manageableCourse || (asset.visibility !== "PRIVATE" && readableCourse);
   if (!allowed) return Response.json({ error: "Permisos insuficientes" }, { status: 403 });
   try {
     return Response.redirect(await createPrivateAssetUrl(asset.bucket, asset.objectPath, 300), 302);

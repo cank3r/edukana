@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { hasCapability } from "@/lib/capabilities";
+import { getEffectiveCapabilities } from "@/lib/authorization";
+import { canManageCourse, courseWhereForScope, resolveCourseReadScope, resolveCourseWriteScope } from "@/lib/course-scope";
 import { calculateWeightedGrade } from "@/lib/lms";
 import { spanishLabel } from "@/lib/ux";
 import CourseTabs from "@/components/dashboard/CourseTabs";
@@ -19,17 +20,19 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ c
   const session = await auth();
   const user = session!.user;
   const { courseId } = await params;
-  if (!hasCapability(user.role, "course.view")) notFound();
-  const canManage = hasCapability(user.role, "course.manage");
-  const canViewRoster = hasCapability(user.role, "course.roster.view");
-  const isStudent = user.role === "STUDENT";
+  const capabilities = await getEffectiveCapabilities(user.institutionId, user.role);
+  if (!capabilities.has("course.view")) notFound();
+  const readScope = resolveCourseReadScope(user, capabilities);
+  const readWhere = courseWhereForScope(user.institutionId, readScope);
+  if (!readWhere) notFound();
+  const accessibleCourse = await db.course.findFirst({ where: { id: courseId, ...readWhere }, select: { teacherId: true } });
+  if (!accessibleCourse) notFound();
+  const writeScope = resolveCourseWriteScope(user, capabilities);
+  const canManage = canManageCourse(writeScope, accessibleCourse.teacherId);
+  const canViewRoster = capabilities.has("course.roster.view");
+  const isStudent = readScope.kind === "student";
   const course = await db.course.findFirst({
-    where: {
-      id: courseId,
-      institutionId: user.institutionId,
-      ...(user.role === "TEACHER" ? { teacherId: user.id } : {}),
-      ...(isStudent ? { enrollments: { some: { studentId: user.id, status: { in: ["ACTIVE", "COMPLETED"] as const } } } } : {}),
-    },
+    where: { id: courseId, ...readWhere },
     include: {
       teacher: { select: { name: true } },
       period: { select: { name: true, startDate: true, endDate: true } },

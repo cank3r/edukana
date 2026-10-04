@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import { hasCapability } from "@/lib/capabilities";
+import { getEffectiveCapabilities } from "@/lib/authorization";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { TrendingUp, Users, BookOpen, UserPlus } from "lucide-react";
@@ -8,7 +8,8 @@ export default async function AnaliticaPage() {
   const session = await auth();
   const user = session!.user;
 
-  if (!hasCapability(user.role, "analytics.view")) {
+  const capabilities = await getEffectiveCapabilities(user.institutionId, user.role);
+  if (!capabilities.has("analytics.view")) {
     redirect("/dashboard");
   }
 

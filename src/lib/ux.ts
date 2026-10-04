@@ -1,4 +1,4 @@
-import { hasCapability } from "@/lib/capabilities";
+import { hasCapability, type Capability } from "@/lib/capabilities";
 import type { EdukanaRole } from "@/types/next-auth";
 
 export type NavigationItem = {
@@ -14,21 +14,21 @@ const common = {
   calendar: { label: "Calendario", href: "/dashboard/calendario", icon: "calendar" },
 } satisfies Record<string, NavigationItem>;
 
-export function navigationForRole(role: EdukanaRole): NavigationItem[] {
-  if (role === "STUDENT") return [common.home, { label: "Mi aprendizaje", href: "/dashboard/portal", icon: "portal" }, common.courses, common.community, common.calendar];
-  if (role === "TEACHER") return [common.home, { ...common.courses, label: "Mis cursos" }, common.community, common.calendar];
-  if (role === "PARENT") return [common.home, common.community];
-
+export function navigationForRole(role: EdukanaRole, effective?: ReadonlySet<Capability> | readonly Capability[]): NavigationItem[] {
+  const can = (capability: Capability) => hasCapability(role, capability, effective);
+  const courses = role === "TEACHER" ? { ...common.courses, label: "Mis cursos" } : common.courses;
   return [
     common.home,
-    ...(hasCapability(role, "people.view") ? [{ label: "Personas", href: "/dashboard/gestion", icon: "people" } as NavigationItem] : []),
-    ...(hasCapability(role, "course.view") ? [common.courses] : []),
-    common.community,
-    ...(hasCapability(role, "admissions.manage") ? [{ label: "Admisiones", href: "/dashboard/admisiones", icon: "admissions" } as NavigationItem] : []),
-    ...(hasCapability(role, "finance.manage") ? [{ label: "Cobros", href: "/dashboard/pagos", icon: "payments" } as NavigationItem] : []),
-    ...(hasCapability(role, "schedule.view") ? [common.calendar] : []),
-    ...(hasCapability(role, "analytics.view") ? [{ label: "Reportes", href: "/dashboard/analitica", icon: "analytics" } as NavigationItem] : []),
-    ...(hasCapability(role, "tenant.settings.manage") ? [{ label: "Configuración", href: "/dashboard/configuracion", icon: "settings" } as NavigationItem] : []),
+    ...(role === "PARENT" && can("child.portal.view") ? [{ label: "Mis hijos", href: "/dashboard/hijos", icon: "portal" } as NavigationItem] : []),
+    ...(role === "STUDENT" && can("student.portal.view") ? [{ label: "Mi aprendizaje", href: "/dashboard/portal", icon: "portal" } as NavigationItem] : []),
+    ...(can("people.view") ? [{ label: "Personas", href: "/dashboard/gestion", icon: "people" } as NavigationItem] : []),
+    ...(can("course.view") ? [courses] : []),
+    ...(role !== "PARENT" || can("child.announcements.view") ? [common.community] : []),
+    ...(can("admissions.manage") ? [{ label: "Admisiones", href: "/dashboard/admisiones", icon: "admissions" } as NavigationItem] : []),
+    ...(can("finance.manage") ? [{ label: "Cobros", href: "/dashboard/pagos", icon: "payments" } as NavigationItem] : []),
+    ...(can("schedule.view") ? [common.calendar] : []),
+    ...(can("analytics.view") ? [{ label: "Reportes", href: "/dashboard/analitica", icon: "analytics" } as NavigationItem] : []),
+    ...(can("tenant.settings.manage") || can("roles.permissions.manage") ? [{ label: "Configuración", href: "/dashboard/configuracion", icon: "settings" } as NavigationItem] : []),
   ];
 }
 
@@ -50,7 +50,7 @@ export function spanishLabel(value: string | null | undefined): string {
 
 const BREADCRUMB_LABELS: Record<string, string> = {
   dashboard: "Inicio", aula: "Cursos", gestion: "Personas", estudiantes: "Estudiantes", portal: "Mi aprendizaje",
-  comunidad: "Avisos", admisiones: "Admisiones", pagos: "Cobros", calendario: "Calendario", analitica: "Reportes", configuracion: "Configuración",
+  comunidad: "Avisos", admisiones: "Admisiones", pagos: "Cobros", calendario: "Calendario", analitica: "Reportes", configuracion: "Configuración", roles: "Roles y permisos", tutores: "Tutores", hijos: "Mis hijos",
 };
 
 export function breadcrumbLabel(segment: string): string {
@@ -65,7 +65,6 @@ export const COURSE_TABS = [
   { href: "#tareas-examenes", label: "Tareas y exámenes" },
   { href: "#calificaciones", label: "Calificaciones" },
 ] as const;
-
 
 export const COURSE_MORE_AREAS = [
   { href: "#horario", label: "Horario" },

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { hasCapability } from "@/lib/capabilities";
+import { getEffectiveCapabilities } from "@/lib/authorization";
 import { db } from "@/lib/db";
 import { PaymentForm } from "@/components/dashboard/MutationForms";
 
@@ -9,7 +9,8 @@ const labels = { PAID: "Pagado", PENDING: "Pendiente", OVERDUE: "Vencido", PARTI
 export default async function PagosPage() {
   const session = await auth();
   const user = session!.user;
-  if (!hasCapability(user.role, "finance.manage")) redirect("/dashboard");
+  const capabilities = await getEffectiveCapabilities(user.institutionId, user.role);
+  if (!capabilities.has("finance.manage")) redirect("/dashboard");
   const [payments, students, periods] = await Promise.all([
     db.paymentConcept.findMany({ where: { institutionId: user.institutionId }, orderBy: [{ dueDate: "asc" }, { createdAt: "desc" }], take: 100 }),
     db.user.findMany({ where: { institutionId: user.institutionId, role: "STUDENT", status: "ACTIVE" }, select: { id: true, name: true }, orderBy: { name: "asc" } }),

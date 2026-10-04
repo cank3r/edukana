@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
+import { getEffectiveCapabilities } from "@/lib/authorization";
 import { db } from "@/lib/db";
 import { spanishLabel } from "@/lib/ux";
 import { BookOpen, CheckCircle, Clock, CreditCard } from "lucide-react";
@@ -8,7 +9,8 @@ import { BookOpen, CheckCircle, Clock, CreditCard } from "lucide-react";
 export default async function StudentPortalPage() {
   const session = await auth();
   const user = session!.user;
-  if (user.role !== "STUDENT") redirect("/dashboard");
+  const capabilities = await getEffectiveCapabilities(user.institutionId, user.role);
+  if (user.role !== "STUDENT" || !capabilities.has("student.portal.view")) redirect("/dashboard");
 
   const [enrollments, payments] = await Promise.all([
     db.enrollment.findMany({

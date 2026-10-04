@@ -1,7 +1,9 @@
 "use server";
 
 import { auth } from "@/lib/auth";
-import { hasCapability, type Capability } from "@/lib/capabilities";
+import { type Capability } from "@/lib/capabilities";
+import { getEffectiveCapabilities, userHasCapability } from "@/lib/authorization";
+import { courseWhereForScope, resolveCourseWriteScope } from "@/lib/course-scope";
 import { db } from "@/lib/db";
 import type { EdukanaRole } from "@/types/next-auth";
 import { revalidatePath } from "next/cache";
@@ -16,7 +18,7 @@ async function requireUser(capability?: Capability): Promise<SessionUser> {
   const session = await auth();
   const user = session?.user as SessionUser | undefined;
   if (!user?.id || !user.institutionId) throw new Error("No autorizado");
-  if (capability && !hasCapability(user.role, capability)) throw new Error("Permisos insuficientes");
+  if (capability && !(await userHasCapability(user, capability))) throw new Error("Permisos insuficientes");
   return user;
 }
 
@@ -37,12 +39,11 @@ export async function createCourseModule(_state: ActionState, formData: FormData
     const user = await requireUser("course.manage");
     const parsed = moduleSchema.safeParse(fields(formData));
     if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? initialError.message };
+    const capabilities = await getEffectiveCapabilities(user.institutionId, user.role);
+    const courseWhere = courseWhereForScope(user.institutionId, resolveCourseWriteScope(user, capabilities));
+    if (!courseWhere) return { ok: false, message: "Curso no encontrado o sin acceso." };
     const course = await db.course.findFirst({
-      where: {
-        id: parsed.data.courseId,
-        institutionId: user.institutionId,
-        ...(user.role === "TEACHER" ? { teacherId: user.id } : {}),
-      },
+      where: { id: parsed.data.courseId, ...courseWhere },
       select: { id: true, _count: { select: { modules: true } } },
     });
     if (!course) return { ok: false, message: "Curso no encontrado o sin acceso." };
