@@ -1,0 +1,15 @@
+# 01 · Plataforma y marca blanca — Tareas
+- [ ] 1. Migración `Institution`→`Tenant`, `TenantDomain`, `Plan`, `TenantSetting`, `TenantSecret`, `PlatformUser`. _Req 3, 6_
+- [ ] 2. Resolución por host en `proxy.ts` y contexto; hosts de plataforma. _Req 3_
+- [ ] 3. Cliente Prisma con tenant obligatorio + RLS + `dbPlatform`. _Req 3_
+- [ ] 4. Presets por tipo (módulos, roles, terminología, ajustes, estructura, plantillas). _Req 2.1_
+- [ ] 5. `provisionTenant` transaccional + invitación de propietario. _Req 2.3–2.5_
+- [ ] 6. Consola: resumen, lista y detalle de espacios. _Req 1_
+- [ ] 7. Asistente "Nuevo espacio" de 5 pasos con vista previa de marca. _Req 2_
+- [ ] 8. Motor de tema y pantalla de marca con vista previa en vivo. _Req 5_
+- [ ] 9. Dominio propio: alta, verificación DNS, activación. _Req 4_
+- [ ] 10. Planes, límites (`checkLimit`) y módulos (`hasModule`). _Req 6_
+- [ ] 11. Ciclo de vida, modo solo lectura, exportación, job de uso y facturas SaaS. _Req 7_
+- [ ] 12. Suplantación con motivo, tiempo, banner, bloqueos y auditoría. _Req 8_
+- [ ] 13. Lista de puesta en marcha del propietario. _Req 9_
+- [ ] 14. Pruebas de aislamiento generadas por modelo. _Req 3_

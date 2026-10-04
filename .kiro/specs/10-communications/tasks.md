@@ -1,0 +1,11 @@
+# 10 · Comunicación — Tareas
+- [ ] 1. Bus de eventos, `Notification`, `OutboundMessage`, worker. _Req 1_
+- [ ] 2. Proveedores de correo y WhatsApp con credenciales por espacio. _Req 1.2_
+- [ ] 3. Plantillas editables con marca. _Req 1.4_
+- [ ] 4. Campana, preferencias y registro de envíos. _Req 1_
+- [ ] 5. Avisos con audiencias, alcance, programación, aprobación, acuse. _Req 2_
+- [ ] 6. Mensajes con reglas y moderación. _Req 3_
+- [ ] 7. Foros. _Req 4_
+- [ ] 8. Calendario combinado, CRUD e iCal. _Req 5_
+- [ ] 9. Sesiones en vivo e integración de reuniones. _Req 6_
+- [ ] 10. Pruebas. _Todos_

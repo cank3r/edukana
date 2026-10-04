@@ -1,0 +1,11 @@
+# 15 · Operación y calidad — Tareas
+- [ ] 1. Cola de jobs, worker y panel. _Req 1_
+- [ ] 2. Consentimientos, exportación personal y anonimización. _Req 2_
+- [ ] 3. Exportación completa del espacio. _Req 2.3_
+- [ ] 4. Endurecimiento de seguridad y respaldos. _Req 3_
+- [ ] 5. Accesibilidad con axe en CI; inglés. _Req 4_
+- [ ] 6. PWA por espacio. _Req 5_
+- [ ] 7. Google Classroom. _Req 6.1_
+- [ ] 8. SCORM, LTI, OneRoster. _Req 6.2_
+- [ ] 9. API y webhooks. _Req 6.3_
+- [ ] 10. Observabilidad. _Req 7_
