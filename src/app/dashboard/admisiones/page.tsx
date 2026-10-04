@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { hasCapability } from "@/lib/capabilities";
+import { getEffectiveCapabilities } from "@/lib/authorization";
 import { db } from "@/lib/db";
 import { AdmissionForm } from "@/components/dashboard/MutationForms";
 import { CheckCircle, Clock, UserPlus, XCircle } from "lucide-react";
@@ -10,7 +10,8 @@ const stageLabel = { INTERESTED: "Interesado", DOCUMENTS: "Documentos", REVIEW: 
 export default async function AdmisionesPage() {
   const session = await auth();
   const user = session!.user;
-  if (!hasCapability(user.role, "admissions.manage")) redirect("/dashboard");
+  const capabilities = await getEffectiveCapabilities(user.institutionId, user.role);
+  if (!capabilities.has("admissions.manage")) redirect("/dashboard");
   const applications = await db.admissionLead.findMany({ where: { institutionId: user.institutionId }, orderBy: { createdAt: "desc" }, take: 100 });
   const count = (stages: Array<keyof typeof stageLabel>) => applications.filter((item) => stages.includes(item.stage)).length;
 

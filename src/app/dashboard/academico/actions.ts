@@ -1,7 +1,9 @@
 "use server";
 
 import { auth } from "@/lib/auth";
-import { hasCapability, type Capability } from "@/lib/capabilities";
+import { type Capability } from "@/lib/capabilities";
+import { getEffectiveCapabilities } from "@/lib/authorization";
+import { courseWhereForParticipation, courseWhereForScope, resolveCourseWriteScope } from "@/lib/course-scope";
 import { db } from "@/lib/db";
 import { autoScoreAnswer, createCertificateIdentity, findScheduleConflicts, progressPercentage, reviewedExamScore } from "@/lib/lms";
 import type { EdukanaRole } from "@/types/next-auth";
@@ -9,7 +11,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import type { ActionState } from "@/app/dashboard/actions";
 
-type SessionUser = { id: string; institutionId: string; role: EdukanaRole };
+type SessionUser = { id: string; institutionId: string; role: EdukanaRole; capabilities: ReadonlySet<Capability> };
 const failed = (message = "No se pudo completar la operación."): ActionState => ({ ok: false, message });
 const success = (message: string): ActionState => ({ ok: true, message });
 const text = (fd: FormData, key: string) => String(fd.get(key) ?? "").trim();
@@ -17,15 +19,26 @@ const optionalDate = (value: string) => value ? new Date(value) : null;
 
 async function requireUser(capability?: Capability): Promise<SessionUser> {
   const session = await auth();
-  const user = session?.user as SessionUser | undefined;
+  const user = session?.user;
   if (!user?.id || !user.institutionId) throw new Error("No autorizado");
-  if (capability && !hasCapability(user.role, capability)) throw new Error("Permisos insuficientes");
-  return user;
+  const capabilities = await getEffectiveCapabilities(user.institutionId, user.role);
+  if (capability && !capabilities.has(capability)) throw new Error("Permisos insuficientes");
+  return { id: user.id, institutionId: user.institutionId, role: user.role, capabilities };
+}
+
+function managementCourseWhere(user: SessionUser) {
+  return courseWhereForScope(user.institutionId, resolveCourseWriteScope(user, user.capabilities))
+    ?? { institutionId: user.institutionId, id: "__restricted__" };
+}
+
+function participationCourseWhere(user: SessionUser) {
+  return courseWhereForParticipation(user.institutionId, user, user.capabilities)
+    ?? { institutionId: user.institutionId, id: "__restricted__" };
 }
 
 async function manageableCourse(user: SessionUser, courseId: string) {
   return db.course.findFirst({
-    where: { id: courseId, institutionId: user.institutionId, ...(user.role === "TEACHER" ? { teacherId: user.id } : {}) },
+    where: { id: courseId, ...managementCourseWhere(user) },
     select: { id: true, periodId: true, teacherId: true, completionThreshold: true },
   });
 }
@@ -49,7 +62,7 @@ export async function createLesson(_state: ActionState, fd: FormData): Promise<A
     const user = await requireUser("course.manage");
     const parsed = z.object({ sectionId: z.string().min(1), title: z.string().min(3).max(140), summary: z.string().max(500).optional(), content: z.string().max(50000).optional(), type: z.enum(["TEXT", "VIDEO", "DOCUMENT", "ACTIVITY"]), estimatedMinutes: z.coerce.number().int().min(1).max(600) }).safeParse({ sectionId: text(fd, "sectionId"), title: text(fd, "title"), summary: text(fd, "summary"), content: text(fd, "content"), type: text(fd, "type"), estimatedMinutes: text(fd, "estimatedMinutes") || "10" });
     if (!parsed.success) return failed(parsed.error.issues[0]?.message);
-    const section = await db.courseSection.findFirst({ where: { id: parsed.data.sectionId, institutionId: user.institutionId, ...(user.role === "TEACHER" ? { course: { teacherId: user.id } } : {}) }, select: { id: true, courseId: true, _count: { select: { lessons: true } } } });
+    const section = await db.courseSection.findFirst({ where: { id: parsed.data.sectionId, institutionId: user.institutionId, course: managementCourseWhere(user) }, select: { id: true, courseId: true, _count: { select: { lessons: true } } } });
     if (!section) return failed("Sección no encontrada o sin acceso.");
     await db.lesson.create({ data: { institutionId: user.institutionId, courseId: section.courseId, sectionId: section.id, title: parsed.data.title, summary: parsed.data.summary || null, content: parsed.data.content || null, type: parsed.data.type, estimatedMinutes: parsed.data.estimatedMinutes, order: section._count.lessons, isPublished: fd.get("isPublished") === "on" } });
     revalidatePath(`/dashboard/aula/${section.courseId}`);
@@ -115,7 +128,7 @@ export async function submitAssignment(_state: ActionState, fd: FormData): Promi
   try {
     const user = await requireUser("course.participate");
     const assignmentId = text(fd, "assignmentId");
-    const assignment = await db.assignment.findFirst({ where: { id: assignmentId, isPublished: true, course: { institutionId: user.institutionId, enrollments: { some: { studentId: user.id, status: "ACTIVE" } } } }, select: { id: true, courseId: true, dueDate: true, allowLate: true } });
+    const assignment = await db.assignment.findFirst({ where: { id: assignmentId, isPublished: true, course: participationCourseWhere(user) }, select: { id: true, courseId: true, dueDate: true, allowLate: true } });
     if (!assignment) return failed("Asignación no disponible.");
     if (!assignment.allowLate && assignment.dueDate && assignment.dueDate < new Date()) return failed("El plazo de entrega cerró.");
     const content = text(fd, "content");
@@ -134,7 +147,7 @@ export async function reviewSubmission(_state: ActionState, fd: FormData): Promi
     const submissionId = text(fd, "submissionId");
     const score = Number(text(fd, "score"));
     const feedback = text(fd, "feedback");
-    const submission = await db.submission.findFirst({ where: { id: submissionId, assignment: { course: { institutionId: user.institutionId, ...(user.role === "TEACHER" ? { teacherId: user.id } : {}) } } }, include: { assignment: { select: { courseId: true, maxScore: true, gradeItem: { select: { id: true } } } } } });
+    const submission = await db.submission.findFirst({ where: { id: submissionId, assignment: { course: managementCourseWhere(user) } }, include: { assignment: { select: { courseId: true, maxScore: true, gradeItem: { select: { id: true } } } } } });
     if (!submission || !Number.isFinite(score) || score < 0 || score > submission.assignment.maxScore) return failed("Entrega o puntuación inválida.");
     await db.$transaction(async (tx) => {
       await tx.submission.update({ where: { id: submission.id }, data: { score, feedback: feedback || null, status: "GRADED", gradedAt: new Date() } });
@@ -184,7 +197,7 @@ export async function submitExam(_state: ActionState, fd: FormData): Promise<Act
   try {
     const user = await requireUser("course.participate");
     const examId = text(fd, "examId");
-    const exam = await db.exam.findFirst({ where: { id: examId, institutionId: user.institutionId, isPublished: true, course: { enrollments: { some: { studentId: user.id, status: "ACTIVE" } } } }, include: { questions: { include: { bankItem: true }, orderBy: { order: "asc" } }, attempts: { where: { studentId: user.id }, select: { attemptNumber: true } }, gradeItem: { select: { id: true } }, course: { select: { teacherId: true } } } });
+    const exam = await db.exam.findFirst({ where: { id: examId, institutionId: user.institutionId, isPublished: true, course: participationCourseWhere(user) }, include: { questions: { include: { bankItem: true }, orderBy: { order: "asc" } }, attempts: { where: { studentId: user.id }, select: { attemptNumber: true } }, gradeItem: { select: { id: true } }, course: { select: { teacherId: true } } } });
     if (!exam || !exam.questions.length || exam.attempts.length >= exam.maxAttempts) return failed("Examen no disponible o intentos agotados.");
     const now = new Date();
     if ((exam.opensAt && now < exam.opensAt) || (exam.closesAt && now > exam.closesAt)) return failed("El examen está fuera de su ventana de disponibilidad.");
@@ -210,7 +223,7 @@ export async function reviewExamAttempt(_state: ActionState, fd: FormData): Prom
     const user = await requireUser("course.manage");
     const attemptId = text(fd, "attemptId");
     const attempt = await db.examAttempt.findFirst({
-      where: { id: attemptId, institutionId: user.institutionId, status: "SUBMITTED", exam: { course: { institutionId: user.institutionId, ...(user.role === "TEACHER" ? { teacherId: user.id } : {}) } } },
+      where: { id: attemptId, institutionId: user.institutionId, status: "SUBMITTED", exam: { course: managementCourseWhere(user) } },
       include: {
         answers: { include: { bankItem: { select: { type: true } } } },
         exam: { select: { courseId: true, gradeItem: { select: { id: true } }, questions: { select: { bankItemId: true, points: true } } } },
@@ -267,12 +280,12 @@ export async function togglePublication(_state: ActionState, fd: FormData): Prom
     const user = await requireUser("course.manage");
     const entity = text(fd, "entity"); const id = text(fd, "id"); const publish = text(fd, "publish") === "true";
     if (entity === "period") {
-      const item = await db.gradingPeriod.findFirst({ where: { id, institutionId: user.institutionId, ...(user.role === "TEACHER" ? { course: { teacherId: user.id } } : {}) }, select: { id: true, courseId: true } });
+      const item = await db.gradingPeriod.findFirst({ where: { id, institutionId: user.institutionId, course: managementCourseWhere(user) }, select: { id: true, courseId: true } });
       if (!item) return failed("Período no encontrado.");
       await db.gradingPeriod.update({ where: { id: item.id }, data: { isPublished: publish, publishedAt: publish ? new Date() : null } });
       revalidatePath(`/dashboard/aula/${item.courseId}`);
     } else if (entity === "assignment") {
-      const item = await db.assignment.findFirst({ where: { id, course: { institutionId: user.institutionId, ...(user.role === "TEACHER" ? { teacherId: user.id } : {}) } }, select: { id: true, courseId: true } });
+      const item = await db.assignment.findFirst({ where: { id, course: managementCourseWhere(user) }, select: { id: true, courseId: true } });
       if (!item) return failed("Asignación no encontrada.");
       await db.assignment.update({ where: { id: item.id }, data: { isPublished: publish, publishedAt: publish ? new Date() : null, gradeItem: { update: { isPublished: publish } } } }).catch(async () => db.assignment.update({ where: { id: item.id }, data: { isPublished: publish, publishedAt: publish ? new Date() : null } }));
       revalidatePath(`/dashboard/aula/${item.courseId}`);
@@ -285,7 +298,7 @@ export async function markLessonComplete(_state: ActionState, fd: FormData): Pro
   try {
     const user = await requireUser("course.participate");
     const lessonId = text(fd, "lessonId");
-    const lesson = await db.lesson.findFirst({ where: { id: lessonId, institutionId: user.institutionId, isPublished: true, section: { isPublished: true }, course: { enrollments: { some: { studentId: user.id, status: "ACTIVE" } } } }, select: { id: true, courseId: true } });
+    const lesson = await db.lesson.findFirst({ where: { id: lessonId, institutionId: user.institutionId, isPublished: true, section: { isPublished: true }, course: participationCourseWhere(user) }, select: { id: true, courseId: true } });
     if (!lesson) return failed("Lección no disponible.");
     const enrollment = await db.enrollment.findUnique({ where: { studentId_courseId: { studentId: user.id, courseId: lesson.courseId } }, select: { id: true } });
     if (!enrollment) return failed("Matrícula no encontrada.");
@@ -303,7 +316,7 @@ export async function issueCertificate(_state: ActionState, fd: FormData): Promi
   try {
     const user = await requireUser("course.manage");
     const enrollmentId = text(fd, "enrollmentId");
-    const enrollment = await db.enrollment.findFirst({ where: { id: enrollmentId, course: { institutionId: user.institutionId, ...(user.role === "TEACHER" ? { teacherId: user.id } : {}) } }, include: { course: { select: { id: true, completionThreshold: true } }, student: { select: { name: true } } } });
+    const enrollment = await db.enrollment.findFirst({ where: { id: enrollmentId, course: managementCourseWhere(user) }, include: { course: { select: { id: true, completionThreshold: true } }, student: { select: { name: true } } } });
     if (!enrollment || (enrollment.status !== "COMPLETED" && enrollment.progressPercent < enrollment.course.completionThreshold)) return failed("El curso todavía no cumple los criterios de finalización.");
     const secret = process.env.CERTIFICATE_SECRET ?? process.env.AUTH_SECRET;
     if (!secret) return failed("Falta CERTIFICATE_SECRET o AUTH_SECRET.");

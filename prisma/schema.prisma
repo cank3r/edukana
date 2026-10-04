@@ -46,6 +46,8 @@ model Institution {
   scheduleSlots      ScheduleSlot[]
   assets             StorageAsset[]
   certificates       Certificate[]
+  roleCapabilityOverrides RoleCapabilityOverride[]
+  guardianships           Guardianship[]
 
   @@map("institutions")
 }
@@ -91,6 +93,11 @@ model User {
   scheduleSlots      ScheduleSlot[]      @relation("ScheduleTeacher")
   uploadedAssets     StorageAsset[]      @relation("AssetUploader")
   issuedCertificates Certificate[]       @relation("CertificateIssuer")
+  updatedRoleCapabilities RoleCapabilityOverride[] @relation("RoleCapabilityOverrideUpdater")
+  parentGuardianships     Guardianship[] @relation("GuardianshipParent")
+  studentGuardianships    Guardianship[] @relation("GuardianshipStudent")
+  createdGuardianships    Guardianship[] @relation("GuardianshipCreator")
+  updatedGuardianships    Guardianship[] @relation("GuardianshipUpdater")
 
   @@unique([institutionId, email])
   @@index([institutionId, role])
@@ -793,6 +800,66 @@ model CalendarEvent {
   createdAt     DateTime    @default(now())
 
   @@map("calendar_events")
+}
+
+enum GuardianshipRelationship {
+  MOTHER
+  FATHER
+  LEGAL_GUARDIAN
+  OTHER
+}
+
+enum GuardianshipStatus {
+  PENDING
+  ACTIVE
+  REVOKED
+}
+
+model Guardianship {
+  id                   String                   @id @default(cuid())
+  institutionId        String
+  institution          Institution              @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  parentId             String
+  parent               User                     @relation("GuardianshipParent", fields: [parentId], references: [id], onDelete: Cascade)
+  studentId            String
+  student              User                     @relation("GuardianshipStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  relationship         GuardianshipRelationship
+  status               GuardianshipStatus       @default(PENDING)
+  canViewAcademics     Boolean                  @default(false)
+  canViewAttendance    Boolean                  @default(false)
+  canViewSchedule      Boolean                  @default(false)
+  canViewAnnouncements Boolean                  @default(false)
+  canViewFinance       Boolean                  @default(false)
+  createdById          String
+  createdBy            User                     @relation("GuardianshipCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  updatedById          String
+  updatedBy            User                     @relation("GuardianshipUpdater", fields: [updatedById], references: [id], onDelete: Restrict)
+  createdAt            DateTime                 @default(now())
+  updatedAt            DateTime                 @updatedAt
+  version              Int                      @default(0)
+  revokedAt            DateTime?
+
+  @@unique([institutionId, parentId, studentId])
+  @@index([institutionId, parentId, status])
+  @@index([institutionId, studentId, status])
+  @@map("guardianships")
+}
+
+model RoleCapabilityOverride {
+  id            String      @id @default(cuid())
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  role          Role
+  capability    String
+  enabled       Boolean
+  updatedById   String
+  updatedBy     User        @relation("RoleCapabilityOverrideUpdater", fields: [updatedById], references: [id], onDelete: Restrict)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([institutionId, role, capability])
+  @@index([institutionId, role])
+  @@map("role_capability_overrides")
 }
 
 model AuditLog {

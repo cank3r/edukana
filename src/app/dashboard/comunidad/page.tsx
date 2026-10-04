@@ -1,6 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
-import { hasCapability } from "@/lib/capabilities";
+import { getEffectiveCapabilities } from "@/lib/authorization";
 import { db } from "@/lib/db";
 import { AnnouncementForm } from "@/components/dashboard/MutationForms";
 import { Calendar, Megaphone, Pin } from "lucide-react";
@@ -10,20 +10,29 @@ type AnnouncementWithAuthor = Prisma.AnnouncementGetPayload<{ include: { author:
 export default async function ComunidadPage() {
   const session = await auth();
   const user = session!.user;
-  const canPublish = hasCapability(user.role, "announcement.publish");
+  const capabilities = await getEffectiveCapabilities(user.institutionId, user.role);
+  const canPublish = capabilities.has("announcement.publish");
+  const parentLinks = user.role === "PARENT" && capabilities.has("child.portal.view") && capabilities.has("child.announcements.view")
+    ? await db.guardianship.findMany({
+        where: { institutionId: user.institutionId, parentId: user.id, status: "ACTIVE", canViewAnnouncements: true, parent: { institutionId: user.institutionId, role: "PARENT", status: "ACTIVE" }, student: { institutionId: user.institutionId, role: "STUDENT", status: "ACTIVE" } },
+        select: { student: { select: { enrollments: { where: { status: { in: ["ACTIVE", "COMPLETED"] }, course: { institutionId: user.institutionId } }, select: { courseId: true } } } } },
+      })
+    : [];
   const courseIds = user.role === "STUDENT"
     ? (await db.enrollment.findMany({ where: { studentId: user.id, status: "ACTIVE", course: { institutionId: user.institutionId } }, select: { courseId: true } })).map((item) => item.courseId)
-    : [];
+    : parentLinks.flatMap((link) => link.student.enrollments.map((item) => item.courseId));
   const where: Prisma.AnnouncementWhereInput = canPublish
     ? { institutionId: user.institutionId }
-    : {
-        institutionId: user.institutionId,
-        OR: [
-          { audience: "ALL" },
-          { audience: "ROLE", audienceId: user.role },
-          ...(courseIds.length ? [{ audience: "COURSE" as const, audienceId: { in: courseIds } }] : []),
-        ],
-      };
+    : user.role === "PARENT" && parentLinks.length === 0
+      ? { institutionId: user.institutionId, id: "__restricted__" }
+      : {
+          institutionId: user.institutionId,
+          OR: [
+            { audience: "ALL" },
+            { audience: "ROLE", audienceId: user.role },
+            ...(courseIds.length ? [{ audience: "COURSE" as const, audienceId: { in: courseIds } }] : []),
+          ],
+        };
   const announcements = await db.announcement.findMany({
     where,
     include: { author: { select: { name: true, role: true } } },

@@ -90,3 +90,38 @@ CircleCI ejecuta la misma puerta de calidad. Los tests cubren RBAC/rutas, ponder
 ## Variables
 
 Consulta `C:\Users\crami\workspace\edukana\.env.example`. Son secretas: conexiones, `AUTH_SECRET`, `CERTIFICATE_SECRET`, `SUPABASE_SERVICE_ROLE_KEY` y contraseñas de seed. No confirmes archivos `.env*`.
+
+## Roles y permisos institucionales
+
+La fuente única de capacidades está en `src/lib/capabilities.ts`: catálogo tipado, defaults, límites por rol y cálculo efectivo. Los overrides se guardan por `(institutionId, role, capability)`; nunca hay configuración global. Cada fila conserva `updatedById`, `createdAt` y `updatedAt`, y cada guardado agrega un `AuditLog` con el antes/después.
+
+Matriz de protección:
+
+| Regla | Garantía |
+| --- | --- |
+| Denegación por defecto | Capacidades desconocidas o no permitidas para el rol no se conceden. |
+| SUPER_ADMIN | Es inmutable y conserva todo el catálogo del sistema. |
+| ADMIN | Solo SUPER_ADMIN puede editarlo; `tenant.settings.manage` y `roles.permissions.manage` no se pueden retirar. |
+| No escalamiento | El actor solo puede conceder o revocar capacidades que posee y que el rol objetivo admite; cada petición contiene deltas explícitos y el servidor preserva intactas las capacidades fuera de su autoridad. |
+| Límites de rol | Los límites de `ROLE_ALLOWED_CAPABILITIES` son reglas de producto no ampliables desde el backoffice. COORDINATOR puede recibir `analytics.view`, pero `finance.manage` está prohibido incluso ante overrides antiguos o manipulados. |
+| PARENT | Solo admite capacidades `child.*`; cada dato exige además vínculo ACTIVE del mismo tenant y bandera específica. No obtiene catálogo, roster, personas ni administración institucional. |
+| Multi-tenant | La institución se deriva de la sesión y todas las lecturas/escrituras filtran por `institutionId`. |
+| Self-lockout | La política rechaza retirar al actor su capacidad de administrar permisos. |
+
+`src/proxy.ts` solo hace la comprobación optimista de autenticación. Next.js 16 no recomienda Proxy como autorización completa y ese runtime no consulta Prisma: los overrides pueden cambiar sin renovar el JWT. La validación autoritativa se ejecuta en páginas, Route Handlers y Server Actions mediante `src/lib/authorization.ts`. La UI recibe únicamente la lista efectiva ya resuelta para navegación; nunca se considera una frontera de seguridad.
+
+La migración local `prisma/migrations/20261003231500_role_capability_overrides/migration.sql` crea la tabla, índices y claves foráneas. Debe revisarse y aplicarse por el flujo normal de migraciones; este cambio no la aplica a ninguna base remota.
+
+## Guardianship y portal de tutores
+
+`Guardianship` es una relación institucional explícita entre un usuario `PARENT` y uno `STUDENT`. Nace siempre en `PENDING`; el esquema inicia todas las banderas en `false` y un administrador puede prepararlas sin conceder acceso. Solo una acción administrativa separada puede pasarla a `ACTIVE`. Activación, cambios de banderas y revocación generan `AuditLog` con estado anterior/posterior y actor. Revocar cambia el estado a `REVOKED`, registra `revokedAt` y corta inmediatamente las consultas del portal. La revocación es terminal en este MVP: la restricción única impide recrear el mismo vínculo y no existe reactivación automática; una reautorización futura requiere un flujo explícito y auditado.
+
+Cada bandera se mapea centralmente a su capability `child.*.view`. El manager solo puede crear, conceder, revocar o activar banderas cuyas capabilities posee; los cambios usan deltas explícitos para preservar áreas fuera de su autoridad. Revocar el vínculo completo sigue permitido con `guardianship.manage` porque reduce acceso. Actualización, activación y revocación usan compare-and-set con tenant, estado, `updatedAt` y una versión monotónica; si otra transacción ganó la carrera, no sobrescriben y solicitan recargar.
+
+La base de datos mantiene claves foráneas individuales e índices por tenant/padre/estudiante, pero PostgreSQL no expresa aquí que ambos usuarios compartan el `institutionId` de la relación. Por eso cada acción vuelve a leer dentro de la misma transacción al tutor con rol `PARENT` y al estudiante con rol `STUDENT`, ambos activos y filtrados por el tenant derivado de la sesión. El cliente nunca decide `institutionId`, `parentId` de la sesión ni identidad por nombre/correo.
+
+Las capacidades institucionales `child.*.view` solo habilitan módulos. Cada consulta exige además vínculo `ACTIVE`, padre de sesión, estudiante solicitado, mismo tenant y la bandera equivalente del vínculo. Finanzas requiere simultáneamente `child.finance.view` y `canViewFinance`; ambos valores son `false` por defecto. Sin vínculos activos, “Mis hijos” devuelve un estado vacío y no consulta datos institucionales del estudiante.
+
+Las migraciones aditivas deben aplicarse en este orden: primero `prisma/migrations/20261003231500_role_capability_overrides/migration.sql` y después `prisma/migrations/20261003234000_guardianship/migration.sql`. Deben probarse en una base local o staging antes de cualquier despliegue.
+
+El alcance de cursos se resuelve centralmente en `src/lib/course-scope.ts`. `course.view` conserva el alcance natural: STUDENT solo matrículas propias, TEACHER solo cursos asignados y PARENT ninguno. `course.view.all` amplía la lectura a todos los cursos del tenant, excepto STUDENT y PARENT. Para otros roles sin alcance natural seguro, `course.view` sin `course.view.all` devuelve cero cursos y deniega detalles. La escritura se calcula por separado: TEACHER solo gestiona cursos asignados aunque tenga lectura global; conceder únicamente lectura nunca amplía mutaciones ni acceso a archivos privados.

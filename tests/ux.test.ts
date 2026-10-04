@@ -9,6 +9,7 @@ test("muestra módulos claros y propios de cada rol", () => {
   assert.equal(navigationForRole("TEACHER").some((item) => item.href === "/dashboard/gestion"), false);
   assert.equal(navigationForRole("PARENT").some((item) => item.href === "/dashboard/aula"), false);
   assert.equal(navigationForRole("PARENT").some((item) => item.href === "/dashboard/calendario"), false);
+  assert.equal(navigationForRole("PARENT").some((item) => item.href === "/dashboard/hijos"), true);
   assert.ok(navigationForRole("ADMIN").some((item) => item.label === "Cobros"));
   assert.equal(navigationForRole("COORDINATOR").some((item) => item.href === "/dashboard/pagos"), false);
   assert.equal(navigationForRole("COORDINATOR").some((item) => item.href === "/dashboard/analitica"), false);

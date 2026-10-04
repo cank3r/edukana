@@ -3,10 +3,10 @@ import type { EdukanaRole } from "@/types/next-auth";
 
 const PUBLIC_ROUTES = ["/login", "/certificados"] as const;
 
-const DASHBOARD_ACCESS: ReadonlyArray<{
-  prefix: string;
-  capability: Capability;
-}> = [
+const DASHBOARD_ACCESS: ReadonlyArray<{ prefix: string; capability: Capability }> = [
+  { prefix: "/dashboard/configuracion/tutores", capability: "guardianship.manage" },
+  { prefix: "/dashboard/configuracion/roles", capability: "roles.permissions.manage" },
+  { prefix: "/dashboard/hijos", capability: "child.portal.view" },
   { prefix: "/dashboard/portal", capability: "student.portal.view" },
   { prefix: "/dashboard/gestion", capability: "people.view" },
   { prefix: "/dashboard/admisiones", capability: "admissions.manage" },
@@ -25,7 +25,9 @@ export function isPublicPath(pathname: string) {
   return PUBLIC_ROUTES.some((route) => matchesPrefix(pathname, route));
 }
 
-export function canAccessDashboardPath(pathname: string, role: EdukanaRole) {
+export function canAccessDashboardPath(pathname: string, role: EdukanaRole, effective?: ReadonlySet<Capability> | readonly Capability[]) {
   const rule = DASHBOARD_ACCESS.find(({ prefix }) => matchesPrefix(pathname, prefix));
-  return !rule || hasCapability(role, rule.capability);
+  if (rule?.capability === "student.portal.view" && role !== "STUDENT") return false;
+  if (rule?.capability === "child.portal.view" && role !== "PARENT") return false;
+  return !rule || hasCapability(role, rule.capability, effective);
 }

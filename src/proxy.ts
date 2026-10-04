@@ -1,11 +1,13 @@
 import { auth } from "@/lib/auth";
-import { canAccessDashboardPath, isPublicPath } from "@/lib/access";
+import { isPublicPath } from "@/lib/access";
 import { NextResponse } from "next/server";
 
+// Proxy cannot safely resolve Prisma-backed institutional overrides. It performs
+// authentication redirects only; every protected server page/action/route must
+// authorize again through the tenant-aware server DAL.
 export default auth((request) => {
   const { nextUrl } = request;
-  const user = request.auth?.user;
-  const isLoggedIn = Boolean(user);
+  const isLoggedIn = Boolean(request.auth?.user);
   const isPublicRoute = isPublicPath(nextUrl.pathname);
 
   if (nextUrl.pathname === "/login" && isLoggedIn) {
@@ -16,14 +18,6 @@ export default auth((request) => {
     const loginUrl = new URL("/login", nextUrl);
     loginUrl.searchParams.set("callbackUrl", `${nextUrl.pathname}${nextUrl.search}`);
     return NextResponse.redirect(loginUrl);
-  }
-
-  if (
-    user?.role &&
-    nextUrl.pathname.startsWith("/dashboard") &&
-    !canAccessDashboardPath(nextUrl.pathname, user.role)
-  ) {
-    return NextResponse.redirect(new URL("/dashboard", nextUrl));
   }
 
   return NextResponse.next();

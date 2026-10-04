@@ -11,6 +11,7 @@ import {
 import { cn } from "@/lib/utils";
 import { navigationForRole } from "@/lib/ux";
 import type { EdukanaRole } from "@/types/next-auth";
+import type { Capability } from "@/lib/capabilities";
 
 interface SidebarUser {
   name?: string | null;
@@ -32,9 +33,9 @@ const ICONS = {
   settings: Settings,
 };
 
-export default function Sidebar({ user }: { user: SidebarUser }) {
+export default function Sidebar({ user, capabilities }: { user: SidebarUser; capabilities: Capability[] }) {
   const pathname = usePathname();
-  const visibleItems = navigationForRole(user.role);
+  const visibleItems = navigationForRole(user.role, capabilities);
 
   return (
     <>

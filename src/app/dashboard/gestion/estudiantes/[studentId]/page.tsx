@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { hasCapability } from "@/lib/capabilities";
+import { getEffectiveCapabilities } from "@/lib/authorization";
 import { db } from "@/lib/db";
 import { spanishLabel } from "@/lib/ux";
 import { ChevronLeft, CreditCard, Mail, Phone } from "lucide-react";
@@ -9,7 +9,8 @@ import { ChevronLeft, CreditCard, Mail, Phone } from "lucide-react";
 export default async function StudentDetailPage({ params }: { params: Promise<{ studentId: string }> }) {
   const session = await auth();
   const user = session!.user;
-  if (!hasCapability(user.role, "people.view")) redirect("/dashboard");
+  const capabilities = await getEffectiveCapabilities(user.institutionId, user.role);
+  if (!capabilities.has("people.view")) redirect("/dashboard");
   const { studentId } = await params;
 
   const student = await db.user.findFirst({
@@ -29,7 +30,7 @@ export default async function StudentDetailPage({ params }: { params: Promise<{ 
   });
   if (!student) notFound();
 
-  const canViewFinance = hasCapability(user.role, "finance.manage");
+  const canViewFinance = capabilities.has("finance.manage");
   const payments = canViewFinance ? await db.paymentConcept.findMany({
     where: { institutionId: user.institutionId, studentId: student.id },
     orderBy: { dueDate: "desc" },
