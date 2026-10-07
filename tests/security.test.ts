@@ -19,7 +19,9 @@ test("rechaza credenciales con formato inválido", () => {
   assert.equal(loginSchema.safeParse({ email: "correo-invalido", password: "123" }).success, false);
 });
 
-test("solo considera públicas las rutas de login y certificados verificables", () => {
+test("solo considera públicas las rutas de puesta en marcha, login y certificados verificables", () => {
+  assert.equal(isPublicPath("/setup"), true);
+  assert.equal(isPublicPath("/setup-extra"), false);
   assert.equal(isPublicPath("/login"), true);
   assert.equal(isPublicPath("/login/ayuda"), true);
   assert.equal(isPublicPath("/certificados/EDU-ABC123"), true);
@@ -111,7 +113,7 @@ test("las acciones del servidor usan el registro central de capacidades", () => 
 });
 
 
-test("las 16 páginas del dashboard conservan defensa autoritativa en servidor", () => {
+test("las 17 páginas del dashboard conservan defensa autoritativa en servidor", () => {
   const pages = [
     ["page.tsx"],
     ["admisiones", "page.tsx"],
@@ -121,6 +123,7 @@ test("las 16 páginas del dashboard conservan defensa autoritativa en servidor",
     ["calendario", "page.tsx"],
     ["comunidad", "page.tsx"],
     ["configuracion", "page.tsx"],
+    ["configuracion", "puesta-en-marcha", "page.tsx"],
     ["configuracion", "roles", "page.tsx"],
     ["configuracion", "unidades", "page.tsx"],
     ["configuracion", "tutores", "page.tsx"],
@@ -130,7 +133,7 @@ test("las 16 páginas del dashboard conservan defensa autoritativa en servidor",
     ["pagos", "page.tsx"],
     ["portal", "page.tsx"],
   ];
-  assert.equal(pages.length, 16);
+  assert.equal(pages.length, 17);
   for (const segments of pages) {
     const source = readFileSync(join(process.cwd(), "src", "app", "dashboard", ...segments), "utf8");
     assert.match(source, /getEffectiveCapabilities\(/, segments.join("/") + " debe resolver permisos en servidor");

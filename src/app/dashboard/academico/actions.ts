@@ -43,6 +43,59 @@ async function manageableCourse(user: SessionUser, courseId: string) {
   });
 }
 
+export async function createCourse(_state: ActionState, fd: FormData): Promise<ActionState> {
+  try {
+    const user = await requireUser("course.manage");
+    if (user.role !== "TEACHER") return failed("En este piloto, cada docente crea sus propios cursos.");
+    const parsed = z.object({
+      periodId: z.string().min(1),
+      name: z.string().trim().min(3).max(160),
+      code: z.string().trim().min(2).max(30).regex(/^[A-Za-z0-9._-]+$/),
+      description: z.string().trim().max(2000).optional(),
+    }).safeParse({ periodId: text(fd, "periodId"), name: text(fd, "name"), code: text(fd, "code"), description: text(fd, "description") });
+    if (!parsed.success) return failed(parsed.error.issues[0]?.message ?? "Revisa los datos del curso.");
+    const period = await db.academicPeriod.findFirst({ where: { id: parsed.data.periodId, institutionId: user.institutionId, isActive: true }, select: { id: true } });
+    if (!period) return failed("El período no está activo o pertenece a otra institución.");
+    const course = await db.$transaction(async (tx) => {
+      const created = await tx.course.create({ data: { institutionId: user.institutionId, periodId: period.id, teacherId: user.id, name: parsed.data.name, code: parsed.data.code.toUpperCase(), description: parsed.data.description || null }, select: { id: true } });
+      await tx.auditLog.create({ data: { institutionId: user.institutionId, userId: user.id, action: "COURSE_CREATED", entity: "Course", entityId: created.id, changes: { periodId: period.id, teacherId: user.id } } });
+      return created;
+    });
+    revalidatePath("/dashboard/aula");
+    return success(`Curso creado. Ábrelo para agregar contenido y actividades. ID: ${course.id}`);
+  } catch (error) {
+    const correlationId = crypto.randomUUID();
+    console.error("createCourse failed", { correlationId, error });
+    return failed(`No se pudo crear el curso. Verifica que el código no esté en uso. Código: ${correlationId}`);
+  }
+}
+
+export async function enrollStudent(_state: ActionState, fd: FormData): Promise<ActionState> {
+  try {
+    const user = await requireUser("enrollment.manage");
+    const parsed = z.object({ courseId: z.string().min(1), studentId: z.string().min(1) }).safeParse({ courseId: text(fd, "courseId"), studentId: text(fd, "studentId") });
+    if (!parsed.success) return failed("Selecciona un estudiante válido.");
+    const [course, student] = await Promise.all([
+      manageableCourse(user, parsed.data.courseId),
+      db.user.findFirst({ where: { id: parsed.data.studentId, institutionId: user.institutionId, role: "STUDENT", status: "ACTIVE" }, select: { id: true } }),
+    ]);
+    if (!course || !student) return failed("El curso o estudiante no pertenece a tu institución o está fuera de tu alcance.");
+    const existing = await db.enrollment.findUnique({ where: { studentId_courseId: { studentId: student.id, courseId: course.id } }, select: { id: true } });
+    if (existing) return success("El estudiante ya está matriculado en este curso.");
+    await db.$transaction(async (tx) => {
+      const enrollment = await tx.enrollment.create({ data: { studentId: student.id, courseId: course.id, status: "ACTIVE" }, select: { id: true } });
+      await tx.auditLog.create({ data: { institutionId: user.institutionId, userId: user.id, action: "STUDENT_ENROLLED", entity: "Enrollment", entityId: enrollment.id, changes: { studentId: student.id, courseId: course.id } } });
+    });
+    revalidatePath(`/dashboard/aula/${course.id}`);
+    revalidatePath("/dashboard/portal");
+    return success("Estudiante matriculado.");
+  } catch (error) {
+    const correlationId = crypto.randomUUID();
+    console.error("enrollStudent failed", { correlationId, error });
+    return failed(`No se pudo matricular al estudiante. Código: ${correlationId}`);
+  }
+}
+
 export async function createSection(_state: ActionState, fd: FormData): Promise<ActionState> {
   try {
     const user = await requireUser("course.manage");
@@ -300,15 +353,39 @@ export async function markLessonComplete(_state: ActionState, fd: FormData): Pro
     const lessonId = text(fd, "lessonId");
     const lesson = await db.lesson.findFirst({ where: { id: lessonId, institutionId: user.institutionId, isPublished: true, section: { isPublished: true }, course: participationCourseWhere(user) }, select: { id: true, courseId: true } });
     if (!lesson) return failed("Lección no disponible.");
-    const enrollment = await db.enrollment.findUnique({ where: { studentId_courseId: { studentId: user.id, courseId: lesson.courseId } }, select: { id: true } });
-    if (!enrollment) return failed("Matrícula no encontrada.");
+    const enrollment = await db.enrollment.findUnique({ where: { studentId_courseId: { studentId: user.id, courseId: lesson.courseId } }, select: { id: true, status: true } });
+    if (!enrollment || enrollment.status !== "ACTIVE") return failed("Matrícula activa no encontrada.");
     await db.lessonProgress.upsert({ where: { enrollmentId_lessonId: { enrollmentId: enrollment.id, lessonId } }, create: { institutionId: user.institutionId, enrollmentId: enrollment.id, lessonId, completed: true, completedAt: new Date() }, update: { completed: true, completedAt: new Date(), watchedSeconds: Math.max(0, Number(text(fd, "watchedSeconds")) || 0) } });
     const [completed, total] = await Promise.all([db.lessonProgress.count({ where: { enrollmentId: enrollment.id, completed: true, institutionId: user.institutionId } }), db.lesson.count({ where: { courseId: lesson.courseId, institutionId: user.institutionId, isPublished: true, section: { isPublished: true } } })]);
     const percent = progressPercentage(completed, total);
-    await db.enrollment.update({ where: { id: enrollment.id }, data: { progressPercent: percent, ...(percent >= 100 ? { status: "COMPLETED", completedAt: new Date() } : {}) } });
+    await db.enrollment.update({ where: { id: enrollment.id }, data: { progressPercent: percent } });
     revalidatePath(`/dashboard/aula/${lesson.courseId}`);
     revalidatePath("/dashboard/portal");
-    return success(`Progreso actualizado: ${percent}%.`);
+    return success(`Progreso actualizado: ${percent}%. El curso sigue activo hasta que el docente lo finalice.`);
+  } catch { return failed(); }
+}
+
+export async function setEnrollmentCompletion(_state: ActionState, fd: FormData): Promise<ActionState> {
+  try {
+    const user = await requireUser("course.manage");
+    const parsed = z.object({ enrollmentId: z.string().min(1), action: z.enum(["COMPLETE", "REOPEN"]) }).safeParse({ enrollmentId: text(fd, "enrollmentId"), action: text(fd, "action") });
+    if (!parsed.success) return failed("Matrícula o acción inválida.");
+    const enrollment = await db.enrollment.findFirst({
+      where: { id: parsed.data.enrollmentId, course: managementCourseWhere(user) },
+      select: { id: true, courseId: true, status: true, progressPercent: true, completedAt: true, course: { select: { completionThreshold: true } } },
+    });
+    if (!enrollment) return failed("Matrícula no encontrada o sin acceso.");
+    if (parsed.data.action === "COMPLETE" && (enrollment.status !== "ACTIVE" || enrollment.progressPercent < enrollment.course.completionThreshold)) return failed("La matrícula activa todavía no cumple el progreso requerido.");
+    if (parsed.data.action === "REOPEN" && enrollment.status !== "COMPLETED") return failed("Solo se puede reabrir una matrícula completada.");
+    const nextStatus = parsed.data.action === "COMPLETE" ? "COMPLETED" : "ACTIVE";
+    await db.$transaction(async (tx) => {
+      await tx.enrollment.update({ where: { id: enrollment.id }, data: { status: nextStatus, completedAt: nextStatus === "COMPLETED" ? new Date() : null } });
+      await tx.auditLog.create({ data: { institutionId: user.institutionId, userId: user.id, action: nextStatus === "COMPLETED" ? "ENROLLMENT_COMPLETED" : "ENROLLMENT_REOPENED", entity: "Enrollment", entityId: enrollment.id, changes: { before: { status: enrollment.status, completedAt: enrollment.completedAt }, after: { status: nextStatus } } } });
+    });
+    revalidatePath(`/dashboard/aula/${enrollment.courseId}`);
+    revalidatePath("/dashboard/portal");
+    revalidatePath("/dashboard/hijos");
+    return success(nextStatus === "COMPLETED" ? "Curso finalizado. La participación quedó en consulta." : "Curso reabierto. El estudiante puede volver a participar.");
   } catch { return failed(); }
 }
 

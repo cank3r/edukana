@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import type { ReactNode } from "react";
 import type { ActionState } from "@/app/dashboard/actions";
-import { createAssignment, createExam, createGradebook, createLesson, createQuestion, createSection, issueCertificate, markLessonComplete, reviewExamAttempt, reviewSubmission, saveAttendance, saveScheduleSlot, submitAssignment, submitExam, togglePublication } from "@/app/dashboard/academico/actions";
+import { createAssignment, createCourse, createExam, createGradebook, createLesson, createQuestion, createSection, enrollStudent, issueCertificate, markLessonComplete, reviewExamAttempt, reviewSubmission, saveAttendance, saveScheduleSlot, setEnrollmentCompletion, submitAssignment, submitExam, togglePublication } from "@/app/dashboard/academico/actions";
 
 const initial: ActionState = { ok: false, message: "" };
 const input = "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500";
@@ -18,6 +18,14 @@ function Field({ label, name, type = "text", required, defaultValue, min, max, s
   return <label className="block text-sm font-medium">{label}<input className={`${input} mt-1`} name={name} type={type} required={required} defaultValue={defaultValue} min={min} max={max} step={step} /></label>;
 }
 function Hidden({ name, value }: { name: string; value: string }) { return <input type="hidden" name={name} value={value} />; }
+
+export function CourseForm({ periods }: { periods: Array<{ id: string; name: string }> }) {
+  return <Form action={createCourse} submitLabel="Crear curso"><label className="block text-sm font-medium">Período activo<select className={`${input} mt-1`} name="periodId" required defaultValue=""><option value="" disabled>Seleccionar período</option>{periods.map((period) => <option key={period.id} value={period.id}>{period.name}</option>)}</select></label><Field label="Nombre del curso" name="name" required /><Field label="Código" name="code" required /><label className="block text-sm font-medium">Descripción<textarea className={`${input} mt-1`} name="description" rows={3} maxLength={2000} /></label></Form>;
+}
+
+export function EnrollmentForm({ courseId, students }: { courseId: string; students: Array<{ id: string; name: string }> }) {
+  return students.length ? <Form action={enrollStudent} submitLabel="Matricular estudiante"><Hidden name="courseId" value={courseId} /><label className="block text-sm font-medium">Estudiante<select className={`${input} mt-1`} name="studentId" required defaultValue=""><option value="" disabled>Seleccionar estudiante</option>{students.map((student) => <option key={student.id} value={student.id}>{student.name}</option>)}</select></label></Form> : <p className="text-sm text-slate-500">No hay estudiantes activos pendientes de matrícula.</p>;
+}
 
 export function SectionForm({ courseId }: { courseId: string }) {
   return <Form action={createSection} submitLabel="Crear sección"><Hidden name="courseId" value={courseId} /><Field label="Título de la sección" name="title" required /><Field label="Descripción" name="description" /><label className="flex gap-2 text-sm"><input type="checkbox" name="isPublished" defaultChecked /> Publicada</label></Form>;
@@ -75,6 +83,7 @@ export function PublishForm({ entity, id, published }: { entity: "period" | "ass
 }
 
 export function ProgressForm({ lessonId }: { lessonId: string }) { return <Form action={markLessonComplete} submitLabel="Marcar como completada" className="inline-flex items-center gap-2"><Hidden name="lessonId" value={lessonId} /></Form>; }
+export function EnrollmentCompletionForm({ enrollmentId, completed }: { enrollmentId: string; completed: boolean }) { return <Form action={setEnrollmentCompletion} submitLabel={completed ? "Reabrir curso" : "Finalizar curso"} className="inline-flex items-center gap-2"><Hidden name="enrollmentId" value={enrollmentId} /><Hidden name="action" value={completed ? "REOPEN" : "COMPLETE"} /></Form>; }
 export function CertificateForm({ enrollmentId }: { enrollmentId: string }) { return <Form action={issueCertificate} submitLabel="Emitir certificado" className="inline-flex items-center gap-2"><Hidden name="enrollmentId" value={enrollmentId} /></Form>; }
 
 export function AssetUpload({ courseId, lessonId, assignmentId, submissionId, kind }: { courseId: string; lessonId?: string; assignmentId?: string; submissionId?: string; kind: "DOCUMENT" | "VIDEO" }) {

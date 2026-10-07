@@ -34,15 +34,16 @@ Requisitos: Node.js 22, npm y un proyecto Supabase/PostgreSQL.
 
 ```powershell
 npm ci
-Copy-Item .env.example .env.local
+Copy-Item .env.example .env
 npx prisma validate
 npx prisma generate
 npx prisma migrate deploy
-npm run db:seed
 npm run dev
 ```
 
-Completa `C:\Users\crami\workspace\edukana\.env.local` sin confirmarlo en Git. El seed exige tres contraseñas distintas de 12+ caracteres y no las imprime.
+Completa el archivo local de entorno sin confirmarlo en Git. En una base vacía, abre `/setup` y crea la primera institución y su administrador desde la interfaz; la ruta se cierra automáticamente después. Continúa con **Configuración → Puesta en marcha del piloto**. El recorrido completo y sus resultados esperados están en `docs/canonical-mvp-pilot.md`.
+
+El seed queda disponible únicamente para desarrollo opcional; no forma parte del caso canónico ni de su definición de terminado.
 
 ## Base de datos
 
@@ -61,9 +62,9 @@ Completa `C:\Users\crami\workspace\edukana\.env.local` sin confirmarlo en Git. E
 
 Límites MVP: documentos PDF/DOCX/PPTX/TXT hasta 20 MB; videos MP4/WebM hasta 100 MB. El registro conserva MIME, tamaño, SHA-256, cargador, tenant y ruta con prefijo de tenant.
 
-## Demo verificable
+## Demo sembrada opcional
 
-Define `SEED_ADMIN_PASSWORD`, `SEED_TEACHER_PASSWORD` y `SEED_STUDENT_PASSWORD`, ejecuta `npm run db:seed` y usa:
+Esta demo acelera desarrollo, pero no valida el caso canónico desde cero. Define `SEED_ADMIN_PASSWORD`, `SEED_TEACHER_PASSWORD` y `SEED_STUDENT_PASSWORD`, ejecuta `npm run db:seed` y usa:
 
 - `admin@demo.edukana`: administración y emisión de certificados.
 - `docente@demo.edukana`: asistencia, contenidos, asignaciones, notas, banco, exámenes y horario.

@@ -63,7 +63,7 @@ export function spanishLabel(value: string | null | undefined): string {
 
 const BREADCRUMB_LABELS: Record<string, string> = {
   dashboard: "Inicio", aula: "Cursos", gestion: "Personas", estudiantes: "Estudiantes", portal: "Mi aprendizaje",
-  comunidad: "Avisos", admisiones: "Admisiones", pagos: "Cobros", calendario: "Calendario", analitica: "Reportes", configuracion: "Configuración", roles: "Roles y permisos", tutores: "Tutores", hijos: "Mis hijos",
+  comunidad: "Avisos", admisiones: "Admisiones", pagos: "Cobros", calendario: "Calendario", analitica: "Reportes", configuracion: "Configuración", roles: "Roles y permisos", tutores: "Tutores", hijos: "Mis hijos", "puesta-en-marcha": "Puesta en marcha",
 };
 
 export function breadcrumbLabel(segment: string): string {

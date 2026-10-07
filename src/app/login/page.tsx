@@ -2,6 +2,7 @@
 
 import { Suspense, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { z } from "zod";
@@ -205,6 +206,10 @@ function LoginForm() {
               {loading ? "Ingresando..." : "Ingresar"}
             </button>
           </form>
+
+          <p className="mt-4 text-center text-xs" style={{ color: "#64748B" }}>
+            ¿Base de datos nueva? <Link href="/setup" className="font-semibold underline" style={{ color: "var(--blue)" }}>Crear la primera institución</Link>
+          </p>
 
           <p className="text-xs text-center mt-8" style={{ color: "#64748B" }}>
             ¿Problemas para ingresar?{" "}
