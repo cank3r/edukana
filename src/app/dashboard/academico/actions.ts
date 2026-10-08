@@ -9,6 +9,7 @@ import { autoScoreAnswer, createCertificateIdentity, findScheduleConflicts, prog
 import type { EdukanaRole } from "@/types/next-auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { questionSnapshot } from "@/server/exams";
 import type { ActionState } from "@/app/dashboard/actions";
 
 type SessionUser = { id: string; institutionId: string; role: EdukanaRole; capabilities: ReadonlySet<Capability> };
@@ -238,7 +239,7 @@ export async function createExam(_state: ActionState, fd: FormData): Promise<Act
     const category = parsed.data.categoryId ? await db.gradeCategory.findFirst({ where: { id: parsed.data.categoryId, institutionId: user.institutionId, courseId: course.id }, select: { id: true, gradingPeriodId: true } }) : null;
     const published = fd.get("isPublished") === "on";
     await db.$transaction(async (tx) => {
-      const exam = await tx.exam.create({ data: { institutionId: user.institutionId, courseId: course.id, title: parsed.data.title, instructions: parsed.data.instructions || null, maxAttempts: parsed.data.maxAttempts, durationMinutes: parsed.data.durationMinutes, isPublished: published, questions: { create: bank.map((question, order) => ({ institutionId: user.institutionId, bankItemId: question.id, order, points: question.defaultPoints })) } } });
+      const exam = await tx.exam.create({ data: { institutionId: user.institutionId, courseId: course.id, title: parsed.data.title, instructions: parsed.data.instructions || null, maxAttempts: parsed.data.maxAttempts, durationMinutes: parsed.data.durationMinutes, isPublished: published, questions: { create: bank.map((question, order) => ({ institutionId: user.institutionId, bankItemId: question.id, order, points: question.defaultPoints, snapshot: questionSnapshot(question, question.defaultPoints) })) } } });
       if (category) await tx.gradeItem.create({ data: { institutionId: user.institutionId, courseId: course.id, gradingPeriodId: category.gradingPeriodId, categoryId: category.id, examId: exam.id, title: exam.title, maxScore: bank.reduce((sum, q) => sum + q.defaultPoints, 0), isPublished: published } });
     });
     revalidatePath(`/dashboard/aula/${course.id}`);
@@ -246,6 +247,11 @@ export async function createExam(_state: ActionState, fd: FormData): Promise<Act
   } catch { return failed(); }
 }
 
+/**
+ * @deprecated Crea el intento al enviar, por lo que no puede aplicar el tiempo del examen.
+ * La pantalla debe pasar a `startExamAttemptAction` y `submitExamAttemptAction`
+ * (`src/server/actions/exams.ts`); cuando lo haga, esta acción se elimina.
+ */
 export async function submitExam(_state: ActionState, fd: FormData): Promise<ActionState> {
   try {
     const user = await requireUser("course.participate");

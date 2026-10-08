@@ -462,6 +462,7 @@ model GradeEntry {
   gradedById    String
   gradedBy      User        @relation("GradeRecorder", fields: [gradedById], references: [id])
   gradedAt      DateTime    @default(now())
+  autoGraded    Boolean     @default(false)
   revisions     GradeEntryRevision[]
 
   @@unique([gradeItemId, enrollmentId])
