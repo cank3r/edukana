@@ -25,6 +25,21 @@ export function getPreviewProtectionHeadersForUrl(requestUrl, expectedHost, env 
   return getPreviewProtectionHeaders(env);
 }
 
+export async function handlePreviewProtectionRoute(route, expectedHost, env = process.env) {
+  const request = route.request();
+  const protectionHeaders = getPreviewProtectionHeadersForUrl(request.url(), expectedHost, env);
+  if (!Object.keys(protectionHeaders).length) {
+    await route.continue();
+    return;
+  }
+
+  const response = await route.fetch({
+    headers: { ...request.headers(), ...protectionHeaders },
+    maxRedirects: 0,
+  });
+  await route.fulfill({ response });
+}
+
 function required(env, name) {
   const value = env[name]?.trim();
   if (!value) throw new Error(`Falta la variable ${name}.`);

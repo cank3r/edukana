@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   getPreviewProtectionHeaders,
   getPreviewProtectionHeadersForUrl,
+  handlePreviewProtectionRoute,
   loadCanonicalPilotConfig,
 } from "../scripts/canonical-pilot-config.mjs";
 
@@ -70,4 +71,44 @@ test("limita el bypass al host Preview confirmado", () => {
     getPreviewProtectionHeadersForUrl(`http://${valid.PILOT_EXPECTED_HOST}/login`, valid.PILOT_EXPECTED_HOST, env),
     {},
   );
+});
+
+
+test("corta redirecciones antes de decidir el bypass del siguiente origen", async () => {
+  const env = { VERCEL_AUTOMATION_BYPASS_SECRET: "preview-secret" };
+  const response = { status: () => 302 };
+  let previewFetchOptions;
+  let fulfilledResponse;
+  let previewContinues = 0;
+  const previewRoute = {
+    request: () => ({
+      url: () => `${valid.PILOT_BASE_URL}/redirect`,
+      headers: () => ({ accept: "text/html" }),
+    }),
+    continue: async () => { previewContinues += 1; },
+    fetch: async (options) => { previewFetchOptions = options; return response; },
+    fulfill: async ({ response: value }) => { fulfilledResponse = value; },
+  };
+
+  await handlePreviewProtectionRoute(previewRoute, valid.PILOT_EXPECTED_HOST, env);
+  assert.equal(previewContinues, 0);
+  assert.equal(previewFetchOptions.maxRedirects, 0);
+  assert.equal(previewFetchOptions.headers["x-vercel-protection-bypass"], "preview-secret");
+  assert.equal(fulfilledResponse, response);
+
+  let externalContinues = 0;
+  let externalFetches = 0;
+  const externalRoute = {
+    request: () => ({
+      url: () => "https://example.supabase.co/storage/object",
+      headers: () => ({}),
+    }),
+    continue: async () => { externalContinues += 1; },
+    fetch: async () => { externalFetches += 1; },
+    fulfill: async () => { throw new Error("No debe responder por el origen externo."); },
+  };
+
+  await handlePreviewProtectionRoute(externalRoute, valid.PILOT_EXPECTED_HOST, env);
+  assert.equal(externalContinues, 1);
+  assert.equal(externalFetches, 0);
 });

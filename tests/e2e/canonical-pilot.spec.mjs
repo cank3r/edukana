@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import {
-  getPreviewProtectionHeadersForUrl,
+  handlePreviewProtectionRoute,
   loadCanonicalPilotConfig,
 } from "../../scripts/canonical-pilot-config.mjs";
 
@@ -20,15 +20,7 @@ function personRoleOptionLabel(user, role) {
 }
 
 test.beforeEach(async ({ page }) => {
-  await page.route("**/*", async (route) => {
-    const request = route.request();
-    const protectionHeaders = getPreviewProtectionHeadersForUrl(request.url(), pilot.expectedHost);
-    if (!Object.keys(protectionHeaders).length) {
-      await route.continue();
-      return;
-    }
-    await route.continue({ headers: { ...request.headers(), ...protectionHeaders } });
-  });
+  await page.route("**/*", (route) => handlePreviewProtectionRoute(route, pilot.expectedHost));
 });
 
 async function gotoApp(page, path) {

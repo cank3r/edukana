@@ -21,17 +21,11 @@
 - El historial publicado contiene el MVP académico, endurecimiento de permisos, tutores, anuncios avanzados y onboarding canónico.
 - No se ha fusionado el PR a producción.
 
-## 1.2 Cambios locales posteriores
+## 1.2 Estado de S0
 
-Sobre `cff38c6` existen cambios todavía sin commit:
+El runner E2E, sus guardas, Playwright Test 1.64.0, Next.js 16.4.0 y la documentación rectora ya están versionados en las ramas coordinadas de S0 y desplegados como Preview del PR. Permanecen fuera de producción mientras el PR no se fusione.
 
-- Runner E2E del piloto desplegado.
-- Guardas para impedir ejecución contra producción.
-- Playwright Test fijado en `1.64.0`.
-- Next.js y `eslint-config-next` actualizados a `16.4.0`.
-- Documentación del piloto, roadmap, blueprint y catálogo de pantallas.
-
-Estos cambios locales no están todavía en Preview ni producción.
+S0 continúa en `REVIEW`: falta cerrar la revisión independiente sobre el SHA candidato y ejecutar el recorrido E2E contra un staging limpio, identificado y autorizado. Los resultados de cada puerta se registran junto con el SHA ejecutado en el PR.
 
 ## 1.3 Dimensión actual
 
@@ -42,7 +36,7 @@ Según el mapa del repositorio:
 - 21 páginas `page.tsx`.
 - 44 acciones de servidor o handlers API identificados.
 - Seis migraciones versionadas.
-- 87 pruebas automatizadas en la suite local actual.
+- La cantidad vigente de pruebas se registra con el SHA y la salida de ejecución en el PR; no se fija aquí porque cambia con cada incremento.
 
 ---
 
@@ -1126,7 +1120,7 @@ Los secretos nunca deben confirmarse en Git ni imprimirse en reportes.
 
 ## Resultado más reciente
 
-- 89/89 pruebas.
+- Suite completa aprobada; el conteo, comandos y SHA exactos se publican juntos en el PR.
 - TypeScript aprobado.
 - ESLint aprobado.
 - Build de 22 páginas.
