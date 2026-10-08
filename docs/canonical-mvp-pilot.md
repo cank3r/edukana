@@ -1,6 +1,6 @@
 # Guion canónico del MVP: institución piloto
 
-Este guion es la definición de terminado del MVP. Se ejecuta contra una base PostgreSQL vacía y un bucket Supabase privado configurado; no usa `prisma/seed.ts`, SQL manual ni datos preparados.
+Este guion es la definición de terminado del MVP y tiene dos ejecuciones complementarias. `bootstrap` recorre una instalación controlada desde una base PostgreSQL vacía; `existing` valida el Preview sobre el staging persistente de Edukana mediante datos exclusivos del run, sin borrar información existente. El recorrido no usa `prisma/seed.ts`, SQL manual ni datos preparados.
 
 ## Precondiciones desplegables
 
@@ -81,20 +81,23 @@ El recorrido solo se declara aprobado si, además de esa puerta, se ejecutan los
 
 ## Runner de aceptación en Preview
 
-Provisiona un entorno de aceptación nuevo y vacío, separado de staging y producción, y aplica allí las migraciones. **Staging conserva sus datos ficticios para demostraciones y no se vacía ni se resetea.** Ejecuta el recorrido con Chromium incluido; `PILOT_BROWSER_CHANNEL=msedge` permite una aceptación local específica con Edge. Las credenciales se pasan solo por variables de entorno y el runner se niega a operar si el host no es un deployment Vercel Preview `-git-` confirmado dos veces.
+El Preview de la rama usa el Supabase staging de Edukana. El modo `existing` inicia sesión con un administrador vigente, confirma el slug institucional y ejecuta un preflight de solo lectura. Rechaza la ejecución antes de escribir si ya existen los correos, código de curso o unidad del run. Cada ejecución necesita un `PILOT_RUN_ID` nuevo, genera nombres exclusivos y reutiliza un período activo sin crearlo, desactivarlo ni editarlo.
 
-Esta guarda valida intención, HTTPS y hostname; no certifica por sí sola qué base de datos o bucket usa el deployment. Antes de permitir escrituras se debe verificar por separado la identidad allowlisted de DB y Storage. El bypass de Deployment Protection se añade únicamente a solicitudes HTTPS del host Preview confirmado y nunca a Supabase ni a otros orígenes.
+Chromium incluido es el navegador predeterminado; `PILOT_BROWSER_CHANNEL=msedge` permite una aceptación local específica con Edge. El runner se niega a operar si el host no es un deployment Vercel Preview `-git-` confirmado dos veces. El bypass de Deployment Protection se añade únicamente a solicitudes HTTPS del host Preview confirmado y nunca a Supabase ni a otros orígenes.
 
 ```powershell
 $env:PILOT_BASE_URL = "https://edukana-git-<rama>-<cuenta>.vercel.app"
 $env:PILOT_EXPECTED_HOST = "edukana-git-<rama>-<cuenta>.vercel.app"
 $env:PILOT_CONFIRM = "PREVIEW_ONLY"
-$env:PILOT_INSTITUTION_SLUG = "colegio-piloto"
-$env:PILOT_ADMIN_EMAIL = "admin@pilot.test"
-$env:PILOT_TEACHER_EMAIL = "teacher@pilot.test"
-$env:PILOT_STUDENT_EMAIL = "student@pilot.test"
-$env:PILOT_PARENT_EMAIL = "parent@pilot.test"
-$env:PILOT_PASSWORD = "<contraseña temporal segura>"
+$env:PILOT_MODE = "existing"
+$env:PILOT_RUN_ID = "s0-<fecha-o-id-unico>"
+$env:PILOT_INSTITUTION_SLUG = "demo"
+$env:PILOT_ADMIN_EMAIL = "<administrador existente de Edukana>"
+$env:PILOT_ADMIN_PASSWORD = "<contraseña del administrador existente>"
+$env:PILOT_TEACHER_EMAIL = "<docente nuevo y exclusivo del run>"
+$env:PILOT_STUDENT_EMAIL = "<estudiante nuevo y exclusivo del run>"
+$env:PILOT_PARENT_EMAIL = "<tutor nuevo y exclusivo del run>"
+$env:PILOT_USER_PASSWORD = "<contraseña temporal segura para las cuentas nuevas>"
 # Solo si Vercel Deployment Protection está habilitado:
 $env:VERCEL_AUTOMATION_BYPASS_SECRET = "<secreto de automatización de Vercel>"
 npm run test:pilot:preview
@@ -102,4 +105,4 @@ npm run test:pilot:preview
 
 `PILOT_HEADLESS=false` permite observar el recorrido. Las capturas y trazas de fallos se escriben en `$env:KIROCREW_SCRATCH`; no se guardan dentro del repositorio. `npm run test:pilot:config` valida las protecciones sin acceder a ningún entorno.
 
-El runner cubre los seis bloques principales, cambios de sesión, persistencia, restricciones de rutas y multimedia privada. Aún requieren una prueba separada: IDs pertenecientes a un segundo tenant y una cuenta activa fuera de la audiencia del anuncio.
+La cadena de migraciones desde una base vacía se valida por separado en PostgreSQL 16 temporal dentro de CircleCI. El modo `bootstrap` del runner se conserva para un entorno vacío controlado, pero nunca se ejecuta contra staging. El recorrido desplegado cubre los seis bloques principales, cambios de sesión, persistencia, restricciones de rutas y multimedia privada. Aún requieren una prueba separada: IDs pertenecientes a un segundo tenant y una cuenta activa fuera de la audiencia del anuncio.

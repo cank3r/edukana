@@ -60,7 +60,7 @@ Un solo agente modifica `prisma/schema.prisma` y la migración activa. Un segund
 
 | ID | Agente | Rama | Estado | Alcance exclusivo | Última actualización | Siguiente paso / bloqueo |
 |---|---|---|---|---|---|---|
-| S0-GOV | Kiro | `fix/role-access-hardening` | REVIEW | `TEAM-COORDINATION.md`, `AGENTS.md`, `.kiro/PLAN.md`, `.kiro/steering/{current-state,simplicity,tech,data-model,product,spec-governance,structure}.md`, documentación S0 y runner E2E local | 2026-10-08 | Revisiones técnica y documental aprobadas. Decisión de Carlos: staging conserva datos demo y no se borra antes de producción. S0-12 requiere un entorno de aceptación nuevo, aislado y allowlisted para ejecutar el E2E sin tocar staging. |
+| S0-GOV | Kiro | `fix/role-access-hardening` | BLOCKED | `TEAM-COORDINATION.md`, `AGENTS.md`, `.kiro/PLAN.md`, `.kiro/steering/{current-state,simplicity,tech,data-model,product,spec-governance,structure}.md`, documentación S0, CI PostgreSQL y runner E2E | 2026-10-08 | Revisión independiente final `PASS`: preflight exacto/read-only antes de escrituras, curso por ID y pickers por código. Puerta local: 93/93, auth 11/11, tipos, lint, build 23/23, audit 0, migraciones 6/6. No crear otro Supabase ni iniciar S1. Bloqueos únicos: autorización de commit/push y login/bypass de Preview para el recorrido desplegado. |
 
 ## Claims reservados siguientes
 

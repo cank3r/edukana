@@ -69,3 +69,27 @@ test("el progreso de lecciones no finaliza la matrícula sin acción docente exp
   assert.match(actions, /ENROLLMENT_COMPLETED/);
   assert.match(actions, /ENROLLMENT_REOPENED/);
 });
+
+
+test("el modo aditivo verifica tenant y conflictos sin crear períodos en staging", () => {
+  const runner = source("tests", "e2e", "canonical-pilot.spec.mjs");
+  const config = source("scripts", "canonical-pilot-config.mjs");
+  const preflight = source("src", "app", "api", "pilot-preflight", "route.ts");
+  const ci = source(".circleci", "config.yml");
+  assert.match(config, /PILOT_MODE debe ser bootstrap o existing/);
+  assert.match(config, /mode === "existing" \? required\(env, "PILOT_RUN_ID"\)/);
+  assert.match(runner, /fetch\("\/api\/pilot-preflight"/);
+  assert.match(runner, /if \(pilot\.mode === "existing"\) \{\s*await preflightExistingInstitution\(page\);\s*return;/);
+  assert.match(runner, /if \(pilot\.mode === "bootstrap"\) \{\s*const periodForm/);
+  assert.match(runner, /await periodSelect\.selectOption\(\{ index: 1 \}\)/);
+  assert.match(runner, /gotoApp\(page, `\/dashboard\/aula\/\$\{createdCourseId\}`\)/);
+  assert.match(runner, /selectPickerCourseByCode\(targetCourses, course\.code\)/);
+  assert.match(runner, /guardianshipCard\.getByRole\("button", \{ name: "Activar vínculo" \}\)/);
+  assert.match(preflight, /id: sessionUser\.id, institutionId: sessionUser\.institutionId, status: "ACTIVE"/);
+  assert.match(preflight, /institutionId: actor\.institutionId, isActive: true/);
+  assert.match(preflight, /institutionId: actor\.institutionId, email: \{ in: emails \}/);
+  assert.match(preflight, /institutionId: actor\.institutionId, code: input\.courseCode\.toUpperCase\(\)/);
+  assert.doesNotMatch(preflight, /\.(?:create|update|upsert|delete|executeRaw)\s*\(/);
+  assert.match(ci, /cimg\/postgres:16\.4/);
+  assert.match(ci, /npx prisma migrate deploy/);
+});

@@ -25,7 +25,7 @@
 
 El runner E2E, sus guardas, Playwright Test 1.64.0, Next.js 16.4.0 y la documentación rectora ya están versionados en las ramas coordinadas de S0 y desplegados como Preview del PR. Permanecen fuera de producción mientras el PR no se fusione.
 
-S0 continúa en `REVIEW`: falta ejecutar el recorrido E2E en un entorno de aceptación nuevo, aislado, identificado y allowlisted. Staging conserva sus datos ficticios para demostraciones y no se borra antes de producción. Los resultados de cada puerta se registran junto con el SHA ejecutado en el PR.
+S0 continúa en `IMPLEMENTING`: falta ejecutar el recorrido E2E aditivo sobre el Preview conectado al staging Edukana. Staging conserva todos sus datos ficticios para demostraciones; el runner no borra, no resetea y no modifica el período activo. Las migraciones desde cero se verifican por separado en PostgreSQL temporal de CI. Los resultados de cada puerta se registran junto con el SHA ejecutado en el PR.
 
 ## 1.3 Dimensión actual
 
@@ -135,15 +135,18 @@ Luego se recorrió el caso completo localmente y se corrigieron defectos descubi
 - Exportación incompatible en una acción de servidor.
 - Necesidad de Storage privado local para pruebas aisladas.
 
-## 2.8 Runner E2E local aún no publicado
+## 2.8 Runner E2E de Preview
 
-Se creó una automatización que reproduce el piloto en un Preview limpio:
+La automatización reproduce el piloto de dos maneras separadas:
 
-- Usa Edge mediante Playwright Test.
+- `bootstrap`: valida `/setup` únicamente contra una base vacía controlada.
+- `existing`: entra con un administrador de la institución Edukana, verifica su slug y crea artefactos exclusivos mediante `PILOT_RUN_ID` sin borrar datos ni cambiar el período activo.
+- Usa Chromium incluido mediante Playwright Test; Edge es una opción explícita.
 - Recibe URL y credenciales por variables de entorno.
 - Rechaza cualquier host que no sea un Preview de Vercel `-git-` confirmado.
 - Guarda trazas y capturas en el scratch de la sesión, no en el repositorio.
 - Recorre múltiples roles, persistencia, archivos y permisos.
+- CircleCI aplica todas las migraciones desde cero sobre PostgreSQL 16 temporal; nunca usa staging para esa prueba destructiva.
 
 ---
 

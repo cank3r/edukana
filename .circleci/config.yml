@@ -4,6 +4,11 @@ jobs:
   validate:
     docker:
       - image: cimg/node:22.20
+      - image: cimg/postgres:16.4
+        environment:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: edukana
     environment:
       DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/edukana
       DIRECT_URL: postgresql://ci:ci@127.0.0.1:5432/edukana
@@ -22,6 +27,12 @@ jobs:
           paths: [~/.npm]
       - run: { name: Validar Prisma, command: npx prisma validate }
       - run: { name: Generar Prisma Client, command: npx prisma generate }
+      - run:
+          name: Migrar PostgreSQL temporal desde cero
+          command: |
+            dockerize -wait tcp://127.0.0.1:5432 -timeout 60s
+            npx prisma migrate deploy
+            npx prisma migrate status
       - run: { name: Ejecutar pruebas, command: npm test }
       - run: { name: Smoke tests autenticados y RBAC, command: npm run test:auth }
       - run: { name: Ejecutar ESLint, command: npm run lint }

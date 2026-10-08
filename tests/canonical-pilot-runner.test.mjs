@@ -20,10 +20,46 @@ const valid = {
   KIROCREW_SCRATCH: "C:\\scratch",
 };
 
-test("acepta un host Preview explícito y cuatro identidades distintas", () => {
+test("acepta bootstrap con un host Preview explícito y cuatro identidades distintas", () => {
   const config = loadCanonicalPilotConfig(valid);
+  assert.equal(config.mode, "bootstrap");
   assert.equal(config.baseUrl, valid.PILOT_BASE_URL);
   assert.equal(config.users.teacher.email, valid.PILOT_TEACHER_EMAIL);
+  assert.equal(config.artifacts.courseCode, "PIL-101");
+  assert.equal(config.adminPassword, valid.PILOT_PASSWORD);
+});
+
+test("acepta staging aditivo con administrador existente y artefactos namespaced", () => {
+  const config = loadCanonicalPilotConfig({
+    ...valid,
+    PILOT_PASSWORD: undefined,
+    PILOT_MODE: "existing",
+    PILOT_RUN_ID: "s0-20261008",
+    PILOT_ADMIN_PASSWORD: "ExistingAdmin123",
+    PILOT_USER_PASSWORD: "NewPilotUsers123",
+  });
+  assert.equal(config.mode, "existing");
+  assert.equal(config.runId, "s0-20261008");
+  assert.equal(config.adminPassword, "ExistingAdmin123");
+  assert.equal(config.userPassword, "NewPilotUsers123");
+  assert.equal(config.artifacts.courseCode, "PIL-S0-20261008");
+  assert.equal(config.artifacts.unitName, "Departamento Académico s0-20261008");
+  assert.equal(config.users.student.name, "Estudiante Piloto s0-20261008");
+});
+
+test("rechaza modo aditivo sin run ID o contraseña administrativa", () => {
+  assert.throws(
+    () => loadCanonicalPilotConfig({ ...valid, PILOT_MODE: "existing", PILOT_ADMIN_PASSWORD: "ExistingAdmin123" }),
+    /PILOT_RUN_ID/,
+  );
+  assert.throws(
+    () => loadCanonicalPilotConfig({ ...valid, PILOT_MODE: "existing", PILOT_RUN_ID: "s0-20261008" }),
+    /PILOT_ADMIN_PASSWORD/,
+  );
+  assert.throws(
+    () => loadCanonicalPilotConfig({ ...valid, PILOT_MODE: "existing", PILOT_RUN_ID: "INVALID_RUN", PILOT_ADMIN_PASSWORD: "ExistingAdmin123" }),
+    /PILOT_RUN_ID debe usar/,
+  );
 });
 
 test("rechaza producción aunque el host sea vercel.app", () => {

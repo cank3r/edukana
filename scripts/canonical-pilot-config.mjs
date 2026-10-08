@@ -7,7 +7,6 @@ const REQUIRED = [
   "PILOT_TEACHER_EMAIL",
   "PILOT_STUDENT_EMAIL",
   "PILOT_PARENT_EMAIL",
-  "PILOT_PASSWORD",
 ];
 
 export function getPreviewProtectionHeaders(env = process.env) {
@@ -46,10 +45,26 @@ function required(env, name) {
   return value;
 }
 
+function validPassword(value, name) {
+  if (value.length < 10 || !/[A-Za-zÁÉÍÓÚáéíóúÑñ]/.test(value) || !/\d/.test(value)) {
+    throw new Error(`${name} debe tener al menos 10 caracteres, una letra y un número.`);
+  }
+  return value;
+}
+
 export function loadCanonicalPilotConfig(env = process.env) {
   for (const name of REQUIRED) required(env, name);
   if (env.PILOT_CONFIRM !== "PREVIEW_ONLY") {
     throw new Error("PILOT_CONFIRM debe ser PREVIEW_ONLY.");
+  }
+
+  const mode = env.PILOT_MODE?.trim() || "bootstrap";
+  if (!new Set(["bootstrap", "existing"]).has(mode)) {
+    throw new Error("PILOT_MODE debe ser bootstrap o existing.");
+  }
+  const runId = mode === "existing" ? required(env, "PILOT_RUN_ID") : env.PILOT_RUN_ID?.trim() || "";
+  if (runId && !/^[a-z0-9](?:[a-z0-9-]{0,14}[a-z0-9])?$/.test(runId)) {
+    throw new Error("PILOT_RUN_ID debe usar 1-16 caracteres en minúsculas, números o guiones.");
   }
 
   const baseUrl = new URL(required(env, "PILOT_BASE_URL"));
@@ -66,10 +81,10 @@ export function loadCanonicalPilotConfig(env = process.env) {
 
   const slug = required(env, "PILOT_INSTITUTION_SLUG");
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) throw new Error("PILOT_INSTITUTION_SLUG no es válido.");
-  const password = required(env, "PILOT_PASSWORD");
-  if (password.length < 10 || !/[A-Za-zÁÉÍÓÚáéíóúÑñ]/.test(password) || !/\d/.test(password)) {
-    throw new Error("PILOT_PASSWORD debe tener al menos 10 caracteres, una letra y un número.");
-  }
+  const userPassword = validPassword(env.PILOT_USER_PASSWORD?.trim() || required(env, "PILOT_PASSWORD"), "PILOT_USER_PASSWORD");
+  const adminPassword = mode === "existing"
+    ? validPassword(required(env, "PILOT_ADMIN_PASSWORD"), "PILOT_ADMIN_PASSWORD")
+    : userPassword;
 
   const emails = {
     admin: required(env, "PILOT_ADMIN_EMAIL").toLowerCase(),
@@ -81,8 +96,12 @@ export function loadCanonicalPilotConfig(env = process.env) {
     throw new Error("Los cuatro correos piloto deben ser válidos y distintos.");
   }
 
+  const tag = runId ? ` ${runId}` : "";
+  const codeTag = runId ? runId.toUpperCase() : "101";
   const scratch = required(env, "KIROCREW_SCRATCH");
   return Object.freeze({
+    mode,
+    runId,
     baseUrl: baseUrl.origin,
     expectedHost,
     institution: {
@@ -91,11 +110,25 @@ export function loadCanonicalPilotConfig(env = process.env) {
     },
     users: {
       admin: { name: "Administración Piloto", email: emails.admin },
-      teacher: { name: "Docente Piloto", email: emails.teacher },
-      student: { name: "Estudiante Piloto", email: emails.student },
-      parent: { name: "Tutor Piloto", email: emails.parent },
+      teacher: { name: `Docente Piloto${tag}`, email: emails.teacher },
+      student: { name: `Estudiante Piloto${tag}`, email: emails.student },
+      parent: { name: `Tutor Piloto${tag}`, email: emails.parent },
     },
-    password,
+    artifacts: {
+      periodName: `Año escolar piloto${tag}`,
+      unitName: `Departamento Académico${tag}`,
+      courseName: `Curso Piloto${tag}`,
+      courseCode: `PIL-${codeTag}`,
+      sectionTitle: `Fundamentos${tag}`,
+      lessonTitle: `Actividad inicial${tag}`,
+      assignmentTitle: `Entrega del piloto${tag}`,
+      announcementTitle: `Aviso del curso piloto${tag}`,
+      submissionText: `Reflexión persistente del estudiante piloto${tag}.`,
+      imageName: `aviso-piloto${runId ? `-${runId}` : ""}.png`,
+    },
+    adminPassword,
+    userPassword,
+    password: userPassword,
     headless: env.PILOT_HEADLESS !== "false",
     scratch,
   });
