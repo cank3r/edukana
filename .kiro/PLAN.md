@@ -24,7 +24,7 @@ Este archivo registra estado, dependencias y siguiente acción. No sustituye req
 | S0-04 | Reconciliar cinco steerings legacy | DONE | Tech, data model, product, governance y structure alineados. |
 | S0-05 | Inventariar restos Alpha | DONE | `docs/legacy-cleanup.md`; no se eliminó ningún modelo. |
 | S0-06 | Crear coordinación multiagente | DONE | `TEAM-COORDINATION.md`, AGENTS y handoff para Claude. |
-| S0-07 | Validar documentación y suite | DONE | 87/87, auth 11/11, types, lint, build 22/22, audit producción 0 y diff check. |
+| S0-07 | Validar documentación y suite | DONE | 89/89, auth 11/11, runner 6/6, types, lint, build 22/22, audit producción 0 y diff check. |
 | S0-08 | Preservar cambios en commit | DONE | Commit S0 específico en `fix/role-access-hardening`. |
 | S0-09 | Publicar rama y actualizar PR | DONE | Push explícito a feature branch; nunca a master. |
 | S0-10 | Decidir privacidad del repositorio | DECISION | El repositorio es público; el propietario debe decidir. |

@@ -59,7 +59,7 @@ Este guion es la definición de terminado del MVP. Se ejecuta contra una base Po
 
 - Repetir una acción con un ID de usuario, curso, unidad, vínculo o archivo de otro tenant: debe responder no encontrado/sin acceso y no escribir nada.
 - Abrir directamente rutas ocultas para tutor, estudiante y docente: debe devolver 404 o redirigir sin datos.
-- Revocar el vínculo: el portal del tutor debe cortar inmediatamente cursos, asistencia, notas y anuncios del estudiante.
+- Revocar el vínculo: el portal del tutor debe cortar inmediatamente nuevas consultas de cursos, asistencia, notas y anuncios. Una URL privada ya emitida puede seguir válida durante su TTL nominal de hasta 300 segundos; S1 debe medir ambos backends y reducir o mediar esa ventana según sensibilidad.
 - Completar el curso: tareas, exámenes y progreso pasan a consulta y no admiten nuevas escrituras.
 - Desactivar una capability del docente: navegación, página, acción y archivo deben aplicar la misma denegación.
 
@@ -81,7 +81,9 @@ El recorrido solo se declara aprobado si, además de esa puerta, se ejecutan los
 
 ## Runner de aceptación en Preview
 
-Después de vaciar exclusivamente staging y aplicar migraciones, ejecuta el recorrido con Edge del sistema. Las credenciales se pasan solo por variables de entorno y el runner se niega a operar si el host no es un deployment Vercel Preview `-git-` confirmado dos veces.
+Después de vaciar exclusivamente staging y aplicar migraciones, ejecuta el recorrido con Chromium incluido. `PILOT_BROWSER_CHANNEL=msedge` permite una aceptación local específica con Edge. Las credenciales se pasan solo por variables de entorno y el runner se niega a operar si el host no es un deployment Vercel Preview `-git-` confirmado dos veces.
+
+Esta guarda valida intención, HTTPS y hostname; no certifica por sí sola qué base de datos o bucket usa el deployment. Antes de permitir escrituras se debe verificar por separado la identidad allowlisted de DB y Storage. El bypass de Deployment Protection se añade únicamente a solicitudes HTTPS del host Preview confirmado y nunca a Supabase ni a otros orígenes.
 
 ```powershell
 $env:PILOT_BASE_URL = "https://edukana-git-<rama>-<cuenta>.vercel.app"

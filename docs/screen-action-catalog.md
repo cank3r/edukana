@@ -339,7 +339,7 @@ Muestra si existen:
 | Checkboxes de áreas | Preparan cambios permitidos. |
 | **Guardar permisos** | Aplica deltas con control de concurrencia. |
 | **Activar vínculo** | Requiere confirmación; concede acceso a las áreas activadas. |
-| **Revocar vínculo** | Requiere confirmación; corta inmediatamente todo acceso y es terminal en el MVP. |
+| **Revocar vínculo** | Requiere confirmación; corta inmediatamente nuevas consultas y es terminal en el MVP. Los enlaces privados ya emitidos conservan una ventana residual nominal de hasta 300 segundos. |
 
 ---
 
@@ -800,7 +800,9 @@ El mismo estado se usa para recurso inexistente o fuera de la institución, evit
 | Control | Qué hará |
 |---|---|
 | **Agregar patrón** | Abre configuración recurrente. |
-| Modalidad | Presencial, virtual, híbrida, asincrónica, práctica o evaluación. |
+| Participación | Presencial, virtual o híbrida. |
+| Temporalidad | Sincrónica o asincrónica; la segunda usa una ventana de disponibilidad. |
+| Tipo pedagógico | Clase, práctica, evaluación o evento. |
 | Día/frecuencia | Semanal o quincenal con vigencia. |
 | Hora y zona | Define inicio, fin y zona horaria. |
 | Sede/aula | Requeridos para presencial/híbrida. |
@@ -1088,9 +1090,9 @@ Una pantalla no se considera funcional si sus botones solo modifican estado visu
 
 ---
 
-# 31. Próxima especificación de pantalla recomendada
+# 31. Especificación de pantalla prevista para S4
 
-La siguiente pantalla a diseñar e implementar debe ser **Detalle de sesión de clase**, acompañada por el **Constructor de horario híbrido** y el **Panel Hoy**. Juntas forman el recorrido vertical:
+Después de cerrar S1 (seguridad), S2 (identidad) y S3 (estructura académica), S4 diseñará e implementará **Detalle de sesión de clase**, **Constructor de horario híbrido** y **Panel Hoy**. El orden operativo vigente está en `.kiro/PLAN.md`; este catálogo define comportamiento, no autoriza adelantar contratos. Juntas forman el recorrido vertical:
 
 1. Configurar lunes presencial y miércoles virtual.
 2. Materializar las sesiones.

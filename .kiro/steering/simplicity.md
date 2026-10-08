@@ -19,6 +19,7 @@ El usuario típico no es técnico, usa con frecuencia el celular y no debe depen
 10. La tarea principal está a dos acciones desde el inicio cuando sea razonable.
 11. La primera experiencia de cada rol ofrece pasos iniciales que se completan automáticamente.
 12. No duplicar conceptos, acciones ni navegación en una misma pantalla.
+13. La navegación principal muestra como máximo cinco opciones por rol; lo secundario se agrupa por tarea sin ocultar la acción principal.
 
 ## Prueba de aceptación por pantalla
 

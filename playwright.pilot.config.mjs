@@ -1,9 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 import { join } from "node:path";
-import { getPreviewProtectionHeaders, loadCanonicalPilotConfig } from "./scripts/canonical-pilot-config.mjs";
+import { loadCanonicalPilotConfig } from "./scripts/canonical-pilot-config.mjs";
 
 const pilot = loadCanonicalPilotConfig();
-const protectionHeaders = getPreviewProtectionHeaders();
+const browserChannel = process.env.PILOT_BROWSER_CHANNEL?.trim();
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -15,11 +15,10 @@ export default defineConfig({
   outputDir: join(pilot.scratch, "edukana-canonical-pilot"),
   reporter: [["line"]],
   use: {
-    ...devices["Desktop Edge"],
+    ...devices["Desktop Chrome"],
     baseURL: pilot.baseUrl,
-    channel: "msedge",
+    ...(browserChannel ? { channel: browserChannel } : {}),
     headless: pilot.headless,
-    extraHTTPHeaders: protectionHeaders,
     screenshot: "only-on-failure",
     trace: "retain-on-failure",
     video: "off",

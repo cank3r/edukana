@@ -19,6 +19,12 @@ export function getPreviewProtectionHeaders(env = process.env) {
   return { "x-vercel-protection-bypass": secret };
 }
 
+export function getPreviewProtectionHeadersForUrl(requestUrl, expectedHost, env = process.env) {
+  const url = new URL(requestUrl);
+  if (url.protocol !== "https:" || url.hostname.toLowerCase() !== expectedHost.toLowerCase()) return {};
+  return getPreviewProtectionHeaders(env);
+}
+
 function required(env, name) {
   const value = env[name]?.trim();
   if (!value) throw new Error(`Falta la variable ${name}.`);

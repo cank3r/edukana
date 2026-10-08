@@ -1,12 +1,35 @@
 import { test, expect } from "@playwright/test";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
-import { loadCanonicalPilotConfig } from "../../scripts/canonical-pilot-config.mjs";
+import {
+  getPreviewProtectionHeadersForUrl,
+  loadCanonicalPilotConfig,
+} from "../../scripts/canonical-pilot-config.mjs";
 
 const pilot = loadCanonicalPilotConfig();
 const period = { name: "Año escolar piloto", start: "2026-09-01", end: "2027-06-30" };
 const course = { name: "Curso Piloto", code: "PIL-101" };
 const announcementTitle = "Aviso del curso piloto";
+
+function personEmailOptionLabel(user) {
+  return `${user.name} · ${user.email}`;
+}
+
+function personRoleOptionLabel(user, role) {
+  return `${user.name} · ${role}`;
+}
+
+test.beforeEach(async ({ page }) => {
+  await page.route("**/*", async (route) => {
+    const request = route.request();
+    const protectionHeaders = getPreviewProtectionHeadersForUrl(request.url(), pilot.expectedHost);
+    if (!Object.keys(protectionHeaders).length) {
+      await route.continue();
+      return;
+    }
+    await route.continue({ headers: { ...request.headers(), ...protectionHeaders } });
+  });
+});
 
 async function gotoApp(page, path) {
   const response = await page.goto(path, { waitUntil: "domcontentloaded" });
@@ -91,7 +114,7 @@ test("piloto canónico desplegado funciona de extremo a extremo", async ({ page 
     await page.getByRole("button", { name: "Crear unidad" }).click();
     await expect(page.getByText("Unidad creada.")).toBeVisible();
     const unit = page.locator("article").filter({ hasText: "Departamento Académico" });
-    await unit.getByLabel("Asignar persona").selectOption({ label: new RegExp(pilot.users.teacher.name) });
+    await unit.getByLabel("Asignar persona").selectOption({ label: personRoleOptionLabel(pilot.users.teacher, "Docente") });
     await unit.getByRole("button", { name: "Asignar" }).click();
     await expect(page.getByText("Miembro asignado.")).toBeVisible();
   });
@@ -133,7 +156,7 @@ test("piloto canónico desplegado funciona de extremo a extremo", async ({ page 
     await page.getByText("Nueva asignación", { exact: true }).click();
     const assignmentForm = formWithButton(page, "Crear tarea");
     await assignmentForm.getByLabel("Título").fill("Entrega del piloto");
-    await assignmentForm.getByLabel("Categoría").selectOption({ label: /Asignaciones/ });
+    await assignmentForm.getByLabel("Categoría").selectOption({ label: "Asignaciones" });
     await assignmentForm.getByLabel("Instrucciones").fill("Entrega una reflexión breve sobre la actividad inicial.");
     await assignmentForm.getByLabel("Entrega").fill("2026-11-01T12:00");
     await assignmentForm.getByRole("button", { name: "Crear tarea" }).click();
@@ -152,8 +175,8 @@ test("piloto canónico desplegado funciona de extremo a extremo", async ({ page 
 
     await gotoApp(page, "/dashboard/configuracion/tutores");
     const guardianForm = formWithButton(page, "Crear pendiente");
-    await guardianForm.getByLabel("Tutor").selectOption({ label: new RegExp(pilot.users.parent.name) });
-    await guardianForm.getByLabel("Estudiante").selectOption({ label: new RegExp(pilot.users.student.name) });
+    await guardianForm.getByLabel("Tutor").selectOption({ label: personEmailOptionLabel(pilot.users.parent) });
+    await guardianForm.getByLabel("Estudiante").selectOption({ label: personEmailOptionLabel(pilot.users.student) });
     await guardianForm.getByLabel("Académico y calificaciones publicadas").check();
     await guardianForm.getByLabel("Asistencia").check();
     await guardianForm.getByLabel("Avisos relevantes").check();
@@ -231,7 +254,7 @@ test("piloto canónico desplegado funciona de extremo a extremo", async ({ page 
     const relatedCourses = page.locator("fieldset").filter({ hasText: "Cursos relacionados" });
     await relatedCourses.getByRole("checkbox", { name: new RegExp(course.name) }).check();
     await page.getByLabel("Botón o enlace destacado").fill("https://example.com/piloto");
-    await page.getByLabel("Insertar una mención en el mensaje").selectOption({ label: new RegExp(pilot.users.teacher.name) });
+    await page.getByLabel("Insertar una mención en el mensaje").selectOption({ label: personRoleOptionLabel(pilot.users.teacher, "Docente") });
 
     const fixtureDir = join(pilot.scratch, "edukana-canonical-pilot-fixtures");
     await mkdir(fixtureDir, { recursive: true });

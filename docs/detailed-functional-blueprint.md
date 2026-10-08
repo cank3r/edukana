@@ -258,17 +258,15 @@ No existe todavía una sesión pedagógica individual ni modalidades diferenciad
 
 ## Se agregará
 
-## 8.1 Modalidades
+## 8.1 Ejes independientes de la sesión
 
-Cada patrón o sesión admite:
+Cada patrón o sesión guarda tres dimensiones separadas:
 
-- `PRESENCIAL`: requiere sede y aula o ubicación.
-- `VIRTUAL_EN_VIVO`: requiere proveedor y enlace o sala virtual.
-- `HIBRIDA`: combina aula y acceso virtual simultáneo.
-- `ASINCRONICA`: no requiere presencia a una hora concreta; tiene ventana de disponibilidad.
-- `PRACTICA`: laboratorio, taller o trabajo de campo.
-- `EVALUACION`: examen o actividad sincrónica.
-- `EVENTO`: orientación, tutoría, presentación u otra sesión académica.
+- **Participación:** `IN_PERSON`, `VIRTUAL` o `HYBRID`.
+- **Temporalidad:** `SYNCHRONOUS` o `ASYNCHRONOUS`.
+- **Tipo pedagógico:** `CLASS`, `PRACTICE`, `ASSESSMENT` o `EVENT`.
+
+Ejemplos válidos: práctica híbrida sincrónica, evaluación virtual sincrónica y clase virtual asincrónica. `IN_PERSON` requiere sede y aula o ubicación; `VIRTUAL` requiere proveedor y enlace o sala cuando es sincrónica; `HYBRID` combina ambos accesos. Una sesión asincrónica usa ventana de disponibilidad en vez de exigir presencia a una hora concreta.
 
 ## 8.2 Patrón recurrente
 
@@ -281,7 +279,9 @@ Un patrón de horario define:
 - Zona horaria.
 - Fecha inicial y final.
 - Frecuencia semanal o quincenal.
-- Modalidad predeterminada.
+- Participación predeterminada: presencial, virtual o híbrida.
+- Temporalidad predeterminada: sincrónica o asincrónica.
+- Tipo pedagógico predeterminado: clase, práctica, evaluación o evento.
 - Sede, edificio y aula.
 - Proveedor virtual y sala o enlace.
 - Capacidad presencial.
@@ -299,7 +299,9 @@ Ejemplo:
 El sistema materializa sesiones individuales a partir del patrón. Cada sesión guarda:
 
 - Fecha y horas reales.
-- Modalidad efectiva, que puede diferir del patrón.
+- Participación efectiva, que puede diferir del patrón.
+- Temporalidad efectiva y, si es asincrónica, ventana de disponibilidad.
+- Tipo pedagógico efectivo.
 - Estado: programada, confirmada, en curso, completada, cancelada o reprogramada.
 - Título y objetivo pedagógico.
 - Temas que se cubrirán.
@@ -924,53 +926,41 @@ Cada permiso debe definir además su alcance: institución, sede, unidad, progra
 
 # 26. Orden de implementación
 
-## Etapa inmediata — cerrar el piloto actual
+El orden operativo vigente está en `.kiro/PLAN.md` y sustituye secuencias anteriores de este blueprint. Los detalles funcionales posteriores siguen siendo objetivos, no autorización para adelantar contratos.
 
-- Publicar runner E2E.
-- Reiniciar solo staging.
-- Ejecutar el piloto desplegado completo.
-- Corregir diferencias entre local y Preview.
+## Etapa inmediata — cerrar S0
 
-## Incremento 1 — semana académica híbrida
+- Corregir y validar el runner E2E.
+- Verificar de forma independiente que Preview usa DB y Storage aislados.
+- Reiniciar solo staging con autorización explícita.
+- Ejecutar el piloto desplegado completo y registrar SHA, entorno y evidencia.
 
-- `CourseOffering`, grupos, sede y aula.
+## S1 — seguridad y pruebas reales
+
+- Contexto vivo, suspensión, rate limiting y recuperación.
+- Bootstrap protegido y PostgreSQL real con dos instituciones en CI.
+- Tiempo autoritativo de examen, URLs firmadas e historia académica mínima.
+
+## S2 — identidad y personas
+
+- Identidad global y `Membership`.
+- Invitaciones, suspensión/reactivación e importación CSV idempotente.
+
+## S3 — estructura académica
+
+- `Course` reusable y `Offering` por período/cohorte.
+- Programas, niveles, cohortes, grupos, varios docentes y matrícula masiva.
+
+## S4 — semana académica híbrida
+
 - Patrones y sesiones concretas.
-- Modalidad, enlace virtual y excepciones.
-- Panel “Hoy”.
-- Contenido y asistencia por sesión.
-- Notificación de cambios.
+- Participación, temporalidad, tipo pedagógico, enlace virtual y excepciones.
+- Panel “Hoy”, contenido y asistencia por sesión, cambios y notificaciones.
 
-## Incremento 2 — operación del estudiante
+## S5 y S6 — video y cierre operativo
 
-- Próximas actividades y calendario consolidado.
-- Comentarios y comunicación por curso.
-- Recuperación de contraseña y correo.
-- Importación masiva.
-
-## Incremento 3 — estructura y matrícula
-
-- Programas, niveles, cohortes y ofertas.
-- Admisión, conversión, matrícula individual y masiva.
-- Plantillas y copia de cursos.
-
-## Incremento 4 — evaluación institucional
-
-- Rúbricas, preguntas adicionales y excepciones.
-- Cierre de período, boletín e historial.
-- Reportes académicos.
-
-## Incremento 5 — cobros administrativos
-
-- Conceptos y asignación masiva.
-- Estados y marcado masivo.
-- Estado de cuenta e instrucciones externas.
-- Exportación y auditoría.
-
-## Incremento 6 — robustez y plataforma
-
-- Marca blanca y aprovisionamiento de tenants.
-- Backups, monitoreo, privacidad y soporte.
-- SSO, API e integraciones prioritarias.
+- `VideoProvider`, reproducción adaptable y reanudación.
+- Cobros administrativos, cierre de período, boletín, reportes y restore probado.
 
 ---
 

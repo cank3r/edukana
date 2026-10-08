@@ -12,8 +12,7 @@ Antes de analizar, editar, migrar, probar o revisar, leer `TEAM-COORDINATION.md`
 
 ## Estado del código
 
-- Rama de trabajo: `fix/role-access-hardening`.
-- Último commit publicado de la rama: `cff38c6`.
+- Rama coordinadora de S0: `fix/role-access-hardening`; la evidencia de cada ejecución debe registrar su SHA exacto.
 - El código usa `Institution` e `institutionId`; no renombrar a `Tenant`/`tenantId`.
 - El usuario actual pertenece directamente a una institución y lleva rol; esto es estado legacy que migrará de forma aditiva.
 - Autorización actual: `src/lib/capabilities.ts`, `authorization.ts`, `access.ts`, `course-scope.ts`, `guardian-portal.ts` y políticas de dominio.
@@ -22,7 +21,6 @@ Antes de analizar, editar, migrar, probar o revisar, leer `TEAM-COORDINATION.md`
 - `ScheduleSlot` solo representa día, hora, docente y aula; no es todavía una sesión pedagógica.
 - Storage usa Supabase privado en entornos desplegados y backend local firmado en pruebas aisladas.
 - Existen seis migraciones versionadas y un piloto local E2E completo.
-- Hay cambios locales aún sin commit: runner E2E Preview, Next.js 16.4 y documentación rectora.
 
 ## Decisiones aprobadas
 
@@ -31,7 +29,7 @@ Antes de analizar, editar, migrar, probar o revisar, leer `TEAM-COORDINATION.md`
 3. **Sesión viva:** el JWT llevará identidad y `sessionVersion`; estado, membresía, rol y permisos se releen por petición.
 4. **Curso y oferta:** `Course` conserva contenido reusable; `Offering` representa ejecución `COHORT` o `SELF_PACED`, fechas, grupo y precio opcional.
 5. **Varios docentes:** `OfferingStaff` asigna titular, asistente o sustituto.
-6. **Sesión de clase:** `ClassSession` se materializa desde `MeetingPattern`. Se separan forma de participación (`PRESENTIAL|VIRTUAL|HYBRID`), temporalidad (`SYNCHRONOUS|ASYNCHRONOUS`) y tipo pedagógico (`CLASS|PRACTICE|ASSESSMENT|EVENT`). Guarda ubicación/sala, contenido, cambios, asistencia y grabación.
+6. **Sesión de clase:** `ClassSession` se materializa desde `MeetingPattern`. Se separan forma de participación (`IN_PERSON|VIRTUAL|HYBRID`), temporalidad (`SYNCHRONOUS|ASYNCHRONOUS`) y tipo pedagógico (`CLASS|PRACTICE|ASSESSMENT|EVENT`). Guarda ubicación/sala, contenido, cambios, asistencia y grabación.
 7. **Clases en vivo:** interfaz `MeetingProvider`; primera implementación `ExternalLink`. BigBlueButton se evalúa según concurrencia y presupuesto. No construir videoconferencia propia.
 8. **Video grabado:** interfaz `VideoProvider` con streaming adaptable. Supabase Storage queda para documentos e imágenes; el backend actual se mantiene hasta migrar.
 9. **Dinero:** nuevos modelos usan centavos enteros más moneda. Los `Float` actuales se migran con backfill.

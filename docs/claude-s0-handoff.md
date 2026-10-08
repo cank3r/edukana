@@ -28,7 +28,7 @@ Adoptamos el plan corregido con estas decisiones:
 - Código nuevo adopta `src/server` gradualmente; no habrá refactor global sin valor funcional.
 - Una capacidad termina solo con E2E desplegado.
 
-S0 está actualmente reclamado por Kiro bajo `S0-GOV`. No edites los archivos incluidos en ese claim hasta que cambie a REVIEW o recibas handoff. Puedes hacer revisión de solo lectura y comentar hallazgos en el PR/issue de S0.
+S0 está actualmente reclamado por Kiro bajo `S0-GOV`. No edites los archivos incluidos en ese claim mientras no exista un handoff explícito del propietario o coordinador; `REVIEW` no libera el alcance. Puedes hacer revisión de solo lectura y comentar hallazgos en el PR/issue de S0.
 
 Cuando vayas a escribir:
 

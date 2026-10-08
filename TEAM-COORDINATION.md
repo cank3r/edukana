@@ -39,11 +39,12 @@ Un solo agente modifica `prisma/schema.prisma` y la migración activa. Un segund
 
 1. Actualizar la rama local y leer este archivo desde la rama de coordinación vigente.
 2. Buscar un claim que toque los mismos modelos, migraciones, contratos o archivos.
-3. Si existe solape, no editar: comentar en el PR/issue del claim y esperar handoff.
-4. Si no existe, añadir una fila con ID, agente, rama, alcance exacto, estado y siguiente paso.
-5. Trabajar únicamente dentro del alcance reclamado.
-6. Actualizar la fila al encontrar un bloqueo, cambiar contrato o terminar.
-7. Antes de handoff, incluir archivos, migraciones, pruebas reales y pendientes.
+3. Si existe solape, no editar: comentar en el PR/issue del claim y esperar un handoff explícito del propietario o coordinador. El estado `REVIEW` no libera el alcance.
+4. Si no existe, proponer una fila con ID, agente, rama, alcance exacto, estado y siguiente paso; publicarla en la rama coordinadora y confirmar en remoto que no apareció un claim competidor antes de escribir.
+5. Si dos claims compiten, prevalece el primero publicado en la rama coordinadora; el segundo espera decisión del coordinador.
+6. Trabajar únicamente dentro del alcance reclamado.
+7. Actualizar la fila al encontrar un bloqueo, cambiar contrato o terminar.
+8. Antes de handoff, incluir SHA base, archivos, migraciones, pruebas reales, pendientes y próximo escritor confirmado.
 
 ## Estados
 
@@ -59,7 +60,7 @@ Un solo agente modifica `prisma/schema.prisma` y la migración activa. Un segund
 
 | ID | Agente | Rama | Estado | Alcance exclusivo | Última actualización | Siguiente paso / bloqueo |
 |---|---|---|---|---|---|---|
-| S0-GOV | Kiro | `fix/role-access-hardening` | REVIEW | `TEAM-COORDINATION.md`, `AGENTS.md`, `.kiro/PLAN.md`, `.kiro/steering/{current-state,simplicity,tech,data-model,product,spec-governance,structure}.md`, documentación S0 y runner E2E local | 2026-10-08 | CI, CircleCI y Vercel verdes; runner soporta Deployment Protection. Espera revisión Claude/Codex y reset de staging. |
+| S0-GOV | Kiro | `fix/role-access-hardening` | REVIEW | `TEAM-COORDINATION.md`, `AGENTS.md`, `.kiro/PLAN.md`, `.kiro/steering/{current-state,simplicity,tech,data-model,product,spec-governance,structure}.md`, documentación S0 y runner E2E local | 2026-10-08 | Claude aprobó arquitectura; hallazgos S0 de Codex y fuga potencial del bypass corregidos y puerta local verde. Publicar SHA de corrección, obtener revisión fijada a ese SHA y resolver S0-12 con reset autorizado de staging. |
 
 ## Claims reservados siguientes
 

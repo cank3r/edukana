@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { getPreviewProtectionHeaders, loadCanonicalPilotConfig } from "../scripts/canonical-pilot-config.mjs";
+import {
+  getPreviewProtectionHeaders,
+  getPreviewProtectionHeadersForUrl,
+  loadCanonicalPilotConfig,
+} from "../scripts/canonical-pilot-config.mjs";
 
 const valid = {
   PILOT_BASE_URL: "https://edukana-git-feat-real-mvp-example.vercel.app",
@@ -48,5 +52,22 @@ test("añade bypass de Vercel solo cuando existe y rechaza inyección de cabecer
   assert.throws(
     () => getPreviewProtectionHeaders({ VERCEL_AUTOMATION_BYPASS_SECRET: "value\r\ninjected: true" }),
     /no es válido/,
+  );
+});
+
+
+test("limita el bypass al host Preview confirmado", () => {
+  const env = { VERCEL_AUTOMATION_BYPASS_SECRET: "preview-secret" };
+  assert.deepEqual(
+    getPreviewProtectionHeadersForUrl(`${valid.PILOT_BASE_URL}/login`, valid.PILOT_EXPECTED_HOST, env),
+    { "x-vercel-protection-bypass": "preview-secret" },
+  );
+  assert.deepEqual(
+    getPreviewProtectionHeadersForUrl("https://example.supabase.co/storage/v1/object/sign/file", valid.PILOT_EXPECTED_HOST, env),
+    {},
+  );
+  assert.deepEqual(
+    getPreviewProtectionHeadersForUrl(`http://${valid.PILOT_EXPECTED_HOST}/login`, valid.PILOT_EXPECTED_HOST, env),
+    {},
   );
 });

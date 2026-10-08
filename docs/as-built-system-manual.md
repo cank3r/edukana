@@ -17,7 +17,7 @@
 ## 1.1 Rama y publicación
 
 - Rama de trabajo: `fix/role-access-hardening`.
-- Último commit publicado y compartido por las ramas remotas relevantes: `cff38c6`.
+- La evidencia Git y de validación debe vincularse al SHA exacto ejecutado; este manual no usa un “último commit” fijo porque envejece con cada publicación.
 - El historial publicado contiene el MVP académico, endurecimiento de permisos, tutores, anuncios avanzados y onboarding canónico.
 - No se ha fusionado el PR a producción.
 
@@ -1126,7 +1126,7 @@ Los secretos nunca deben confirmarse en Git ni imprimirse en reportes.
 
 ## Resultado más reciente
 
-- 87/87 pruebas.
+- 89/89 pruebas.
 - TypeScript aprobado.
 - ESLint aprobado.
 - Build de 22 páginas.
@@ -1288,22 +1288,16 @@ Edukana registra obligaciones y estados. El pago real ocurre por vías externas 
 
 ---
 
-# 27. Qué se está construyendo a continuación
+# 27. Qué se construye a continuación
 
-El siguiente incremento vertical propuesto es la semana híbrida:
+El orden operativo vigente está en `.kiro/PLAN.md` y sustituye cualquier secuencia anterior de este manual:
 
-1. Separar curso reusable de oferta.
-2. Crear grupos.
-3. Modelar sede y aula.
-4. Crear patrones recurrentes.
-5. Materializar sesiones concretas.
-6. Añadir modalidad presencial, virtual, híbrida y asincrónica.
-7. Vincular contenido y actividades por sesión.
-8. Crear panel Hoy.
-9. Registrar asistencia según modalidad.
-10. Gestionar reprogramaciones y notificaciones.
+1. **S1 — seguridad y pruebas reales:** sesión viva, suspensión inmediata, recuperación, rate limiting, bootstrap protegido, PostgreSQL CI, examen temporal, URLs firmadas e historia académica mínima.
+2. **S2 — identidad y personas:** identidad global, `Membership`, invitaciones e importación CSV idempotente.
+3. **S3 — estructura académica:** separar curso reusable de oferta, programas, cohortes, grupos, varios docentes y matrícula masiva.
+4. **S4 — semana híbrida:** patrones, sesiones concretas, participación presencial/virtual/híbrida, temporalidad sincrónica/asincrónica, contenido por sesión, Panel Hoy, asistencia y notificaciones.
 
-Después se priorizan recuperación, correo, importación masiva, estructura académica completa, admisión, evaluación avanzada y cobros administrativos en lote.
+Los detalles de la semana híbrida se conservan como objetivo funcional de S4, pero no autorizan adelantar sus contratos antes de cerrar S1–S3.
 
 ---
 
