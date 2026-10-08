@@ -93,6 +93,8 @@ $env:PILOT_TEACHER_EMAIL = "teacher@pilot.test"
 $env:PILOT_STUDENT_EMAIL = "student@pilot.test"
 $env:PILOT_PARENT_EMAIL = "parent@pilot.test"
 $env:PILOT_PASSWORD = "<contraseña temporal segura>"
+# Solo si Vercel Deployment Protection está habilitado:
+$env:VERCEL_AUTOMATION_BYPASS_SECRET = "<secreto de automatización de Vercel>"
 npm run test:pilot:preview
 ```
 

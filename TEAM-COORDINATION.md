@@ -59,7 +59,7 @@ Un solo agente modifica `prisma/schema.prisma` y la migración activa. Un segund
 
 | ID | Agente | Rama | Estado | Alcance exclusivo | Última actualización | Siguiente paso / bloqueo |
 |---|---|---|---|---|---|---|
-| S0-GOV | Kiro | `fix/role-access-hardening` | REVIEW | `TEAM-COORDINATION.md`, `AGENTS.md`, `.kiro/PLAN.md`, `.kiro/steering/{current-state,simplicity,tech,data-model,product,spec-governance,structure}.md`, documentación S0 y runner E2E local | 2026-10-08 | S0 validado; Claude revisa arquitectura/seguridad y Codex revisa UX/casos límite antes de cerrar. |
+| S0-GOV | Kiro | `fix/role-access-hardening` | REVIEW | `TEAM-COORDINATION.md`, `AGENTS.md`, `.kiro/PLAN.md`, `.kiro/steering/{current-state,simplicity,tech,data-model,product,spec-governance,structure}.md`, documentación S0 y runner E2E local | 2026-10-08 | CI, CircleCI y Vercel verdes; runner soporta Deployment Protection. Espera revisión Claude/Codex y reset de staging. |
 
 ## Claims reservados siguientes
 

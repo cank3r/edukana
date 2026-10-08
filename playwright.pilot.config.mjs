@@ -1,8 +1,9 @@
 import { defineConfig, devices } from "@playwright/test";
 import { join } from "node:path";
-import { loadCanonicalPilotConfig } from "./scripts/canonical-pilot-config.mjs";
+import { getPreviewProtectionHeaders, loadCanonicalPilotConfig } from "./scripts/canonical-pilot-config.mjs";
 
 const pilot = loadCanonicalPilotConfig();
+const protectionHeaders = getPreviewProtectionHeaders();
 
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -18,6 +19,7 @@ export default defineConfig({
     baseURL: pilot.baseUrl,
     channel: "msedge",
     headless: pilot.headless,
+    extraHTTPHeaders: protectionHeaders,
     screenshot: "only-on-failure",
     trace: "retain-on-failure",
     video: "off",

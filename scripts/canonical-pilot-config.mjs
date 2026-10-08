@@ -10,6 +10,15 @@ const REQUIRED = [
   "PILOT_PASSWORD",
 ];
 
+export function getPreviewProtectionHeaders(env = process.env) {
+  const secret = env.VERCEL_AUTOMATION_BYPASS_SECRET?.trim();
+  if (!secret) return {};
+  if (secret.length > 4096 || /[\r\n]/.test(secret)) {
+    throw new Error("VERCEL_AUTOMATION_BYPASS_SECRET no es válido.");
+  }
+  return { "x-vercel-protection-bypass": secret };
+}
+
 function required(env, name) {
   const value = env[name]?.trim();
   if (!value) throw new Error(`Falta la variable ${name}.`);

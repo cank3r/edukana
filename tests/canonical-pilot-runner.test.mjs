@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { loadCanonicalPilotConfig } from "../scripts/canonical-pilot-config.mjs";
+import { getPreviewProtectionHeaders, loadCanonicalPilotConfig } from "../scripts/canonical-pilot-config.mjs";
 
 const valid = {
   PILOT_BASE_URL: "https://edukana-git-feat-real-mvp-example.vercel.app",
@@ -37,4 +37,16 @@ test("rechaza confirmación, contraseña o identidades inseguras", () => {
   assert.throws(() => loadCanonicalPilotConfig({ ...valid, PILOT_CONFIRM: "YES" }), /PREVIEW_ONLY/);
   assert.throws(() => loadCanonicalPilotConfig({ ...valid, PILOT_PASSWORD: "solo-letras" }), /al menos 10 caracteres/);
   assert.throws(() => loadCanonicalPilotConfig({ ...valid, PILOT_PARENT_EMAIL: valid.PILOT_STUDENT_EMAIL }), /válidos y distintos/);
+});
+
+
+test("añade bypass de Vercel solo cuando existe y rechaza inyección de cabeceras", () => {
+  assert.deepEqual(getPreviewProtectionHeaders({}), {});
+  assert.deepEqual(getPreviewProtectionHeaders({ VERCEL_AUTOMATION_BYPASS_SECRET: "preview-secret" }), {
+    "x-vercel-protection-bypass": "preview-secret",
+  });
+  assert.throws(
+    () => getPreviewProtectionHeaders({ VERCEL_AUTOMATION_BYPASS_SECRET: "value\r\ninjected: true" }),
+    /no es válido/,
+  );
 });

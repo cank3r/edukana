@@ -29,7 +29,7 @@ Este archivo registra estado, dependencias y siguiente acción. No sustituye req
 | S0-09 | Publicar rama y actualizar PR | DONE | Push explícito a feature branch; nunca a master. |
 | S0-10 | Decidir privacidad del repositorio | DECISION | El repositorio es público; el propietario debe decidir. |
 | S0-11 | Contratar infraestructura de piloto | EXTERNAL | Verificar planes, backups, correo, video y presupuesto. |
-| S0-12 | Reset limpio y runner en Preview | BLOCKED | Depende del deployment actualizado y reset autorizado de staging. |
+| S0-12 | Reset limpio y runner en Preview | BLOCKED | Runner acepta `VERCEL_AUTOMATION_BYPASS_SECRET`; falta autorizar reset de staging y configurar el secreto de automatización. |
 
 ## Sprints aprobados
 
