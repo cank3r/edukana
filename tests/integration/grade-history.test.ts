@@ -91,7 +91,7 @@ test("historia de entregas: reenviar conserva la versión anterior con su fecha"
 });
 
 test("alta inicial: con SETUP_TOKEN definido solo vale el valor exacto", () => {
-  const env = { SETUP_TOKEN: "un-valor-largo-y-aleatorio-123456" } as NodeJS.ProcessEnv;
+  const env = { SETUP_TOKEN: "un-valor-largo-y-aleatorio-123456" };
   assert.equal(checkSetupToken("un-valor-largo-y-aleatorio-123456", env), "valid");
   assert.equal(checkSetupToken("un-valor-largo-y-aleatorio-123457", env), "invalid");
   assert.equal(checkSetupToken("", env), "invalid");
@@ -99,6 +99,6 @@ test("alta inicial: con SETUP_TOKEN definido solo vale el valor exacto", () => {
 });
 
 test("alta inicial: sin SETUP_TOKEN se conserva el comportamiento anterior y un valor corto se rechaza", () => {
-  assert.equal(checkSetupToken("", {} as NodeJS.ProcessEnv), "not_required");
-  assert.throws(() => checkSetupToken("x", { SETUP_TOKEN: "corto" } as NodeJS.ProcessEnv), /24 caracteres/);
+  assert.equal(checkSetupToken("", {}), "not_required");
+  assert.throws(() => checkSetupToken("x", { SETUP_TOKEN: "corto" }), /24 caracteres/);
 });
