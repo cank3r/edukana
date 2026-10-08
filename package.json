@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/security.test.ts tests/permissions.test.ts tests/course-scope.test.ts tests/guardianship.test.ts tests/lms.test.ts tests/schema.test.ts tests/ux.test.ts tests/announcements.test.ts tests/local-storage.test.ts tests/canonical-pilot.test.ts tests/canonical-pilot-runner.test.mjs",
     "test:auth": "tsx --test tests/security.test.ts",
+    "test:integration": "node --conditions=react-server --import tsx --test \"tests/integration/**/*.test.ts\"",
     "test:pilot:config": "node --test tests/canonical-pilot-runner.test.mjs",
     "test:pilot:preview": "playwright test --config=playwright.pilot.config.mjs",
     "postinstall": "prisma generate",

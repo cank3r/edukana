@@ -4,12 +4,18 @@ jobs:
   validate:
     docker:
       - image: cimg/node:22.20
+      - image: cimg/postgres:16.4
+        environment:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: edukana
     environment:
       DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/edukana
       DIRECT_URL: postgresql://ci:ci@127.0.0.1:5432/edukana
       AUTH_SECRET: circleci-build-only-secret-at-least-32-characters
       CERTIFICATE_SECRET: circleci-certificate-secret-at-least-32-characters
       AUTH_URL: http://127.0.0.1:3000
+      EDUKANA_INTEGRATION_DB: "1"
     steps:
       - checkout
       - restore_cache:
@@ -23,6 +29,9 @@ jobs:
       - run: { name: Validar Prisma, command: npx prisma validate }
       - run: { name: Generar Prisma Client, command: npx prisma generate }
       - run: { name: Ejecutar pruebas, command: npm test }
+      - run: { name: Esperar PostgreSQL, command: dockerize -wait tcp://127.0.0.1:5432 -timeout 60s }
+      - run: { name: Aplicar migraciones en PostgreSQL real, command: npx prisma migrate deploy }
+      - run: { name: Pruebas de integración con dos instituciones, command: npm run test:integration }
       - run: { name: Smoke tests autenticados y RBAC, command: npm run test:auth }
       - run: { name: Ejecutar ESLint, command: npm run lint }
       - run: { name: Verificar TypeScript, command: npm run typecheck }
