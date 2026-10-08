@@ -24,12 +24,12 @@ Este archivo registra estado, dependencias y siguiente acción. No sustituye req
 | S0-04 | Reconciliar cinco steerings legacy | DONE | Tech, data model, product, governance y structure alineados. |
 | S0-05 | Inventariar restos Alpha | DONE | `docs/legacy-cleanup.md`; no se eliminó ningún modelo. |
 | S0-06 | Crear coordinación multiagente | DONE | `TEAM-COORDINATION.md`, AGENTS y handoff para Claude. |
-| S0-07 | Validar documentación y suite | DONE | 89/89, auth 11/11, runner 6/6, types, lint, build 22/22, audit producción 0 y diff check. |
+| S0-07 | Validar documentación y suite | DONE | Puerta local completada; cada ejecución se registra en el PR con SHA exacto, comandos y resultados antes de promover S0. |
 | S0-08 | Preservar cambios en commit | DONE | Commit S0 específico en `fix/role-access-hardening`. |
 | S0-09 | Publicar rama y actualizar PR | DONE | Push explícito a feature branch; nunca a master. |
 | S0-10 | Decidir privacidad del repositorio | DECISION | El repositorio es público; el propietario debe decidir. |
 | S0-11 | Contratar infraestructura de piloto | EXTERNAL | Verificar planes, backups, correo, video y presupuesto. |
-| S0-12 | Reset limpio y runner en Preview | BLOCKED | Runner acepta `VERCEL_AUTOMATION_BYPASS_SECRET`; falta autorizar reset de staging y configurar el secreto de automatización. |
+| S0-12 | Entorno aislado y runner en Preview | BLOCKED | Conservar staging con datos demo. Usar `docs/s0-staging-acceptance-record.md` para provisionar y allowlistar un entorno de aceptación nuevo, sin borrar staging, y configurar el secreto de automatización. |
 
 ## Sprints aprobados
 

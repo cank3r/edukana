@@ -21,17 +21,11 @@
 - El historial publicado contiene el MVP académico, endurecimiento de permisos, tutores, anuncios avanzados y onboarding canónico.
 - No se ha fusionado el PR a producción.
 
-## 1.2 Cambios locales posteriores
+## 1.2 Estado de S0
 
-Sobre `cff38c6` existen cambios todavía sin commit:
+El runner E2E, sus guardas, Playwright Test 1.64.0, Next.js 16.4.0 y la documentación rectora ya están versionados en las ramas coordinadas de S0 y desplegados como Preview del PR. Permanecen fuera de producción mientras el PR no se fusione.
 
-- Runner E2E del piloto desplegado.
-- Guardas para impedir ejecución contra producción.
-- Playwright Test fijado en `1.64.0`.
-- Next.js y `eslint-config-next` actualizados a `16.4.0`.
-- Documentación del piloto, roadmap, blueprint y catálogo de pantallas.
-
-Estos cambios locales no están todavía en Preview ni producción.
+S0 continúa en `REVIEW`: falta ejecutar el recorrido E2E en un entorno de aceptación nuevo, aislado, identificado y allowlisted. Staging conserva sus datos ficticios para demostraciones y no se borra antes de producción. Los resultados de cada puerta se registran junto con el SHA ejecutado en el PR.
 
 ## 1.3 Dimensión actual
 
@@ -42,7 +36,7 @@ Según el mapa del repositorio:
 - 21 páginas `page.tsx`.
 - 44 acciones de servidor o handlers API identificados.
 - Seis migraciones versionadas.
-- 87 pruebas automatizadas en la suite local actual.
+- La cantidad vigente de pruebas se registra con el SHA y la salida de ejecución en el PR; no se fija aquí porque cambia con cada incremento.
 
 ---
 
@@ -1090,7 +1084,7 @@ Los secretos nunca deben confirmarse en Git ni imprimirse en reportes.
 
 ## Suite unitario-contractual
 
-87 pruebas cubren:
+La suite automatizada cubre:
 
 - Protocolos seguros de enlaces.
 - Render seguro de anuncios.
@@ -1126,7 +1120,7 @@ Los secretos nunca deben confirmarse en Git ni imprimirse en reportes.
 
 ## Resultado más reciente
 
-- 89/89 pruebas.
+- Suite completa aprobada; el conteo, comandos y SHA exactos se publican juntos en el PR.
 - TypeScript aprobado.
 - ESLint aprobado.
 - Build de 22 páginas.
@@ -1151,7 +1145,7 @@ El escenario automatizado cubre:
 13. Anuncio con imagen.
 14. Recepción por roles.
 
-Todavía no se ha ejecutado contra un staging limpio después de su creación.
+Todavía no se ha ejecutado contra un entorno de aceptación desplegado, nuevo y aislado. El staging existente se conserva con datos ficticios para explicar y demostrar la plataforma.
 
 ---
 
@@ -1180,13 +1174,18 @@ Eso prueba el recorrido local equivalente, pero no sustituye la aceptación desp
 
 ## Preview publicado
 
-El commit `cff38c6` está desplegado en el Preview del PR existente y Vercel reportó estado exitoso cuando se verificó.
+La rama del PR se despliega automáticamente en Vercel Preview. El SHA candidato, deployment y resultado de checks vigentes se registran juntos en el PR; este manual no fija un commit como “actual”. Un deployment exitoso demuestra compilación y publicación, no la aceptación E2E.
 
-## Staging
+## Staging demostrativo
 
-- Las migraciones de anuncios llegaron a aplicarse anteriormente.
-- El reset limpio solicitado no se completó.
-- El runner E2E nuevo no está publicado ni ejecutado allí.
+- Conserva datos ficticios para explicar cómo se ve y funciona la plataforma.
+- No se resetea, vacía ni borra antes de producción.
+- El runner E2E no se ejecuta allí porque su recorrido requiere una base nueva.
+
+## Entorno de aceptación
+
+- Debe ser nuevo, aislado de staging y producción y usar PostgreSQL y Storage allowlisted propios.
+- El runner está versionado y publicado en Preview, pero todavía no se ejecutó contra ese entorno aislado.
 
 ## Producción
 
