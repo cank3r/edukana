@@ -28,6 +28,12 @@ jobs:
           paths: [~/.npm]
       - run: { name: Validar Prisma, command: npx prisma validate }
       - run: { name: Generar Prisma Client, command: npx prisma generate }
+      - run:
+          name: Migrar PostgreSQL temporal desde cero
+          command: |
+            dockerize -wait tcp://127.0.0.1:5432 -timeout 60s
+            npx prisma migrate deploy
+            npx prisma migrate status
       - run: { name: Ejecutar pruebas, command: npm test }
       - run: { name: Esperar PostgreSQL, command: dockerize -wait tcp://127.0.0.1:5432 -timeout 60s }
       - run: { name: Aplicar migraciones en PostgreSQL real, command: npx prisma migrate deploy }

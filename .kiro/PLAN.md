@@ -29,7 +29,7 @@ Este archivo registra estado, dependencias y siguiente acción. No sustituye req
 | S0-09 | Publicar rama y actualizar PR | DONE | Push explícito a feature branch; nunca a master. |
 | S0-10 | Decidir privacidad del repositorio | DECISION | El repositorio es público; el propietario debe decidir. |
 | S0-11 | Contratar infraestructura de piloto | EXTERNAL | Verificar planes, backups, correo, video y presupuesto. |
-| S0-12 | Entorno aislado y runner en Preview | BLOCKED | Conservar staging con datos demo. Usar `docs/s0-staging-acceptance-record.md` para provisionar y allowlistar un entorno de aceptación nuevo, sin borrar staging, y configurar el secreto de automatización. |
+| S0-12 | Runner aditivo en Preview y migraciones limpias en CI | BLOCKED | Implementación local aprobada por revisión independiente: preflight PostgreSQL exacto/read-only, navegación por ID y namespace por run; 93/93 pruebas, auth 11/11, tipos, lint, build 23/23, auditoría 0 y 6/6 migraciones en PostgreSQL temporal. Falta publicar el cambio y ejecutar Preview con bypass Vercel y administrador demo autenticado. |
 
 ## Sprints aprobados
 
