@@ -1174,13 +1174,13 @@ Eso prueba el recorrido local equivalente, pero no sustituye la aceptación desp
 
 ## Preview publicado
 
-El commit `cff38c6` está desplegado en el Preview del PR existente y Vercel reportó estado exitoso cuando se verificó.
+La rama del PR se despliega automáticamente en Vercel Preview. El SHA candidato, deployment y resultado de checks vigentes se registran juntos en el PR; este manual no fija un commit como “actual”. Un deployment exitoso demuestra compilación y publicación, no la aceptación E2E.
 
 ## Staging
 
 - Las migraciones de anuncios llegaron a aplicarse anteriormente.
 - El reset limpio solicitado no se completó.
-- El runner E2E nuevo no está publicado ni ejecutado allí.
+- El runner E2E está versionado y publicado en Preview, pero todavía no se ejecutó contra una base limpia, allowlisted y autorizada.
 
 ## Producción
 
