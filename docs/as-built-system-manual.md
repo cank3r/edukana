@@ -1084,7 +1084,7 @@ Los secretos nunca deben confirmarse en Git ni imprimirse en reportes.
 
 ## Suite unitario-contractual
 
-87 pruebas cubren:
+La suite automatizada cubre:
 
 - Protocolos seguros de enlaces.
 - Render seguro de anuncios.
