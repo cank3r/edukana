@@ -8,6 +8,8 @@ declare module "next-auth" {
     institutionId: string;
     institutionSlug: string;
     sessionVersion: number;
+    identityId: string | null;
+    institutionCount: number;
   }
 
   interface Session {
@@ -17,6 +19,8 @@ declare module "next-auth" {
       institutionId: string;
       institutionSlug: string;
       sessionVersion: number;
+      identityId: string | null;
+      institutionCount: number;
     };
   }
 }

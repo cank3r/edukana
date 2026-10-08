@@ -34,8 +34,14 @@ export async function applyPeopleImport(
   let created = 0;
   for (let i = 0; i < rows.length; i += CHUNK) {
     const chunk = rows.slice(i, i + CHUNK);
+    const emails = chunk.map((row) => row.email);
+    // Una identidad por correo: se crea si falta y se reutiliza si la persona ya existe en otra institución.
+    await db.identity.createMany({ data: emails.map((email) => ({ email })), skipDuplicates: true });
+    const identities = await db.identity.findMany({ where: { email: { in: emails } }, select: { id: true, email: true } });
+    const identityByEmail = new Map(identities.map((identity) => [identity.email, identity.id]));
     const result = await db.user.createMany({
       data: chunk.map((row) => ({
+        identityId: identityByEmail.get(row.email),
         institutionId: actor.institutionId,
         name: row.name,
         email: row.email,

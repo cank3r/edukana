@@ -11,6 +11,8 @@ const admin = { id: A.admin.id, institutionId: A.institutionId };
 before(ensureSeed);
 after(async () => {
   await db.user.deleteMany({ where: { email: { endsWith: "@importado.test" } } });
+  await db.user.deleteMany({ where: { institutionId: A.institutionId, email: "estudiante@b.test" } });
+  await db.identity.deleteMany({ where: { email: { endsWith: "@importado.test" } } });
   await db.auditLog.deleteMany({ where: { action: "PEOPLE_IMPORTED" } });
   await db.$disconnect();
 });
@@ -104,4 +106,21 @@ test("importación: las cuentas nacen sin contraseña y activas, listas para el 
   assert.equal(user.password, null);
   assert.equal(user.status, "ACTIVE");
   assert.equal(user.sessionVersion, 0);
+});
+
+test("importación: cada cuenta nueva queda enlazada a una identidad con su mismo correo", async () => {
+  const user = await db.user.findFirstOrThrow({ where: { email: "masivo2@importado.test" }, include: { identity: true } });
+  assert.equal(user.identity?.email, "masivo2@importado.test");
+  assert.equal(user.identity?.passwordHash, null);
+  assert.equal(await db.identity.count({ where: { email: { endsWith: "@importado.test" } } }), 1600);
+});
+
+test("importación: una persona que ya existe en otra institución conserva su identidad y su contraseña", async () => {
+  const before = await db.identity.update({ where: { email: "estudiante@b.test" }, data: { passwordHash: "hash-previo" } });
+  const parsed = parsePeopleCsv("Nombre,Correo\nEstudiante De B,estudiante@b.test\n");
+  assert.deepEqual(await applyPeopleImport(admin, parsed.rows), { created: 1, alreadyExisted: 0 });
+  const inA = await db.user.findFirstOrThrow({ where: { institutionId: A.institutionId, email: "estudiante@b.test" } });
+  assert.equal(inA.identityId, before.id);
+  assert.equal((await db.identity.findUniqueOrThrow({ where: { id: before.id } })).passwordHash, "hash-previo");
+  await db.identity.update({ where: { id: before.id }, data: { passwordHash: null } });
 });

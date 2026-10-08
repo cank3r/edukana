@@ -2,6 +2,7 @@ import { createHash, randomBytes } from "node:crypto";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { ensureIdentity, listActiveMemberships, normalizeEmail } from "@/server/identity";
 import { getEmailProvider } from "@/server/integrations/email";
 import { isAttemptAllowed, recordAttempt } from "@/server/security/login-throttle";
 
@@ -26,44 +27,47 @@ function appUrl() {
  * Solicita la recuperación. No devuelve nada y no lanza por causas que dependan de si la
  * cuenta existe: quien llama responde siempre lo mismo.
  *
- * Mientras un correo pueda existir en dos instituciones (hasta S2), se envía un enlace por
- * cuenta indicando la institución. Las cuentas nunca se fusionan aquí.
+ * La contraseña pertenece a la identidad: se envía un solo enlace aunque la persona esté en
+ * varias instituciones, y al usarlo cambia para todas.
  */
 export async function requestPasswordReset(input: { email: string; ip: string }, now = new Date()) {
-  const email = input.email.trim().toLowerCase();
+  const email = normalizeEmail(input.email);
   const subject = { email, ip: input.ip, kind: "reset" as const };
   if (!(await isAttemptAllowed(subject, now))) return;
   await recordAttempt(subject, false, now);
 
-  const users = await db.user.findMany({
-    where: { email, status: "ACTIVE" },
-    select: { id: true, name: true, institution: { select: { name: true } } },
-    take: 10,
+  const identity = await db.identity.findUnique({ where: { email }, select: { id: true, status: true } });
+  if (!identity || identity.status !== "ACTIVE") return;
+  const memberships = await listActiveMemberships(identity.id);
+  if (!memberships.length) return;
+
+  const token = randomBytes(32).toString("base64url");
+  await db.passwordResetToken.create({
+    data: {
+      userId: memberships[0].id,
+      tokenHash: hashToken(token),
+      expiresAt: new Date(now.getTime() + RESET_TOKEN_MINUTES * 60_000),
+    },
   });
-  for (const user of users) {
-    const token = randomBytes(32).toString("base64url");
-    await db.passwordResetToken.create({
-      data: { userId: user.id, tokenHash: hashToken(token), expiresAt: new Date(now.getTime() + RESET_TOKEN_MINUTES * 60_000) },
+  const places = memberships.map((item) => item.institution.name).join(", ");
+  try {
+    await getEmailProvider().send({
+      to: email,
+      subject: "Restablece tu contraseña de Edukana",
+      text: [
+        `Hola, ${memberships[0].name}:`,
+        "",
+        `Recibimos una solicitud para cambiar la contraseña de tu cuenta (${places}).`,
+        `Abre este enlace para elegir una nueva. Vence en ${RESET_TOKEN_MINUTES} minutos y solo funciona una vez:`,
+        "",
+        `${appUrl()}/restablecer/${token}`,
+        "",
+        "Si no lo pediste, ignora este mensaje: tu contraseña no cambia.",
+      ].join("\n"),
     });
-    try {
-      await getEmailProvider().send({
-        to: email,
-        subject: `Restablece tu contraseña de ${user.institution.name}`,
-        text: [
-          `Hola, ${user.name}:`,
-          "",
-          `Recibimos una solicitud para cambiar tu contraseña en ${user.institution.name}.`,
-          `Abre este enlace para elegir una nueva. Vence en ${RESET_TOKEN_MINUTES} minutos y solo funciona una vez:`,
-          "",
-          `${appUrl()}/restablecer/${token}`,
-          "",
-          "Si no lo pediste, ignora este mensaje: tu contraseña no cambia.",
-        ].join("\n"),
-      });
-    } catch (error) {
-      const correlationId = crypto.randomUUID();
-      console.error("requestPasswordReset: no se pudo enviar el correo", { correlationId, error });
-    }
+  } catch (error) {
+    const correlationId = crypto.randomUUID();
+    console.error("requestPasswordReset: no se pudo enviar el correo", { correlationId, error });
   }
 }
 
@@ -87,17 +91,23 @@ export async function resetPasswordWithToken(input: { token: string; password: s
   return db.$transaction(async (tx) => {
     // El UPDATE condicional consume el enlace de forma atómica: de dos usos simultáneos solo uno cuenta.
     const consumed = await tx.passwordResetToken.updateMany({
-      where: { tokenHash, usedAt: null, expiresAt: { gt: now }, user: { status: "ACTIVE" } },
+      where: { tokenHash, usedAt: null, expiresAt: { gt: now }, user: { status: "ACTIVE", OR: [{ identity: null }, { identity: { status: "ACTIVE" } }] } },
       data: { usedAt: now },
     });
     if (consumed.count !== 1) return invalid;
     const record = await tx.passwordResetToken.findUniqueOrThrow({ where: { tokenHash }, select: { userId: true } });
-    await tx.user.update({
+    const user = await tx.user.findUniqueOrThrow({
       where: { id: record.userId },
-      data: { password: passwordHash, sessionVersion: { increment: 1 } },
+      select: { institutionId: true, email: true, identityId: true },
     });
-    await tx.passwordResetToken.updateMany({ where: { userId: record.userId, usedAt: null }, data: { usedAt: now } });
-    const user = await tx.user.findUniqueOrThrow({ where: { id: record.userId }, select: { institutionId: true } });
+    const identityId = user.identityId ?? (await ensureIdentity(tx, { email: user.email }));
+    if (!user.identityId) await tx.user.update({ where: { id: record.userId }, data: { identityId } });
+    await tx.identity.update({
+      where: { id: identityId },
+      data: { passwordHash, sessionVersion: { increment: 1 } },
+    });
+    // Cualquier otro enlace pendiente de la misma persona, en cualquier institución, deja de servir.
+    await tx.passwordResetToken.updateMany({ where: { user: { identityId }, usedAt: null }, data: { usedAt: now } });
     await tx.auditLog.create({
       data: {
         institutionId: user.institutionId,

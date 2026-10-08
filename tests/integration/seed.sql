@@ -34,3 +34,8 @@ INSERT INTO enrollments (id, "institutionId", "studentId", "courseId", status) V
 INSERT INTO announcements (id, "institutionId", "authorId", title, content, audience, "audienceId") VALUES ('b_announcement', 'b_inst', 'b_admin', 'Aviso del curso B', 'Contenido', 'COURSE', 'b_course');
 INSERT INTO announcement_course_targets ("institutionId", "announcementId", "courseId") VALUES ('b_inst', 'b_announcement', 'b_course');
 INSERT INTO guardianships (id, "institutionId", "parentId", "studentId", relationship, status, "canViewAcademics", "canViewAnnouncements", "createdById", "updatedById", "updatedAt") VALUES ('b_guardianship', 'b_inst', 'b_parent', 'b_student', 'MOTHER', 'ACTIVE', true, true, 'b_admin', 'b_admin', now());
+
+-- Identidades: una por correo, como las crea la migración s2_identity.
+INSERT INTO identities (id, email, "updatedAt")
+SELECT 'idn_' || md5(lower(email)), lower(email), now() FROM users GROUP BY lower(email);
+UPDATE users SET "identityId" = 'idn_' || md5(lower(email));
