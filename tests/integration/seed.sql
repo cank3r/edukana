@@ -13,7 +13,7 @@ INSERT INTO users (id, "institutionId", name, email, role, status, "updatedAt") 
 INSERT INTO academic_periods (id, "institutionId", name, "startDate", "endDate", "isActive") VALUES ('a_period', 'a_inst', 'Período A', '2026-09-01', '2027-06-30', true);
 INSERT INTO courses (id, "institutionId", "periodId", "teacherId", name, code, "updatedAt") VALUES ('a_course', 'a_inst', 'a_period', 'a_teacher', 'course A', 'COURSE-1', now());
 INSERT INTO courses (id, "institutionId", "periodId", "teacherId", name, code, "updatedAt") VALUES ('a_course2', 'a_inst', 'a_period', 'a_teacher2', 'course2 A', 'COURSE2-1', now());
-INSERT INTO enrollments (id, "studentId", "courseId", status) VALUES ('a_enrollment', 'a_student', 'a_course', 'ACTIVE');
+INSERT INTO enrollments (id, "institutionId", "studentId", "courseId", status) VALUES ('a_enrollment', 'a_inst', 'a_student', 'a_course', 'ACTIVE');
 INSERT INTO announcements (id, "institutionId", "authorId", title, content, audience, "audienceId") VALUES ('a_announcement', 'a_inst', 'a_admin', 'Aviso del curso A', 'Contenido', 'COURSE', 'a_course');
 INSERT INTO announcement_course_targets ("institutionId", "announcementId", "courseId") VALUES ('a_inst', 'a_announcement', 'a_course');
 INSERT INTO guardianships (id, "institutionId", "parentId", "studentId", relationship, status, "canViewAcademics", "canViewAnnouncements", "createdById", "updatedById", "updatedAt") VALUES ('a_guardianship', 'a_inst', 'a_parent', 'a_student', 'MOTHER', 'ACTIVE', true, true, 'a_admin', 'a_admin', now());
@@ -30,7 +30,7 @@ INSERT INTO users (id, "institutionId", name, email, role, status, "updatedAt") 
 INSERT INTO academic_periods (id, "institutionId", name, "startDate", "endDate", "isActive") VALUES ('b_period', 'b_inst', 'Período B', '2026-09-01', '2027-06-30', true);
 INSERT INTO courses (id, "institutionId", "periodId", "teacherId", name, code, "updatedAt") VALUES ('b_course', 'b_inst', 'b_period', 'b_teacher', 'course B', 'COURSE-1', now());
 INSERT INTO courses (id, "institutionId", "periodId", "teacherId", name, code, "updatedAt") VALUES ('b_course2', 'b_inst', 'b_period', 'b_teacher2', 'course2 B', 'COURSE2-1', now());
-INSERT INTO enrollments (id, "studentId", "courseId", status) VALUES ('b_enrollment', 'b_student', 'b_course', 'ACTIVE');
+INSERT INTO enrollments (id, "institutionId", "studentId", "courseId", status) VALUES ('b_enrollment', 'b_inst', 'b_student', 'b_course', 'ACTIVE');
 INSERT INTO announcements (id, "institutionId", "authorId", title, content, audience, "audienceId") VALUES ('b_announcement', 'b_inst', 'b_admin', 'Aviso del curso B', 'Contenido', 'COURSE', 'b_course');
 INSERT INTO announcement_course_targets ("institutionId", "announcementId", "courseId") VALUES ('b_inst', 'b_announcement', 'b_course');
 INSERT INTO guardianships (id, "institutionId", "parentId", "studentId", relationship, status, "canViewAcademics", "canViewAnnouncements", "createdById", "updatedById", "updatedAt") VALUES ('b_guardianship', 'b_inst', 'b_parent', 'b_student', 'MOTHER', 'ACTIVE', true, true, 'b_admin', 'b_admin', now());

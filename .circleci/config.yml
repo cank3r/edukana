@@ -31,6 +31,9 @@ jobs:
       - run: { name: Ejecutar pruebas, command: npm test }
       - run: { name: Esperar PostgreSQL, command: dockerize -wait tcp://127.0.0.1:5432 -timeout 60s }
       - run: { name: Aplicar migraciones en PostgreSQL real, command: npx prisma migrate deploy }
+      - run:
+          name: Verificar que las migraciones coinciden con schema.prisma
+          command: npx prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --exit-code
       - run: { name: Pruebas de integración con dos instituciones, command: npm run test:integration }
       - run: { name: Smoke tests autenticados y RBAC, command: npm run test:auth }
       - run: { name: Ejecutar ESLint, command: npm run lint }
