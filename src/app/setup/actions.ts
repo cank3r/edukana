@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { checkSetupToken } from "@/server/setup-token";
 
 export type SetupState = { ok: boolean; message: string };
 
@@ -16,6 +17,9 @@ const setupSchema = z.object({
 });
 
 export async function createFirstInstitution(_state: SetupState, formData: FormData): Promise<SetupState> {
+  if (checkSetupToken(String(formData.get("setupToken") ?? "")) === "invalid") {
+    return { ok: false, message: "La puesta en marcha inicial no está disponible." };
+  }
   const parsed = setupSchema.safeParse(Object.fromEntries(formData.entries()));
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Revisa los datos." };
 

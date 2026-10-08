@@ -10,6 +10,9 @@ import type { EdukanaRole } from "@/types/next-auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { questionSnapshot } from "@/server/exams";
+import { archiveSubmissionVersion, writeGradeEntry } from "@/server/grade-history";
+
+class GradeReasonRequired extends Error {}
 import type { ActionState } from "@/app/dashboard/actions";
 
 type SessionUser = { id: string; institutionId: string; role: EdukanaRole; capabilities: ReadonlySet<Capability> };
@@ -189,7 +192,10 @@ export async function submitAssignment(_state: ActionState, fd: FormData): Promi
     if (content.length < 3 || content.length > 30000) return failed("La entrega debe tener entre 3 y 30,000 caracteres.");
     const enrollment = await db.enrollment.findUnique({ where: { studentId_courseId: { studentId: user.id, courseId: assignment.courseId } }, select: { id: true } });
     if (!enrollment) return failed("Matrícula no encontrada.");
-    await db.submission.upsert({ where: { assignmentId_studentId: { assignmentId, studentId: user.id } }, create: { institutionId: user.institutionId, assignmentId, studentId: user.id, enrollmentId: enrollment.id, content, status: "SUBMITTED" }, update: { content, status: "SUBMITTED", submittedAt: new Date(), score: null, feedback: null, gradedAt: null } });
+    await db.$transaction(async (tx) => {
+      await archiveSubmissionVersion(tx, { assignmentId, studentId: user.id, institutionId: user.institutionId });
+      await tx.submission.upsert({ where: { assignmentId_studentId: { assignmentId, studentId: user.id } }, create: { institutionId: user.institutionId, assignmentId, studentId: user.id, enrollmentId: enrollment.id, content, status: "SUBMITTED" }, update: { content, status: "SUBMITTED", submittedAt: new Date(), score: null, feedback: null, gradedAt: null } });
+    });
     revalidatePath(`/dashboard/aula/${assignment.courseId}`);
     return success("Entrega enviada para revisión.");
   } catch { return failed(); }
@@ -205,11 +211,25 @@ export async function reviewSubmission(_state: ActionState, fd: FormData): Promi
     if (!submission || !Number.isFinite(score) || score < 0 || score > submission.assignment.maxScore) return failed("Entrega o puntuación inválida.");
     await db.$transaction(async (tx) => {
       await tx.submission.update({ where: { id: submission.id }, data: { score, feedback: feedback || null, status: "GRADED", gradedAt: new Date() } });
-      if (submission.assignment.gradeItem) await tx.gradeEntry.upsert({ where: { gradeItemId_enrollmentId: { gradeItemId: submission.assignment.gradeItem.id, enrollmentId: submission.enrollmentId } }, create: { institutionId: user.institutionId, gradeItemId: submission.assignment.gradeItem.id, enrollmentId: submission.enrollmentId, score, feedback: feedback || null, gradedById: user.id }, update: { score, feedback: feedback || null, gradedById: user.id, gradedAt: new Date() } });
+      if (submission.assignment.gradeItem) {
+        const written = await writeGradeEntry(tx, {
+          institutionId: user.institutionId,
+          gradeItemId: submission.assignment.gradeItem.id,
+          enrollmentId: submission.enrollmentId,
+          score,
+          feedback: feedback || null,
+          actorId: user.id,
+          reason: text(fd, "reason"),
+        });
+        if (!written.ok) throw new GradeReasonRequired(written.message);
+      }
     });
     revalidatePath(`/dashboard/aula/${submission.assignment.courseId}`);
     return success("Entrega calificada.");
-  } catch { return failed(); }
+  } catch (error) {
+    if (error instanceof GradeReasonRequired) return failed(error.message);
+    return failed();
+  }
 }
 
 export async function createQuestion(_state: ActionState, fd: FormData): Promise<ActionState> {
@@ -304,15 +324,24 @@ export async function reviewExamAttempt(_state: ActionState, fd: FormData): Prom
         await tx.examAnswer.update({ where: { id: answer.answer.id }, data: { score: answer.manualScore, feedback: answer.feedback || null } });
       }
       await tx.examAttempt.update({ where: { id: attempt.id }, data: { status: "GRADED", score } });
-      if (attempt.exam.gradeItem) await tx.gradeEntry.upsert({
-        where: { gradeItemId_enrollmentId: { gradeItemId: attempt.exam.gradeItem.id, enrollmentId: attempt.enrollmentId } },
-        create: { institutionId: user.institutionId, gradeItemId: attempt.exam.gradeItem.id, enrollmentId: attempt.enrollmentId, score, gradedById: user.id },
-        update: { score, gradedById: user.id, gradedAt: new Date() },
-      });
+      if (attempt.exam.gradeItem) {
+        const written = await writeGradeEntry(tx, {
+          institutionId: user.institutionId,
+          gradeItemId: attempt.exam.gradeItem.id,
+          enrollmentId: attempt.enrollmentId,
+          score,
+          actorId: user.id,
+          reason: text(fd, "reason") || "Revisión de respuestas abiertas del examen",
+        });
+        if (!written.ok) throw new GradeReasonRequired(written.message);
+      }
     });
     revalidatePath(`/dashboard/aula/${attempt.exam.courseId}`);
     return success(`Examen revisado: ${score}/${attempt.maxScore ?? score}.`);
-  } catch { return failed(); }
+  } catch (error) {
+    if (error instanceof GradeReasonRequired) return failed(error.message);
+    return failed();
+  }
 }
 
 

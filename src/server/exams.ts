@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { autoScoreAnswer } from "@/lib/lms";
+import { writeGradeEntry } from "@/server/grade-history";
 
 /** Tolerancia para que un envío hecho al filo del tiempo no se pierda por latencia de red. */
 export const SUBMIT_GRACE_SECONDS = 30;
@@ -207,13 +208,19 @@ export async function submitExamAttempt(
     await tx.examAttempt.update({ where: { id: attempt.id }, data: { status, score, maxScore, submittedAt: now } });
 
     if (!needsReview && attempt.exam.gradeItem) {
-      const key = { gradeItemId: attempt.exam.gradeItem.id, enrollmentId: attempt.enrollmentId };
-      const grade = { score, autoGraded: true, gradedById: attempt.exam.course.teacherId, gradedAt: now };
-      await tx.gradeEntry.upsert({
-        where: { gradeItemId_enrollmentId: key },
-        create: { institutionId: actor.institutionId, ...key, ...grade },
-        update: grade,
-      });
+      await writeGradeEntry(
+        tx,
+        {
+          institutionId: actor.institutionId,
+          gradeItemId: attempt.exam.gradeItem.id,
+          enrollmentId: attempt.enrollmentId,
+          score,
+          actorId: attempt.exam.course.teacherId,
+          autoGraded: true,
+          reason: `Intento ${attempt.attemptNumber} del examen, calificado automáticamente`,
+        },
+        now,
+      );
     }
     return { ok: true, attemptNumber: attempt.attemptNumber, status, score, maxScore };
   }, rowLocked);
