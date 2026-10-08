@@ -1,18 +1,18 @@
-import { auth } from "@/lib/auth";
+import { authFromToken } from "@/lib/auth";
 import { isPublicPath } from "@/lib/access";
 import { NextResponse } from "next/server";
 
 // Proxy cannot safely resolve Prisma-backed institutional overrides. It performs
 // authentication redirects only; every protected server page/action/route must
 // authorize again through the tenant-aware server DAL.
-export default auth((request) => {
+//
+// The token alone cannot tell a suspended account from an active one, so the proxy
+// never redirects away from /login: `src/app/login/layout.tsx` does that with the
+// live session. Redirecting here would loop for a token that is no longer valid.
+export default authFromToken((request) => {
   const { nextUrl } = request;
   const isLoggedIn = Boolean(request.auth?.user);
   const isPublicRoute = isPublicPath(nextUrl.pathname);
-
-  if (nextUrl.pathname === "/login" && isLoggedIn) {
-    return NextResponse.redirect(new URL("/dashboard", nextUrl));
-  }
 
   if (!isLoggedIn && !isPublicRoute) {
     const loginUrl = new URL("/login", nextUrl);

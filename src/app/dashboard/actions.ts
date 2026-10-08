@@ -230,6 +230,7 @@ export async function savePayment(_state: ActionState, formData: FormData): Prom
       periodId: data.periodId || null,
       concept: data.concept,
       amount: data.amount,
+      amountCents: Math.round(data.amount * 100),
       currency: data.currency,
       dueDate: data.dueDate ? new Date(`${data.dueDate}T12:00:00Z`) : null,
       paidAt: data.status === "PAID" ? new Date() : null,

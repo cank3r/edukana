@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { getCommunityAnnouncementWhere } from "@/lib/announcement-data";
 import { validateAnnouncementUpload } from "@/lib/announcements";
 import { createPrivateAssetUrl, inspectPrivateAsset, removePrivateAsset } from "@/lib/storage";
+import { signedUrlSeconds } from "@/server/signed-urls";
 
 export async function GET(_request: Request, context: { params: Promise<{ assetId: string }> }) {
   const session = await auth();
@@ -14,7 +15,7 @@ export async function GET(_request: Request, context: { params: Promise<{ assetI
   const { assetId } = await context.params;
   const asset = await db.storageAsset.findFirst({
     where: { id: assetId, institutionId: user.institutionId, confirmedAt: { not: null } },
-    select: { bucket: true, objectPath: true, courseId: true, announcementId: true, uploaderId: true, visibility: true, submission: { select: { studentId: true } } },
+    select: { bucket: true, kind: true, objectPath: true, courseId: true, announcementId: true, uploaderId: true, visibility: true, submission: { select: { studentId: true } } },
   });
   if (!asset || !asset.objectPath.startsWith(`${user.institutionId}/`)) return Response.json({ error: "Archivo no encontrado" }, { status: 404 });
 
@@ -32,7 +33,7 @@ export async function GET(_request: Request, context: { params: Promise<{ assetI
   }
   if (!allowed) return Response.json({ error: "Permisos insuficientes" }, { status: 403 });
   try {
-    return Response.redirect(await createPrivateAssetUrl(asset.bucket, asset.objectPath, 300), 302);
+    return Response.redirect(await createPrivateAssetUrl(asset.bucket, asset.objectPath, signedUrlSeconds(asset.kind)), 302);
   } catch (error) {
     return Response.json({ error: error instanceof Error ? error.message : "Storage no disponible" }, { status: 503 });
   }
