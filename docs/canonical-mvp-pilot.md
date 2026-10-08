@@ -77,3 +77,25 @@ git diff --check
 ```
 
 El recorrido solo se declara aprobado si, además de esa puerta, se ejecutan los seis bloques en un entorno desplegado o equivalente con PostgreSQL y Supabase Storage reales. Un build verde sin autenticación, persistencia, archivos y cambio de sesiones no completa el MVP.
+
+
+## Runner de aceptación en Preview
+
+Después de vaciar exclusivamente staging y aplicar migraciones, ejecuta el recorrido con Edge del sistema. Las credenciales se pasan solo por variables de entorno y el runner se niega a operar si el host no es un deployment Vercel Preview `-git-` confirmado dos veces.
+
+```powershell
+$env:PILOT_BASE_URL = "https://edukana-git-<rama>-<cuenta>.vercel.app"
+$env:PILOT_EXPECTED_HOST = "edukana-git-<rama>-<cuenta>.vercel.app"
+$env:PILOT_CONFIRM = "PREVIEW_ONLY"
+$env:PILOT_INSTITUTION_SLUG = "colegio-piloto"
+$env:PILOT_ADMIN_EMAIL = "admin@pilot.test"
+$env:PILOT_TEACHER_EMAIL = "teacher@pilot.test"
+$env:PILOT_STUDENT_EMAIL = "student@pilot.test"
+$env:PILOT_PARENT_EMAIL = "parent@pilot.test"
+$env:PILOT_PASSWORD = "<contraseña temporal segura>"
+npm run test:pilot:preview
+```
+
+`PILOT_HEADLESS=false` permite observar el recorrido. Las capturas y trazas de fallos se escriben en `$env:KIROCREW_SCRATCH`; no se guardan dentro del repositorio. `npm run test:pilot:config` valida las protecciones sin acceder a ningún entorno.
+
+El runner cubre los seis bloques principales, cambios de sesión, persistencia, restricciones de rutas y multimedia privada. Aún requieren una prueba separada: IDs pertenecientes a un segundo tenant y una cuenta activa fuera de la audiencia del anuncio.

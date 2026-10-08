@@ -41,7 +41,7 @@ npx prisma migrate deploy
 npm run dev
 ```
 
-Completa el archivo local de entorno sin confirmarlo en Git. En una base vacía, abre `/setup` y crea la primera institución y su administrador desde la interfaz; la ruta se cierra automáticamente después. Continúa con **Configuración → Puesta en marcha del piloto**. El recorrido completo y sus resultados esperados están en `docs/canonical-mvp-pilot.md`.
+Completa el archivo local de entorno sin confirmarlo en Git. En una base vacía, abre `/setup` y crea la primera institución y su administrador desde la interfaz; la ruta se cierra automáticamente después. Continúa con **Configuración → Puesta en marcha del piloto**. El recorrido completo y sus resultados esperados están en `docs/canonical-mvp-pilot.md`; el inventario objetivo y su secuencia de entrega están en `docs/platform-capability-roadmap.md`.
 
 El seed queda disponible únicamente para desarrollo opcional; no forma parte del caso canónico ni de su definición de terminado.
 
