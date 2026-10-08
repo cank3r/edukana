@@ -60,6 +60,7 @@ Un solo agente modifica `prisma/schema.prisma` y la migración activa. Un segund
 | ID | Agente | Rama | Estado | Alcance exclusivo | Última actualización | Siguiente paso / bloqueo |
 |---|---|---|---|---|---|---|
 | S0-GOV | Kiro | `fix/role-access-hardening` | REVIEW | `TEAM-COORDINATION.md`, `AGENTS.md`, `.kiro/PLAN.md`, `.kiro/steering/{current-state,simplicity,tech,data-model,product,spec-governance,structure}.md`, documentación S0 y runner E2E local | 2026-10-08 | CI, CircleCI y Vercel verdes; runner soporta Deployment Protection. Espera revisión Claude/Codex y reset de staging. |
+| S1-SEC-PROPOSAL | Claude | `claude/s1-sec-proposal` | REVIEW | Solo `docs/proposals/S1-SEC/**` y esta fila de registro. No toca specs, esquema, código ni otros archivos de S0-GOV. | 2026-10-08 | Revisión de S0 cerrada en PR #2 (aprobado). Propuesta de requirements/design de S1 en PR #5. Bloqueo: S0-GOV debe pasar a DONE. Siguiente: Claude reclama S1-SEC y empieza por Postgres en CI. Pruebas: ninguna, solo documentación. |
 
 ## Claims reservados siguientes
 
