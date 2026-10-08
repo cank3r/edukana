@@ -102,3 +102,10 @@ test("alta inicial: sin SETUP_TOKEN se conserva el comportamiento anterior y un 
   assert.equal(checkSetupToken("", {}), "not_required");
   assert.throws(() => checkSetupToken("x", { SETUP_TOKEN: "corto" }), /24 caracteres/);
 });
+
+test("URLs firmadas: un documento vive 60 segundos y un video 5 minutos como máximo", async () => {
+  const { signedUrlSeconds } = await import("@/server/signed-urls");
+  assert.equal(signedUrlSeconds("DOCUMENT"), 60);
+  assert.equal(signedUrlSeconds("IMAGE"), 60);
+  assert.equal(signedUrlSeconds("VIDEO"), 300);
+});
