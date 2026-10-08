@@ -356,3 +356,430 @@ Todos los enlaces de evidencia del cuerpo, salvo el apartado remoto y la API ext
 [academic-ui]: https://github.com/cank3r/edukana/blob/0e67a916b03083b22d4142f0a56b5635ba145c52/src/components/dashboard/AcademicForms.tsx#L13-L113
 [ux-tests]: https://github.com/cank3r/edukana/blob/0e67a916b03083b22d4142f0a56b5635ba145c52/tests/ux.test.ts#L33-L88
 [ci]: https://github.com/cank3r/edukana/blob/0e67a916b03083b22d4142f0a56b5635ba145c52/.circleci/config.yml#L5-L30
+
+---
+
+## Seguimiento independiente — 2026-10-08 — SHA 3b5e644
+
+**Objeto fijo:** `3b5e644afa56071c0edd6e42931141714caf4599`. Este apartado contrasta las correcciones posteriores a `0e67a916b03083b22d4142f0a56b5635ba145c52`. Todo el informe anterior, incluidas sus referencias, se conserva íntegro como historial; sus resultados no se convierten en resultados del nuevo SHA. Salvo las referencias históricas o externas identificadas, todos los enlaces de este seguimiento apuntan a `3b5e644`.
+
+**Veredicto: BLOQUEAR el cierre de S0 sobre este SHA.** B1 está corregido, pero el bypass introducido después de la primera auditoría conserva una fuga reproducible de cabeceras entre orígenes por redirección (**B2, Bloqueante**). Su filtro también ignora el puerto (**I10, Importante**). Continúan pendientes inconsistencias documentales, aceptación UX y la decisión de salida S0-12/Q1. Las implementaciones de bootstrap, historial y revocación previstas para S1 no se exigen como código nuevo en S0.
+
+### Base, alcance y coordinación comprobados
+
+- Leídos primero, en orden: TEAM, current-state, simplicity y PLAN del objeto fijo; después AGENTS e inventario de `.agents/skills`. No fue necesario aplicar herramientas de plataforma o migración.
+- Se reutilizó la rama propia en `4cbbde6fe8ff8fa60129388784cb68eb37bba647`. Las lecturas y pruebas se hicieron en otra copia aislada con HEAD separado en `3b5e644`, en el equipo autorizado. No se mezclaron commits de Kiro en la rama del informe.
+- El diff `0e67a916..3b5e644` cambia 13 archivos: documentación, configuración y pruebas del runner. `git diff --exit-code 0e67a916..3b5e644 -- src prisma .circleci package.json package-lock.json` devuelve 0, sin diferencias. La deuda de producto original no se corrigió ni se introdujo en este intervalo.
+- Se verificó el [claim existente 6054480829](https://github.com/cank3r/edukana/pull/2#issuecomment-6054480829), IMPLEMENTING, limitado a este informe y reactivado para el nuevo SHA. [TEAM:42–47,63,69][fu-team] mantiene transferencia explícita, S0-GOV REVIEW y S1-SEC PLANNED; [PLAN:32,38,52–54][fu-plan] mantiene S0-12 BLOCKED y la dependencia de S1.
+- La rama remota de propuesta seguía en `0bb74bba23353757ff020761d02cebe3b61df059`; su [registro](https://github.com/cank3r/edukana/blob/0bb74bba23353757ff020761d02cebe3b61df059/TEAM-COORDINATION.md#L61-L70) reserva únicamente propuestas documentales en REVIEW. Se leyeron los comentarios actuales de PR #2 y #5. Una declaración de otro revisor sobre aprobación o un posible inicio de S1 no modifica los estados verificados ni autoriza esta tarea.
+- Los resultados de types, lint, build, audit y validación declarados en [PLAN:27][fu-plan], [manual:1127–1133][fu-manual-evidence] y comentarios son evidencia atribuida a sus autores. Solo las ejecuciones de este apartado se presentan como propias.
+
+**Avance remoto posterior, separado del objeto:** al comprobar referencias hacia las 15:32 UTC del 2026-10-08, `fix/role-access-hardening` estaba ya en `d3078325a25380f88faa3db0ba3ce4c7aaab62a8`. Solo se consultó su [registro de claims:63–69](https://github.com/cank3r/edukana/blob/d3078325a25380f88faa3db0ba3ce4c7aaab62a8/TEAM-COORDINATION.md#L63-L69): conserva S0-GOV REVIEW y S1-SEC PLANNED y declara correcciones adicionales. **No se auditó ese código ni se ejecutaron sus pruebas**; no se adopta esa declaración como corrección verificada. La copia de pruebas permaneció en 3b5e644 y la rama remota del informe en 4cbbde6.
+
+### Matriz de seguimiento de todos los hallazgos originales
+
+“Resuelto” se limita al defecto descrito; no significa E2E aprobado. “Previsto para otro sprint” mantiene la deuda abierta en su sprint asignado y no declara una corrección implementada.
+
+| ID / prioridad original | Estado en 3b5e644 | Evidencia, decisión y siguiente paso |
+|---|---|---|
+| **B1 / Bloqueante** | **Resuelto** | [Runner:14–19][fu-runner], [117,159,178–179][fu-selects] y [257][fu-media] usan strings. Los cinco labels coinciden con las fuentes de UI detalladas más abajo. **Prueba ejecutada:** cinco selecciones con los helpers actuales en DOM sintético, Playwright 1.64.0 y Edge, correctas. No prueba el recorrido completo ni los datos reales de sus componentes. |
+| **I1 / Importante** | **Resuelto** | **Inspección:** [manual:1291–1300][fu-manual-order], [blueprint:927–963][fu-blueprint-order] y [catálogo:1093–1106][fu-catalog-order] subordinan S4 a S1→S2→S3 y coinciden con [PLAN:38–43][fu-plan]. No se adelanta la migración híbrida a S0. |
+| **I2 / Importante** | **Parcialmente resuelto** | **Inspección:** [estado:32][fu-state], [modelo:52–53][fu-model], [blueprint:261–304][fu-blueprint-class] y [catálogo:803–805][fu-catalog-class] separan los tres ejes. Queda una contradicción de reglas: el blueprint exige sala/enlace virtual cuando la sesión es sincrónica, pero [catálogo:809][fu-catalog-class] lo exige para toda virtual/híbrida, incluida la combinación virtual asincrónica permitida. [Filtro:878][fu-catalog-filter] y [tarjeta:353][fu-blueprint-ui] siguen agrupando participación y temporalidad. Conciliar reglas y representación en documentos S0; implementación sigue en S4. |
+| **I3 / Importante** | **Parcialmente resuelto** | **Inspección:** current-state elimina el SHA efímero y la afirmación de cambios locales; [manual:20][fu-manual-history] también. Sin embargo, **manual:24–34 conserva “cambios todavía sin commit” sobre cff38c6** y afirma ausencia en Preview sin identificar una ejecución. Los archivos ya estaban versionados en 0e67a916. Corregir o fechar expresamente como historia. El 89/89 sí se reprodujo con el runtime alternativo; las otras puertas siguen siendo declaraciones ajenas. |
+| **I4 / Importante** | **Parcialmente resuelto** | **Inspección:** [piloto:84–86][fu-pilot-guard] reconoce que hostname no certifica DB/bucket y exige verificar identidad antes de escribir; [estado:42][fu-state] mantiene allowlist para S1. [Validador:34–85][fu-config] sigue sin comprobar recursos desplegados y acepta puertos no predeterminados. Las seis pruebas existentes del runner pasan, sin convertir el patrón de hostname en prueba de rechazo efectivo de producción. No se ensayó ningún recurso remoto. Véase además I10. |
+| **I5 / Importante** | **Previsto para otro sprint — S1** | **Inspección:** [setup/page:7–17][fu-setup-page] y [actions:18–56][fu-setup-action] no cambiaron: guardan ausencia de instituciones y transacción Serializable, pero no token de bootstrap. [Estado:42][fu-state] y [PLAN:38][fu-plan] sí lo planifican. No declarar el endpoint protegido ni inferir una carrera demostrada; no se exige implementar S1 ahora. |
+| **I6 / Importante** | **Parcialmente resuelto** | **Inspección:** [catálogo:342][fu-catalog-revoke] y [piloto:62][fu-pilot-revoke] corrigen la promesa de revocación total inmediata: nuevas consultas frente a URLs emitidas con TTL nominal de hasta 300 s. [Assets:35][fu-asset] y [storage:88–97][fu-storage] no cambiaron. Pasan las dos pruebas existentes de token local, pero no miden revocación ni Supabase. Medición y reducción/mediación de la ventana siguen en S1. |
+| **I7 / Importante** | **Previsto para otro sprint — S1** | **Inspección:** [acciones:180–207][fu-academic-history], [236–268][fu-exam-history] y [schema:437–620][fu-schema-history] permanecen iguales: reenvío reemplaza estado, cambios de nota no tienen revisiones y preguntas usadas carecen de snapshot. [PLAN:38][fu-plan] conserva historia académica en S1. Sin ensayo transaccional ni prueba de alteración retroactiva explotada. Mantener separado de Offering S3 y cierre/boletín S6. |
+| **I8 / Importante** | **Resuelto** | **Inspección:** [TEAM:42–47][fu-team] declara que REVIEW no libera, reserva confirmación remota, establece arbitraje por primer claim publicado y exige próximo escritor confirmado; [handoff:31][fu-handoff] ya no contradice esa regla. Se comprobó el registro remoto; no se simuló una carrera de escritores. Una interpretación contraria en un comentario no sustituye el protocolo. |
+| **I9 / Importante** | **Abierto** | **Inspección:** persisten texto técnico en [setup:15][fu-setup-page], tabla mínima de 520 px y horarios en minutos, publicación sin confirmación y mensajes internos en [AcademicForms:39,78,82,106–110][fu-academic-ui]. No hay cambios de producto ni inventario/aceptación de estas excepciones en las correcciones S0. La regla de cinco opciones sí fue restaurada en [simplicity:22][fu-simplicity], pero no resuelve esos casos. Sin medición UX del producto. Inventariar y asignar aceptación; corregir cada dominio en su recorrido. |
+| **R1 / Recomendación** | **Previsto para otro sprint — S1 y aceptación por pantalla** | **Inspección y pruebas:** [UX:33–88][fu-ux-tests] continúa comprobando fuente; [CI:5–31][fu-ci] no incorpora PostgreSQL ni piloto. El [runner:270–279][fu-media] sigue sin segundo tenant/destinatario externo ni revocación. 89/89 no equivale a esos comportamientos. Integración DB en S1; la aceptación real de simplicidad sigue exigida por [PLAN:54][fu-plan], no queda dispensada. |
+| **R2 / Recomendación** | **Parcialmente resuelto** | **Inspección:** [config:6,18–20][fu-browser] elimina Edge obligatorio: Chromium predeterminado y canal opcional. **Prueba ejecutada:** se inició Edge del sistema para ensayos locales, sin cargar esta configuración. No se instaló ni ensayó Chromium incluido/CI; [CI:19–31][fu-ci] aún no instala navegador ni ejecuta el piloto. Completar esa integración reproducible en S1. |
+| **Q1 / Pregunta** | **Abierto** | **Inspección:** [TEAM:54–56,63,69][fu-team] conserva REVIEW y dependencia; [PLAN:32,52–54][fu-plan] conserva S0-12 BLOCKED y E2E requerido. [Manual:1341–1343,1362][fu-manual-done] separa puertas locales de Preview. Una aprobación ajena o CI verde no resuelve el cierre. Coordinación debe aportar E2E sobre SHA identificado o registrar la redefinición autorizada del criterio y sus riesgos. |
+
+**Contraste de labels de B1:** `Docente Piloto · Docente` coincide con [OrganizationalUnitsManager:36][fu-units], [mapeo de página:24][fu-unit-page] y [roleLabel:46–56][fu-role]. `Asignaciones` coincide con [AssignmentForm:47][fu-category] y la categoría creada en [actions:156][fu-category-create]. Los labels de tutor/estudiante usan nombre, punto medio y correo como [GuardianshipManager:42][fu-guardian]. La mención docente usa ese mismo rol según [AnnouncementComposer:195][fu-mention] y [comunidad:88][fu-community]. La inspección verifica la cadena esperada; el DOM sintético prueba la API de selección, no el renderizado de esos componentes con DB.
+
+### Hallazgos nuevos respecto de 0e67a916
+
+#### B2 — Bloqueante: el bypass cruza orígenes al seguir redirecciones
+
+**Rutas y líneas del objeto:** [`tests/e2e/canonical-pilot.spec.mjs:22–31`][fu-runner], [`scripts/canonical-pilot-config.mjs:22–25`][fu-guard]; declaración incorrecta en [`docs/canonical-mvp-pilot.md:86`][fu-pilot-guard]. Relevancia funcional: [`src/app/api/assets/[assetId]/route.ts:35`][fu-asset], [`src/app/dashboard/comunidad/page.tsx:108`][fu-community] y [`tests/e2e/canonical-pilot.spec.mjs:270–275`][fu-media].
+
+**Origen:** el [commit 1191b82](https://github.com/cank3r/edukana/commit/1191b82ba20c324d60c9f8fcdc29eaa5a337ffc4) añadió el bypass como cabecera global. 3b5e644 elimina esa configuración y mejora las solicitudes directas mediante `page.route`, pero no corta la propagación por redirección. Es un riesgo nuevo frente a la auditoría de 0e67a916, que no contenía ese bypass; no se afirma que el filtro de 3b5e644 empeore la cabecera global anterior.
+
+**Inspección de la versión fijada:** en `playwright-core@1.64.0/lib/coreBundle.js:37600–37610`, el manejador Chromium recupera `_alreadyContinuedParams.headers` de la petición original, los aplica a la petición redirigida y continúa sin crear otra ruta de usuario. `37857–37866` conserva esos overrides. La [fuente oficial de v1.64.0, crNetworkManager.ts](https://github.com/microsoft/playwright/blob/v1.64.0/packages/playwright-core/src/server/chromium/crNetworkManager.ts#L342-L355) contiene la misma lógica. No hay comparación de origen en ese camino.
+
+**Prueba ejecutada:** Playwright 1.64.0 + Edge 154.0.4258.48, servidores HTTP exclusivamente en loopback, cabecera sin valor real. El origen inicial responde 302. La cabecera añadida mediante `route.continue({headers})` llegó al receptor de otro puerto y al receptor con hostname `localhost` en vez de `127.0.0.1`. El handler se invocó solo para `/start`, no para `/end`. El control de petición directa al otro origen llegó sin cabecera.
+
+**Límite:** este ensayo ejecutó la propagación del navegador con HTTP local. El helper real se probó aparte con URLs HTTPS sintéticas; no se conectó a ellas. No se ejecutó la combinación completa runner→Preview HTTPS→Supabase, ni se usó credencial de Vercel. Tampoco se alteraron certificados, proxy, hosts o seguridad. Se confirma el mecanismo de propagación y la insuficiencia de la guarda; **no se afirma una filtración real ocurrida en un despliegue**.
+
+**Impacto:** un GET permitido de un archivo pasa por Edukana y responde 302 a la URL firmada. La imagen del anuncio usa `/api/assets/<id>` con `unoptimized`, y el piloto exige cargarla. Por ello, una ejecución con bypass podría entregar la credencial de protección al origen de Storage o a otro destino de redirección. La frase “nunca a Supabase ni a otros orígenes” carece de soporte y contradice el comportamiento observado del cliente.
+
+**Corrección esperada antes de usar bypass real o cerrar S0:** garantizar el confinamiento de la cabecera durante toda la cadena, con origen permitido exacto y tratamiento explícito de cada salto. Una posible estrategia es obtener respuestas sin seguimiento automático y continuar de manera controlada; no basta añadir otro filtro `page.route` esperando que intercepte redirecciones. Añadir regresión con 302 entre orígenes y control directo negativo, además del caso permitido. Kiro debe elegir e implementar la solución dentro de su claim; esta revisión no modifica el runner.
+
+**Documentación externa, con cautela:** [Route.continue, Details](https://playwright.dev/docs/api/class-route#route-continue) describe la propagación a redirecciones; [Route.fetch, Details](https://playwright.dev/docs/api/class-route#route-fetch) contiene una recomendación aparentemente contradictoria. La decisión se apoya en el paquete exacto y en el ensayo ejecutado, no únicamente en esas frases.
+
+#### I10 — Importante: el filtro compara hostname, no origen completo
+
+**Rutas y líneas:** [`scripts/canonical-pilot-config.mjs:22–25`][fu-guard] y [`34–49,70–72`][fu-config]; [`tests/canonical-pilot-runner.test.mjs:59–73`][fu-tests].
+
+**Origen:** el helper por URL aparece en 3b5e644. El validador de configuración ya aceptaba puertos en 0e67a916; el efecto nuevo es usar ese mismo hostname como frontera para enviar la cabecera.
+
+**Prueba ejecutada del helper real:** con valor sintético, `https://<host>/asset`, `https://<host>:443/asset` y `https://<host>:444/asset` reciben la cabecera. HTTP y hostname diferente devuelven un objeto vacío. No se hizo conexión a ninguna de esas URL.
+
+**Impacto:** 443 y 444 comparten hostname pero son orígenes distintos. La guarda no cumple el confinamiento “nunca a otros orígenes”, incluso antes de considerar un 302. No se afirma que exista un servicio escuchando en 444 en el despliegue real.
+
+**Corrección esperada:** comparar el `origin` normalizado con el único origen aprobado para el piloto y decidir expresamente qué puertos se admiten. Si solo se acepta el Preview habitual, rechazar cualquier puerto efectivo distinto de 443 desde la configuración. Probar 443 explícito, puerto distinto, cambio de esquema y hostname; tratar también B2, porque validar el origen inicial no resuelve redirecciones.
+
+### Pruebas propias del seguimiento y límites
+
+| ID | Ejecución | Resultado observado |
+|---|---|---|
+| F1 | Git: HEAD fijo, diff contra 0e67a916 y estado de ambas copias | Copia de revisión en 3b5e644; rama del informe conserva 4cbbde6 antes de añadir este apartado. Sin cambios de producto, schema, CI o lockfile en el intervalo. |
+| F2 | Los once archivos del script `npm test`, mediante Node 24.14.0 y el resolvedor temporal descrito en la auditoría original | **89/89 PASS**, 0 fallos: 83 casos anteriores más 6 del runner. No fue `npm test` literal ni Node 22/tsx. Node emitió avisos MODULE_TYPELESS_PACKAGE_JSON; no hubo fallos. |
+| F3 | `node --check` del E2E y `playwright.pilot.config.mjs` | Ambos exit 0; solo sintaxis. |
+| F4 | Helper real con cinco entradas sintéticas HTTPS/HTTP, host y puertos | 5 resultados afirmados: cabecera presente en HTTPS esperado, 443 y 444; ausente en HTTP y otro host. |
+| F5 | Navegador, cuatro escenarios HTTP loopback con 302/control directo | Mismo origen: presente; otro puerto: presente; otro hostname: presente; petición directa al otro origen: ausente. Handler llamado una vez por caso. |
+| F6 | Cinco labels del runner en cinco selects de DOM sintético | **5/5 selecciones correctas**. No renderiza la aplicación. |
+| F7 | Inspección de Playwright 1.64.0, fuentes de producto, instrucciones y claims | Hallazgos y matriz separados de pruebas dinámicas. |
+| F8 | Preservación del prefijo histórico del informe y `git diff --check` | Prefijo histórico íntegro, 13 IDs y 45 referencias al SHA nuevo comprobados; diff sin errores tras quitar una línea vacía final. Solo se añade este seguimiento al archivo autorizado. |
+
+F2 reutilizó Zod 4.6.5 y el resolvedor temporal ya preparado; F4–F6 reutilizaron playwright-core 1.64.0. No se instalaron dependencias nuevas ni navegadores. El navegador usado fue Edge del sistema, no el Chromium predeterminado del piloto. Huella SHA-256 del bundle ejecutado: `2325ca4c1c83070e89dc49fb82525508f0a68e0cf12e2a624277968da216b7e0`. El lockfile no cambió y los paquetes se habían verificado contra su integridad en la revisión original.
+
+Comando de F2, desde la copia aislada del SHA nuevo:
+
+```powershell
+$reviewScratch = Join-Path $env:TEMP 'edukana-s0-review-0e67a91'
+$reviewLoader = ([Uri](Join-Path $reviewScratch 'resolve-ts.mjs')).AbsoluteUri
+node --import $reviewLoader --test tests/security.test.ts tests/permissions.test.ts tests/course-scope.test.ts tests/guardianship.test.ts tests/lms.test.ts tests/schema.test.ts tests/ux.test.ts tests/announcements.test.ts tests/local-storage.test.ts tests/canonical-pilot.test.ts tests/canonical-pilot-runner.test.mjs
+node --check tests/e2e/canonical-pilot.spec.mjs
+node --check playwright.pilot.config.mjs
+```
+
+**No ejecutado:** puerta oficial Node 22/tsx; Prisma validate/generate, typecheck, lint, build y audit; runner completo ni `playwright --list`; PostgreSQL, Supabase, Preview o producción; reset; aislamiento DB entre instituciones; revocación real; historial transaccional; UX del producto renderizada a 360 px, teclado, tamaños o tiempos. El ensayo de navegador local no sustituye ninguno de esos recorridos. No se consultaron secretos ni datos reales de alumnos.
+
+### Harness exacto de los ensayos F4–F6
+
+Guardado fuera del repositorio como `followup-browser.cjs`, junto al directorio temporal `playwright-core/package` ya verificado. Ejecutado desde la copia aislada de 3b5e644 con:
+
+```powershell
+node (Join-Path $env:TEMP 'edukana-s0-review-0e67a91/followup-browser.cjs')
+```
+
+En la parte de red, la cabecera que produce el helper para una cadena HTTPS sintética se inyecta en una solicitud HTTP loopback deliberadamente. Esto permite ensayar el comportamiento de redirección sin certificados de prueba ni excepciones TLS; **no equivale a ejecutar el beforeEach del producto contra HTTPS**. Las cuatro navegaciones solo alcanzan los servidores locales creados por el ensayo.
+
+```javascript
+const assert = require('node:assert/strict');
+const http = require('node:http');
+const fs = require('node:fs');
+const path = require('node:path');
+const { pathToFileURL } = require('node:url');
+const { chromium } = require('./playwright-core/package');
+
+(async () => {
+  const { getPreviewProtectionHeadersForUrl: headersFor } = await import(pathToFileURL(path.resolve('scripts/canonical-pilot-config.mjs')).href);
+  const expectedHost = 'edukana-git-synthetic-example.vercel.app';
+  const env = { VERCEL_AUTOMATION_BYPASS_SECRET: 'SYNTHETIC-REVIEW-MARKER-NOT-A-SECRET' };
+  const cases = [
+    ['expected-https', `https://${expectedHost}/asset`, true],
+    ['explicit-443', `https://${expectedHost}:443/asset`, true],
+    ['other-port-444', `https://${expectedHost}:444/asset`, true],
+    ['http', `http://${expectedHost}/asset`, false],
+    ['other-host', 'https://storage.invalid/asset', false],
+  ];
+  for (const [name, url, expected] of cases) {
+    const present = !!headersFor(url, expectedHost, env)['x-vercel-protection-bypass'];
+    assert.equal(present, expected);
+    console.log(JSON.stringify({ type: 'actual-helper', name, headerPresent: present }));
+  }
+  const observed = [];
+  let destination;
+  const app = http.createServer((req, res) => {
+    observed.push({server:'app',path:req.url,marker:req.headers['x-vercel-protection-bypass'] === env.VERCEL_AUTOMATION_BYPASS_SECRET});
+    if (req.url === '/start') { res.writeHead(302, {Location:destination}); res.end(); }
+    else { res.writeHead(200, {'Content-Type':'text/html'}); res.end('<p>LOCAL SYNTHETIC RESPONSE</p>'); }
+  });
+  const sink = http.createServer((req, res) => {
+    observed.push({server:'sink',path:req.url,marker:req.headers['x-vercel-protection-bypass'] === env.VERCEL_AUTOMATION_BYPASS_SECRET});
+    res.writeHead(200, {'Content-Type':'text/html'}); res.end('<p>LOCAL SYNTHETIC RESPONSE</p>');
+  });
+  const listen = server => new Promise((resolve,reject) => {server.once('error',reject); server.listen(0,'127.0.0.1',resolve);});
+  let browser;
+  try {
+    await listen(app); await listen(sink);
+    const appOrigin = `http://127.0.0.1:${app.address().port}`;
+    const sinkOrigin = `http://127.0.0.1:${sink.address().port}`;
+    browser = await chromium.launch({channel:'msedge',headless:true});
+    console.log(JSON.stringify({type:'runtime',playwright:require('./playwright-core/package/package.json').version,browser:browser.version()}));
+    for (const [name,target,redirect,expected] of [
+      ['same-origin',appOrigin+'/end',true,true],
+      ['other-port',sinkOrigin+'/end',true,true],
+      ['other-hostname',`http://localhost:${sink.address().port}/end`,true,true],
+      ['direct-other-origin',sinkOrigin+'/direct',false,false],
+    ]) {
+      observed.length = 0; destination = target;
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      const routed = [];
+      await page.route('**/*', async route => {
+        const request = route.request(); const url = new URL(request.url());
+        if (!['127.0.0.1','localhost'].includes(url.hostname)) return route.abort();
+        routed.push(url.pathname);
+        if (url.origin === appOrigin) return route.continue({headers:{...request.headers(),...headersFor(`https://${expectedHost}/asset`,expectedHost,env)}});
+        return route.continue();
+      });
+      const response = await page.goto(redirect ? appOrigin+'/start' : target,{waitUntil:'domcontentloaded',timeout:10000});
+      assert.equal(response.status(),200);
+      const received = observed.find(x=>x.path === (redirect ? '/end' : '/direct'));
+      assert.ok(received); assert.equal(received.marker,expected);
+      assert.deepEqual(routed,redirect ? ['/start'] : ['/direct']);
+      console.log(JSON.stringify({type:'http-loopback-browser',name,finalHeaderPresent:received.marker,routed}));
+      await context.close();
+    }
+    const context = await browser.newContext(); const page=await context.newPage();
+    await page.route('**/*',route=>route.abort());
+    const spec=fs.readFileSync('tests/e2e/canonical-pilot.spec.mjs','utf8');
+    const emailLabel = new Function('user',spec.match(/function personEmailOptionLabel\(user\) \{([\s\S]*?)\n\}/)[1]);
+    const roleLabel = new Function('user','role',spec.match(/function personRoleOptionLabel\(user, role\) \{([\s\S]*?)\n\}/)[1]);
+    const teacher={name:'Docente Piloto',email:'teacher@pilot.test'};
+    const parent={name:'Tutor Piloto',email:'parent@pilot.test'};
+    const student={name:'Estudiante Piloto',email:'student@pilot.test'};
+    const options=[['unit',roleLabel(teacher,'Docente')],['category','Asignaciones'],['parent',emailLabel(parent)],['student',emailLabel(student)],['mention',roleLabel(teacher,'Docente')]];
+    await page.setContent(options.map(([id,label])=>`<select id="${id}"><option value="">Choose</option><option value="${id}">${label}</option></select>`).join(''));
+    for(const [id,label] of options){ assert.deepEqual(await page.locator('#'+id).selectOption({label}),[id]); }
+    console.log(JSON.stringify({type:'synthetic-select-dom',selected:options.length,actualProductRendered:false}));
+    await context.close();
+  } finally {
+    if(browser) await browser.close();
+    await Promise.all([app,sink].map(server=>new Promise(resolve=>{server.closeAllConnections();server.close(resolve)})));
+  }
+})().catch(error=>{console.error(error.message);process.exitCode=1});
+```
+
+Salida resumida observada: helper `[true,true,true,false,false]`; redirecciones/control `[true,true,true,false]`; selects `5`. Todos los assertions terminaron con exit 0 y se cerraron navegador y servidores.
+
+### Condiciones de handoff del seguimiento
+
+1. Kiro corrige B2/I10 y sustituye la garantía absoluta sobre el bypass por un comportamiento comprobado con regresión de redirecciones y origen completo. No usar el secreto real para validar la corrección.
+2. Conciliar las reglas residuales de I2 y la evidencia histórica de I3; registrar excepciones y aceptación de I9. Las tres dimensiones de ClassSession se mantienen separadas y su implementación sigue en S4.
+3. Mantener el cierre Q1/S0-12 abierto hasta aportar ejecución desplegada sobre un SHA identificado o una decisión explícita del criterio y riesgo. Los 89 casos y el ensayo local de cabeceras no satisfacen esa salida.
+4. Bootstrap, historia académica, identidad de recursos y revocación/medición permanecen en sus sprints acordados. No se convierte su ausencia legacy en una nueva implementación requerida para S0.
+5. Entregar este seguimiento como un nuevo commit local sobre 4cbbde6, con **solo** `docs/reviews/s0-independent-review.md` modificado y la auditoría original intacta. Sin push, comentarios, review formal, PR nuevo ni actualización de claim en esta fase. La coordinación revisará la entrega antes de publicarla.
+
+### Referencias del seguimiento al SHA 3b5e644
+
+[fu-team]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/TEAM-COORDINATION.md#L38-L69
+[fu-state]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/.kiro/steering/current-state.md#L13-L44
+[fu-plan]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/.kiro/PLAN.md#L19-L54
+[fu-simplicity]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/.kiro/steering/simplicity.md#L8-L30
+[fu-runner]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/tests/e2e/canonical-pilot.spec.mjs#L14-L31
+[fu-selects]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/tests/e2e/canonical-pilot.spec.mjs#L117-L179
+[fu-media]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/tests/e2e/canonical-pilot.spec.mjs#L245-L279
+[fu-guard]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/scripts/canonical-pilot-config.mjs#L13-L26
+[fu-config]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/scripts/canonical-pilot-config.mjs#L34-L85
+[fu-browser]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/playwright.pilot.config.mjs#L5-L24
+[fu-tests]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/tests/canonical-pilot-runner.test.mjs#L47-L73
+[fu-manual-history]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/docs/as-built-system-manual.md#L17-L34
+[fu-manual-evidence]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/docs/as-built-system-manual.md#L1127-L1133
+[fu-manual-order]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/docs/as-built-system-manual.md#L1291-L1300
+[fu-manual-done]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/docs/as-built-system-manual.md#L1330-L1362
+[fu-blueprint-order]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/docs/detailed-functional-blueprint.md#L927-L963
+[fu-blueprint-class]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/docs/detailed-functional-blueprint.md#L261-L304
+[fu-blueprint-ui]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/docs/detailed-functional-blueprint.md#L347-L368
+[fu-catalog-class]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/docs/screen-action-catalog.md#L798-L809
+[fu-catalog-filter]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/docs/screen-action-catalog.md#L872-L881
+[fu-catalog-order]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/docs/screen-action-catalog.md#L1093-L1106
+[fu-catalog-revoke]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/docs/screen-action-catalog.md#L335-L342
+[fu-pilot-revoke]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/docs/canonical-mvp-pilot.md#L59-L64
+[fu-pilot-guard]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/docs/canonical-mvp-pilot.md#L82-L105
+[fu-handoff]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/docs/claude-s0-handoff.md#L29-L38
+[fu-setup-action]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/src/app/setup/actions.ts#L18-L56
+[fu-setup-page]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/src/app/setup/page.tsx#L7-L17
+[fu-asset]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/src/app/api/assets/%5BassetId%5D/route.ts#L9-L35
+[fu-storage]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/src/lib/storage.ts#L88-L97
+[fu-academic-history]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/src/app/dashboard/academico/actions.ts#L180-L207
+[fu-exam-history]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/src/app/dashboard/academico/actions.ts#L236-L268
+[fu-schema-history]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/prisma/schema.prisma#L437-L620
+[fu-academic-ui]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/src/components/dashboard/AcademicForms.tsx#L38-L113
+[fu-ux-tests]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/tests/ux.test.ts#L33-L88
+[fu-ci]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/.circleci/config.yml#L5-L31
+[fu-units]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/src/components/dashboard/OrganizationalUnitsManager.tsx#L36
+[fu-unit-page]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/src/app/dashboard/configuracion/unidades/page.tsx#L24
+[fu-role]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/src/lib/ux.ts#L46-L56
+[fu-category]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/src/components/dashboard/AcademicForms.tsx#L46-L47
+[fu-category-create]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/src/app/dashboard/academico/actions.ts#L156
+[fu-guardian]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/src/components/dashboard/GuardianshipManager.tsx#L42
+[fu-mention]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/src/components/dashboard/AnnouncementComposer.tsx#L195
+[fu-community]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/src/app/dashboard/comunidad/page.tsx#L88-L108
+[fu-model]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/.kiro/steering/data-model.md#L50-L58
+[fu-package]: https://github.com/cank3r/edukana/blob/3b5e644afa56071c0edd6e42931141714caf4599/package.json#L5-L17
+
+---
+
+## Comprobación acotada del candidato d3078325 — 2026-10-08
+
+**Objeto fijo:** `d3078325a25380f88faa3db0ba3ce4c7aaab62a8`. Revisión limitada a **B2, I10, I3 y Q1/S0-12**, autorizada después del seguimiento anterior. La auditoría original y el seguimiento de 3b5e644 se conservan como historial. La nota previa que identifica d3078325 como “no auditado” describe el momento anterior a esta ampliación; este apartado incorpora únicamente las cuatro comprobaciones nuevas.
+
+**Conclusión vigente para esos cuatro puntos:** **B2 resuelto en el mecanismo ensayado; I3 resuelto en sus afirmaciones documentales obsoletas; I10 y Q1 continúan abiertos.** La propagación por 302 observada en 3b5e644 no se presenta como defecto actual de este candidato. No se cambia el estado global de S0 ni se concede aceptación desplegada.
+
+### Evidencia y decisiones del candidato
+
+| ID / prioridad | Estado en d3078325 | Evidencia y decisión |
+|---|---|---|
+| **B2 / Bloqueante en 3b5e644** | **Resuelto — alcance de propagación por 302 probado** | [Handler:28–40][ca-handler] usa `route.fetch` con `maxRedirects:0` y `route.fulfill`; [runner:22–24][ca-runner] lo invoca. **Navegador ejecutado:** el receptor final no recibió la cabecera sintética tras 302 al mismo origen, otro puerto ni otro hostname. La cabecera sí llegó al primer salto. No se probó Preview/Supabase real ni una política universal para cualquier recurso. |
+| **I10 / Importante** | **Abierto** | [Helper:22–25][ca-handler] continúa comparando hostname y esquema, sin puerto/origen; [config:55–65][ca-config] tampoco restringe puerto. **Helper real:** HTTPS normal, 443 y 444 reciben cabecera. **Navegador con handler real y fachada sintética:** una solicitud directa al mismo hostname en otro puerto recibió la cabecera; a otro hostname, no. Comparar origen completo y probar puertos sigue pendiente. |
+| **I3 / Importante** | **Resuelto — corrección documental** | **Inspección:** [manual:24–39][ca-manual] elimina “sin commit” y conteos efímeros; [1175–1183][ca-preview] elimina el SHA/estado Preview obsoleto y distingue despliegue de aceptación. [PLAN:27][ca-plan] remite resultados al SHA ejecutado. Git confirma que los archivos están versionados. Las afirmaciones sobre despliegues o puertas locales de terceros no se verificaron operacionalmente ni se adoptan como propias. |
+| **Q1 / Pregunta; S0-12** | **Abierto** | [TEAM:63,69][ca-team] conserva REVIEW y dependencia de S1; [PLAN:32,52–54][ca-plan] conserva BLOCKED y E2E requerido. El [registro de staging:9–16,32–48][ca-staging] tiene identidad DB, autorización y preflight pendientes; [84–110][ca-evidence] tiene ejecución y conclusión pendientes. Crear el documento no ejecuta ni autoriza el reset o E2E. Coordinación debe completar la aceptación o registrar una redefinición explícita del criterio y riesgo. |
+
+**Otros IDs:** no se reauditaron en esta comprobación acotada. Su último resultado documentado, fijado a **3b5e644**, permanece: B1/I1/I8 resueltos; I2/I4/I6/R2 parciales; I5/I7/R1 previstos para otro sprint o aceptación por pantalla; I9 abierto. La matriz anterior conserva rutas y evidencias de esos resultados. No se presentan como una nueva auditoría integral de d3078325.
+
+**Origen de las correcciones:** `fa13427` introduce el handler y el registro de staging; `bb34cd4` retira conteos obsoletos; `d307832` corrige el estado Preview. El delta cambia siete archivos; AGENTS, habilidades locales, producto, schema y lockfile no cambiaron. Se leyeron TEAM, current-state, simplicity y PLAN en el orden requerido. El ensayo usó otro worktree con HEAD separado en d3078325; la copia de 3b5e644 y la rama propia del informe no cambiaron de base.
+
+**Límite importante de B2:** en las tres redirecciones el callback de `page.route` solo se ejecutó para `/start`. La corrección evita propagar los headers de `route.fetch`, pero **no se observó una segunda llamada al helper para validar el destino**. Incluso el redirect al mismo origen terminó sin la cabecera. No se probó si la configuración real de Deployment Protection, cookies y login mantiene el recorrido operativo. No se afirma un fallo funcional de Vercel: esa compatibilidad debe cubrirse en la aceptación autorizada.
+
+La [prueba añadida:77–114][ca-test] usa rutas simuladas e invoca por separado el handler del origen permitido y otro externo. Confirma opciones y decisiones aisladas; por sí sola no reproduce un 302 de navegador. El ensayo local siguiente cubre esa diferencia.
+
+**Límite importante de Q1:** [registro:14–16][ca-staging] propone una rama/alias Preview y deja el SHA por registrar. No se supone que ese alias esté sirviendo este candidato. Su preflight exige comprobar que HEAD, PR y deployment coinciden; no se consultaron credenciales, recursos ni se ejecutaron las instrucciones destructivas del documento.
+
+### Ejecuciones propias, método y límites
+
+**Versiones:** Node **24.14.0**, playwright-core **1.64.0**, Edge del sistema **154.0.4258.48**, headless. Se reutilizó el mismo paquete verificado; no hubo instalaciones o descargas nuevas.
+
+| Ejecución | Resultado |
+|---|---|
+| `node --test tests/canonical-pilot-runner.test.mjs` | **7/7 PASS**, exit 0. No se repitió toda la suite del candidato. El 89/89 anterior pertenece a 3b5e644. |
+| Cinco entradas al helper actual | Cabecera presente para HTTPS esperado, 443 explícito y 444; ausente para HTTP y otro hostname. |
+| Cinco escenarios de navegador en HTTP loopback | Tres redirects sin cabecera final; directo a otro hostname sin cabecera; directo al mismo hostname/otro puerto con cabecera. Todos los assertions terminaron con exit 0. |
+| `node --check` de E2E y configuración del runner | Exit 0; solo sintaxis. |
+| Git y lectura documental | HEAD fijo, worktree limpio, delta acotado y registros pendientes confirmados. |
+
+**Resultado de red detallado:**
+
+| Escenario | Cabecera en primer salto | Cabecera en destino final | Callback |
+|---|---|---|---|
+| 302 al mismo origen | Sí | No | Solo `/start` |
+| 302 al mismo hostname y otro puerto | Sí | No | Solo `/start` |
+| 302 a otro hostname local | Sí | No | Solo `/start` |
+| Directo a otro hostname local | No | No | Solo `/direct` |
+| Directo al mismo hostname y otro puerto | Sí | Sí | Solo `/direct` |
+
+Los servidores escucharon únicamente en `127.0.0.1`; el segundo hostname fue `localhost`. Se usó un marcador sintético sin valor real. El handler del candidato se importó sin modificarlo. Una fachada presentó a `request.url()` una URL HTTPS sintética con el mismo patrón de hostname/puerto, mientras `fetch`, `fulfill` y `continue` delegaron al Route real y todas las conexiones fueron HTTP loopback. Se comprobó `maxRedirects:0` en cada primer salto.
+
+**Este ensayo HTTP demuestra la semántica de redirección de Playwright y la decisión del handler con entradas sintéticas; no ejecuta el flujo HTTPS real de Edukana.** No se usó `ignoreHTTPSErrors`, ni flags para certificados, cambios de proxy/hosts o permisos. No hubo conexión a DB, Storage, Preview o producción; tampoco secretos, datos reales, reset, escritura del registro de staging o implementación de correcciones.
+
+Siguen sin ejecutarse puerta oficial Node 22/tsx, build/typecheck/lint/audit/Prisma, E2E completo, integración DB, revocación real y UX del producto. No se trasladan resultados de 3b5e644 como si fueran ejecuciones de d3078325.
+
+### Harness exacto del candidato
+
+Archivo temporal `candidate-browser.cjs` junto a `playwright-core/package`, ejecutado desde el worktree de d3078325:
+
+```powershell
+node --test tests/canonical-pilot-runner.test.mjs
+node (Join-Path $env:TEMP 'edukana-s0-review-0e67a91/candidate-browser.cjs')
+node --check tests/e2e/canonical-pilot.spec.mjs
+node --check scripts/canonical-pilot-config.mjs
+```
+
+```javascript
+const assert = require('node:assert/strict');
+const http = require('node:http');
+const path = require('node:path');
+const { pathToFileURL } = require('node:url');
+const { chromium } = require('./playwright-core/package');
+
+(async () => {
+  const { getPreviewProtectionHeadersForUrl: headersFor, handlePreviewProtectionRoute: handle } = await import(pathToFileURL(path.resolve('scripts/canonical-pilot-config.mjs')).href);
+  const expectedHost='edukana-git-synthetic-example.vercel.app';
+  const env={VERCEL_AUTOMATION_BYPASS_SECRET:'SYNTHETIC-REVIEW-MARKER-NOT-A-SECRET'};
+  for(const [name,url,expected] of [
+    ['expected-https',`https://${expectedHost}/asset`,true],
+    ['explicit-443',`https://${expectedHost}:443/asset`,true],
+    ['other-port-444',`https://${expectedHost}:444/asset`,true],
+    ['http',`http://${expectedHost}/asset`,false],
+    ['other-host','https://storage.invalid/asset',false],
+  ]) {const present=!!headersFor(url,expectedHost,env)['x-vercel-protection-bypass']; assert.equal(present,expected); console.log(JSON.stringify({type:'candidate-helper',name,headerPresent:present}));}
+  const observed=[];let destination;
+  const app=http.createServer((req,res)=>{
+    observed.push({server:'app',path:req.url,marker:req.headers['x-vercel-protection-bypass']===env.VERCEL_AUTOMATION_BYPASS_SECRET});
+    if(req.url==='/start'){res.writeHead(302,{Location:destination});res.end();}
+    else{res.writeHead(200,{'Content-Type':'text/html'});res.end('<p>LOCAL SYNTHETIC RESPONSE</p>');}
+  });
+  const sink=http.createServer((req,res)=>{
+    observed.push({server:'sink',path:req.url,marker:req.headers['x-vercel-protection-bypass']===env.VERCEL_AUTOMATION_BYPASS_SECRET});
+    res.writeHead(200,{'Content-Type':'text/html'});res.end('<p>LOCAL SYNTHETIC RESPONSE</p>');
+  });
+  const listen=s=>new Promise((resolve,reject)=>{s.once('error',reject);s.listen(0,'127.0.0.1',resolve)});
+  let browser;
+  try{
+    await listen(app);await listen(sink);
+    const appOrigin=`http://127.0.0.1:${app.address().port}`;
+    const sinkOrigin=`http://127.0.0.1:${sink.address().port}`;
+    browser=await chromium.launch({channel:'msedge',headless:true});
+    console.log(JSON.stringify({type:'runtime',node:process.version,playwright:require('./playwright-core/package/package.json').version,browser:browser.version()}));
+    for(const [name,target,redirect,expected] of [
+      ['same-origin',appOrigin+'/end',true,false],
+      ['other-port',sinkOrigin+'/end',true,false],
+      ['other-hostname',`http://localhost:${sink.address().port}/end`,true,false],
+      ['direct-other-hostname',`http://localhost:${sink.address().port}/direct`,false,false],
+      ['direct-other-port',sinkOrigin+'/direct',false,true],
+    ]){
+      observed.length=0;destination=target;
+      const context=await browser.newContext();const page=await context.newPage();const routed=[];const fetched=[];
+      await page.route('**/*',async route=>{
+        const request=route.request();const url=new URL(request.url());
+        if(!['127.0.0.1','localhost'].includes(url.hostname))return route.abort();
+        routed.push(url.pathname);
+        const syntheticHost=url.hostname==='127.0.0.1'?expectedHost:'storage.invalid';
+        const facade={
+          request:()=>({url:()=>`https://${syntheticHost}:${url.port}${url.pathname}`,headers:()=>request.headers()}),
+          continue:options=>route.continue(options),
+          fetch:options=>{fetched.push({maxRedirects:options.maxRedirects});return route.fetch(options)},
+          fulfill:options=>route.fulfill(options),
+        };
+        await handle(facade,expectedHost,env);
+      });
+      const response=await page.goto(redirect?appOrigin+'/start':target,{waitUntil:'domcontentloaded',timeout:10000});
+      assert.equal(response.status(),200);
+      const final=observed.find(x=>x.path===(redirect?'/end':'/direct'));
+      assert.ok(final);assert.equal(final.marker,expected);
+      if(redirect){assert.equal(observed.find(x=>x.path==='/start').marker,true);assert.equal(fetched.length,1);assert.equal(fetched[0].maxRedirects,0);}
+      assert.deepEqual(routed,redirect?['/start']:['/direct']);
+      console.log(JSON.stringify({type:'candidate-http-loopback',name,finalHeaderPresent:final.marker,routed,fetched}));
+      await context.close();
+    }
+  }finally{
+    if(browser)await browser.close();
+    await Promise.all([app,sink].map(s=>new Promise(resolve=>{s.closeAllConnections();s.close(resolve)})));
+  }
+})().catch(error=>{console.error(error.message);process.exitCode=1});
+```
+
+### Entrega acotada
+
+Corregir I10 antes de dar por verificado el confinamiento por origen; mantener Q1/S0-12 pendiente con evidencia identificada. B2 no se reabre por el comportamiento de 3b5e644 que ya se corrigió. Conservar las conclusiones históricas con sus SHA y completar una aceptación autorizada del candidato que finalmente se elija.
+
+Se consolida únicamente el seguimiento añadido a `docs/reviews/s0-independent-review.md` en un commit local cuyo padre es `4cbbde6fe8ff8fa60129388784cb68eb37bba647`. Auditoría original y seguimiento de 3b5e644 intactos. Sin push, PR nuevo, comentarios, revisión formal ni cambios en el registro de staging.
+
+[ca-handler]: https://github.com/cank3r/edukana/blob/d3078325a25380f88faa3db0ba3ce4c7aaab62a8/scripts/canonical-pilot-config.mjs#L22-L41
+[ca-config]: https://github.com/cank3r/edukana/blob/d3078325a25380f88faa3db0ba3ce4c7aaab62a8/scripts/canonical-pilot-config.mjs#L49-L65
+[ca-runner]: https://github.com/cank3r/edukana/blob/d3078325a25380f88faa3db0ba3ce4c7aaab62a8/tests/e2e/canonical-pilot.spec.mjs#L22-L24
+[ca-test]: https://github.com/cank3r/edukana/blob/d3078325a25380f88faa3db0ba3ce4c7aaab62a8/tests/canonical-pilot-runner.test.mjs#L77-L114
+[ca-manual]: https://github.com/cank3r/edukana/blob/d3078325a25380f88faa3db0ba3ce4c7aaab62a8/docs/as-built-system-manual.md#L17-L39
+[ca-preview]: https://github.com/cank3r/edukana/blob/d3078325a25380f88faa3db0ba3ce4c7aaab62a8/docs/as-built-system-manual.md#L1175-L1183
+[ca-plan]: https://github.com/cank3r/edukana/blob/d3078325a25380f88faa3db0ba3ce4c7aaab62a8/.kiro/PLAN.md#L27-L54
+[ca-team]: https://github.com/cank3r/edukana/blob/d3078325a25380f88faa3db0ba3ce4c7aaab62a8/TEAM-COORDINATION.md#L54-L69
+[ca-staging]: https://github.com/cank3r/edukana/blob/d3078325a25380f88faa3db0ba3ce4c7aaab62a8/docs/s0-staging-acceptance-record.md#L5-L48
+[ca-evidence]: https://github.com/cank3r/edukana/blob/d3078325a25380f88faa3db0ba3ce4c7aaab62a8/docs/s0-staging-acceptance-record.md#L80-L110
+
+---
+
+## Nota final documental — 2026-10-08 — SHA 7deb3f1
+
+**Objeto:** `7deb3f1b45cf56c1eb50f4acffe8c7fff7a5bd41`, contrastado únicamente con `d3078325a25380f88faa3db0ba3ce4c7aaab62a8`. El delta modifica siete documentos; no cambia producto, schema, runner, pruebas ni dependencias. No se repitió ninguna comprobación dinámica. Las últimas pruebas del handler permanecen fijadas a **d3078325**; el 89/89 histórico permanece fijado a **3b5e644**.
+
+**Explicación vigente de Q1/S0-12: abierto.** [PLAN:32](https://github.com/cank3r/edukana/blob/7deb3f1b45cf56c1eb50f4acffe8c7fff7a5bd41/.kiro/PLAN.md#L32) sustituye el reset por un **entorno de aceptación NUEVO, aislado y allowlisted**. Staging y su Storage conservan los datos demostrativos y no se resetean, vacían ni limpian. Faltan provisión/asignación, identidad y separación verificadas, autorización específica y E2E del entorno nuevo. El [registro:9–33](https://github.com/cank3r/edukana/blob/7deb3f1b45cf56c1eb50f4acffe8c7fff7a5bd41/docs/s0-staging-acceptance-record.md#L9-L33) deja pendientes recursos y autorización, y [82–109](https://github.com/cank3r/edukana/blob/7deb3f1b45cf56c1eb50f4acffe8c7fff7a5bd41/docs/s0-staging-acceptance-record.md#L82-L109) deja pendiente evidencia y conclusión. Se conserva su ruta histórica, pero ya no prescribe reset. Leer ese registro **no autoriza crear recursos**, asumir costos, ejecutar migraciones o hacer escrituras.
+
+**Residuo dentro de Q1 — Importante, inspección estática:** [blueprint §26:931–936](https://github.com/cank3r/edukana/blob/7deb3f1b45cf56c1eb50f4acffe8c7fff7a5bd41/docs/detailed-functional-blueprint.md#L931-L936) todavía ordena en la línea 935: “Reiniciar solo staging con autorización explícita”. El delta no modifica ese apartado. Contradice la conservación expresa del nuevo PLAN/registro y podría orientar una operación sobre el entorno equivocado. **Corrección esperada:** reemplazar esa instrucción por provisión y aceptación en el entorno nuevo aislado, conservando staging. Se señala como inconsistencia documental; no se ejecutó ni se interpretó como autorización de reset.
+
+**Estados:** B2 permanece resuelto para la propagación por 302 probada en d3078325; I3 permanece corregido documentalmente; I10 sigue abierto porque el código de hostname/puerto no cambió. Q1 continúa abierto con las condiciones nuevas y el residuo anterior. Los demás IDs conservan su última evaluación y SHA, sin una nueva auditoría integral. No se declara S0 DONE.
+
+Esta nota actualiza el requisito vigente; las menciones a reset en auditorías anteriores se conservan exclusivamente como historia de sus SHA. Los cierres “sin push” anteriores describen entregas locales previas. La publicación ahora autorizada comprende solo este informe; el coordinador actualizará el claim existente. No se modificaron el registro de aceptación, código ni documentación ajena.
