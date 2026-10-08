@@ -25,7 +25,7 @@
 
 El runner E2E, sus guardas, Playwright Test 1.64.0, Next.js 16.4.0 y la documentación rectora ya están versionados en las ramas coordinadas de S0 y desplegados como Preview del PR. Permanecen fuera de producción mientras el PR no se fusione.
 
-S0 continúa en `REVIEW`: falta cerrar la revisión independiente sobre el SHA candidato y ejecutar el recorrido E2E contra un staging limpio, identificado y autorizado. Los resultados de cada puerta se registran junto con el SHA ejecutado en el PR.
+S0 continúa en `REVIEW`: falta ejecutar el recorrido E2E en un entorno de aceptación nuevo, aislado, identificado y allowlisted. Staging conserva sus datos ficticios para demostraciones y no se borra antes de producción. Los resultados de cada puerta se registran junto con el SHA ejecutado en el PR.
 
 ## 1.3 Dimensión actual
 
@@ -1145,7 +1145,7 @@ El escenario automatizado cubre:
 13. Anuncio con imagen.
 14. Recepción por roles.
 
-Todavía no se ha ejecutado contra un staging limpio después de su creación.
+Todavía no se ha ejecutado contra un entorno de aceptación desplegado, nuevo y aislado. El staging existente se conserva con datos ficticios para explicar y demostrar la plataforma.
 
 ---
 
@@ -1176,11 +1176,16 @@ Eso prueba el recorrido local equivalente, pero no sustituye la aceptación desp
 
 La rama del PR se despliega automáticamente en Vercel Preview. El SHA candidato, deployment y resultado de checks vigentes se registran juntos en el PR; este manual no fija un commit como “actual”. Un deployment exitoso demuestra compilación y publicación, no la aceptación E2E.
 
-## Staging
+## Staging demostrativo
 
-- Las migraciones de anuncios llegaron a aplicarse anteriormente.
-- El reset limpio solicitado no se completó.
-- El runner E2E está versionado y publicado en Preview, pero todavía no se ejecutó contra una base limpia, allowlisted y autorizada.
+- Conserva datos ficticios para explicar cómo se ve y funciona la plataforma.
+- No se resetea, vacía ni borra antes de producción.
+- El runner E2E no se ejecuta allí porque su recorrido requiere una base nueva.
+
+## Entorno de aceptación
+
+- Debe ser nuevo, aislado de staging y producción y usar PostgreSQL y Storage allowlisted propios.
+- El runner está versionado y publicado en Preview, pero todavía no se ejecutó contra ese entorno aislado.
 
 ## Producción
 

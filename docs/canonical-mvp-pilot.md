@@ -81,7 +81,7 @@ El recorrido solo se declara aprobado si, además de esa puerta, se ejecutan los
 
 ## Runner de aceptación en Preview
 
-Después de vaciar exclusivamente staging y aplicar migraciones, ejecuta el recorrido con Chromium incluido. `PILOT_BROWSER_CHANNEL=msedge` permite una aceptación local específica con Edge. Las credenciales se pasan solo por variables de entorno y el runner se niega a operar si el host no es un deployment Vercel Preview `-git-` confirmado dos veces.
+Provisiona un entorno de aceptación nuevo y vacío, separado de staging y producción, y aplica allí las migraciones. **Staging conserva sus datos ficticios para demostraciones y no se vacía ni se resetea.** Ejecuta el recorrido con Chromium incluido; `PILOT_BROWSER_CHANNEL=msedge` permite una aceptación local específica con Edge. Las credenciales se pasan solo por variables de entorno y el runner se niega a operar si el host no es un deployment Vercel Preview `-git-` confirmado dos veces.
 
 Esta guarda valida intención, HTTPS y hostname; no certifica por sí sola qué base de datos o bucket usa el deployment. Antes de permitir escrituras se debe verificar por separado la identidad allowlisted de DB y Storage. El bypass de Deployment Protection se añade únicamente a solicitudes HTTPS del host Preview confirmado y nunca a Supabase ni a otros orígenes.
 

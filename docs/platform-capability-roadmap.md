@@ -56,7 +56,7 @@ El objetivo no es copiar cada ajuste ni cada plugin. Una capacidad cuenta como t
 
 **Meta:** demostrar una institución pequeña operando el flujo académico completo en Preview.
 
-- Ejecutar onboarding sobre una base limpia.
+- Ejecutar onboarding sobre una base nueva del entorno de aceptación aislado, sin borrar staging.
 - Crear usuarios, período, departamento, curso y matrícula.
 - Publicar contenido y video, entregar, registrar asistencia y calificar.
 - Vincular tutor y comprobar permisos.

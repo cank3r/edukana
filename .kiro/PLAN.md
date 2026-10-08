@@ -29,7 +29,7 @@ Este archivo registra estado, dependencias y siguiente acción. No sustituye req
 | S0-09 | Publicar rama y actualizar PR | DONE | Push explícito a feature branch; nunca a master. |
 | S0-10 | Decidir privacidad del repositorio | DECISION | El repositorio es público; el propietario debe decidir. |
 | S0-11 | Contratar infraestructura de piloto | EXTERNAL | Verificar planes, backups, correo, video y presupuesto. |
-| S0-12 | Reset limpio y runner en Preview | BLOCKED | Usar `docs/s0-staging-acceptance-record.md`; falta completar allowlist, autorizar reset/backup de staging y configurar el secreto de automatización. |
+| S0-12 | Entorno aislado y runner en Preview | BLOCKED | Conservar staging con datos demo. Usar `docs/s0-staging-acceptance-record.md` para provisionar y allowlistar un entorno de aceptación nuevo, sin borrar staging, y configurar el secreto de automatización. |
 
 ## Sprints aprobados
 

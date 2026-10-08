@@ -60,7 +60,7 @@ Un solo agente modifica `prisma/schema.prisma` y la migración activa. Un segund
 
 | ID | Agente | Rama | Estado | Alcance exclusivo | Última actualización | Siguiente paso / bloqueo |
 |---|---|---|---|---|---|---|
-| S0-GOV | Kiro | `fix/role-access-hardening` | REVIEW | `TEAM-COORDINATION.md`, `AGENTS.md`, `.kiro/PLAN.md`, `.kiro/steering/{current-state,simplicity,tech,data-model,product,spec-governance,structure}.md`, documentación S0 y runner E2E local | 2026-10-08 | Ola independiente completada: documentación conciliada; bypass protegido también frente a redirecciones; puerta local verde. Propuesta S1 requiere revisión y rebase después de S0. Publicar nuevo SHA, obtener revisión fijada y completar `docs/s0-staging-acceptance-record.md` antes del reset autorizado. |
+| S0-GOV | Kiro | `fix/role-access-hardening` | REVIEW | `TEAM-COORDINATION.md`, `AGENTS.md`, `.kiro/PLAN.md`, `.kiro/steering/{current-state,simplicity,tech,data-model,product,spec-governance,structure}.md`, documentación S0 y runner E2E local | 2026-10-08 | Revisiones técnica y documental aprobadas. Decisión de Carlos: staging conserva datos demo y no se borra antes de producción. S0-12 requiere un entorno de aceptación nuevo, aislado y allowlisted para ejecutar el E2E sin tocar staging. |
 
 ## Claims reservados siguientes
 

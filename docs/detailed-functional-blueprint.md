@@ -968,7 +968,7 @@ El orden operativo vigente está en `.kiro/PLAN.md` y sustituye secuencias anter
 
 Con trabajo continuo asistido por agentes y sin integrar pasarelas de pago:
 
-- Piloto desplegado actual: días, condicionado al reset de staging.
+- Piloto desplegado actual: días, condicionado al aprovisionamiento del entorno de aceptación aislado; staging se conserva para demos.
 - Semana híbrida detallada y panel “Hoy”: 2–4 semanas.
 - Operación diaria básica de un instituto: 5–8 semanas acumuladas.
 - Beta institucional convincente: 2–3 meses.
