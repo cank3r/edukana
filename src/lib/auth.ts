@@ -4,6 +4,7 @@ import Credentials from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { loginSchema } from "@/lib/validation";
+import { clientIpFromHeaders, isAttemptAllowed, recordAttempt } from "@/server/security/login-throttle";
 import { resolveLiveIdentity } from "@/server/session";
 
 const SESSION_MAX_AGE_SECONDS = Number(process.env.SESSION_MAX_AGE_DAYS ?? 7) * 24 * 60 * 60;
@@ -20,20 +21,26 @@ const nextAuth = NextAuth({
         email: { label: "Correo", type: "email" },
         password: { label: "Contraseña", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, request) {
         const parsed = loginSchema.safeParse(credentials);
         if (!parsed.success) return null;
+
+        // Mismo resultado para bloqueo, cuenta inexistente y contraseña incorrecta: no se revela cuál fue.
+        const attempt = { email: parsed.data.email, ip: clientIpFromHeaders(request?.headers) };
+        if (!(await isAttemptAllowed(attempt))) return null;
 
         const matches = await db.user.findMany({
           where: { email: parsed.data.email, status: "ACTIVE" },
           include: { institution: { select: { slug: true } } },
           take: 2,
         });
-        if (matches.length !== 1 || !matches[0].password) return null;
-
-        const user = matches[0];
-        const passwordHash = user.password;
-        if (!passwordHash || !(await bcrypt.compare(parsed.data.password, passwordHash))) return null;
+        const user = matches.length === 1 ? matches[0] : null;
+        const passwordHash = user?.password;
+        if (!user || !passwordHash || !(await bcrypt.compare(parsed.data.password, passwordHash))) {
+          await recordAttempt(attempt, false);
+          return null;
+        }
+        await recordAttempt(attempt, true);
 
         return {
           id: user.id,
