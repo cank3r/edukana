@@ -5,6 +5,7 @@ import { courseWhereForScope, resolveCourseWriteScope } from "@/lib/course-scope
 import { db } from "@/lib/db";
 import { ImageUploader } from "@/components/dashboard/ImageUploader";
 import { courseUsage } from "@/server/courses/course";
+import { isIndependentInstitution } from "@/server/platform/independent";
 import { CourseForm } from "../../nuevo/CourseForm";
 import { CourseStateTools } from "./CourseStateTools";
 
@@ -25,6 +26,7 @@ export default async function EditCoursePage({ params }: { params: Promise<{ cou
   });
   if (!course) notFound();
 
+  const independent = scope.kind === "all" && (await isIndependentInstitution(user.institutionId));
   const [periods, activeTeachers, usage, activeStudents] = await Promise.all([
     db.academicPeriod.findMany({ where: { institutionId: user.institutionId }, select: { id: true, name: true }, orderBy: { startDate: "desc" } }),
     scope.kind === "all"
@@ -48,7 +50,8 @@ export default async function EditCoursePage({ params }: { params: Promise<{ cou
           course={{ id: course.id, name: course.name, description: course.description ?? "", teacherId: course.teacherId, periodId: course.periodId, code: course.code ?? "", maxStudents: course.maxStudents?.toString() ?? "" }}
           teachers={teachers}
           periods={periods}
-          fixedTeacherId={scope.kind === "teacher" ? scope.teacherId : undefined}
+          fixedTeacherId={scope.kind === "teacher" ? scope.teacherId : independent ? course.teacherId : undefined}
+          fixedPeriodId={independent && periods.length === 1 ? course.periodId : undefined}
         />
       </section>
       <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-labelledby="imagen-curso">

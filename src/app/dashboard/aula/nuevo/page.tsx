@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { getEffectiveCapabilities } from "@/lib/authorization";
 import { resolveCourseWriteScope } from "@/lib/course-scope";
 import { db } from "@/lib/db";
+import { isIndependentInstitution } from "@/server/platform/independent";
 import { CourseForm } from "./CourseForm";
 
 export const dynamic = "force-dynamic";
@@ -17,9 +18,11 @@ export default async function NewCoursePage() {
   const scope = resolveCourseWriteScope(user, capabilities);
   if (scope.kind !== "all" && scope.kind !== "teacher") notFound();
 
+  // Docente independiente: el curso es suyo y usa el período que se creó con su espacio.
+  const independent = scope.kind === "all" && (await isIndependentInstitution(user.institutionId));
   const [periods, teachers] = await Promise.all([
     db.academicPeriod.findMany({ where: { institutionId: user.institutionId }, select: { id: true, name: true }, orderBy: { startDate: "desc" } }),
-    scope.kind === "all"
+    scope.kind === "all" && !independent
       ? db.user.findMany({ where: { institutionId: user.institutionId, role: "TEACHER", status: "ACTIVE" }, select: { id: true, name: true }, orderBy: { name: "asc" }, take: 500 })
       : Promise.resolve([]),
   ]);
@@ -38,7 +41,7 @@ export default async function NewCoursePage() {
               ? <Link href="/dashboard/configuracion/periodos" className={primary}>Crear un período</Link>
               : <p className="mt-3 text-sm text-slate-600">Pide a la administración que lo cree y vuelve aquí.</p>}
           </div>
-        ) : scope.kind === "all" && teachers.length === 0 ? (
+        ) : scope.kind === "all" && !independent && teachers.length === 0 ? (
           <div>
             <p className="font-semibold text-slate-950">Primero hace falta un docente.</p>
             <p className="mt-1 text-sm text-slate-600">Cada curso tiene un docente a cargo y tu institución todavía no tiene docentes activos.</p>
@@ -47,7 +50,12 @@ export default async function NewCoursePage() {
               : <p className="mt-3 text-sm text-slate-600">Pide a la administración que agregue al docente y vuelve aquí.</p>}
           </div>
         ) : (
-          <CourseForm teachers={teachers} periods={periods} fixedTeacherId={scope.kind === "teacher" ? scope.teacherId : undefined} />
+          <CourseForm
+            teachers={teachers}
+            periods={periods}
+            fixedTeacherId={scope.kind === "teacher" ? scope.teacherId : independent ? user.id : undefined}
+            fixedPeriodId={independent && periods.length === 1 ? periods[0].id : undefined}
+          />
         )}
       </div>
     </div>

@@ -89,3 +89,12 @@ test("Aula conserva visibles los cursos completados del estudiante", () => {
   const classroom = readFileSync(join(process.cwd(), "src", "app", "dashboard", "aula", "page.tsx"), "utf8");
   assert.match(classroom, /status: \{ in: \["ACTIVE", "COMPLETED"\] \}/);
 });
+
+test("docente independiente: menú corto sin personas, admisiones, cobros manuales ni calendario", () => {
+  const items = navigationForRole("ADMIN", undefined, { independent: true });
+  assert.deepEqual(items.map((item) => item.label), ["Inicio", "Mis cursos", "Ventas", "Avisos", "Configuración"]);
+  assert.ok(items.length <= MAX_MAIN_NAVIGATION);
+  for (const hidden of ["/dashboard/gestion", "/dashboard/admisiones", "/dashboard/pagos", "/dashboard/calendario"]) {
+    assert.equal(items.some((item) => item.href === hidden), false, hidden);
+  }
+});

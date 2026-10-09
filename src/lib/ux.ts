@@ -14,7 +14,17 @@ const common = {
   calendar: { label: "Calendario", href: "/dashboard/calendario", icon: "calendar" },
 } satisfies Record<string, NavigationItem>;
 
-export function navigationForRole(role: EdukanaRole, effective?: ReadonlySet<Capability> | readonly Capability[]): NavigationItem[] {
+/**
+ * Menú por rol. Con `independent` (espacio de docente independiente) quedan solo las tareas de quien
+ * enseña y vende sus cursos: sin personas, admisiones, cobros manuales, calendario ni reportes.
+ * Las pantallas siguen siendo las mismas; solo se ocultan las entradas.
+ */
+export function navigationForRole(
+  role: EdukanaRole,
+  effective?: ReadonlySet<Capability> | readonly Capability[],
+  options: { independent?: boolean } = {},
+): NavigationItem[] {
+  if (options.independent) return independentNavigation(role, effective);
   const can = (capability: Capability) => hasCapability(role, capability, effective);
   // Docente y estudiante solo ven sus cursos: el menú lo dice igual que el título de la página.
   const courses = role === "TEACHER" || role === "STUDENT" ? { ...common.courses, label: "Mis cursos" } : common.courses;
@@ -35,6 +45,17 @@ export function navigationForRole(role: EdukanaRole, effective?: ReadonlySet<Cap
       { label: "Mi estado de cuenta", href: "/dashboard/mi-cuenta", icon: "payments" } as NavigationItem,
       { label: "Mis certificados", href: "/dashboard/mis-certificados", icon: "portal" } as NavigationItem,
     ] : []),
+  ];
+}
+
+function independentNavigation(role: EdukanaRole, effective?: ReadonlySet<Capability> | readonly Capability[]): NavigationItem[] {
+  const can = (capability: Capability) => hasCapability(role, capability, effective);
+  return [
+    common.home,
+    ...(can("course.view") ? [{ ...common.courses, label: "Mis cursos" }] : []),
+    ...(can("finance.manage") ? [{ label: "Ventas", href: "/dashboard/ventas", icon: "payments" } as NavigationItem] : []),
+    common.community,
+    ...(can("tenant.settings.manage") ? [{ label: "Configuración", href: "/dashboard/configuracion", icon: "settings" } as NavigationItem] : []),
   ];
 }
 

@@ -2,6 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { courseWhereForScope, type CourseScope } from "@/lib/course-scope";
 import { db } from "@/lib/db";
+import { isIndependentInstitution } from "@/server/platform/independent";
 import type { EdukanaRole } from "@/types/next-auth";
 
 type Actor = { id: string; institutionId: string; role: EdukanaRole };
@@ -52,8 +53,11 @@ async function checkInput(actor: Actor, scope: CourseScope, input: CourseInput, 
   // Un docente solo crea y mantiene cursos propios; no puede pasarlos a otra persona.
   const teacherId = scope.kind === "teacher" ? scope.teacherId : data.teacherId;
   if (teacherId !== current?.teacherId) {
+    // En el espacio de un docente independiente, quien lo administra es también quien enseña.
+    const ownIndependentCourse = teacherId === actor.id && (actor.role === "ADMIN" || actor.role === "SUPER_ADMIN")
+      && (await isIndependentInstitution(actor.institutionId));
     const teacher = await db.user.findFirst({
-      where: { id: teacherId, institutionId: actor.institutionId, role: "TEACHER", status: "ACTIVE" },
+      where: { id: teacherId, institutionId: actor.institutionId, status: "ACTIVE", ...(ownIndependentCourse ? {} : { role: "TEACHER" as const }) },
       select: { id: true },
     });
     if (!teacher) return { ok: false, message: "Ese docente no está disponible. Elige un docente activo de tu institución." };
