@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
 import {
   cancelChargeAction,
@@ -9,6 +10,7 @@ import {
   recordPaymentAction,
   searchChargeStudentsAction,
   updateChargeAction,
+  voidPaymentAction,
   type FinanceState,
 } from "@/server/actions/finance";
 import { centsToInput, formatMoney, parseMoneyToCents, type ShownStatus } from "@/server/finance/money";
@@ -21,9 +23,14 @@ const field = "min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 
 const label = "block text-sm font-medium text-slate-900";
 const empty: FinanceState = { ok: false, message: "" };
 
-function Notice({ ok, message }: { ok: boolean; message: string }) {
+function Notice({ ok, message, receiptHref }: { ok: boolean; message: string; receiptHref?: string }) {
   if (!message) return null;
-  return <p role={ok ? "status" : "alert"} className={`mt-3 rounded-lg p-3 text-sm ${ok ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-800"}`}>{message}</p>;
+  return (
+    <div role={ok ? "status" : "alert"} className={`mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg p-3 text-sm ${ok ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-800"}`}>
+      <p>{message}</p>
+      {ok && receiptHref && <Link className="inline-flex min-h-11 items-center font-semibold text-emerald-900 underline" href={receiptHref}>Ver recibo</Link>}
+    </div>
+  );
 }
 
 type Option = { id: string; name: string };
@@ -264,25 +271,42 @@ export type ChargeView = {
   dueKey: string | null;
   status: ShownStatus;
   cancelReason: string;
-  payments: Array<{ id: string; amountCents: number; paidOn: string; method: string; note: string }>;
+  payments: Array<{
+    id: string;
+    amountCents: number;
+    paidOn: string;
+    method: string;
+    note: string;
+    recordedByName: string;
+    voided: { at: string; reason: string } | null;
+    legacy: boolean;
+  }>;
 };
+type PaymentView = ChargeView["payments"][number];
 
 type Panel = "pay" | "edit" | "cancel" | "delete" | null;
 
 export function ChargeItem({ charge, todayKey }: { charge: ChargeView; todayKey: string }) {
   const [panel, setPanel] = useState<Panel>(null);
   const [result, setResult] = useState<FinanceState>(empty);
+  const [showHistory, setShowHistory] = useState(false);
+  const [voiding, setVoiding] = useState<string | null>(null);
   const status = STATUS_LABEL[charge.status];
   const cancelled = charge.status === "CANCELLED";
   const money = (cents: number) => formatMoney(cents, charge.currency);
   const hasPayments = charge.paidCents > 0 || charge.payments.length > 0;
+  const voidedCount = charge.payments.filter((payment) => payment.voided).length;
 
   function finished(state: FinanceState) {
     setResult(state);
     setPanel(null);
+    setVoiding(null);
+    // Tras registrar o anular un pago, el historial queda a la vista con el cambio.
+    if (state.receiptHref || panel === null) setShowHistory(true);
   }
   function open(next: Panel) {
     setResult(empty);
+    setVoiding(null);
     setPanel(next);
   }
 
@@ -315,16 +339,21 @@ export function ChargeItem({ charge, todayKey }: { charge: ChargeView; todayKey:
       {cancelled && charge.cancelReason && <p className="mt-2 text-sm text-slate-700">Motivo de la anulación: {charge.cancelReason}</p>}
 
       {charge.payments.length > 0 && (
-        <details className="mt-2">
+        <details className="mt-2" open={showHistory} onToggle={(event) => setShowHistory(event.currentTarget.open)}>
           <summary className="flex min-h-11 cursor-pointer items-center text-sm font-semibold text-blue-700">
-            {charge.payments.length === 1 ? "Ver 1 pago" : `Ver ${charge.payments.length} pagos`}
+            Historial de pagos ({charge.payments.length}){voidedCount > 0 ? ` · ${voidedCount === 1 ? "1 anulado" : `${voidedCount} anulados`}` : ""}
           </summary>
           <ul className="divide-y divide-slate-100 rounded-lg bg-slate-50 px-3">
             {charge.payments.map((payment) => (
-              <li key={payment.id} className="py-2 text-sm text-slate-800">
-                <span className="font-semibold">{money(payment.amountCents)}</span> · {formatDateKey(payment.paidOn) || "Sin fecha"} · {METHOD_LABEL[payment.method] ?? "Otro"}
-                {payment.note && <span className="block text-slate-600">{payment.note}</span>}
-              </li>
+              <PaymentLine
+                key={payment.id}
+                payment={payment}
+                charge={charge}
+                voiding={voiding === payment.id}
+                onVoid={() => { setResult(empty); setPanel(null); setVoiding(payment.id); }}
+                onClose={() => setVoiding(null)}
+                onDone={finished}
+              />
             ))}
           </ul>
         </details>
@@ -334,8 +363,79 @@ export function ChargeItem({ charge, todayKey }: { charge: ChargeView; todayKey:
       {panel === "edit" && <EditForm charge={charge} onDone={finished} onClose={() => setPanel(null)} />}
       {panel === "cancel" && <CancelForm charge={charge} onDone={finished} onClose={() => setPanel(null)} />}
       {panel === "delete" && <DeleteForm charge={charge} onClose={() => setPanel(null)} />}
-      <Notice ok={result.ok} message={result.message} />
+      <Notice ok={result.ok} message={result.message} receiptHref={result.receiptHref} />
     </li>
+  );
+}
+
+function PaymentLine({ payment, charge, voiding, onVoid, onClose, onDone }: {
+  payment: PaymentView;
+  charge: ChargeView;
+  voiding: boolean;
+  onVoid: () => void;
+  onClose: () => void;
+  onDone: (state: FinanceState) => void;
+}) {
+  const money = (cents: number) => formatMoney(cents, charge.currency);
+  return (
+    <li className="py-3 text-sm text-slate-800">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className={payment.voided ? "text-slate-500 line-through" : ""}>
+            <span className="font-semibold">{money(payment.amountCents)}</span> · {formatDateKey(payment.paidOn) || "Sin fecha"} · {METHOD_LABEL[payment.method] ?? "Otro"}
+          </p>
+          {payment.voided && (
+            <p className="mt-1 text-xs font-semibold text-red-800">
+              <span className="rounded-full bg-red-50 px-2 py-1">Anulado</span>
+              {payment.voided.reason && <span className="ml-2 font-normal text-slate-700">Motivo: {payment.voided.reason}</span>}
+            </p>
+          )}
+          {payment.recordedByName && <p className="text-xs text-slate-600">Lo registró {payment.recordedByName}</p>}
+          {payment.legacy && <p className="text-xs text-slate-600">Pago anterior al historial nuevo: no tiene recibo.</p>}
+          {payment.note && <p className="text-slate-600">{payment.note}</p>}
+        </div>
+        {!payment.legacy && !voiding && (
+          <div className="flex flex-wrap gap-2">
+            <Link className={`${secondary} inline-flex items-center`} href={`/dashboard/pagos/recibo/${encodeURIComponent(payment.id)}`}>Ver recibo</Link>
+            {!payment.voided && <button type="button" className={secondary} onClick={onVoid}>Anular pago</button>}
+          </div>
+        )}
+      </div>
+      {voiding && <VoidPaymentForm payment={payment} charge={charge} onDone={onDone} onClose={onClose} />}
+    </li>
+  );
+}
+
+function VoidPaymentForm({ payment, charge, onDone, onClose }: { payment: PaymentView; charge: ChargeView; onDone: (state: FinanceState) => void; onClose: () => void }) {
+  const [reason, setReason] = useState("");
+  const [state, action, pending] = useActionState(async (previous: FinanceState, formData: FormData) => {
+    const result = await voidPaymentAction(previous, formData);
+    if (result.ok) onDone(result);
+    return result;
+  }, empty);
+  const money = (cents: number) => formatMoney(cents, charge.currency);
+  const owedAfter = Math.min(charge.amountCents, charge.balanceCents + payment.amountCents);
+
+  return (
+    <form action={action} className="mt-3 rounded-lg bg-amber-50 p-4">
+      <input type="hidden" name="paymentId" value={payment.id} />
+      <p className="text-sm font-semibold text-amber-950">
+        Se anulará el pago de {money(payment.amountCents)} del {formatDateKey(payment.paidOn) || "día registrado"}.{" "}
+        {charge.status === "CANCELLED"
+          ? "El cargo ya está anulado: este dinero dejará de contar como cobrado."
+          : `${charge.studentName} volverá a deber ${money(owedAfter)} por «${charge.concept}».`}{" "}
+        El pago no se borra: queda en el historial y su recibo dirá «Anulado». No se puede deshacer.
+      </p>
+      <label className={`${label} mt-3`}>
+        ¿Por qué se anula el pago?
+        <input name="reason" required maxLength={300} value={reason} onChange={(event) => setReason(event.target.value)} className={`${field} mt-1`} placeholder="Ejemplo: la transferencia fue rechazada" autoComplete="off" />
+      </label>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button className={danger} type="submit" disabled={pending}>{pending ? "Anulando…" : "Sí, anular pago"}</button>
+        <button className={secondary} type="button" disabled={pending} onClick={onClose}>No anular</button>
+      </div>
+      <Notice ok={state.ok} message={state.ok ? "" : state.message} />
+    </form>
   );
 }
 

@@ -10,11 +10,12 @@ import {
   recordPayment,
   searchChargeStudents,
   updateCharge,
+  voidPayment,
 } from "@/server/finance/charges";
 import { formatMoney, parseMoneyToCents } from "@/server/finance/money";
 import type { EdukanaRole } from "@/types/next-auth";
 
-export type FinanceState = { ok: boolean; message: string };
+export type FinanceState = { ok: boolean; message: string; receiptHref?: string };
 export type ChargeStudentSearch = { ok: boolean; message: string; students: Array<{ id: string; name: string; email: string }>; more: boolean };
 
 type Actor = { id: string; institutionId: string; role: EdukanaRole };
@@ -107,9 +108,23 @@ export async function recordPaymentAction(_state: FinanceState, formData: FormDa
     });
     if (!result.ok) return result;
     refresh();
-    return { ok: true, message: "Pago registrado." };
+    return { ok: true, message: "Pago registrado.", receiptHref: `/dashboard/pagos/recibo/${encodeURIComponent(result.paymentId)}` };
   } catch (error) {
     return failure("recordPaymentAction", error);
+  }
+}
+
+/** Anula un pago (no lo borra) y recalcula el cargo. Campos: `paymentId`, `reason`. */
+export async function voidPaymentAction(_state: FinanceState, formData: FormData): Promise<FinanceState> {
+  const actor = await currentActor();
+  if (!actor) return { ok: false, message: SESSION_ENDED };
+  try {
+    const result = await voidPayment(actor, { paymentId: text(formData, "paymentId"), reason: text(formData, "reason") });
+    if (!result.ok) return result;
+    refresh();
+    return { ok: true, message: "Pago anulado. Sigue en el historial y ya no cuenta como pagado." };
+  } catch (error) {
+    return failure("voidPaymentAction", error);
   }
 }
 

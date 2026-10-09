@@ -2,11 +2,12 @@ import "server-only";
 
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
+import { chargeBalances } from "@/server/finance/charges";
 import { scopedCourseCondition, type ReportAccess, type ReportFilters } from "./access";
 
 /**
  * Reportes para la dirección. Todas las cifras se calculan en la base (COUNT / AVG / SUM agrupados);
- * nunca se traen filas para sumarlas en memoria. Cada función dice cuántas consultas hace.
+ * nunca se traen filas para sumarlas en memoria, salvo lo pagado de los cobros (ver `getFinanceSummary`). Cada función dice cuántas consultas hace.
  * Todo parte de `scopedCourseCondition`: institución de quien mira + su alcance de cursos + filtros.
  */
 
@@ -136,38 +137,36 @@ export async function getOverview(access: ReportAccess, filters: ReportFilters, 
 /**
  * Cobrado y por cobrar, en centavos. Sin permiso de cobros devuelve null sin consultar.
  * Los cobros no pertenecen a un curso: respetan el filtro de período, no el de programa.
- * Consultas: 1.
+ *
+ * Excepción a «todo se suma en la base»: lo pagado sale de `chargeBalances` (pagos reales no anulados,
+ * con respaldo para pagos antiguos), la misma función que usan Cobros, el portal y el estado de cuenta
+ * del hijo, para que todas las pantallas den la misma cifra. «Cobrado» es el dinero recibido (también el
+ * de un cargo anulado después); «por cobrar» y «vencido» son saldos de cargos no anulados.
+ * Consultas: 1 + las de `chargeBalances` (4).
  */
 export async function getFinanceSummary(access: ReportAccess, filters: ReportFilters, now = new Date()): Promise<FinanceSummary | null> {
   if (!access.canSeeFinance) return null;
-  const period = filters.periodId ? Prisma.sql`AND "periodId" = ${filters.periodId}` : Prisma.empty;
-  const d30 = daysAgo(now, 30);
-  const [row] = await db.$queryRaw<
-    Array<{ collected: number; pending: number; overdue: number; collectedLast30: number; collectedBefore30: number; currency: string | null; currencies: number }>
-  >(Prisma.sql`
-    SELECT
-      COALESCE(SUM(cents) FILTER (WHERE status = 'PAID'), 0)::float8 AS collected,
-      COALESCE(SUM(cents) FILTER (WHERE status IN ('PENDING', 'OVERDUE', 'PARTIAL')), 0)::float8 AS pending,
-      COALESCE(SUM(cents) FILTER (WHERE status = 'OVERDUE' OR (status IN ('PENDING', 'PARTIAL') AND "dueDate" < ${ts(now)})), 0)::float8 AS overdue,
-      COALESCE(SUM(cents) FILTER (WHERE status = 'PAID' AND "paidAt" >= ${ts(d30)}), 0)::float8 AS "collectedLast30",
-      COALESCE(SUM(cents) FILTER (WHERE status = 'PAID' AND "paidAt" >= ${ts(daysAgo(now, 60))} AND "paidAt" < ${ts(d30)}), 0)::float8 AS "collectedBefore30",
-      MIN(currency) AS currency,
-      COUNT(DISTINCT currency)::int AS currencies
-    FROM (
-      SELECT status, "dueDate", "paidAt", currency, COALESCE("amountCents", ROUND(amount * 100))::bigint AS cents
-      FROM payment_concepts
-      WHERE "institutionId" = ${access.institutionId} AND status <> 'CANCELLED' ${period}
-    ) p
-  `);
-  return {
-    collectedCents: row.collected,
-    pendingCents: row.pending,
-    overdueCents: row.overdue,
-    collectedLast30Cents: row.collectedLast30,
-    collectedBefore30Cents: row.collectedBefore30,
-    currency: row.currency ?? "DOP",
-    mixedCurrencies: row.currencies > 1,
-  };
+  const charges = await db.paymentConcept.findMany({
+    where: { institutionId: access.institutionId, ...(filters.periodId ? { periodId: filters.periodId } : {}) },
+    select: { id: true },
+  });
+  const balances = await chargeBalances(access.institutionId, charges.map((charge) => charge.id), now);
+  const from30 = daysAgo(now, 30).toISOString().slice(0, 10);
+  const from60 = daysAgo(now, 60).toISOString().slice(0, 10);
+  const summary = { collectedCents: 0, pendingCents: 0, overdueCents: 0, collectedLast30Cents: 0, collectedBefore30Cents: 0 };
+  const currencies = new Set<string>();
+  for (const balance of balances.values()) {
+    summary.collectedCents += balance.paidCents;
+    for (const entry of balance.received) {
+      if (entry.paidOn >= from30) summary.collectedLast30Cents += entry.amountCents;
+      else if (entry.paidOn >= from60) summary.collectedBefore30Cents += entry.amountCents;
+    }
+    if (balance.status === "CANCELLED") continue;
+    currencies.add(balance.currency);
+    summary.pendingCents += balance.balanceCents;
+    if (balance.shownStatus === "OVERDUE") summary.overdueCents += balance.balanceCents;
+  }
+  return { ...summary, currency: [...currencies].sort()[0] ?? "DOP", mixedCurrencies: currencies.size > 1 };
 }
 
 // ---------- Cursos ----------

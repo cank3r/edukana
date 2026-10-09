@@ -1,15 +1,19 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  amountInWords,
   centsToDecimal,
+  chargeBalanceOf,
   centsToInput,
   chargeCents,
   dateKeyToStored,
   dueDateKey,
   formatMoney,
   institutionCurrency,
+  integerToWords,
   paidCentsOf,
   parseMoneyToCents,
+  receiptNumber,
   shownStatus,
   statusForPaid,
 } from "../src/server/finance/money";
@@ -82,4 +86,40 @@ test("fechas de vencimiento: se guardan al mediodía UTC y se leen sin correrse 
   assert.equal(dateKeyToStored("09/10/2026"), null);
   assert.equal(dateKeyToStored(""), null);
   assert.equal(dueDateKey(null), null);
+});
+
+test("saldo de un cargo: con filas de pago manda la suma de los pagos vigentes; sin filas, la regla antigua", () => {
+  assert.deepEqual(chargeBalanceOf("PENDING", 1000, 400, true), { paidCents: 400, balanceCents: 600, status: "PARTIAL" });
+  assert.deepEqual(chargeBalanceOf("PAID", 1000, 400, true), { paidCents: 400, balanceCents: 600, status: "PARTIAL" }, "tras anular un pago, el estado guardado no manda");
+  assert.deepEqual(chargeBalanceOf("PARTIAL", 1000, 0, true), { paidCents: 0, balanceCents: 1000, status: "PENDING" });
+  assert.deepEqual(chargeBalanceOf("PENDING", 1000, 1000, true), { paidCents: 1000, balanceCents: 0, status: "PAID" });
+  assert.deepEqual(chargeBalanceOf("PAID", 1000, 0, false), { paidCents: 1000, balanceCents: 0, status: "PAID" }, "cargo antiguo pagado sin pagos registrados");
+  assert.deepEqual(chargeBalanceOf("OVERDUE", 1000, 0, false), { paidCents: 0, balanceCents: 1000, status: "OVERDUE" });
+  assert.deepEqual(chargeBalanceOf("CANCELLED", 1000, 300, true), { paidCents: 300, balanceCents: 0, status: "CANCELLED" });
+});
+
+test("número de recibo corto y estable", () => {
+  assert.equal(receiptNumber("cm1abcdefghijklmnopq7z9x"), "MNOPQ7Z9X".slice(-8));
+  assert.equal(receiptNumber("cm1abcdefghijklmnopq7z9x"), receiptNumber("cm1abcdefghijklmnopq7z9x"));
+  assert.equal(receiptNumber("ab"), "000000AB");
+});
+
+test("montos en letras para el recibo", () => {
+  assert.equal(integerToWords(0), "cero");
+  assert.equal(integerToWords(15), "quince");
+  assert.equal(integerToWords(21), "veintiuno");
+  assert.equal(integerToWords(100), "cien");
+  assert.equal(integerToWords(101), "ciento uno");
+  assert.equal(integerToWords(1000), "mil");
+  assert.equal(integerToWords(21_000), "veintiún mil");
+  assert.equal(integerToWords(1_500_000), "un millón quinientos mil");
+  assert.equal(integerToWords(20_000_000), "veinte millones");
+  assert.equal(amountInWords(350_000), "Tres mil quinientos pesos dominicanos con 00/100");
+  assert.equal(amountInWords(350_050, "DOP"), "Tres mil quinientos pesos dominicanos con 50/100");
+  assert.equal(amountInWords(100, "DOP"), "Un peso dominicano con 00/100");
+  assert.equal(amountInWords(2_100, "USD"), "Veintiún dólares estadounidenses con 00/100");
+  assert.equal(amountInWords(3_199, "EUR"), "Treinta y un euros con 99/100");
+  assert.equal(amountInWords(7, "DOP"), "Cero pesos dominicanos con 07/100");
+  assert.equal(amountInWords(100_000_000, "DOP"), "Un millón de pesos dominicanos con 00/100");
+  assert.equal(amountInWords(99_999_999, "DOP"), "Novecientos noventa y nueve mil novecientos noventa y nueve pesos dominicanos con 99/100");
 });

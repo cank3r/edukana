@@ -120,8 +120,20 @@ export default async function MiCuentaPage({ searchParams }: { searchParams: Pro
                     <span className="min-w-0 text-slate-800">
                       {payment.concept}
                       <span className="block text-slate-600">{formatDateKey(payment.paidOn) || "Sin fecha"} · {METHOD_LABEL[payment.method] ?? "Otro"}</span>
+                      {payment.voided && (
+                        <span className="mt-1 block text-xs font-semibold text-red-800">
+                          Anulado{payment.voided.reason ? `: ${payment.voided.reason}` : ""}. No cuenta como pagado.
+                        </span>
+                      )}
                     </span>
-                    <span className="font-semibold text-slate-950">{formatMoney(payment.amountCents, payment.currency)}</span>
+                    <span className="flex flex-col items-end gap-1">
+                      <span className={`font-semibold ${payment.voided ? "text-slate-500 line-through" : "text-slate-950"}`}>{formatMoney(payment.amountCents, payment.currency)}</span>
+                      {!payment.legacy && (
+                        <Link className="inline-flex min-h-11 items-center font-semibold text-blue-700 underline" href={`/dashboard/mi-cuenta/recibo/${encodeURIComponent(payment.id)}`}>
+                          Ver recibo
+                        </Link>
+                      )}
+                    </span>
                   </li>
                 ))}
               </ul>
