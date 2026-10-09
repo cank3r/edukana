@@ -31,7 +31,6 @@ import { createChapter, createLesson, setChapterPublished, setLessonPublished } 
 import { createCourse, setCoursePublished } from "@/server/courses/course";
 import { enrollStudents } from "@/server/courses/enrollment";
 import { createLiveClasses } from "@/server/courses/live-classes";
-import { createCharge, recordPayment } from "@/server/finance/charges";
 import { SMOKE_ACCOUNTS, SMOKE_PASSWORD, SMOKE_SEED_FILE, type SmokeSeed } from "./shared";
 
 const TIME_ZONE = "America/Santo_Domingo";
