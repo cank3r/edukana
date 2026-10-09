@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useActionState, useRef, useState, useTransition } from "react";
 import { importPeopleAction, type PeopleImportState } from "@/server/actions/people-import";
-import { invitePendingPeopleAction, invitePersonAction, setPersonStatusAction, type PeopleActionState } from "@/server/actions/people";
+import { invitePendingPeopleAction, invitePersonAction, setPersonStatusAction, updatePersonAction, type PeopleActionState } from "@/server/actions/people";
 
 const primary = "min-h-11 rounded-lg bg-blue-600 px-4 py-2.5 font-semibold text-white disabled:opacity-60";
 const secondary = "min-h-11 rounded-lg border border-slate-300 bg-white px-4 py-2.5 font-semibold text-slate-800 disabled:opacity-60";
@@ -131,12 +131,27 @@ export function InvitePending({ pending }: { pending: number }) {
   );
 }
 
-type Person = { id: string; name: string; email: string; roleLabel: string; suspended: boolean; hasPassword: boolean; isSelf: boolean };
+type Person = { id: string; name: string; email: string; phone: string; role: string; roleLabel: string; suspended: boolean; hasPassword: boolean; isSelf: boolean };
+
+const ROLE_OPTIONS = [
+  { value: "STUDENT", label: "Estudiante" },
+  { value: "TEACHER", label: "Docente" },
+  { value: "COORDINATOR", label: "Coordinador" },
+  { value: "PARENT", label: "Tutor" },
+  { value: "ADMIN", label: "Administrador" },
+];
+const fieldClass = "mt-1 min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-base outline-none focus:border-blue-500";
 
 export function PersonAccess({ person }: { person: Person }) {
   const [statusState, statusAction, statusPending] = useActionState(setPersonStatusAction, empty);
   const [inviteState, inviteAction, invitePending] = useActionState(invitePersonAction, empty);
   const [asking, setAsking] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editState, editAction, editPending] = useActionState(async (state: PeopleActionState, data: FormData) => {
+    const result = await updatePersonAction(state, data);
+    if (result.ok) setEditing(false);
+    return result;
+  }, empty);
   return (
     <li className="py-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -147,8 +162,10 @@ export function PersonAccess({ person }: { person: Person }) {
             {person.suspended ? <span className="rounded-full bg-red-50 px-2 py-1 text-red-700">Suspendido</span> : person.hasPassword ? <span className="rounded-full bg-emerald-50 px-2 py-1 text-emerald-700">Puede entrar</span> : <span className="rounded-full bg-amber-50 px-2 py-1 text-amber-800">Aún no crea su contraseña</span>}
           </p>
         </div>
+        <div className="flex flex-wrap gap-2">
+          {!editing && <button className={secondary} type="button" onClick={() => setEditing(true)}>Editar</button>}
         {!person.isSelf && (
-          <div className="flex flex-wrap gap-2">
+          <>
             {!person.suspended && (
               <form action={inviteAction}>
                 <input type="hidden" name="userId" value={person.id} />
@@ -164,9 +181,39 @@ export function PersonAccess({ person }: { person: Person }) {
             ) : (
               !asking && <button className={secondary} type="button" onClick={() => setAsking(true)}>Suspender</button>
             )}
-          </div>
+          </>
         )}
+        </div>
       </div>
+      {editing && (
+        <form action={editAction} className="mt-3 space-y-3 rounded-lg bg-slate-50 p-4">
+          <input type="hidden" name="userId" value={person.id} />
+          <label className="block text-sm font-medium text-slate-900">
+            Nombre completo
+            <input name="name" defaultValue={person.name} required minLength={3} maxLength={120} className={fieldClass} autoComplete="off" />
+          </label>
+          <label className="block text-sm font-medium text-slate-900">
+            Teléfono (opcional)
+            <input name="phone" defaultValue={person.phone} maxLength={30} inputMode="tel" className={fieldClass} autoComplete="off" />
+          </label>
+          {person.isSelf ? (
+            <input type="hidden" name="role" value={person.role} />
+          ) : (
+            <label className="block text-sm font-medium text-slate-900">
+              Rol
+              <select name="role" defaultValue={person.role} className={fieldClass}>
+                {ROLE_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+              </select>
+            </label>
+          )}
+          <p className="text-xs text-slate-500">El correo ({person.email}) es la cuenta con la que entra y no se cambia aquí.</p>
+          <div className="flex flex-wrap gap-2">
+            <button className={primary} type="submit" disabled={editPending}>{editPending ? "Guardando…" : "Guardar cambios"}</button>
+            <button className={secondary} type="button" disabled={editPending} onClick={() => setEditing(false)}>Cancelar</button>
+          </div>
+        </form>
+      )}
+      <Notice ok={editState.ok} message={editState.message} />
       {asking && !person.suspended && (
         <form action={statusAction} className="mt-3 rounded-lg bg-amber-50 p-4">
           <input type="hidden" name="userId" value={person.id} />
