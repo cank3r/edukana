@@ -141,6 +141,9 @@ test("docente: ve las áreas de gestión y el horario, no las vistas del estudia
   for (const path of [...MANAGEMENT, "/tareas", "/clases", "/asistencia", "/certificados"]) assert.match(html, link(path), path);
   assert.doesNotMatch(html, link("/presentar"));
   assert.doesNotMatch(html, link("/mis-notas"));
-  assert.match(html, /SCHEDULE_FORM/);
+  // El horario ya no se edita en la portada: se organiza en su propia pantalla `/horario`.
+  assert.match(html, link("/horario"));
+  assert.match(html, /Organizar el horario/);
+  assert.doesNotMatch(html, /SCHEDULE_FORM|<form/);
   assert.equal(fixture.queries.some((query) => query.model === "courseSection"), false, "el temario del estudiante no se consulta");
 });
