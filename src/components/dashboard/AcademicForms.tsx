@@ -3,7 +3,7 @@
 import { useActionState, useState } from "react";
 import type { ReactNode } from "react";
 import type { ActionState } from "@/app/dashboard/actions";
-import { createAssignment, createCourse, createExam, createGradebook, createLesson, createQuestion, createSection, enrollStudent, issueCertificate, markLessonComplete, reviewExamAttempt, reviewSubmission, saveAttendance, saveScheduleSlot, setEnrollmentCompletion, submitAssignment, submitExam, togglePublication } from "@/app/dashboard/academico/actions";
+import { createCourse, createExam, createGradebook, createLesson, createQuestion, createSection, enrollStudent, issueCertificate, markLessonComplete, reviewExamAttempt, saveAttendance, saveScheduleSlot, setEnrollmentCompletion, submitExam, togglePublication } from "@/app/dashboard/academico/actions";
 
 const initial: ActionState = { ok: false, message: "" };
 const input = "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500";
@@ -41,18 +41,6 @@ export function AttendanceForm({ courseId, students }: { courseId: string; stude
 
 export function GradebookForm({ courseId, startDate, endDate }: { courseId: string; startDate: string; endDate: string }) {
   return <Form action={createGradebook} submitLabel="Crear libro de calificaciones" className="grid gap-3 sm:grid-cols-2"><Hidden name="courseId" value={courseId} /><Field label="Período de notas" name="name" defaultValue="Primer período" required /><Field label="Inicio" name="startDate" type="date" defaultValue={startDate} required /><Field label="Fin" name="endDate" type="date" defaultValue={endDate} required /><Field label="Peso asignaciones (%)" name="taskWeight" type="number" defaultValue={40} min="0" max="100" required /><Field label="Peso exámenes (%)" name="examWeight" type="number" defaultValue={60} min="0" max="100" required /></Form>;
-}
-
-export function AssignmentForm({ courseId, categories }: { courseId: string; categories: Array<{ id: string; name: string }> }) {
-  return <Form action={createAssignment} submitLabel="Crear tarea"><Hidden name="courseId" value={courseId} /><Field label="Título" name="title" required /><label className="block text-sm font-medium">Categoría<select className={`${input} mt-1`} name="categoryId"><option value="">Sin calificación ponderada</option>{categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label><label className="block text-sm font-medium">Instrucciones<textarea className={`${input} mt-1`} name="instructions" rows={5} required minLength={10} /></label><div className="grid gap-3 sm:grid-cols-2"><Field label="Entrega" name="dueDate" type="datetime-local" /><Field label="Puntuación máxima" name="maxScore" type="number" defaultValue={100} min="1" max="10000" required /></div><label className="flex gap-2 text-sm"><input type="checkbox" name="isPublished" defaultChecked /> Publicar ahora</label></Form>;
-}
-
-export function SubmissionForm({ assignmentId }: { assignmentId: string }) {
-  return <Form action={submitAssignment} submitLabel="Entregar tarea"><Hidden name="assignmentId" value={assignmentId} /><label className="block text-sm font-medium">Tu entrega<textarea className={`${input} mt-1`} name="content" rows={5} required minLength={3} /></label></Form>;
-}
-
-export function ReviewForm({ submissionId, maxScore }: { submissionId: string; maxScore: number }) {
-  return <Form action={reviewSubmission} submitLabel="Calificar entrega" className="grid gap-2 sm:grid-cols-[8rem_1fr_auto]"><Hidden name="submissionId" value={submissionId} /><Field label={`Nota / ${maxScore}`} name="score" type="number" min="0" max={String(maxScore)} step="0.01" required /><Field label="Retroalimentación" name="feedback" /></Form>;
 }
 
 export function QuestionForm({ courseId }: { courseId: string }) {

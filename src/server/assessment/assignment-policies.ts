@@ -29,6 +29,11 @@ type LinkedGrade = {
   entries: ReadonlyArray<{ score: number | null; feedback: string | null; isExcused: boolean }>;
 };
 
+/** Publication is checked before inspecting either the grade or the exemption. */
+function publishedAssignmentEntry(gradeItem: LinkedGrade) {
+  return gradeItem.isPublished ? gradeItem.entries[0] : undefined;
+}
+
 /**
  * Linked tasks follow gradebook publication and its authoritative, student-scoped entry.
  * Never fall back to a stale Submission grade when a linked grade is hidden or missing.
@@ -37,13 +42,28 @@ export function studentAssignmentGrade(submission: SubmissionGrade | null, grade
   const hidden = { graded: false, score: null, feedback: "" } as const;
   if (!submission || submission.status === "DRAFT") return hidden;
   if (gradeItem) {
-    if (!gradeItem.isPublished) return hidden;
-    const entry = gradeItem.entries[0];
+    const entry = publishedAssignmentEntry(gradeItem);
     if (!entry || entry.isExcused || entry.score === null) return hidden;
     return { graded: true, score: entry.score, feedback: entry.feedback ?? "" };
   }
   if (submission.status !== "GRADED") return hidden;
   return { graded: true, score: submission.score, feedback: submission.feedback ?? "" };
+}
+
+/**
+ * The portal also shows published manual gradebook entries without a submission.
+ * Exemptions are explicit, contain no numeric grade, and never reveal feedback.
+ * Task list/detail behavior remains in studentAssignmentGrade above.
+ */
+export function studentPortalAssignmentGrade(submission: SubmissionGrade | null, gradeItem: LinkedGrade | null) {
+  const hidden = { score: null, isExcused: false } as const;
+  if (gradeItem) {
+    const entry = publishedAssignmentEntry(gradeItem);
+    if (!entry) return hidden;
+    if (entry.isExcused) return { score: null, isExcused: true } as const;
+    return { score: entry.score, isExcused: false };
+  }
+  return { score: studentAssignmentGrade(submission, null).score, isExcused: false };
 }
 
 /** Same decision for the student list, detail, and the transactional write. */

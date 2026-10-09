@@ -10,7 +10,8 @@ import type { EdukanaRole } from "@/types/next-auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { questionSnapshot } from "@/server/exams";
-import { archiveSubmissionVersion, writeGradeEntry } from "@/server/grade-history";
+import { writeGradeEntry } from "@/server/grade-history";
+import { gradeSubmissionAction, setAssignmentPublishedAction, submitAssignmentAction } from "@/server/actions/assignments";
 
 class GradeReasonRequired extends Error {}
 import type { ActionState } from "@/app/dashboard/actions";
@@ -19,7 +20,6 @@ type SessionUser = { id: string; institutionId: string; role: EdukanaRole; capab
 const failed = (message = "No se pudo completar la operación."): ActionState => ({ ok: false, message });
 const success = (message: string): ActionState => ({ ok: true, message });
 const text = (fd: FormData, key: string) => String(fd.get(key) ?? "").trim();
-const optionalDate = (value: string) => value ? new Date(value) : null;
 
 async function requireUser(capability?: Capability): Promise<SessionUser> {
   const session = await auth();
@@ -163,73 +163,23 @@ export async function createGradebook(_state: ActionState, fd: FormData): Promis
   } catch { return failed("Ya existe ese período o los datos no son válidos."); }
 }
 
+/** Formularios antiguos: crear desde la pantalla de tareas evita reinterpretar fechas y opciones. */
 export async function createAssignment(_state: ActionState, fd: FormData): Promise<ActionState> {
   try {
     const user = await requireUser("course.manage");
-    const parsed = z.object({ courseId: z.string().min(1), categoryId: z.string().optional(), title: z.string().min(3).max(140), instructions: z.string().min(10).max(30000), dueDate: z.string().optional(), maxScore: z.coerce.number().positive().max(10000) }).safeParse({ courseId: text(fd, "courseId"), categoryId: text(fd, "categoryId"), title: text(fd, "title"), instructions: text(fd, "instructions"), dueDate: text(fd, "dueDate"), maxScore: text(fd, "maxScore") });
-    if (!parsed.success) return failed(parsed.error.issues[0]?.message);
-    const course = await manageableCourse(user, parsed.data.courseId);
-    if (!course) return failed("Curso no encontrado o sin acceso.");
-    const category = parsed.data.categoryId ? await db.gradeCategory.findFirst({ where: { id: parsed.data.categoryId, institutionId: user.institutionId, courseId: course.id }, select: { id: true, gradingPeriodId: true } }) : null;
-    const published = fd.get("isPublished") === "on";
-    await db.$transaction(async (tx) => {
-      const assignment = await tx.assignment.create({ data: { institutionId: user.institutionId, courseId: course.id, title: parsed.data.title, description: parsed.data.instructions.slice(0, 500), instructions: parsed.data.instructions, dueDate: optionalDate(parsed.data.dueDate ?? ""), maxScore: parsed.data.maxScore, isPublished: published, publishedAt: published ? new Date() : null } });
-      if (category) await tx.gradeItem.create({ data: { institutionId: user.institutionId, courseId: course.id, gradingPeriodId: category.gradingPeriodId, categoryId: category.id, assignmentId: assignment.id, title: assignment.title, maxScore: assignment.maxScore, dueDate: assignment.dueDate, isPublished: published } });
-    });
-    revalidatePath(`/dashboard/aula/${course.id}`);
-    return success("Asignación creada.");
+    if (!await manageableCourse(user, text(fd, "courseId"))) return failed("Curso no encontrado o sin acceso.");
+    return failed("Este formulario ya no está disponible. Vuelve al curso y abre «Tareas» para crear una tarea.");
   } catch { return failed(); }
 }
 
-export async function submitAssignment(_state: ActionState, fd: FormData): Promise<ActionState> {
-  try {
-    const user = await requireUser("course.participate");
-    const assignmentId = text(fd, "assignmentId");
-    const assignment = await db.assignment.findFirst({ where: { id: assignmentId, isPublished: true, course: participationCourseWhere(user) }, select: { id: true, courseId: true, dueDate: true, allowLate: true } });
-    if (!assignment) return failed("Asignación no disponible.");
-    if (!assignment.allowLate && assignment.dueDate && assignment.dueDate < new Date()) return failed("El plazo de entrega cerró.");
-    const content = text(fd, "content");
-    if (content.length < 3 || content.length > 30000) return failed("La entrega debe tener entre 3 y 30,000 caracteres.");
-    const enrollment = await db.enrollment.findUnique({ where: { studentId_courseId: { studentId: user.id, courseId: assignment.courseId } }, select: { id: true } });
-    if (!enrollment) return failed("Matrícula no encontrada.");
-    await db.$transaction(async (tx) => {
-      await archiveSubmissionVersion(tx, { assignmentId, studentId: user.id, institutionId: user.institutionId });
-      await tx.submission.upsert({ where: { assignmentId_studentId: { assignmentId, studentId: user.id } }, create: { institutionId: user.institutionId, assignmentId, studentId: user.id, enrollmentId: enrollment.id, content, status: "SUBMITTED" }, update: { content, status: "SUBMITTED", submittedAt: new Date(), score: null, feedback: null, gradedAt: null } });
-    });
-    revalidatePath(`/dashboard/aula/${assignment.courseId}`);
-    return success("Entrega enviada para revisión.");
-  } catch { return failed(); }
+/** Compatibilidad con llamadas antiguas: la acción M3 vuelve a validar sesión, matrícula y entrega vigente. */
+export async function submitAssignment(state: ActionState, fd: FormData): Promise<ActionState> {
+  return submitAssignmentAction(state, fd);
 }
 
-export async function reviewSubmission(_state: ActionState, fd: FormData): Promise<ActionState> {
-  try {
-    const user = await requireUser("course.manage");
-    const submissionId = text(fd, "submissionId");
-    const score = Number(text(fd, "score"));
-    const feedback = text(fd, "feedback");
-    const submission = await db.submission.findFirst({ where: { id: submissionId, assignment: { course: managementCourseWhere(user) } }, include: { assignment: { select: { courseId: true, maxScore: true, gradeItem: { select: { id: true } } } } } });
-    if (!submission || !Number.isFinite(score) || score < 0 || score > submission.assignment.maxScore) return failed("Entrega o puntuación inválida.");
-    await db.$transaction(async (tx) => {
-      await tx.submission.update({ where: { id: submission.id }, data: { score, feedback: feedback || null, status: "GRADED", gradedAt: new Date() } });
-      if (submission.assignment.gradeItem) {
-        const written = await writeGradeEntry(tx, {
-          institutionId: user.institutionId,
-          gradeItemId: submission.assignment.gradeItem.id,
-          enrollmentId: submission.enrollmentId,
-          score,
-          feedback: feedback || null,
-          actorId: user.id,
-          reason: text(fd, "reason"),
-        });
-        if (!written.ok) throw new GradeReasonRequired(written.message);
-      }
-    });
-    revalidatePath(`/dashboard/aula/${submission.assignment.courseId}`);
-    return success("Entrega calificada.");
-  } catch (error) {
-    if (error instanceof GradeReasonRequired) return failed(error.message);
-    return failed();
-  }
+/** La misma puerta M3 exige motivo al corregir y conserva el historial, incluso sin columna de notas. */
+export async function reviewSubmission(state: ActionState, fd: FormData): Promise<ActionState> {
+  return gradeSubmissionAction(state, fd);
 }
 
 export async function createQuestion(_state: ActionState, fd: FormData): Promise<ActionState> {
@@ -373,10 +323,10 @@ export async function togglePublication(_state: ActionState, fd: FormData): Prom
       await db.gradingPeriod.update({ where: { id: item.id }, data: { isPublished: publish, publishedAt: publish ? new Date() : null } });
       revalidatePath(`/dashboard/aula/${item.courseId}`);
     } else if (entity === "assignment") {
-      const item = await db.assignment.findFirst({ where: { id, course: managementCourseWhere(user) }, select: { id: true, courseId: true } });
-      if (!item) return failed("Asignación no encontrada.");
-      await db.assignment.update({ where: { id: item.id }, data: { isPublished: publish, publishedAt: publish ? new Date() : null, gradeItem: { update: { isPublished: publish } } } }).catch(async () => db.assignment.update({ where: { id: item.id }, data: { isPublished: publish, publishedAt: publish ? new Date() : null } }));
-      revalidatePath(`/dashboard/aula/${item.courseId}`);
+      const publication = new FormData();
+      publication.set("assignmentId", id);
+      publication.set("published", String(publish));
+      return setAssignmentPublishedAction(_state, publication);
     } else return failed("Tipo de publicación inválido.");
     return success(publish ? "Contenido publicado." : "Contenido retirado.");
   } catch { return failed(); }
