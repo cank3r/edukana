@@ -20,7 +20,7 @@ export async function getFirstSteps(institutionId: string): Promise<FirstStep[]>
       id: "period",
       title: "Crea el período académico",
       detail: "Es el tiempo en que se dan las clases, por ejemplo «Enero–Abril 2027». Los cursos se crean dentro de un período.",
-      href: "/dashboard/configuracion/puesta-en-marcha",
+      href: "/dashboard/configuracion/periodos",
       action: "Crear período",
       done: periods > 0,
     },

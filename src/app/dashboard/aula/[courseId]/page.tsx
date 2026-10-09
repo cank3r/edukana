@@ -195,35 +195,7 @@ export default async function CourseHomePage({ params }: { params: Promise<{ cou
       <section aria-labelledby="mas-herramientas">
         <h2 id="mas-herramientas" className="mb-3 text-xl font-bold text-slate-950">Más herramientas</h2>
         <div className="space-y-3">
-          <details className={tool} id="asistencia">
-            <summary><Users size={18} aria-hidden="true" />Asistencia</summary>
-            <div className="space-y-4 pb-4">
-              {canManage && (enrollments.length
-                ? <AttendanceForm courseId={course.id} students={enrollments.map((enrollment) => ({ enrollmentId: enrollment.id, name: enrollment.student.name }))} />
-                : <p className="text-sm text-slate-600">Para tomar asistencia primero inscribe estudiantes en el curso.</p>)}
-              {attendanceSummary.some((summary) => summary.total > 0) ? (
-                <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {attendanceSummary.map((summary) => (
-                    <li className="rounded-xl bg-slate-50 p-4" key={summary.id}>
-                      <p className="font-semibold text-slate-900">{isStudent ? "Tu asistencia" : summary.name}</p>
-                      <p className="text-2xl font-bold text-blue-700">{summary.percent}%</p>
-                      <p className="text-xs text-slate-600">{summary.attended} de {count(summary.total, "clase", "clases")}</p>
-                    </li>
-                  ))}
-                </ul>
-              ) : <p className="text-sm text-slate-600">Todavía no se ha tomado asistencia.</p>}
-              {!isStudent && attendanceSessions.length > 0 && (
-                <ul className="space-y-2">
-                  {attendanceSessions.map((session) => (
-                    <li className="rounded-lg border border-slate-200 p-3 text-sm" key={session.id}>
-                      <p className="font-semibold text-slate-900">{dateOnly(session.date)} · {session.title ?? "Clase"}</p>
-                      <p className="mt-1 text-slate-600">{session.records.map((record) => `${nameByEnrollment.get(record.enrollmentId) ?? "Estudiante retirado"}: ${spanishLabel(record.status)}`).join(" · ") || "Sin registros."}</p>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </details>
+          <Link className={`${tool} flex min-h-11 items-center gap-2 p-4 font-semibold text-slate-900`} href={`${base}/asistencia`}><Users size={18} aria-hidden="true" />{isStudent ? "Mi asistencia" : "Tomar y revisar asistencia"}</Link>
 
           <details className={tool} id="horario">
             <summary><CalendarDays size={18} aria-hidden="true" />Horario</summary>
@@ -242,25 +214,7 @@ export default async function CourseHomePage({ params }: { params: Promise<{ cou
             </div>
           </details>
 
-          <details className={tool} id="certificados">
-            <summary><Award size={18} aria-hidden="true" />Certificados</summary>
-            <div className="pb-4">
-              {enrollments.length ? (
-                <ul className="grid gap-3 md:grid-cols-2">
-                  {enrollments.map((enrollment) => (
-                    <li className="rounded-xl bg-slate-50 p-4" key={enrollment.id}>
-                      <p className="font-semibold text-slate-900">{isStudent ? "Tu certificado" : enrollment.student.name}</p>
-                      <p className="text-sm text-slate-600">Avance: {Math.round(enrollment.progressPercent)}% · {spanishLabel(enrollment.status)}</p>
-                      {canManage && (enrollment.status === "COMPLETED" || enrollment.progressPercent >= course.completionThreshold) && <div className="mt-2"><EnrollmentCompletionForm enrollmentId={enrollment.id} completed={enrollment.status === "COMPLETED"} /></div>}
-                      {enrollment.certificates[0]
-                        ? <Link className="mt-2 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-blue-700 underline" href={`/certificados/${enrollment.certificates[0].verificationCode}`}><ShieldCheck size={16} aria-hidden="true" />Ver certificado</Link>
-                        : canManage ? <div className="mt-2"><CertificateForm enrollmentId={enrollment.id} /></div> : <p className="mt-2 text-xs text-slate-600">Disponible al completar el curso.</p>}
-                    </li>
-                  ))}
-                </ul>
-              ) : <p className="text-sm text-slate-600">Los certificados aparecen aquí cuando el curso tiene estudiantes inscritos.</p>}
-            </div>
-          </details>
+          <Link className={`${tool} flex min-h-11 items-center gap-2 p-4 font-semibold text-slate-900`} href={`${base}/certificados`}><GraduationCap size={18} aria-hidden="true" />{isStudent ? "Mi certificado" : "Certificados del curso"}</Link>
         </div>
       </section>
     </div>

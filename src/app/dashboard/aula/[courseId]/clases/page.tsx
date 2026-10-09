@@ -47,7 +47,7 @@ export default async function LiveClassesPage({ params }: { params: Promise<{ co
     const url = safeJoinUrl(item.joinUrl);
     return (
       <li key={item.id} className="rounded-xl border border-slate-200 bg-white p-4">
-        <p className="text-sm font-semibold capitalize text-blue-700">{item.dayLabel}</p>
+        <p className="text-sm font-semibold text-blue-700 first-letter:uppercase">{item.dayLabel}</p>
         <h3 className="mt-0.5 text-base font-bold text-slate-950">{item.title}</h3>
         <p className="text-sm text-slate-600">{item.timeLabel} · {item.durationMinutes} minutos</p>
         {item.description && <p className="mt-2 whitespace-pre-line text-sm text-slate-700">{item.description}</p>}

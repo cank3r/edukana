@@ -72,7 +72,7 @@ export default async function AssignmentPage({ params, searchParams }: { params:
           <h2 id="mi-entrega" className="text-lg font-bold text-slate-950">Tu entrega</h2>
           {submission ? (
             <p className="mt-1 text-sm text-slate-600">
-              Entregada el {formatDateTime(submission.submittedAt, zone)}{submission.late ? " (tarde)" : ""}.
+              Entregada el {formatDateTime(submission.submittedAt, zone)}{submission.late ? " (tarde)" : ""}
               {submission.previousVersions > 0 ? ` La has cambiado ${submission.previousVersions} ${submission.previousVersions === 1 ? "vez" : "veces"}.` : ""}
             </p>
           ) : (
@@ -128,7 +128,7 @@ export default async function AssignmentPage({ params, searchParams }: { params:
             <span className={`${badge} ${STATE_STYLE[selected.state]}`}>{selected.state}</span>
           </div>
           <p className="mt-1 text-sm text-slate-600">
-            Entregada el {formatDateTime(selected.submission.submittedAt, zone)}{selected.late ? " (después de la fecha límite)" : ""}.
+            Entregada el {formatDateTime(selected.submission.submittedAt, zone)}{selected.late ? " (después de la fecha límite)" : ""}
             {selected.submission.previousVersions > 0 ? ` El estudiante la cambió ${selected.submission.previousVersions} ${selected.submission.previousVersions === 1 ? "vez" : "veces"}; esta es la versión más reciente.` : ""}
           </p>
           <Work content={selected.submission.content} links={selected.submission.links} />

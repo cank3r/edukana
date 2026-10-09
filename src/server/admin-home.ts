@@ -68,7 +68,7 @@ export async function getAdminHome(institutionId: string, now = new Date()): Pro
       id: "period-missing",
       title: "No hay un período académico en curso",
       detail: "Los cursos se crean dentro de un período, por ejemplo «Enero–Abril 2027».",
-      href: "/dashboard/configuracion/puesta-en-marcha",
+      href: "/dashboard/configuracion/periodos",
       action: "Crear período",
     });
   } else if (activePeriod.endDate < now) {
@@ -76,7 +76,7 @@ export async function getAdminHome(institutionId: string, now = new Date()): Pro
       id: "period-ended",
       title: `El período «${activePeriod.name}» ya terminó`,
       detail: "Crea el período siguiente para seguir abriendo cursos.",
-      href: "/dashboard/configuracion/puesta-en-marcha",
+      href: "/dashboard/configuracion/periodos",
       action: "Revisar períodos",
     });
   }

@@ -35,7 +35,7 @@ export default async function NewCoursePage() {
             <p className="font-semibold text-slate-950">Primero hace falta un período.</p>
             <p className="mt-1 text-sm text-slate-600">Un período es el tramo del año en que se da el curso (por ejemplo, «Año 2026–2027» o «Primer semestre»). Tu institución todavía no tiene ninguno.</p>
             {canSetUp
-              ? <Link href="/dashboard/configuracion/puesta-en-marcha" className={primary}>Crear un período</Link>
+              ? <Link href="/dashboard/configuracion/periodos" className={primary}>Crear un período</Link>
               : <p className="mt-3 text-sm text-slate-600">Pide a la administración que lo cree y vuelve aquí.</p>}
           </div>
         ) : scope.kind === "all" && teachers.length === 0 ? (
