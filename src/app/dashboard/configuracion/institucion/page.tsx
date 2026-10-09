@@ -6,6 +6,8 @@ import { getInstitutionSettings, INSTITUTION_TYPE_OPTIONS, LANGUAGE_OPTIONS, tim
 import { ImageUploader } from "@/components/dashboard/ImageUploader";
 import { db } from "@/lib/db";
 import { InstitutionSettingsForm } from "./InstitutionSettingsForm";
+import { getInstitutionBranding } from "@/server/platform/branding";
+import { BrandColorForm } from "./BrandColorForm";
 
 export const dynamic = "force-dynamic";
 
@@ -18,6 +20,7 @@ export default async function InstitutionSettingsPage() {
   if (!institution) redirect("/dashboard");
   const zones = timeZoneOptions(institution.timezone);
   const logo = await db.institution.findFirst({ where: { id: user.institutionId }, select: { logoUrl: true } });
+  const branding = await getInstitutionBranding(user.institutionId);
 
   return (
     <div className="mx-auto max-w-2xl space-y-5 p-4 sm:p-8">
@@ -37,6 +40,7 @@ export default async function InstitutionSettingsPage() {
         <h2 id="logo-institucion" className="mb-3 text-lg font-bold text-slate-950">Logo</h2>
         <ImageUploader purpose="logo" imageUrl={logo?.logoUrl ?? null} alt={`Logo de ${institution.name}`} />
       </section>
+      <BrandColorForm current={branding?.brandColor ?? null} />
     </div>
   );
 }
