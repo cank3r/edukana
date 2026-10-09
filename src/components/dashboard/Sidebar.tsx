@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
-  BarChart2, BookOpen, Calendar, ChevronRight, CreditCard, GraduationCap,
+  BarChart2, BookOpen, Building2, Calendar, ChevronRight, CreditCard, GraduationCap,
   LayoutDashboard, LogOut, Megaphone, Menu, Settings, UserPlus, Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,7 @@ interface SidebarUser {
   email?: string | null;
   role: EdukanaRole;
   institutionSlug: string;
+  institutionCount?: number;
 }
 
 const ICONS = {
@@ -55,6 +56,7 @@ export default function Sidebar({ user, capabilities }: { user: SidebarUser; cap
                 return <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} onClick={(event) => event.currentTarget.closest("details")?.removeAttribute("open")} className={cn("flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-base font-semibold", active ? "bg-blue-600 text-white" : "text-slate-800 hover:bg-slate-100")}><Icon size={20} aria-hidden="true" /><span>{item.label}</span></Link>;
               })}
             </nav>
+            {(user.institutionCount ?? 1) > 1 && <Link href="/elegir-institucion" className="mt-2 flex min-h-11 items-center gap-3 rounded-lg border-t border-slate-200 px-3 py-2 text-base font-semibold text-slate-700 hover:bg-slate-100"><Building2 size={20} aria-hidden="true" /> Cambiar de institución</Link>}
             <button onClick={() => signOut({ callbackUrl: "/login" })} className="mt-2 flex min-h-11 w-full items-center gap-3 rounded-lg border-t border-slate-200 px-3 py-2 text-base font-semibold text-slate-700 hover:bg-slate-100">
               <LogOut size={20} aria-hidden="true" /> Cerrar sesión
             </button>
@@ -85,6 +87,10 @@ export default function Sidebar({ user, capabilities }: { user: SidebarUser; cap
       </nav>
 
       <div className="space-y-2 border-t px-2 pb-4 pt-3 md:px-3" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+        {(user.institutionCount ?? 1) > 1 && <Link href="/elegir-institucion" title="Cambiar de institución" aria-label="Cambiar de institución"
+          className="flex w-full items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-400 transition-all hover:bg-white/5 hover:text-white md:justify-start">
+          <Building2 size={18} aria-hidden="true" /><span className="hidden md:block">Cambiar de institución</span>
+        </Link>}
         <button onClick={() => signOut({ callbackUrl: "/login" })} title="Cerrar sesión" aria-label="Cerrar sesión"
           className="flex w-full items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-400 transition-all hover:bg-white/5 hover:text-white md:justify-start">
           <LogOut size={18} /><span className="hidden md:block">Cerrar sesión</span>

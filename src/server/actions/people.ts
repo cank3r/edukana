@@ -79,6 +79,7 @@ export async function setPersonStatusAction(_state: PeopleActionState, formData:
     });
     if (!result.ok) return result;
     revalidatePath("/dashboard/gestion");
+    revalidatePath("/dashboard/gestion/accesos");
     return { ok: true, message: status === "SUSPENDED" ? "Acceso suspendido." : "Acceso reactivado." };
   } catch (error) {
     return failure("setPersonStatusAction", error);
