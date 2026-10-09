@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import { db } from "@/lib/db";
 import { authorizeChildren, getChildOverview, listMyChildren } from "@/server/family/guardian-portal";
+import { getParentHome } from "@/server/parent-home";
 import { A, B, ensureSeed } from "./setup";
 
 const DAY = 24 * 60 * 60_000;
@@ -177,6 +178,11 @@ test("asistencia, clases y estado de cuenta: aparecen solo cuando el vínculo y 
   assert.deepEqual(view.account.charges.map((charge) => [charge.id, charge.amountCents, charge.overdue]), [["it_gp_pay_overdue", 150000, true], ["it_gp_pay_pending", 100050, false]]);
   assert.deepEqual(view.account.totals, [{ currency: "DOP", owedCents: 250050, overdueCents: 150000 }]);
 
+  // El inicio del tutor avisa del cargo vencido (y no del cargo de otro estudiante).
+  const home = await getParentHome(A.parent, now);
+  assert.deepEqual(home.children.map((child) => [child.studentId, child.overdueCharges]), [[A.student.id, 1]]);
+  assert.ok(home.alertsTotal >= 1, "con un cargo vencido no puede decir «Todo al día»");
+
   // Lo que debe sale de los pagos reales: un pago parcial baja el saldo; uno anulado no cuenta.
   await db.payment.createMany({
     data: [
@@ -191,6 +197,7 @@ test("asistencia, clases y estado de cuenta: aparecen solo cuando el vínculo y 
 
   await db.guardianship.update({ where: { id: A.guardianshipId }, data: { canViewFinance: false } });
   assert.equal((await getChildOverview(A.parent, A.student.id, now))?.account, null, "sin permiso del vínculo no hay estado de cuenta");
+  assert.equal((await getParentHome(A.parent, now)).children[0].overdueCharges, null, "sin permiso no se cuentan sus cargos");
 
   await db.roleCapabilityOverride.deleteMany({ where: { id: "it_gp_override" } });
   await db.guardianship.update({ where: { id: A.guardianshipId }, data: SEED_LINK });

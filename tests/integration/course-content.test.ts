@@ -221,3 +221,39 @@ test("permisos: administración y coordinación de A gestionan cualquier curso d
   assert.equal((await createChapter(A.teacher2, B.course2Id, { title: "En otra institución" })).ok, false);
   assert.deepEqual(await chapterTitles(A.course2Id), ["Del segundo docente"]);
 });
+
+test("avance: publicar, ocultar, crear y borrar lecciones recalcula el avance de las matrículas activas", async () => {
+  const percent = async () => (await db.enrollment.findUniqueOrThrow({ where: { id: "a_enrollment" }, select: { progressPercent: true } })).progressPercent;
+  const original = await percent();
+  try {
+    const chapterId = await newChapter("Unidad de avance");
+    const first = await newLesson(chapterId, "Primera");
+    const second = await newLesson(chapterId, "Segunda");
+    assert.equal((await setChapterPublished(A.teacher, chapterId, true)).ok, true);
+    assert.equal((await setLessonPublished(A.teacher, first, true)).ok, true);
+    await db.lessonProgress.create({ data: { institutionId: A.institutionId, enrollmentId: "a_enrollment", lessonId: first, completed: true, completedAt: new Date() } });
+
+    // Lo que ya hubiera publicado en el curso (de otras pruebas o de la semilla) también cuenta.
+    const published = { isPublished: true, section: { isPublished: true } };
+    const others = await db.lesson.count({ where: { courseId: A.courseId, ...published, id: { notIn: [first, second] } } });
+    const doneOthers = await db.lessonProgress.count({ where: { enrollmentId: "a_enrollment", completed: true, lessonId: { notIn: [first, second] }, lesson: { courseId: A.courseId, ...published } } });
+    const expected = (done: number, total: number) => (total ? Math.round((done / total) * 10000) / 100 : 0);
+
+    assert.equal((await setLessonPublished(A.teacher, second, true)).ok, true);
+    assert.equal(await percent(), expected(doneOthers + 1, others + 2), "al publicar otra lección el avance baja");
+    assert.equal((await setLessonPublished(A.teacher, second, false)).ok, true);
+    assert.equal(await percent(), expected(doneOthers + 1, others + 1), "al ocultarla vuelve a subir");
+
+    const third = await newLesson(chapterId, "Tercera");
+    assert.equal((await setLessonPublished(A.teacher, third, true)).ok, true);
+    assert.equal(await percent(), expected(doneOthers + 1, others + 2));
+    assert.equal((await deleteLesson(A.teacher, third)).ok, true);
+    assert.equal(await percent(), expected(doneOthers + 1, others + 1), "al borrarla deja de contar");
+
+    assert.equal((await setChapterPublished(A.teacher, chapterId, false)).ok, true);
+    assert.equal(await percent(), expected(doneOthers, others), "ocultar el capítulo quita sus lecciones del total");
+  } finally {
+    await cleanUp();
+    await db.enrollment.update({ where: { id: "a_enrollment" }, data: { progressPercent: original } });
+  }
+});

@@ -205,18 +205,23 @@ export function AssignmentActions({ courseId, assignment }: { courseId: string; 
 /** Nota y comentario de una entrega. Al cambiar una nota ya puesta pide el motivo. */
 export function GradeForm({ submissionId, maxScore, score, feedback, graded, nextHref }: { submissionId: string; maxScore: number; score: number | null; feedback: string; graded: boolean; nextHref: string | null }) {
   const [state, action, pending] = useActionState(gradeSubmissionAction, empty);
+  // El motivo se pide solo si la entrega ya tenía nota al abrir el formulario, o si después de
+  // ponerla por primera vez se escribe otra distinta: justo tras la primera nota no es una corrección.
+  const [hadGrade] = useState(graded);
+  const [typed, setTyped] = useState(score === null ? "" : String(score));
+  const askReason = hadGrade || (graded && score !== null && typed !== "" && Number(typed) !== score);
   return (
     <form action={action} className="mt-4 space-y-3 rounded-lg bg-slate-50 p-4">
       <input type="hidden" name="submissionId" value={submissionId} />
       <label className={label}>
         Nota (de 0 a {maxScore})
-        <input name="score" type="number" inputMode="decimal" min="0" max={maxScore} step="any" required defaultValue={score ?? ""} className={field} />
+        <input name="score" type="number" inputMode="decimal" min="0" max={maxScore} step="any" required defaultValue={score ?? ""} onChange={(event) => setTyped(event.target.value)} className={field} />
       </label>
       <label className={label}>
         Comentario para el estudiante (opcional)
         <textarea name="feedback" rows={3} maxLength={5000} defaultValue={feedback} className={field} placeholder="Qué hizo bien y qué puede mejorar." />
       </label>
-      {graded && (
+      {askReason && (
         <label className={label}>
           Motivo del cambio
           <input name="reason" maxLength={500} className={field} placeholder="Ejemplo: error al sumar los puntos" autoComplete="off" />
