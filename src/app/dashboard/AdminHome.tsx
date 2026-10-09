@@ -19,12 +19,12 @@ export async function AdminHome({ institutionId, userName, canManagePeople, canP
   ];
 
   const figures = [
-    { label: "Estudiantes activos", value: numbers.activeStudents, href: "/dashboard/gestion", empty: "Aún no hay estudiantes. Agrega los primeros." },
-    { label: "Docentes activos", value: numbers.activeTeachers, href: "/dashboard/gestion", empty: "Aún no hay docentes. Agrega el primero." },
+    { label: "Estudiantes activos", value: numbers.activeStudents, href: "/dashboard/gestion?rol=estudiantes", empty: "Aún no hay estudiantes. Agrega los primeros." },
+    { label: "Docentes activos", value: numbers.activeTeachers, href: "/dashboard/gestion?rol=docentes", empty: "Aún no hay docentes. Agrega el primero." },
     { label: "Cursos", value: numbers.courses, href: "/dashboard/aula", empty: "Aún no hay cursos. Crea el primero." },
     { label: "Inscripciones activas", value: numbers.activeEnrollments, href: "/dashboard/aula", empty: "Nadie está inscrito todavía. Abre un curso e inscribe estudiantes." },
     { label: "Personas que aún no pueden entrar", value: numbers.pendingInvitations, href: "/dashboard/gestion/accesos", empty: "Todas las personas ya pueden entrar." },
-    { label: "Personas suspendidas", value: numbers.suspendedPeople, href: "/dashboard/gestion", empty: "No hay nadie suspendido." },
+    { label: "Personas suspendidas", value: numbers.suspendedPeople, href: "/dashboard/gestion?estado=suspendidos", empty: "No hay nadie suspendido." },
   ];
 
   return (
