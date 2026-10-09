@@ -227,6 +227,18 @@ test("administrador", async ({ page }, info) => {
     await heading(page, "Recibo de pago");
   });
   // --- fin M5 ---
+  // --- tanda 4 (QA): ficha del docente, IA en la institución y verificar certificados ---
+  await tour.open("ficha del docente", `/dashboard/gestion/personas/${seed.teacherId ?? ""}`, async () => {
+    await heading(page, "Luis Peralta");
+    await heading(page, "Cursos que enseña");
+    await visible(page, "Matemática Básica");
+  });
+  await tour.open("institucion asistente de ia", "/dashboard/configuracion/institucion", async () => {
+    await heading(page, "Datos de la institución");
+    await heading(page, "Asistente de IA");
+  });
+  await tour.open("verificar certificado", "/certificados", () => expect(page.getByLabel("Código del certificado")).toBeVisible());
+  // --- fin tanda 4 ---
   tour.finish();
 });
 
@@ -240,6 +252,12 @@ test("docente", async ({ page }, info) => {
     await heading(page, "¿Qué tengo hoy?");
     await visible(page, "Matemática Básica");
   });
+  // --- tanda 4 (QA): el examen sembrado tiene respuestas cortas de Rosa y Juan sin revisar ---
+  await tour.step("inicio respuestas por revisar", async () => {
+    await heading(page, "Por calificar");
+    await visible(page, /respuestas por revisar/);
+  });
+  // --- fin tanda 4 ---
   await tour.open("mis cursos", "/dashboard/aula", () => visible(page, "Matemática Básica"));
   await tour.step("curso portada", async () => {
     await page.getByRole("link", { name: /Matemática Básica/ }).first().click();
@@ -414,6 +432,13 @@ test("docente", async ({ page }, info) => {
     await heading(page, "Mi perfil");
     await visible(page, SMOKE_ACCOUNTS.teacher);
   });
+  // --- tanda 4 (QA): IA en el curso (en CI no hay clave: debe decir que está desactivada) ---
+  await tour.open("generar preguntas con ia", `${course}/generar-preguntas`, async () => {
+    await heading(page, "Generar preguntas con IA");
+    await heading(page, "El asistente de IA no está disponible");
+    await visible(page, /no está activado en esta plataforma/);
+  });
+  // --- fin tanda 4 ---
   tour.finish();
 });
 
@@ -517,6 +542,28 @@ test("estudiante", async ({ page }, info) => {
     await expect(page.getByRole("button", { name: /Marcar como (no )?completada|Terminar/ }).first()).toBeVisible();
   });
   // --- fin M9 ---
+  // --- tanda 4 (QA): Pregúntale al curso, Mi asistencia y preferencias de correo ---
+  await tour.open("leccion preguntale al curso", `${course}/leccion/${seed.lessonIds[2]}`, async () => {
+    await heading(page, "Sumar con llevadas");
+    await heading(page, "Pregúntale al curso");
+    await visible(page, /no está activado en esta plataforma/);
+  });
+  await tour.open("curso portada mi asistencia", course, async () => {
+    await heading(page, "Matemática Básica");
+    await visible(page, "Mi asistencia");
+  });
+  await tour.open("notificaciones", "/dashboard/notificaciones", () => heading(page, "Notificaciones"));
+  await tour.step("preferencias de correo", async () => {
+    await page.getByRole("link", { name: "Elegir qué me llega por correo" }).filter({ visible: true }).first().click();
+    await page.waitForURL(/\/notificaciones\/preferencias$/);
+    await heading(page, "Qué me llega por correo");
+  });
+  await tour.step("preferencias de correo guardadas", async () => {
+    await page.getByRole("checkbox").first().setChecked(false);
+    await page.getByRole("button", { name: "Guardar mis preferencias" }).click();
+    await done(page, /^Listo\./);
+  });
+  // --- fin tanda 4 ---
   tour.finish();
 });
 
@@ -526,6 +573,13 @@ test("tutor", async ({ page }, info) => {
   if (!(await start(tour, SMOKE_ACCOUNTS.parent))) return;
 
   await tour.open("inicio", "/dashboard", () => heading(page, "¿Cómo van mis hijos?"));
+  // --- tanda 4 (QA): Ana tiene sembrada la «Inscripción del período» vencida con un abono ---
+  await tour.step("inicio hijo con alerta", async () => {
+    await heading(page, "Requiere tu atención");
+    await expect(page.getByRole("link").filter({ hasText: "Ana Rodríguez" }).filter({ hasText: /cargos? vencidos? por pagar/ }).first()).toBeVisible();
+    await heading(page, "Mis hijos");
+  });
+  // --- fin tanda 4 ---
   await tour.open("mis hijos", "/dashboard/hijos", async () => {
     await heading(page, "Mis hijos");
     await visible(page, "Pedro Jiménez");
@@ -578,6 +632,27 @@ test("publico", async ({ page }, info) => {
   // Pantallas públicas que otras piezas están construyendo: se recorren cuando existan en la rama.
   if (existsSync(join(process.cwd(), "src/app/solicitud"))) await tour.open("solicitud de admision", "/solicitud");
   if (existsSync(join(process.cwd(), "src/app/cursos"))) await tour.open("catalogo de cursos", "/cursos");
+  // --- tanda 4 (QA): alta de un docente independiente y su primer curso (al final: deja la sesión iniciada) ---
+  const stamp = Date.now();
+  const independentCourse = `Guitarra para principiantes (${info.project.name})`;
+  await tour.open("ensena en edukana", "/ensenar", () => heading(page, "Enseña tus cursos en Edukana"));
+  await tour.step("ensena espacio creado", async () => {
+    await page.getByLabel("Tu nombre").fill("Elena Docente");
+    await page.getByLabel("Correo electrónico").fill(`docente-${stamp}@demo.test`);
+    await page.getByLabel("Contraseña").fill("ClaseLibre2026");
+    await page.getByRole("button", { name: "Crear mi espacio de docente" }).click();
+    await page.waitForURL(/\/dashboard\/?$/, { timeout: 30_000 });
+    await visible(page, "Crear un curso");
+  });
+  await tour.step("docente independiente crea curso", async () => {
+    await page.getByRole("link", { name: /Crear un curso/ }).filter({ visible: true }).first().click();
+    await page.waitForURL(/\/dashboard\/aula\/nuevo$/);
+    await page.getByLabel("Nombre del curso").fill(independentCourse);
+    await page.getByRole("button", { name: "Crear curso", exact: true }).click();
+    await page.waitForURL(/\/dashboard\/aula\/(?!nuevo)[^/?#]+$/, { timeout: 20_000 });
+    await heading(page, independentCourse);
+  });
+  // --- fin tanda 4 ---
   tour.finish();
 });
 // --- fin qa ---

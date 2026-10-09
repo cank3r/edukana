@@ -102,7 +102,7 @@ async function main() {
       description: "Contar, ordenar y comparar.",
       lessons: [
         { title: "Qué son los números naturales", summary: "Para qué sirven y cómo se escriben.", type: "TEXT", content: "Los números naturales son los que usamos para contar: 1, 2, 3…\n\nEn esta lección veremos cómo se leen y se ordenan.", estimatedMinutes: 10 },
-        { title: "Video: contar de diez en diez", summary: "Mira el video y practica en tu cuaderno.", type: "VIDEO", content: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", estimatedMinutes: 8 },
+        { title: "Video: contar de diez en diez", summary: "Mira el video y practica en tu cuaderno.", type: "VIDEO", content: "Después del video, cuenta de diez en diez hasta 100 en tu cuaderno.", videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", estimatedMinutes: 8 },
       ],
     },
     {
@@ -215,6 +215,7 @@ async function main() {
     gradedStudentIds: [student3.id, student4.id],
     finishedCourseId: "",
     certificateCode: "",
+    teacherId: teacher.id,
   };
 
   // --- qa: recorrido completo ---

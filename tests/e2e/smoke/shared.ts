@@ -38,6 +38,8 @@ export type SmokeSeed = {
   finishedCourseId: string;
   /** Código del certificado de Ana en el curso terminado (página pública). */
   certificateCode: string;
+  /** Docente del curso (ficha de persona en el recorrido del administrador). */
+  teacherId?: string;
 };
 
 export function loadSeed(): SmokeSeed {

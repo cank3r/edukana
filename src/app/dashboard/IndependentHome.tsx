@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BookOpen, ChevronRight, ExternalLink, Globe, Plus, ShoppingBag } from "lucide-react";
 import type { IndependentHome as HomeData } from "@/server/platform/independent";
+import { plural } from "@/lib/ux";
 
 type Props = { home: HomeData; userName?: string | null };
 
@@ -10,18 +11,18 @@ export function IndependentHome({ home, userName }: Props) {
   const { numbers } = home;
   const cards = [
     { href: "/dashboard/aula/nuevo", label: "Crear un curso", detail: "Ponle nombre y empieza a agregar lecciones.", icon: <Plus size={20} aria-hidden="true" />, external: false },
-    { href: "/dashboard/aula", label: "Mis cursos", detail: numbers.courses ? `${numbers.courses} curso(s)` : "Aún no tienes cursos.", icon: <BookOpen size={20} aria-hidden="true" />, external: false },
+    { href: "/dashboard/aula", label: "Mis cursos", detail: numbers.courses ? plural(numbers.courses, "curso", "cursos") : "Aún no tienes cursos.", icon: <BookOpen size={20} aria-hidden="true" />, external: false },
     {
       href: "/dashboard/ventas",
       label: "Ventas",
-      detail: numbers.pendingOrders ? `${numbers.pendingOrders} pedido(s) por confirmar` : "Pedidos, cupones y precios.",
+      detail: numbers.pendingOrders ? plural(numbers.pendingOrders, "pedido por confirmar", "pedidos por confirmar") : "Pedidos, cupones y precios.",
       icon: <ShoppingBag size={20} aria-hidden="true" />,
       external: false,
     },
     {
       href: `/catalogo/${home.slug}`,
       label: "Mi página pública",
-      detail: numbers.publicCourses ? `${numbers.publicCourses} curso(s) a la venta` : "Todavía no hay cursos a la venta.",
+      detail: numbers.publicCourses ? plural(numbers.publicCourses, "curso a la venta", "cursos a la venta") : "Todavía no hay cursos a la venta.",
       icon: <Globe size={20} aria-hidden="true" />,
       external: true,
     },
