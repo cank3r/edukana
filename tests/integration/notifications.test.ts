@@ -56,6 +56,7 @@ function ok<T extends { ok: boolean }>(result: T): Extract<T, { ok: true }> {
 }
 
 async function cleanup() {
+  await db.notificationPreference.deleteMany({ where: { userId: { in: USERS } } });
   await db.notification.deleteMany({ where: { institutionId: { in: [A.institutionId, B.institutionId] } } });
   await db.paymentConcept.deleteMany({ where: { studentId: { in: USERS } } });
   await db.certificate.deleteMany({ where: { courseId: { in: [COURSE, COURSE2] } } });
@@ -135,7 +136,7 @@ test("notify: solo personas activas de la institución, nunca de otra ni suspend
 
 test("deliverEmails: máximo un lote por llamada y nunca a suspendidos aunque se pidan", async () => {
   const ids = Array.from({ length: EMAIL_BATCH + 5 }, (_, index) => `${S1}-fantasma-${index}`);
-  const outcome = await deliverEmails({ institutionId: A.institutionId, userIds: [SUSP, B.student.id, S2, ...ids], title: "Prueba", body: null, href: "/dashboard" });
+  const outcome = await deliverEmails({ institutionId: A.institutionId, userIds: [SUSP, B.student.id, S2, ...ids], kind: "announcement", title: "Prueba", body: null, href: "/dashboard" });
   assert.equal(outcome.sent, 1);
   assert.deepEqual(mail.sent.map((message) => message.to), ["nt_s2@a.test"]);
   assert.ok(outcome.skipped > 0);
@@ -265,16 +266,18 @@ test("examen publicado: a los estudiantes activos del curso", async () => {
   assert.equal(await countKind("exam"), 2, "republicar no repite");
 });
 
-test("clase en vivo: a los estudiantes, con correo y la hora de la institución", async () => {
+test("clase en vivo: a los estudiantes, con la hora de la institución (correo solo si lo activan)", async () => {
   ok(await createLiveClasses(A.teacher, { courseId: COURSE, title: "Repaso", date: "2026-10-20", time: "18:00", durationMinutes: 60, joinUrl: "https://meet.example.com/abc", weeks: 2 }, NOW));
   const rows = await db.notification.findMany({ where: { kind: "live_class" } });
   assert.deepEqual(new Set(rows.map((row) => row.userId)), new Set([S1, S2]));
   assert.match(rows[0].body ?? "", /martes, 20 de octubre a las 6:00/);
   assert.match(rows[0].body ?? "", /2 clases/);
-  assert.deepEqual(new Set(mail.sent.map((message) => message.to)), new Set(["nt_s1@a.test", "nt_s2@a.test"]));
+  assert.equal(mail.sent.length, 0, "por omisión las clases en vivo avisan solo en la aplicación");
 });
 
 test("un fallo del correo no rompe la acción y la notificación queda en la aplicación", async () => {
+  // Quieren las clases en vivo por correo: así el envío sí se intenta.
+  await db.notificationPreference.createMany({ data: [S1, S2].map((userId) => ({ institutionId: A.institutionId, userId, kind: "live_class", email: true })) });
   const broken: EmailProvider = { send: async () => { throw new Error("proveedor caído"); } };
   setEmailProviderForTests(broken);
   ok(await createLiveClasses(A.teacher, { courseId: COURSE, title: "Sin correo", date: "2026-10-22", time: "18:00", durationMinutes: 30, joinUrl: "https://meet.example.com/x" }, NOW));
@@ -291,6 +294,7 @@ test("un fallo del correo no rompe la acción y la notificación queda en la apl
   } finally {
     if (previous.key !== undefined) process.env.RESEND_API_KEY = previous.key;
     if (previous.from !== undefined) process.env.EMAIL_FROM = previous.from;
+    await db.notificationPreference.deleteMany({ where: { userId: { in: [S1, S2] } } });
   }
 });
 
@@ -310,12 +314,12 @@ test("un fallo al guardar dentro de la transacción no la tumba", async () => {
   assert.equal(await db.notification.count({ where: { title: "Falla" } }), 0);
 });
 
-test("certificado emitido: al estudiante, con correo", async () => {
+test("certificado emitido: al estudiante (correo solo si lo activa)", async () => {
   ok(await issueCertificate(A.teacher, COURSE, "nt_e1"));
   const rows = await of(S1, "certificate");
   assert.equal(rows.length, 1);
   assert.equal(rows[0].href, "/dashboard/mis-certificados");
-  assert.deepEqual(mail.sent.map((message) => message.to), ["nt_s1@a.test"]);
+  assert.equal(mail.sent.length, 0, "por omisión el certificado avisa solo en la aplicación");
   ok(await issueCertificate(A.teacher, COURSE, "nt_e1"));
   assert.equal(await countKind("certificate"), 1, "repetir no vuelve a avisar");
 });
@@ -341,19 +345,21 @@ test("inscripción (curso y grupo): al estudiante, solo en la aplicación", asyn
   assert.equal(mail.sent.length, 0);
 });
 
-test("cargo creado: al estudiante, solo en la aplicación (también en lote)", async () => {
+test("cargo creado: al estudiante, en la aplicación y por correo (también en lote, tras confirmar)", async () => {
   ok(await createCharge(A.admin, { studentId: S1, concept: "Mensualidad de octubre", amountCents: 350000, dueDate: "2026-10-31" }));
   const rows = await of(S1, "charge");
   assert.equal(rows.length, 1);
   assert.equal(rows[0].title, "Nuevo cargo: Mensualidad de octubre");
   assert.match(rows[0].body ?? "", /31 de octubre de 2026/);
   assert.equal(rows[0].href, "/dashboard/mi-cuenta");
+  assert.deepEqual(mail.sent.map((message) => message.to), ["nt_s1@a.test"], "los cargos van por correo por omisión");
 
   const batch = await createGroupCharges(A.admin, { target: { kind: "course", id: COURSE }, operationKey: "nt-operation-key-0001", concept: "Laboratorio", amountCents: 50000, dueDate: "2026-11-15" });
   ok(batch);
   assert.deepEqual(new Set((await db.notification.findMany({ where: { kind: "charge", title: "Nuevo cargo: Laboratorio" } })).map((row) => row.userId)), new Set([S1, S2]));
   ok(await createGroupCharges(A.admin, { target: { kind: "course", id: COURSE }, operationKey: "nt-operation-key-0001", concept: "Laboratorio", amountCents: 50000, dueDate: "2026-11-15" }));
   assert.equal(await countKind("charge"), 3, "repetir la misma operación no vuelve a avisar");
-  assert.equal(mail.sent.length, 0);
+  assert.equal(mail.sent.length, 3, "el lote envía un correo por estudiante y repetirlo no envía otro");
+  assert.deepEqual(new Set(mail.sent.slice(1).map((message) => message.to)), new Set(["nt_s1@a.test", "nt_s2@a.test"]));
   assert.equal(await db.notification.count({ where: { userId: SUSP } }), 0);
 });
