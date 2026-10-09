@@ -45,3 +45,5 @@ next-env.d.ts
 .env.local
 .env
 .kiro/settings/
+# Carpetas de trabajo temporales de agentes
+/.claude/worktrees/
