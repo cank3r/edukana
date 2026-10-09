@@ -32,7 +32,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-4 sm:p-8">
       <header>
-        <h1 className="text-2xl font-bold" style={{ color: "var(--navy)" }}>Personas y acceso</h1>
+        <h1 className="text-2xl font-bold" style={{ color: "var(--navy)" }}>Importar e invitar</h1>
         <p className="mt-1 text-sm text-slate-600">Agrega personas desde una lista, envíales su invitación y controla quién puede entrar.</p>
       </header>
 

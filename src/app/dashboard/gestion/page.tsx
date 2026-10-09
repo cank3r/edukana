@@ -131,7 +131,9 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
         ) : (
           <ul className="mt-2 divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white px-4">
             {people.map((person) => {
-              const detailHref = person.role === "STUDENT" ? `/dashboard/gestion/estudiantes/${person.id}` : undefined;
+              // Un docente solo ve la ficha de sus estudiantes; el resto, la ficha de cualquier persona.
+              const detailHref =
+                user.role !== "TEACHER" ? `/dashboard/gestion/personas/${person.id}` : person.role === "STUDENT" ? `/dashboard/gestion/estudiantes/${person.id}` : undefined;
               const isSuspended = person.status !== "ACTIVE";
               const hasPassword = Boolean(person.identity?.passwordHash);
               if (canManage) {

@@ -80,10 +80,10 @@ test("administrador", async ({ page }, info) => {
   await tour.step("persona detalle", async () => {
     await page.goto("/dashboard/gestion");
     await page.getByRole("link", { name: "Ana Rodríguez" }).click();
-    await page.waitForURL(new RegExp(`/gestion/estudiantes/${seed.studentIds[0]}`));
+    await page.waitForURL(new RegExp(`/gestion/personas/${seed.studentIds[0]}`));
     await visible(page, "Ana Rodríguez");
   });
-  await tour.open("importar e invitar", "/dashboard/gestion/accesos", () => heading(page, "Personas y acceso"));
+  await tour.open("importar e invitar", "/dashboard/gestion/accesos", () => heading(page, "Importar e invitar"));
   await tour.open("programas", "/dashboard/gestion/programas", () => visible(page, "Bachillerato Técnico"));
   await tour.step("programa detalle", async () => {
     await page.getByRole("link", { name: /Bachillerato Técnico/ }).first().click();
@@ -205,7 +205,7 @@ test("administrador", async ({ page }, info) => {
   });
   await tour.step("admisiones convertida", async () => {
     await page.getByRole("button", { name: "Sí, convertir en estudiante" }).click();
-    await visible(page, "Ya es estudiante de la institución.");
+    await visible(page, /Ya es estudiante de la institución/);
   });
 
   await tour.open("reportes", "/dashboard/analitica", () => heading(page, "Reportes"));
@@ -498,12 +498,12 @@ test("estudiante", async ({ page }, info) => {
     await visible(page, "Taller de Lectura");
   });
   await tour.open("mi estado de cuenta", "/dashboard/mi-cuenta", async () => {
-    await heading(page, "Mi cuenta");
+    await heading(page, "Mi estado de cuenta");
     await visible(page, mobile ? "Inscripción del período" : "Mensualidad");
   });
   // --- fin qa ---
   // --- M5 · pagos y recibos ---
-  await tour.open("mi cuenta recibos", "/dashboard/mi-cuenta", () => heading(page, "Mi cuenta"));
+  await tour.open("mi cuenta recibos", "/dashboard/mi-cuenta", () => heading(page, "Mi estado de cuenta"));
   await tour.step("mi recibo", async () => {
     await page.getByRole("link", { name: "Ver recibo" }).filter({ visible: true }).first().click();
     await page.waitForURL(/\/dashboard\/mi-cuenta\/recibo\//);
@@ -536,10 +536,10 @@ test("tutor", async ({ page }, info) => {
     await heading(page, "Ana Rodríguez");
   });
   await tour.open("estado de cuenta", "/dashboard/mi-cuenta", async () => {
-    await heading(page, /Cuenta de Ana Rodríguez/);
+    await heading(page, /Estado de cuenta de Ana Rodríguez/);
     await visible(page, "Inscripción del período");
   });
-  await tour.open("estado de cuenta otro hijo", `/dashboard/mi-cuenta?estudiante=${seed.studentIds[1]}`, () => heading(page, /Cuenta de Pedro Jiménez/));
+  await tour.open("estado de cuenta otro hijo", `/dashboard/mi-cuenta?estudiante=${seed.studentIds[1]}`, () => heading(page, /Estado de cuenta de Pedro Jiménez/));
   // El tutor no tiene «Calendario» en su menú (las fechas de cada hijo están en su resumen): no se visita.
   await tour.open("avisos", "/dashboard/comunidad", () => heading(page, "Avisos"));
   tour.finish();

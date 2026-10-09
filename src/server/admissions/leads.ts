@@ -61,8 +61,13 @@ async function can(actor: AdmissionActor, ...needed: Array<"admissions.manage" |
   return needed.every((capability) => capabilities.has(capability));
 }
 
-/** Persona creada a partir de la solicitud; se guarda dentro de `documents` porque el modelo no tiene un campo propio. */
-export function convertedUserId(documents: unknown): string | null {
+/**
+ * Persona creada a partir de la solicitud. Se guarda en `convertedUserId`; las solicitudes convertidas
+ * antes de existir ese campo la tienen dentro de `documents`, y se sigue leyendo de ahí.
+ */
+export function leadConvertedUserId(lead: { convertedUserId?: string | null; documents?: unknown }): string | null {
+  if (lead.convertedUserId) return lead.convertedUserId;
+  const documents = lead.documents;
   if (!documents || typeof documents !== "object" || Array.isArray(documents)) return null;
   const value = (documents as Record<string, unknown>).convertedUserId;
   return typeof value === "string" && value ? value : null;
@@ -141,17 +146,36 @@ export async function getLead(institutionId: string, leadId: string) {
     select: { id: true, action: true, changes: true, createdAt: true, userId: true },
   });
   const authorIds = [...new Set(history.map((row) => row.userId).filter((id): id is string => Boolean(id)))];
-  const personId = convertedUserId(lead.documents);
+  const personId = leadConvertedUserId(lead);
   const [authors, person, sameEmail] = await Promise.all([
     authorIds.length ? db.user.findMany({ where: { id: { in: authorIds }, institutionId }, select: { id: true, name: true } }) : [],
-    personId ? db.user.findFirst({ where: { id: personId, institutionId }, select: { id: true, name: true, email: true } }) : null,
+    personId
+      ? db.user.findFirst({
+          where: { id: personId, institutionId },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            identity: { select: { passwordHash: true } },
+            _count: { select: { passwordResetTokens: { where: { usedAt: null, expiresAt: { gt: new Date() } } } } },
+          },
+        })
+      : null,
     personId ? null : db.user.findFirst({ where: { institutionId, email: lead.email }, select: { id: true, name: true, role: true, status: true } }),
   ]);
   const names = new Map(authors.map((author) => [author.id, author.name]));
   return {
     lead,
     convertedUserId: personId,
-    person,
+    person: person
+      ? {
+          id: person.id,
+          name: person.name,
+          email: person.email,
+          /** Si ya puede entrar: creó su contraseña, tiene un enlace vigente, o todavía no se le invitó. */
+          access: person.identity?.passwordHash ? ("ready" as const) : person._count.passwordResetTokens > 0 ? ("invited" as const) : ("pending" as const),
+        }
+      : null,
     /** Persona de la institución que ya usa el correo de la solicitud (solo si aún no se convirtió). */
     sameEmail,
     history: history.map((row) => ({ id: row.id, action: row.action, changes: row.changes, createdAt: row.createdAt, author: row.userId ? names.get(row.userId) ?? null : null })),
@@ -183,7 +207,7 @@ export async function updateLead(actor: AdmissionActor, leadId: string, input: L
   return db.$transaction(async (tx) => {
     const lead = await tx.admissionLead.findFirst({ where: { id: leadId, institutionId: actor.institutionId } });
     if (!lead) return fail(NOT_FOUND);
-    if (convertedUserId(lead.documents) && data.email !== lead.email) {
+    if (leadConvertedUserId(lead) && data.email !== lead.email) {
       return fail("Esta solicitud ya se convirtió en estudiante. Para cambiar su correo, corrígelo en la ficha de la persona.");
     }
     const fields = (Object.keys(data) as Array<keyof typeof data>).filter((key) => (lead[key] ?? null) !== data[key]);
@@ -208,9 +232,9 @@ export async function moveLeadStage(actor: AdmissionActor, leadId: string, to: s
   if (target === "ENROLLED") return fail("Para dejarla como inscrita usa «Convertir en estudiante»: así se crea la persona en la institución.");
   if (target === "REJECTED" && why.length < 3) return fail("Escribe el motivo por el que no continúa.");
   return db.$transaction(async (tx) => {
-    const lead = await tx.admissionLead.findFirst({ where: { id: leadId, institutionId: actor.institutionId }, select: { id: true, stage: true, documents: true } });
+    const lead = await tx.admissionLead.findFirst({ where: { id: leadId, institutionId: actor.institutionId }, select: { id: true, stage: true, documents: true, convertedUserId: true } });
     if (!lead) return fail(NOT_FOUND);
-    if (convertedUserId(lead.documents) || lead.stage === "ENROLLED") return fail(ALREADY_STUDENT);
+    if (leadConvertedUserId(lead) || lead.stage === "ENROLLED") return fail(ALREADY_STUDENT);
     if (lead.stage === target) return { ok: true, from: lead.stage, to: target } as const;
     // La etapa anterior va en la condición: si otra persona la movió a la vez, este cambio no pisa el suyo.
     const moved = await tx.admissionLead.updateMany({ where: { id: lead.id, institutionId: actor.institutionId, stage: lead.stage }, data: { stage: target } });
@@ -233,9 +257,9 @@ export async function moveLeadStage(actor: AdmissionActor, leadId: string, to: s
 export async function deleteLead(actor: AdmissionActor, leadId: string): Promise<AdmissionResult> {
   if (!(await can(actor, "admissions.manage"))) return fail(NO_PERMISSION);
   return db.$transaction(async (tx) => {
-    const lead = await tx.admissionLead.findFirst({ where: { id: leadId, institutionId: actor.institutionId }, select: { id: true, name: true, stage: true, documents: true } });
+    const lead = await tx.admissionLead.findFirst({ where: { id: leadId, institutionId: actor.institutionId }, select: { id: true, name: true, stage: true, documents: true, convertedUserId: true } });
     if (!lead) return fail(NOT_FOUND);
-    if (convertedUserId(lead.documents) || lead.stage === "ENROLLED") {
+    if (leadConvertedUserId(lead) || lead.stage === "ENROLLED") {
       return fail("Esta solicitud ya se convirtió en estudiante y no se puede borrar. La persona se gestiona desde Personas.");
     }
     const removed = await tx.admissionLead.deleteMany({ where: { id: lead.id, institutionId: actor.institutionId, stage: { not: "ENROLLED" } } });
@@ -287,7 +311,7 @@ export async function convertLead(actor: AdmissionActor, input: ConvertInput): P
 
   const lead = await db.admissionLead.findFirst({ where: { id: input.leadId, institutionId } });
   if (!lead) return fail(NOT_FOUND);
-  const done = convertedUserId(lead.documents);
+  const done = leadConvertedUserId(lead);
   if (done) return { ok: true, userId: done, created: false, alreadyConverted: true, addedToGroup: false, groupNote: null };
   if (lead.stage !== "ACCEPTED" && lead.stage !== "ENROLLED") return fail("Solo se puede convertir en estudiante una solicitud admitida. Pásala primero a «Admitido».");
 
@@ -332,9 +356,9 @@ export async function convertLead(actor: AdmissionActor, input: ConvertInput): P
     const locked = await tx.$queryRaw<Array<{ id: string }>>`
       SELECT "id" FROM "admission_leads" WHERE "id" = ${lead.id} AND "institutionId" = ${institutionId} FOR UPDATE`;
     if (!locked.length) return fail(NOT_FOUND);
-    const current = await tx.admissionLead.findFirst({ where: { id: lead.id, institutionId }, select: { stage: true, documents: true, notes: true } });
+    const current = await tx.admissionLead.findFirst({ where: { id: lead.id, institutionId }, select: { stage: true, documents: true, convertedUserId: true } });
     if (!current) return fail(NOT_FOUND);
-    const already = convertedUserId(current.documents);
+    const already = leadConvertedUserId(current);
     if (already) return { ok: true, userId: already, created: false, alreadyConverted: true, addedToGroup: false, groupNote: null } as const;
     if (current.stage !== "ACCEPTED" && current.stage !== "ENROLLED") return fail("Alguien más acaba de mover esta solicitud. Actualiza la página y revisa en qué etapa quedó.");
 
@@ -359,17 +383,8 @@ export async function convertLead(actor: AdmissionActor, input: ConvertInput): P
       }
     }
 
-    const previous = current.documents && typeof current.documents === "object" && !Array.isArray(current.documents) ? (current.documents as Prisma.JsonObject) : {};
-    const stamp = new Date();
-    const note = `Convertida en estudiante el ${stamp.toISOString().slice(0, 10)}${created ? "" : " (vinculada con una persona que ya existía)"}.`;
-    await tx.admissionLead.update({
-      where: { id: lead.id },
-      data: {
-        stage: "ENROLLED",
-        documents: { ...previous, convertedUserId: userId, convertedAt: stamp.toISOString() } as unknown as Prisma.InputJsonObject,
-        notes: [current.notes, note].filter(Boolean).join("\n").slice(0, 4000),
-      },
-    });
+    // El vínculo va en sus campos; las notas son de quien gestiona y el hecho queda en el historial.
+    await tx.admissionLead.update({ where: { id: lead.id }, data: { stage: "ENROLLED", convertedUserId: userId, convertedAt: new Date() } });
     await tx.auditLog.create({
       data: {
         institutionId,

@@ -142,7 +142,7 @@ export default async function AnaliticaPage({ searchParams }: { searchParams: Pr
 
       <section aria-label="Resumen" className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <Figure
-          label="Estudiantes activos"
+          label="Estudiantes con cursos activos"
           value={whole(overview.activeStudents.value)}
           meaning="Personas inscritas hoy en al menos un curso."
           comparison={countChange(overview.activeStudents)}
@@ -162,7 +162,7 @@ export default async function AnaliticaPage({ searchParams }: { searchParams: Pr
         <Figure
           label="Tareas entregadas a tiempo"
           value={pct(overview.onTime.percent)}
-          meaning={overview.onTime.expected > 0 ? `De las ${whole(overview.onTime.expected)} entregas que se esperaban en los últimos 30 días.` : "Ninguna tarea venció en los últimos 30 días."}
+          meaning={overview.onTime.expected > 0 ? overview.onTime.expected === 1 ? "De la única entrega que se esperaba en los últimos 30 días." : `De las ${whole(overview.onTime.expected)} entregas que se esperaban en los últimos 30 días.` : "Ninguna tarea venció en los últimos 30 días."}
           comparison={pointsChange(overview.onTime.percent, overview.onTime.beforePercent)}
         />
         <Figure
@@ -185,11 +185,11 @@ export default async function AnaliticaPage({ searchParams }: { searchParams: Pr
           {finance.mixedCurrencies ? "Hay cobros en más de una moneda: la suma los mezcla. Descarga los cobros para verlos por moneda. " : ""}
           {filters.programId ? "Los cobros no se separan por programa: se muestran los de toda la institución." : ""}
           {" "}
-          <a href={download("cobros")} className="inline-flex min-h-11 items-center font-semibold text-blue-700 underline">Descargar cobros en CSV</a>
+          {finance.collectedCents + finance.pendingCents > 0 && <a href={download("cobros")} className="inline-flex min-h-11 items-center font-semibold text-blue-700 underline">Descargar cobros en CSV</a>}
         </p>
       )}
 
-      <Section id="cursos" title="Cursos" description={`Cuánta gente tiene cada curso y cómo avanza. Se resaltan los cursos con avance promedio menor de ${LOW_PROGRESS_PERCENT} %.`} downloadHref={download("cursos")}>
+      <Section id="cursos" title="Cursos" description={`Cuánta gente tiene cada curso y cómo avanza. Se resaltan los cursos con avance promedio menor de ${LOW_PROGRESS_PERCENT} %.`} downloadHref={courses.rows.length > 0 ? download("cursos") : undefined}>
         {courses.rows.length === 0 ? (
           <Empty>No hay cursos para mostrar{filtered ? " con estos filtros" : ""}. Cuando se creen cursos y se inscriban estudiantes, aquí verás su avance.</Empty>
         ) : (
@@ -243,10 +243,14 @@ export default async function AnaliticaPage({ searchParams }: { searchParams: Pr
         id="riesgo"
         title="Estudiantes en riesgo"
         description={`Estudiantes que conviene contactar: llevan ${INACTIVITY_DAYS} días sin actividad, avanzan mucho menos que su grupo, asisten a menos del ${LOW_ATTENDANCE_PERCENT} % de las clases o tienen tareas vencidas.`}
-        downloadHref={download("riesgo")}
+        downloadHref={risk.rows.length > 0 ? download("riesgo") : undefined}
       >
         {risk.rows.length === 0 ? (
-          <Empty>Ningún estudiante necesita atención ahora. Buen trabajo.</Empty>
+          <Empty>
+            {overview.activeStudents.value > 0
+              ? "Ningún estudiante necesita atención ahora. Buen trabajo."
+              : "Todavía no hay estudiantes inscritos en cursos. Cuando los haya, aquí verás a quién conviene contactar."}
+          </Empty>
         ) : (
           <>
             <Bars
@@ -290,7 +294,7 @@ export default async function AnaliticaPage({ searchParams }: { searchParams: Pr
         )}
       </Section>
 
-      <Section id="docentes" title="Docentes" description="Carga de cada docente y cuánto llevan esperando los estudiantes por una calificación." downloadHref={download("docentes")}>
+      <Section id="docentes" title="Docentes" description="Carga de cada docente y cuánto llevan esperando los estudiantes por una calificación." downloadHref={teachers.rows.length > 0 ? download("docentes") : undefined}>
         {teachers.rows.length === 0 ? (
           <Empty>No hay docentes con cursos{filtered ? " en estos filtros" : ""}.</Empty>
         ) : (
@@ -334,7 +338,7 @@ export default async function AnaliticaPage({ searchParams }: { searchParams: Pr
                 bars={accessRows.map((row) => ({ label: roleLabel(row.role as EdukanaRole), value: row.withoutAccess, text: `${whole(row.withoutAccess)} de ${whole(row.total)}` }))}
               />
               <p className="text-sm text-slate-600">
-                Para enviarles la invitación ve a <Link href="/dashboard/gestion/accesos" className="inline-flex min-h-11 items-center font-semibold text-blue-700 underline">Accesos</Link>.
+                Para enviarles la invitación ve a <Link href="/dashboard/gestion/accesos" className="inline-flex min-h-11 items-center font-semibold text-blue-700 underline">Importar e invitar</Link>.
               </p>
             </>
           )}
