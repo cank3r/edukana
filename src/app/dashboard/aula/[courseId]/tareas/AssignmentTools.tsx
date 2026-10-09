@@ -165,7 +165,7 @@ export function AssignmentActions({ courseId, assignment }: { courseId: string; 
 
       {panel === "delete" && assignment.deleteBlocked && (
         <div className="mt-3 rounded-lg bg-amber-50 p-4 text-sm text-amber-900" role="alertdialog" aria-label="Esta tarea no se puede borrar">
-          <p className="font-semibold">Esta tarea no se puede borrar: tiene notas en un período de calificaciones que ya se publicó.</p>
+          <p className="font-semibold">Esta tarea no se puede borrar: tiene entregas o notas cuyo historial debe conservarse.</p>
           <p className="mt-1">{assignment.isPublished ? "Puedes ocultarla: los estudiantes dejan de verla y las entregas y las notas se conservan." : "Ya está oculta: los estudiantes no la ven y las entregas y las notas se conservan."}</p>
           <div className="mt-3 flex flex-wrap gap-2">
             {assignment.isPublished && <button className={primary} type="button" onClick={() => setPanel("publish")}>Ocultar en su lugar</button>}
@@ -176,22 +176,9 @@ export function AssignmentActions({ courseId, assignment }: { courseId: string; 
       {panel === "delete" && !assignment.deleteBlocked && (
         <form action={deleteAction} className="mt-3 rounded-lg bg-red-50 p-4 text-sm text-red-900" role="alertdialog" aria-label="Confirmar borrar tarea">
           <input type="hidden" name="assignmentId" value={assignment.id} />
-          {hasSubmissions ? (
-            <>
-              <p className="font-semibold">
-                Se borrará «{assignment.title}» y se perderán para siempre {count(assignment.submissionCount, "entrega", "entregas")}
-                {assignment.gradedCount > 0 ? `, ${assignment.gradedCount} de ellas ya con nota` : ""}, junto con las versiones anteriores de cada entrega.
-              </p>
-              {assignment.countsForGrade && <p className="mt-1">Esta tarea cuenta para la nota del curso: también se quitan su columna del libro de calificaciones, las notas y el historial de correcciones.</p>}
-              <p className="mt-1">No se puede deshacer. Si solo quieres que los estudiantes dejen de verla, usa «Ocultar».</p>
-              <label className="mt-3 block text-sm font-medium text-slate-900">
-                ¿Por qué se borra?
-                <input name="reason" required minLength={5} maxLength={500} className={field} placeholder="Ejemplo: se creó por error en este curso" autoComplete="off" />
-              </label>
-            </>
-          ) : (
-            <p className="font-semibold">Se borrará «{assignment.title}». Nadie ha entregado todavía, así que no se pierde ninguna entrega. No se puede deshacer.</p>
-          )}
+          <p className="font-semibold">
+            Se borrará «{assignment.title}». No tiene entregas ni notas guardadas. No se puede deshacer.
+          </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <button className={danger} type="submit" disabled={deletePending}>{deletePending ? "Borrando…" : "Sí, borrar tarea"}</button>
             <button className={secondary} type="button" onClick={close}>Cancelar</button>
@@ -267,14 +254,14 @@ export function SubmitForm({ assignmentId, content, link, resubmitting }: { assi
       <label className={label}>
         Enlace a tu trabajo (opcional)
         <input name="link" type="url" inputMode="url" pattern="https://.+" maxLength={2000} defaultValue={link} readOnly={confirming} className={field} placeholder="https://…" autoComplete="off" />
-        <span className="mt-1 block text-xs font-normal text-slate-500">Por ejemplo un documento compartido. Debe empezar con https:// y tu docente debe poder abrirlo.</span>
+        <span className="mt-1 block text-xs font-normal text-slate-500">Por ejemplo un documento compartido. Debe empezar con https:// y tu docente debe poder abrirlo. Si envías un enlace, por ahora no podrás reemplazar esta entrega.</span>
       </label>
       {localError && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{localError}</p>}
       {!confirming && <button type="button" className={primary} onClick={ask} disabled={pending}>{resubmitting ? "Volver a entregar" : "Entregar tarea"}</button>}
       {confirming && (
         <div className="rounded-lg bg-amber-50 p-4 text-sm text-amber-900" role="alertdialog" aria-label="Confirmar entrega">
           <p className="font-semibold">
-            Tu docente verá esta entrega. {resubmitting ? "Reemplaza a la que enviaste antes; la anterior queda guardada como versión previa." : "Podrás cambiarla mientras no esté calificada y la tarea siga abierta."}
+            Tu docente verá esta entrega. {resubmitting ? "Reemplaza a la que enviaste antes; la anterior queda guardada como versión previa." : "Las entregas solo de texto pueden cambiarse mientras no estén calificadas y la tarea siga abierta."}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
             <button className={primary} type="submit" disabled={pending}>{pending ? "Entregando…" : "Sí, entregar"}</button>
