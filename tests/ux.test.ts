@@ -2,6 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { loadLegacyExamForm } from "./helpers/legacy-exam-actions.mjs";
 import { breadcrumbLabel, COURSE_MORE_AREAS, COURSE_TABS, navigationForRole, roleLabel, spanishLabel } from "../src/lib/ux";
 
 test("muestra módulos claros y propios de cada rol", () => {
@@ -60,11 +63,13 @@ test("el selector móvil del curso expone las ocho áreas sin desplazamiento hor
   assert.match(tabs, /md:hidden/);
 });
 
-test("cada respuesta corta tiene una etiqueta conectada a su textarea", () => {
-  const forms = readFileSync(join(process.cwd(), "src", "components", "dashboard", "AcademicForms.tsx"), "utf8");
-  assert.match(forms, /htmlFor=\{`answer-\$\{q\.id\}`\}/);
-  assert.match(forms, /id=\{`answer-\$\{q\.id\}`\}/);
-  assert.match(forms, />Tu respuesta<\/label>/);
+test("la entrada del examen ofrece navegación accesible hacia el flujo con tiempo", async () => {
+  const ExamAttemptForm = await loadLegacyExamForm();
+  const html = renderToStaticMarkup(createElement(ExamAttemptForm, { courseId: "curso" }));
+  assert.match(html, /<a[^>]+href="\/dashboard\/aula\/curso\/presentar"/);
+  assert.match(html, />Ver mis exámenes<\/a>/);
+  assert.match(html, /min-h-11/);
+  assert.doesNotMatch(html, /<form|<textarea|<input/);
 });
 
 test("el dashboard oculta pendientes en cero y usa el término Cobros", () => {

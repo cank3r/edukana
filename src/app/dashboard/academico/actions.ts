@@ -5,7 +5,7 @@ import { type Capability } from "@/lib/capabilities";
 import { getEffectiveCapabilities } from "@/lib/authorization";
 import { courseWhereForParticipation, courseWhereForScope, resolveCourseWriteScope } from "@/lib/course-scope";
 import { db } from "@/lib/db";
-import { autoScoreAnswer, createCertificateIdentity, findScheduleConflicts, progressPercentage, reviewedExamScore } from "@/lib/lms";
+import { createCertificateIdentity, findScheduleConflicts, progressPercentage, reviewedExamScore } from "@/lib/lms";
 import type { EdukanaRole } from "@/types/next-auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -268,33 +268,16 @@ export async function createExam(_state: ActionState, fd: FormData): Promise<Act
 }
 
 /**
- * @deprecated Crea el intento al enviar, por lo que no puede aplicar el tiempo del examen.
- * La pantalla debe pasar a `startExamAttemptAction` y `submitExamAttemptAction`
- * (`src/server/actions/exams.ts`); cuando lo haga, esta acción se elimina.
+ * Compatibilidad para formularios guardados antes del examen con tiempo.
+ * Nunca crea ni envía intentos: solo /presentar puede iniciar el reloj del servidor.
  */
 export async function submitExam(_state: ActionState, fd: FormData): Promise<ActionState> {
+  void fd; // Ningún dato de un formulario antiguo puede iniciar ni enviar un intento.
   try {
     const user = await requireUser("course.participate");
-    const examId = text(fd, "examId");
-    const exam = await db.exam.findFirst({ where: { id: examId, institutionId: user.institutionId, isPublished: true, course: participationCourseWhere(user) }, include: { questions: { include: { bankItem: true }, orderBy: { order: "asc" } }, attempts: { where: { studentId: user.id }, select: { attemptNumber: true } }, gradeItem: { select: { id: true } }, course: { select: { teacherId: true } } } });
-    if (!exam || !exam.questions.length || exam.attempts.length >= exam.maxAttempts) return failed("Examen no disponible o intentos agotados.");
-    const now = new Date();
-    if ((exam.opensAt && now < exam.opensAt) || (exam.closesAt && now > exam.closesAt)) return failed("El examen está fuera de su ventana de disponibilidad.");
-    const enrollment = await db.enrollment.findUnique({ where: { studentId_courseId: { studentId: user.id, courseId: exam.courseId } }, select: { id: true } });
-    if (!enrollment) return failed("Matrícula no encontrada.");
-    let total = 0; let score = 0; let needsReview = false;
-    const answers = exam.questions.map(({ bankItem, points }) => {
-      const response = text(fd, `question_${bankItem.id}`);
-      total += points;
-      const result = autoScoreAnswer(bankItem.type, response, bankItem.answerKey, points);
-      if (result.score === null) needsReview = true; else score += result.score;
-      return { institutionId: user.institutionId, bankItemId: bankItem.id, response, score: result.score, isCorrect: result.isCorrect };
-    });
-    const attempt = await db.examAttempt.create({ data: { institutionId: user.institutionId, examId: exam.id, enrollmentId: enrollment.id, studentId: user.id, attemptNumber: Math.max(0, ...exam.attempts.map((a) => a.attemptNumber)) + 1, status: needsReview ? "SUBMITTED" : "GRADED", score, maxScore: total, submittedAt: now, answers: { create: answers } } });
-    if (!needsReview && exam.gradeItem) await db.gradeEntry.upsert({ where: { gradeItemId_enrollmentId: { gradeItemId: exam.gradeItem.id, enrollmentId: enrollment.id } }, create: { institutionId: user.institutionId, gradeItemId: exam.gradeItem.id, enrollmentId: enrollment.id, score, gradedById: exam.course.teacherId }, update: { score, gradedById: exam.course.teacherId, gradedAt: now } });
-    revalidatePath(`/dashboard/aula/${exam.courseId}`);
-    return success(needsReview ? `Intento ${attempt.attemptNumber} enviado para revisión.` : `Intento calificado: ${score}/${total}.`);
-  } catch { return failed(); }
+    if (user.role !== "STUDENT") return failed("No tienes permiso para presentar este examen.");
+    return failed("Esta pantalla ya no admite entregas. Vuelve al curso y abre «Ver mis exámenes» para presentar o retomar el examen con tiempo.");
+  } catch { return failed("No tienes permiso para presentar este examen."); }
 }
 
 export async function reviewExamAttempt(_state: ActionState, fd: FormData): Promise<ActionState> {
