@@ -69,6 +69,7 @@ model Institution {
   liveClasses             LiveClass[]
   payments                Payment[]
   notifications           Notification[]
+  notificationPreferences NotificationPreference[]
   courseOrders            CourseOrder[]
   coupons                 Coupon[]
   courseReviews           CourseReview[]
@@ -135,6 +136,7 @@ model User {
   createdLiveClasses      LiveClass[] @relation("LiveClassCreator")
   recordedPayments        Payment[] @relation("PaymentRecorder")
   notifications           Notification[]
+  notificationPreferences NotificationPreference[]
   courseOrders            CourseOrder[]
   courseReviews           CourseReview[]
 
@@ -1300,6 +1302,22 @@ model Notification {
   @@index([userId, readAt])
   @@index([institutionId, createdAt])
   @@map("notifications")
+}
+
+/// Qué notificaciones quiere recibir cada persona por correo. Sin fila, vale el valor por omisión del tipo.
+model NotificationPreference {
+  id            String      @id @default(cuid())
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind          String
+  email         Boolean
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([userId, kind])
+  @@index([institutionId])
+  @@map("notification_preferences")
 }
 
 model Coupon {

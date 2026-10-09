@@ -51,15 +51,20 @@ export default async function NotificationsPage({ searchParams }: { searchParams
             Toca una para abrirla.
           </p>
         </div>
-        {unread > 0 && (
-          <form action={markAllNotificationsReadAction}>
-            <PendingButton
-              label="Marcar todas como leídas"
-              pendingLabel="Marcando…"
-              className="min-h-11 rounded-lg border border-slate-300 bg-white px-4 py-2.5 font-semibold text-slate-800 hover:bg-slate-50 disabled:opacity-60"
-            />
-          </form>
-        )}
+        <div className="flex flex-wrap gap-2">
+          <Link href="/dashboard/notificaciones/preferencias" className="inline-flex min-h-11 items-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 font-semibold text-slate-800 hover:bg-slate-50">
+            Elegir qué me llega por correo
+          </Link>
+          {unread > 0 && (
+            <form action={markAllNotificationsReadAction}>
+              <PendingButton
+                label="Marcar todas como leídas"
+                pendingLabel="Marcando…"
+                className="min-h-11 rounded-lg border border-slate-300 bg-white px-4 py-2.5 font-semibold text-slate-800 hover:bg-slate-50 disabled:opacity-60"
+              />
+            </form>
+          )}
+        </div>
       </header>
 
       {page.items.length === 0 ? (
