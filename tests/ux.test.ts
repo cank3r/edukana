@@ -34,7 +34,7 @@ test("ofrece las seis áreas principales y las dos áreas adicionales del curso"
 });
 
 test("el login conserva las credenciales fuera de la URL sin JavaScript", () => {
-  const login = readFileSync(join(process.cwd(), "src", "app", "login", "page.tsx"), "utf8");
+  const login = readFileSync(join(process.cwd(), "src", "app", "login", "LoginForm.tsx"), "utf8");
   assert.match(login, /method="post"/);
   assert.match(login, /action="\/api\/auth\/callback\/credentials"/);
   assert.doesNotMatch(login, /method="get"/i);
