@@ -19,7 +19,7 @@ export async function seedPlatformPlans(tx: Prisma.TransactionClient) {
 export async function createTrialSubscription(tx: Prisma.TransactionClient, institutionId: string, now = new Date()) {
   await seedPlatformPlans(tx);
   const end = new Date(now.getTime() + PLATFORM_TRIAL_DAYS * 86400000);
-  await tx.institutionSubscription.create({ data: {
+  return tx.institutionSubscription.create({ data: {
     institutionId, planCode: "FREE", status: "TRIAL", priceCents: 0,
     currentPeriodStart: now, currentPeriodEnd: end, trialEndsAt: end,
   } });
