@@ -21,7 +21,7 @@ export default async function MiCuentaPage({ searchParams }: { searchParams: Pro
   if (students.length === 0) {
     return (
       <div className="mx-auto max-w-3xl space-y-4 p-4 sm:p-8">
-        <h1 className="text-2xl font-bold" style={{ color: "var(--navy)" }}>{isParent ? "Estado de cuenta" : "Mi cuenta"}</h1>
+        <h1 className="text-2xl font-bold" style={{ color: "var(--navy)" }}>{isParent ? "Estado de cuenta" : "Mi estado de cuenta"}</h1>
         <p className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
           {isParent
             ? "Todavía no tienes permiso para ver el estado de cuenta de tus hijos. Pídelo en la administración de la institución."
@@ -45,7 +45,7 @@ export default async function MiCuentaPage({ searchParams }: { searchParams: Pro
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-4 sm:p-8">
       <header>
-        <h1 className="text-2xl font-bold" style={{ color: "var(--navy)" }}>{isParent ? `Cuenta de ${account.student.name}` : "Mi cuenta"}</h1>
+        <h1 className="text-2xl font-bold" style={{ color: "var(--navy)" }}>{isParent ? `Cuenta de ${account.student.name}` : "Mi estado de cuenta"}</h1>
         <p className="mt-1 text-sm text-slate-600">Lo que se debe, lo que ya venció y los pagos recibidos. Para pagar, acércate a la administración.</p>
       </header>
 

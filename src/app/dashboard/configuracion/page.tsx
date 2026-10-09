@@ -63,7 +63,7 @@ export default async function ConfiguracionPage() {
     });
   }
   if (capabilities.has("people.view")) {
-    main.push({ icon: Users, title: "Personas y acceso", detail: "Agrega docentes y estudiantes, invítalos a entrar y controla quién tiene acceso.", links: [{ href: "/dashboard/gestion", label: "Ver personas" }] });
+    main.push({ icon: Users, title: "Personas", detail: "Agrega docentes y estudiantes, invítalos a entrar y controla quién tiene acceso.", links: [{ href: "/dashboard/gestion", label: "Ver personas" }] });
   }
 
   const advanced: Card[] = [];

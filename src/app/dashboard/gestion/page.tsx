@@ -4,7 +4,7 @@ import type { Prisma, Role } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { getEffectiveCapabilities } from "@/lib/authorization";
 import { db } from "@/lib/db";
-import { roleLabel } from "@/lib/ux";
+import { plural, roleLabel } from "@/lib/ux";
 import { PersonAccess } from "./accesos/AccessTools";
 import { AddPerson } from "./AddPerson";
 
@@ -80,7 +80,7 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
         <div className="space-y-3">
           {canManage && <AddPerson key={params.agregar ? "abierto" : "cerrado"} canAddAdmin={user.role === "ADMIN" || user.role === "SUPER_ADMIN"} startOpen={Boolean(params.agregar)} />}
           <div className="flex flex-wrap gap-x-5">
-            {canManage && <Link href="/dashboard/gestion/accesos" className="inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 underline">Importar desde archivo e invitar</Link>}
+            {canManage && <Link href="/dashboard/gestion/accesos" className="inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 underline">Importar e invitar</Link>}
             {canOrganize && <Link href="/dashboard/gestion/programas" className="inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 underline">Programas</Link>}
             {canOrganize && <Link href="/dashboard/gestion/grupos" className="inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 underline">Grupos</Link>}
           </div>
@@ -111,7 +111,7 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
 
       <section aria-labelledby="lista-personas">
         <p id="lista-personas" className="text-sm font-medium text-slate-700" aria-live="polite">
-          {total === 0 ? "Sin resultados" : total === 1 ? "1 persona" : pages > 1 ? `${first}–${last} de ${total} personas` : `${total} personas`}
+          {total === 0 ? "Sin resultados" : pages > 1 ? `${first}–${last} de ${total} personas` : plural(total, "persona", "personas")}
           {filtered && <Link className="ml-2 inline-flex min-h-11 items-center text-blue-700 underline" href="/dashboard/gestion">Quitar filtros</Link>}
         </p>
 
@@ -131,7 +131,8 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
         ) : (
           <ul className="mt-2 divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white px-4">
             {people.map((person) => {
-              const detailHref = person.role === "STUDENT" ? `/dashboard/gestion/estudiantes/${person.id}` : undefined;
+              // Un docente solo abre fichas de estudiantes (de sus cursos); el resto ve la ficha de cualquiera.
+              const detailHref = user.role !== "TEACHER" || person.role === "STUDENT" || person.id === user.id ? `/dashboard/gestion/personas/${person.id}` : undefined;
               const isSuspended = person.status !== "ACTIVE";
               const hasPassword = Boolean(person.identity?.passwordHash);
               if (canManage) {
