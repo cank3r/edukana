@@ -5,15 +5,18 @@ import { auth } from "@/lib/auth";
 import { getEffectiveCapabilities } from "@/lib/authorization";
 import { sendInvitations, sendPendingInvitations } from "@/server/people/invitations";
 import { setPersonStatus } from "@/server/people/status";
+import type { EdukanaRole } from "@/types/next-auth";
 
 export type PeopleActionState = { ok: boolean; message: string; remaining?: number };
 
-async function requirePeopleManager() {
+type Guard = { actor: { id: string; institutionId: string; role: EdukanaRole }; error: null } | { actor: null; error: string };
+
+async function requirePeopleManager(): Promise<Guard> {
   const user = (await auth())?.user;
-  if (!user?.id || !user.institutionId) return { error: "Tu sesión terminó. Vuelve a iniciar sesión." } as const;
+  if (!user?.id || !user.institutionId) return { actor: null, error: "Tu sesión terminó. Vuelve a iniciar sesión." };
   const capabilities = await getEffectiveCapabilities(user.institutionId, user.role);
-  if (!capabilities.has("people.manage")) return { error: "No tienes permiso para gestionar personas." } as const;
-  return { actor: { id: user.id, institutionId: user.institutionId, role: user.role } } as const;
+  if (!capabilities.has("people.manage")) return { actor: null, error: "No tienes permiso para gestionar personas." };
+  return { actor: { id: user.id, institutionId: user.institutionId, role: user.role }, error: null };
 }
 
 function failure(name: string, error: unknown): PeopleActionState {
@@ -25,7 +28,7 @@ function failure(name: string, error: unknown): PeopleActionState {
 /** Invita (o vuelve a invitar) a una persona. Campo: `userId`. */
 export async function invitePersonAction(_state: PeopleActionState, formData: FormData): Promise<PeopleActionState> {
   const guard = await requirePeopleManager();
-  if ("error" in guard) return { ok: false, message: guard.error };
+  if (guard.error !== null) return { ok: false, message: guard.error };
   try {
     const result = await sendInvitations(guard.actor, [String(formData.get("userId") ?? "")]);
     if (result.sent === 1) return { ok: true, message: "Invitación enviada." };
@@ -42,7 +45,7 @@ export async function invitePersonAction(_state: PeopleActionState, formData: Fo
  */
 export async function invitePendingPeopleAction(): Promise<PeopleActionState> {
   const guard = await requirePeopleManager();
-  if ("error" in guard) return { ok: false, message: guard.error };
+  if (guard.error !== null) return { ok: false, message: guard.error };
   try {
     const result = await sendPendingInvitations(guard.actor);
     if (result.failed) {
@@ -65,7 +68,7 @@ export async function invitePendingPeopleAction(): Promise<PeopleActionState> {
 /** Suspende o reactiva. Campos: `userId`, `status` ("SUSPENDED" | "ACTIVE") y `reason` (obligatorio al suspender). */
 export async function setPersonStatusAction(_state: PeopleActionState, formData: FormData): Promise<PeopleActionState> {
   const guard = await requirePeopleManager();
-  if ("error" in guard) return { ok: false, message: guard.error };
+  if (guard.error !== null) return { ok: false, message: guard.error };
   const status = formData.get("status");
   if (status !== "SUSPENDED" && status !== "ACTIVE") return { ok: false, message: "Acción no válida." };
   try {
