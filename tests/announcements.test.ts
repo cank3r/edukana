@@ -120,9 +120,12 @@ test("panel guiado evita Ctrl y exige revisión antes de publicar", () => {
   const composer = readFileSync(join(root, "src", "components", "dashboard", "AnnouncementComposer.tsx"), "utf8");
   assert.match(composer, /function GuidedPicker/);
   assert.match(composer, /type="search"/);
-  assert.match(composer, /Revisar anuncio/);
-  assert.match(composer, /Confirmar publicación/);
-  assert.match(composer, /Confirma antes de publicar/);
+  assert.match(composer, /Revisar y publicar/);
+  assert.match(composer, /Publicar aviso/);
+  assert.match(composer, /Seguir editando/);
+  assert.match(composer, /Revisa antes de publicar/);
+  assert.match(composer, /Vas a publicar este aviso para:/);
+  assert.match(composer, /Opciones avanzadas/);
   assert.doesNotMatch(composer, /Ctrl\s*\/\s*⌘/);
   assert.match(composer, /Botón o enlace destacado/);
   assert.match(composer, /Insertar una mención en el mensaje/);

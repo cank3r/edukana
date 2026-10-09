@@ -25,7 +25,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
       where: { institutionId: user.institutionId, ...(search ?? { status: "SUSPENDED" as const }) },
       orderBy: { name: "asc" },
       take: 50,
-      select: { id: true, name: true, email: true, role: true, status: true, identity: { select: { passwordHash: true } } },
+      select: { id: true, name: true, email: true, phone: true, role: true, status: true, identity: { select: { passwordHash: true } } },
     }),
   ]);
 
@@ -51,7 +51,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
       </section>
 
       <section className="rounded-xl border border-slate-200 bg-white p-5" aria-labelledby="paso-acceso">
-        <h2 id="paso-acceso" className="text-lg font-bold text-slate-950">3. Suspender o reactivar a una persona</h2>
+        <h2 id="paso-acceso" className="text-lg font-bold text-slate-950">3. Corregir, suspender o reactivar a una persona</h2>
         <p className="mt-1 text-sm text-slate-600">Suspender impide entrar de inmediato y no borra nada: cursos, notas y entregas se conservan.</p>
         <form className="mt-3 flex gap-2" role="search">
           <label className="sr-only" htmlFor="buscar-persona">Buscar persona por nombre o correo</label>
@@ -64,7 +64,7 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
         </p>
         {people.length === 0 ? (
           <p className="mt-2 rounded-lg bg-slate-50 p-4 text-sm text-slate-600">
-            {q ? "Nadie coincide con esa búsqueda. Revisa cómo está escrito el nombre o el correo." : "No hay personas suspendidas. Para suspender a alguien, búscalo por nombre o correo."}
+            {q ? "Nadie coincide con esa búsqueda. Revisa cómo está escrito el nombre o el correo." : "No hay personas suspendidas. Para corregir o suspender a alguien, búscalo por nombre o correo."}
           </p>
         ) : (
           <ul className="mt-2 divide-y divide-slate-100">
@@ -75,6 +75,8 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
                   id: person.id,
                   name: person.name,
                   email: person.email,
+                  phone: person.phone ?? "",
+                  role: person.role,
                   roleLabel: roleLabel(person.role),
                   suspended: person.status !== "ACTIVE",
                   hasPassword: Boolean(person.identity?.passwordHash),
