@@ -3,6 +3,7 @@ import { getEffectiveCapabilities } from "@/lib/authorization";
 import { db } from "@/lib/db";
 import { canViewGuardianArea, type GuardianLink } from "@/lib/guardianship-policy";
 import { zonedDateKey } from "@/lib/timezone";
+import { notifyChargeCreated, notifyChargesWithinTransaction } from "@/server/notifications/events";
 import type { EdukanaRole } from "@/types/next-auth";
 import {
   centsToDecimal,
@@ -352,6 +353,7 @@ export async function createCharge(actor: Actor, input: ChargeFields & { student
     });
     return charge.id;
   });
+  await notifyChargeCreated(institutionId, { studentIds: [student.id], concept: fields.concept, amountCents: fields.amountCents, currency, dueDate: input.dueDate });
   return { ok: true, chargeId };
 }
 
@@ -445,6 +447,7 @@ export async function createGroupCharges(
         },
       },
     });
+    await notifyChargesWithinTransaction(tx, institutionId, { studentIds, concept: fields.concept, amountCents: fields.amountCents, currency, dueDate: input.dueDate });
     return { ok: true, created: rows.length, repeated: false, amountCents: fields.amountCents, currency, targetName } as const;
   }, rowLocked);
 }

@@ -5,6 +5,7 @@ import { courseWhereForScope, resolveCourseWriteScope } from "@/lib/course-scope
 import { db } from "@/lib/db";
 import { archiveSubmissionVersion, writeGradeEntry } from "@/server/grade-history";
 import type { EdukanaRole } from "@/types/next-auth";
+import { notifyAssignmentPublished, notifyGradePosted, notifySubmissionReceived } from "@/server/notifications/events";
 import { lockAssignmentSubmission } from "./submission-lock";
 import {
   ASSIGNMENT_RETENTION_MESSAGE,
@@ -244,6 +245,7 @@ export async function saveAssignment(actor: AssignmentManager, input: Assignment
       }
       return assignment.id;
     });
+    if (published) await notifyAssignmentPublished(actor.institutionId, assignmentId);
     return { ok: true, courseId: course.id, assignmentId };
   }
 
@@ -280,6 +282,7 @@ export async function setAssignmentPublished(actor: AssignmentManager, assignmen
     });
     if (existing.gradeItem) await tx.gradeItem.update({ where: { id: existing.gradeItem.id }, data: { isPublished: published } });
   });
+  if (published && !existing.isPublished) await notifyAssignmentPublished(actor.institutionId, existing.id);
   return { ok: true, courseId: existing.courseId };
 }
 
@@ -483,7 +486,7 @@ export async function gradeSubmission(
   const reason = input.reason?.trim().slice(0, 500) || null;
 
   try {
-    return await db.$transaction(async (tx) => {
+    const graded = await db.$transaction(async (tx) => {
       const locked = await lockAssignmentSubmission(tx, {
         assignmentId: observed.assignmentId, studentId: observed.studentId, institutionId: actor.institutionId,
       });
@@ -530,6 +533,8 @@ export async function gradeSubmission(
       }
       return { ok: true as const, courseId: submission.assignment.courseId, assignmentId: submission.assignment.id, corrected };
     }, { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted });
+    if (graded.ok) await notifyGradePosted(actor.institutionId, { submissionId: input.submissionId, corrected: graded.corrected });
+    return graded;
   } catch (error) {
     if (error instanceof GradeRejected) return fail(error.message);
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2034") {
@@ -688,7 +693,7 @@ export async function submitAssignment(
   if (content.length > 30000) return fail("El texto es demasiado largo. Acórtalo o comparte un enlace al documento.");
 
   try {
-    return await db.$transaction(async (tx) => {
+    const submitted = await db.$transaction(async (tx) => {
       const key = { assignmentId: assignment.id, studentId: student.id };
       if (!await lockAssignmentSubmission(tx, { ...key, institutionId: student.institutionId })) return unavailable;
       const currentAssignment = await tx.assignment.findFirst({
@@ -722,6 +727,8 @@ export async function submitAssignment(
         resubmitted, late: Boolean(currentAssignment.dueDate && currentAssignment.dueDate < now),
       };
     }, { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted });
+    if (submitted.ok) await notifySubmissionReceived(student.institutionId, { assignmentId: submitted.assignmentId, studentId: student.id, resubmitted: submitted.resubmitted });
+    return submitted;
   } catch (error) {
     if (error instanceof SubmissionRevisionUnavailable) return fail(error.message);
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2034") {

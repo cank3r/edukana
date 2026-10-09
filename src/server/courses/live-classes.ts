@@ -3,6 +3,7 @@ import { getEffectiveCapabilities } from "@/lib/authorization";
 import { courseWhereForScope, resolveCourseReadScope, resolveCourseWriteScope } from "@/lib/course-scope";
 import { db } from "@/lib/db";
 import { addDaysToDateKey, formatZonedDay, formatZonedTime, isValidTimeZone, zonedDateKey, zonedTimeToUtc } from "@/lib/timezone";
+import { notifyLiveClassScheduled } from "@/server/notifications/events";
 import type { EdukanaRole } from "@/types/next-auth";
 
 type Actor = { id: string; institutionId: string; role: EdukanaRole };
@@ -211,6 +212,7 @@ export async function createLiveClasses(actor: Actor, input: LiveClassInput & { 
       },
     });
   });
+  await notifyLiveClassScheduled(actor.institutionId, { courseId: course.id, title: data.title, starts });
   return { ok: true, courseId: course.id, created: starts.length, warning };
 }
 

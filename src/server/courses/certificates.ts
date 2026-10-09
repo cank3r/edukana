@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { createCertificateIdentity, verifyCertificateIdentity } from "@/lib/lms";
 import { loadGradebook, loadMyGrades } from "@/server/assessment/gradebook";
 import { progressPercentOf } from "@/server/courses/enrollment";
+import { notifyCertificatesIssued } from "@/server/notifications/events";
 import type { EdukanaRole } from "@/types/next-auth";
 
 type Actor = { id: string; institutionId: string; role: EdukanaRole };
@@ -253,7 +254,7 @@ async function issueFor(actor: Actor, courseId: string, rows: CertificateRow[], 
         data: { institutionId: actor.institutionId, userId: actor.id, action, entity: "Course", entityId: courseId, changes: { issued: issuedTo.length, enrollmentIds: issuedTo } },
       });
     }
-    return { issued: issuedTo.length, already: rows.length - issuedTo.length, codes };
+    return { issued: issuedTo.length, already: rows.length - issuedTo.length, codes, issuedTo };
   }, rowLocked);
 }
 
@@ -268,6 +269,7 @@ export async function issueCertificate(actor: Actor, courseId: string, enrollmen
   if (!secret()) return { ok: false, message: NO_SECRET };
   const result = await issueFor(actor, data.course.id, [row], "CERTIFICATE_ISSUED", now);
   if (!result) return { ok: false, message: NO_ACCESS };
+  await notifyCertificatesIssued(actor.institutionId, { courseId: data.course.id, enrollmentIds: result.issuedTo });
   return { ok: true, issued: result.issued, already: result.already, code: result.codes.get(row.enrollmentId) ?? null };
 }
 
@@ -281,6 +283,7 @@ export async function issueCertificatesToEligible(actor: Actor, courseId: string
   if (!secret()) return { ok: false, message: NO_SECRET };
   const result = await issueFor(actor, data.course.id, eligible, "CERTIFICATES_ISSUED_TO_ELIGIBLE", now);
   if (!result) return { ok: false, message: NO_ACCESS };
+  await notifyCertificatesIssued(actor.institutionId, { courseId: data.course.id, enrollmentIds: result.issuedTo });
   return { ok: true, issued: result.issued, already: already + result.already };
 }
 

@@ -10,6 +10,7 @@ import { revalidatePath } from "next/cache";
 import { announcementContentSchema, announcementRoles, canTargetAnnouncementPeople, externalAnnouncementUrlSchema, isMentionInsideAudience } from "@/lib/announcements";
 import type { Role } from "@prisma/client";
 import { z } from "zod";
+import { notifyAnnouncementPublished } from "@/server/notifications/events";
 
 export type ActionState = { ok: boolean; message: string };
 const initialError: ActionState = { ok: false, message: "No se pudo completar la operación." };
@@ -167,6 +168,8 @@ export async function createAnnouncement(_state: ActionState, formData: FormData
         if (attached.count !== data.assetIds.length) throw new Error("ANNOUNCEMENT_ASSET_RACE");
       }
     });
+    // Nunca lanza: si notificar falla, el aviso ya quedó publicado.
+    await notifyAnnouncementPublished(user, { title: data.title, content: data.content, audience });
     revalidatePath("/dashboard/comunidad");
     revalidatePath("/dashboard/hijos");
     return { ok: true, message: "Anuncio publicado correctamente." };
