@@ -96,3 +96,12 @@ test("plural: «1 aviso», «0 avisos», «3 avisos»; la ficha de persona tiene
   assert.equal(plural(3, "curso", "cursos"), "3 cursos");
   assert.equal(breadcrumbLabel("personas"), "Personas");
 });
+
+test("docente independiente: menú corto sin personas, admisiones, cobros manuales ni calendario", () => {
+  const items = navigationForRole("ADMIN", undefined, { independent: true });
+  assert.deepEqual(items.map((item) => item.label), ["Inicio", "Mis cursos", "Ventas", "Avisos", "Configuración"]);
+  assert.ok(items.length <= MAX_MAIN_NAVIGATION);
+  for (const hidden of ["/dashboard/gestion", "/dashboard/admisiones", "/dashboard/pagos", "/dashboard/calendario"]) {
+    assert.equal(items.some((item) => item.href === hidden), false, hidden);
+  }
+});

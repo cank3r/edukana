@@ -4,6 +4,7 @@ import { Building2, CalendarRange, ChevronRight, GraduationCap, HeartHandshake, 
 import { auth } from "@/lib/auth";
 import { getEffectiveCapabilities } from "@/lib/authorization";
 import { canManageOrganizationalUnits } from "@/lib/organizational-units";
+import { isIndependentInstitution } from "@/server/platform/independent-kind";
 
 export const dynamic = "force-dynamic";
 
@@ -48,12 +49,16 @@ export default async function ConfiguracionPage() {
   const user = (await auth())?.user;
   if (!user?.id || !user.institutionId) redirect("/login");
   const capabilities = await getEffectiveCapabilities(user.institutionId, user.role);
+  // Docente independiente: solo los datos de su espacio; períodos, personas, roles y tutores no le hacen falta.
+  const independent = await isIndependentInstitution(user.institutionId);
 
   const main: Card[] = [];
   if (capabilities.has("tenant.settings.manage")) {
-    main.push({ icon: Building2, title: "Datos de la institución", detail: "Cambia el nombre, el tipo, la zona horaria y el idioma.", links: [{ href: "/dashboard/configuracion/institucion", label: "Cambiar datos" }] });
+    main.push(independent
+      ? { icon: Building2, title: "Datos de tu espacio", detail: "Cambia el nombre de tu espacio, la zona horaria y el idioma.", links: [{ href: "/dashboard/configuracion/institucion", label: "Cambiar datos" }] }
+      : { icon: Building2, title: "Datos de la institución", detail: "Cambia el nombre, el tipo, la zona horaria y el idioma.", links: [{ href: "/dashboard/configuracion/institucion", label: "Cambiar datos" }] });
   }
-  if (capabilities.has("academic.structure.manage")) {
+  if (!independent && capabilities.has("academic.structure.manage")) {
     main.push({ icon: CalendarRange, title: "Períodos académicos", detail: "Crea los tramos del año en que se dan las clases y elige cuál es el actual.", links: [{ href: "/dashboard/configuracion/periodos", label: "Ver períodos" }] });
     main.push({
       icon: GraduationCap,
@@ -62,18 +67,18 @@ export default async function ConfiguracionPage() {
       links: [{ href: "/dashboard/gestion/programas", label: "Ver programas" }, { href: "/dashboard/gestion/grupos", label: "Ver grupos" }],
     });
   }
-  if (capabilities.has("people.view")) {
+  if (!independent && capabilities.has("people.view")) {
     main.push({ icon: Users, title: "Personas", detail: "Agrega docentes y estudiantes, invítalos a entrar y controla quién tiene acceso.", links: [{ href: "/dashboard/gestion", label: "Ver personas" }] });
   }
 
   const advanced: Card[] = [];
-  if (capabilities.has("roles.permissions.manage")) {
+  if (!independent && capabilities.has("roles.permissions.manage")) {
     advanced.push({ icon: ShieldCheck, title: "Roles y permisos", detail: "Decide qué puede hacer cada tipo de persona: administración, coordinación, docentes.", links: [{ href: "/dashboard/configuracion/roles", label: "Revisar permisos" }] });
   }
-  if (capabilities.has("guardianship.manage")) {
+  if (!independent && capabilities.has("guardianship.manage")) {
     advanced.push({ icon: HeartHandshake, title: "Tutores y familias", detail: "Conecta a cada madre, padre o tutor con su estudiante y elige qué puede ver.", links: [{ href: "/dashboard/configuracion/tutores", label: "Conectar tutores" }] });
   }
-  if (canManageOrganizationalUnits(capabilities)) {
+  if (!independent && canManageOrganizationalUnits(capabilities)) {
     advanced.push({ icon: Network, title: "Departamentos o áreas", detail: "Organiza al personal por departamento para enviar avisos solo a un área.", links: [{ href: "/dashboard/configuracion/unidades", label: "Organizar áreas" }] });
   }
 
@@ -83,7 +88,7 @@ export default async function ConfiguracionPage() {
     <div className="mx-auto max-w-3xl space-y-6 p-4 sm:p-8">
       <header>
         <h1 className="text-2xl font-bold" style={{ color: "var(--navy)" }}>Configuración</h1>
-        <p className="mt-1 text-sm text-slate-600">Aquí preparas tu institución. Elige qué quieres hacer.</p>
+        <p className="mt-1 text-sm text-slate-600">{independent ? "Aquí preparas tu espacio." : "Aquí preparas tu institución."} Elige qué quieres hacer.</p>
       </header>
 
       {main.length > 0 && <ul className="space-y-3">{main.map((card) => <SettingsCard key={card.title} card={card} />)}</ul>}

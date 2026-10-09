@@ -5,7 +5,7 @@ export const LOGIN_WINDOW_MINUTES = 15;
 export const MAX_FAILURES_PER_EMAIL = Number(process.env.LOGIN_MAX_FAILURES_PER_EMAIL ?? 5);
 export const MAX_FAILURES_PER_IP = Number(process.env.LOGIN_MAX_FAILURES_PER_IP ?? 20);
 
-export type ThrottleKind = "login" | "reset";
+export type ThrottleKind = "login" | "reset" | "signup";
 export type ThrottleSubject = { email: string; ip: string; kind?: ThrottleKind };
 
 function secret() {
