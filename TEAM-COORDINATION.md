@@ -61,7 +61,7 @@ Un solo agente modifica `prisma/schema.prisma` y la migración activa. Un segund
 | ID | Agente | Rama | Estado | Alcance exclusivo | Última actualización | Siguiente paso / bloqueo |
 |---|---|---|---|---|---|---|
 | S0-GOV | Kiro | `fix/role-access-hardening` | BLOCKED | `TEAM-COORDINATION.md`, `AGENTS.md`, `.kiro/PLAN.md`, `.kiro/steering/{current-state,simplicity,tech,data-model,product,spec-governance,structure}.md`, documentación S0, CI PostgreSQL y runner E2E | 2026-10-08 | Revisión independiente final `PASS`: preflight exacto/read-only antes de escrituras, curso por ID y pickers por código. Puerta local: 93/93, auth 11/11, tipos, lint, build 23/23, audit 0, migraciones 6/6. No crear otro Supabase ni iniciar S1. Bloqueos únicos: autorización de commit/push y login/bypass de Preview para el recorrido desplegado. |
-| S0-AUTH-DIAG | Kiro | `fix/role-access-hardening` | CLAIMED | Diagnóstico seguro de credenciales en `src/lib/auth.ts` y prueba contractual en `tests/security.test.ts`; sin esquema, migraciones ni secretos | 2026-10-09 | Publicar el claim, confirmar exclusividad remota, instrumentar las salidas de rechazo sin PII y obtener una causa verificable desde Vercel. |
+| S0-AUTH-DIAG | Kiro | `fix/role-access-hardening` | REVIEW | Diagnóstico seguro de credenciales en `src/lib/auth.ts` y prueba contractual en `tests/security.test.ts`; sin esquema, migraciones ni secretos | 2026-10-09 | Diagnóstico listo: cuatro causas explícitas, SHA/tenant/rol/updatedAt sin PII. Puerta: 94/94, auth 12/12, tipos, lint, build 23/23 y audit 0. Publicar en ambas ramas feature, ejecutar un solo login y leer `[auth][credentials-rejected]` en Vercel. |
 
 ## Claims reservados siguientes
 
