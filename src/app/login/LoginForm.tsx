@@ -19,11 +19,11 @@ type LoginForm = z.infer<typeof loginSchema>;
 /** Marca de la institución cuando se entra con `?institucion=<identificador>`. */
 export type LoginBrand = { slug: string; name: string; logoUrl: string | null; color: string };
 
-export function LoginScreen({ brand }: { brand: LoginBrand | null }) {
-  return <Suspense fallback={<div className="min-h-screen" style={{ background: "var(--cloud)" }} />}><LoginForm brand={brand} /></Suspense>;
+export function LoginScreen({ brand, showSetup = false }: { brand: LoginBrand | null; showSetup?: boolean }) {
+  return <Suspense fallback={<div className="min-h-screen" style={{ background: "var(--cloud)" }} />}><LoginForm brand={brand} showSetup={showSetup} /></Suspense>;
 }
 
-function LoginForm({ brand }: { brand: LoginBrand | null }) {
+function LoginForm({ brand, showSetup }: { brand: LoginBrand | null; showSetup: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
@@ -222,9 +222,12 @@ function LoginForm({ brand }: { brand: LoginBrand | null }) {
             <Link href="/recuperar" className="inline-flex min-h-11 items-center font-semibold underline" style={{ color: "var(--blue)" }}>¿Olvidaste tu contraseña o es tu primera vez?</Link>
           </p>
 
-          <p className="mt-4 text-center text-xs" style={{ color: "#64748B" }}>
-            ¿Base de datos nueva? <Link href="/setup" className="font-semibold underline" style={{ color: "var(--blue)" }}>Crear la primera institución</Link>
-          </p>
+          {/* Solo mientras no exista ninguna institución: después, /setup ya no sirve. */}
+          {showSetup && (
+            <p className="mt-4 text-center text-xs" style={{ color: "#64748B" }}>
+              ¿Base de datos nueva? <Link href="/setup" className="inline-flex min-h-11 items-center font-semibold underline" style={{ color: "var(--blue)" }}>Crear la primera institución</Link>
+            </p>
+          )}
 
           <p className="text-xs text-center mt-8" style={{ color: "#64748B" }}>
             ¿Problemas para ingresar?{" "}

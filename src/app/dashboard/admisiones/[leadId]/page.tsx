@@ -51,9 +51,18 @@ export default async function LeadPage({ params }: { params: Promise<{ leadId: s
     db.program.findMany({ where: { institutionId: user.institutionId, isPublished: true }, orderBy: { name: "asc" }, select: { name: true } }),
     stage === "ACCEPTED" && canConvert ? listGroups(user.institutionId) : [],
   ]);
+  const dateOnly = new Intl.DateTimeFormat("es", { timeZone: institution?.timezone ?? "America/Santo_Domingo", dateStyle: "long" });
   const when = new Intl.DateTimeFormat("es", { timeZone: institution?.timezone ?? "America/Santo_Domingo", dateStyle: "medium", timeStyle: "short" });
   const lastReason = history.find((row) => row.action === "ADMISSION_STAGE_CHANGED" && (row.changes as { to?: unknown } | null)?.to === "REJECTED");
   const reasonText = (lastReason?.changes as { reason?: unknown } | null | undefined)?.reason;
+  // Lo que pasó al convertir, para que se siga viendo después de recargar.
+  const conversion = history.find((row) => row.action === "ADMISSION_CONVERTED");
+  const conversionData = (conversion?.changes ?? {}) as { created?: unknown; groupId?: unknown };
+  const convertedOn = lead.convertedAt ?? conversion?.createdAt ?? null;
+  const conversionGroup =
+    converted && typeof conversionData.groupId === "string"
+      ? await db.studentGroup.findFirst({ where: { id: conversionData.groupId, institutionId: user.institutionId }, select: { name: true } })
+      : null;
   const linkable = sameEmail ? sameEmail.role === "STUDENT" && sameEmail.status === "ACTIVE" : true;
 
   return (
@@ -88,16 +97,35 @@ export default async function LeadPage({ params }: { params: Promise<{ leadId: s
           )
         )}
         {converted && (
-          <p className="rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900">
-            Ya es estudiante de la institución.{" "}
-            {person && capabilities.has("people.view") ? (
-              <Link href={`/dashboard/gestion/estudiantes/${person.id}`} className="inline-flex min-h-11 items-center font-semibold underline">Ver la ficha de {person.name}</Link>
-            ) : person ? (
-              <>Su ficha está en Personas como {person.name}.</>
-            ) : (
-              <>No encontramos a la persona vinculada; búscala en Personas por su correo.</>
+          <div className="space-y-1 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900">
+            <p className="font-semibold">
+              Ya es estudiante de la institución{convertedOn ? ` desde el ${dateOnly.format(convertedOn)}` : ""}.
+            </p>
+            {conversion && (
+              <p>
+                {conversionData.created === false ? "Se vinculó con una persona que ya existía." : "Se creó como persona nueva."}
+                {conversionGroup ? ` Quedó en el grupo «${conversionGroup.name}».` : ""}
+              </p>
             )}
-          </p>
+            {person && (
+              <p>
+                {person.access === "ready"
+                  ? "Ya creó su contraseña y puede entrar."
+                  : person.access === "invited"
+                    ? "Ya recibió su invitación; falta que cree su contraseña."
+                    : "Todavía no recibió su invitación: envíasela desde su ficha."}
+              </p>
+            )}
+            <p>
+              {person && capabilities.has("people.view") ? (
+                <Link href={`/dashboard/gestion/personas/${person.id}`} className="inline-flex min-h-11 items-center font-semibold underline">Ver la ficha de {person.name}</Link>
+              ) : person ? (
+                <>Su ficha está en Personas como {person.name}.</>
+              ) : (
+                <>No encontramos a la persona vinculada; búscala en Personas por su correo.</>
+              )}
+            </p>
+          </div>
         )}
         {stage === "REJECTED" && (
           <>

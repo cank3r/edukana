@@ -154,6 +154,10 @@ test("tareas y notas: solo lo publicado y solo lo de su hijo", async () => {
 
 test("asistencia, clases y estado de cuenta: aparecen solo cuando el vínculo y el rol lo permiten", async () => {
   await db.guardianship.update({ where: { id: A.guardianshipId }, data: ALL_AREAS });
+  // El tutor tiene por omisión el permiso de cobros; si la institución se lo quita al rol, el vínculo no basta.
+  await db.roleCapabilityOverride.create({
+    data: { id: "it_gp_override", institutionId: A.institutionId, role: "PARENT", capability: "child.finance.view", enabled: false, updatedById: A.admin.id },
+  });
   let view = await getChildOverview(A.parent, A.student.id, now);
   assert.ok(view);
   assert.deepEqual(view.permissions, { academics: true, attendance: true, schedule: true, announcements: true, finance: false }, "el estado de cuenta además exige el permiso del rol");
@@ -169,9 +173,7 @@ test("asistencia, clases y estado de cuenta: aparecen solo cuando el vínculo y 
   assert.equal(card.nextClass?.id, "it_gp_live");
   assert.equal(JSON.stringify(card).includes("reunion.test"), false);
 
-  await db.roleCapabilityOverride.create({
-    data: { id: "it_gp_override", institutionId: A.institutionId, role: "PARENT", capability: "child.finance.view", enabled: true, updatedById: A.admin.id },
-  });
+  await db.roleCapabilityOverride.deleteMany({ where: { id: "it_gp_override" } });
   view = await getChildOverview(A.parent, A.student.id, now);
   assert.ok(view?.account);
   assert.deepEqual(view.account.charges.map((charge) => [charge.id, charge.amountCents, charge.overdue]), [["it_gp_pay_overdue", 150000, true], ["it_gp_pay_pending", 100050, false]]);

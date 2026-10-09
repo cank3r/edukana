@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { verifyCertificateCode } from "@/server/courses/certificates";
 import { PrintButton } from "./PrintButton";
@@ -60,7 +61,10 @@ export default async function CertificatePage({ params }: { params: Promise<{ co
               <dd className="font-semibold tracking-wider text-slate-900">{result.code}</dd>
             </div>
           </dl>
-          <p className="mt-6 text-xs text-slate-500">Emitido con Edukana. Cualquiera puede comprobarlo abriendo su enlace o buscando este código.</p>
+          <p className="mt-6 text-xs text-slate-500">
+            Emitido con Edukana. Cualquiera puede comprobarlo abriendo su enlace o escribiendo este código en{" "}
+            <Link href="/certificados" className="underline print:no-underline">Comprobar un certificado</Link>.
+          </p>
         </div>
       </article>
 
