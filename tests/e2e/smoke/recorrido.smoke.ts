@@ -1,14 +1,21 @@
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { Tour } from "./harness";
 import { demoDayKey, loadSeed, SMOKE_ACCOUNTS } from "./shared";
 
 /**
- * Recorrido en navegador de las pantallas del curso completo, con la semilla de `seed.ts`.
+ * Recorrido en navegador de toda la plataforma, con la semilla de `seed.ts`.
  *
- * Tres recorridos independientes (administrador, docente, estudiante). Cada uno entra por el
+ * Recorridos independientes por rol (administrador de una institución nueva, administrador,
+ * docente, estudiante, tutor, coordinador y visitante sin sesión). Cada uno entra por el
  * formulario real de `/login`. Lo que cada recorrido crea lleva el nombre del proyecto
  * (móvil / escritorio) para que las dos pasadas no choquen sobre la misma base; el estudiante
- * del proyecto móvil es Ana y el del escritorio es Pedro.
+ * del proyecto móvil es Ana y el del escritorio es Pedro. El docente califica a Rosa en móvil
+ * y a Juan en escritorio (los dos tienen entrega y examen sembrados).
+ *
+ * Numeración de capturas: 001 institución nueva, 010 administrador, 100 docente, 200 estudiante,
+ * 300 tutor, 350 coordinador, 400 público.
  */
 
 const seed = loadSeed();
@@ -19,17 +26,41 @@ const visible = (page: Page, text: string | RegExp) => expect(page.getByText(tex
 const heading = (page: Page, name: string | RegExp) => expect(page.getByRole("heading", { name }).first()).toBeVisible();
 /** Mensaje de éxito de una acción (los formularios lo muestran con role="status"). */
 const done = (page: Page, text: RegExp) => expect(page.getByRole("status").filter({ hasText: text }).first()).toBeVisible();
+const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-test("administrador", async ({ page }, info) => {
-  const tag = info.project.name;
-  const tour = new Tour(page, info, "administrador", 1);
+/** Inicia sesión o deja constancia de que el recorrido no pudo empezar. */
+async function start(tour: Tour, email: string) {
   try {
-    await tour.login(SMOKE_ACCOUNTS.admin);
+    await tour.login(email);
+    return true;
   } catch (error) {
     await tour.aborted(`No se pudo iniciar sesión: ${String(error).slice(0, 200)}`);
     tour.finish();
-    return;
+    return false;
   }
+}
+
+test("administrador institucion nueva", async ({ page }, info) => {
+  const tour = new Tour(page, info, "admin nuevo", 1);
+  if (!(await start(tour, SMOKE_ACCOUNTS.newAdmin))) return;
+
+  await tour.open("inicio primeros pasos", "/dashboard", async () => {
+    await heading(page, "Primeros pasos");
+    await heading(page, "Colegio Nuevo Amanecer");
+  });
+  await tour.open("personas vacio", "/dashboard/gestion", () => heading(page, "Personas"));
+  await tour.open("cursos vacio", "/dashboard/aula", () => heading(page, "Cursos"));
+  await tour.open("periodos vacio", "/dashboard/configuracion/periodos", () => heading(page, "Períodos académicos"));
+  await tour.open("cobros vacio", "/dashboard/pagos", () => heading(page, "Cobros"));
+  await tour.open("admisiones vacio", "/dashboard/admisiones", () => heading(page, "Admisiones"));
+  await tour.open("reportes vacio", "/dashboard/analitica", () => heading(page, "Reportes"));
+  tour.finish();
+});
+
+test("administrador", async ({ page }, info) => {
+  const tag = info.project.name;
+  const tour = new Tour(page, info, "administrador", 10);
+  if (!(await start(tour, SMOKE_ACCOUNTS.admin))) return;
 
   await tour.open("inicio", "/dashboard", () => heading(page, /Primeros pasos|Tu institución en números/));
   await tour.open("personas", "/dashboard/gestion", () => visible(page, "Ana Rodríguez"));
@@ -100,8 +131,95 @@ test("administrador", async ({ page }, info) => {
   await tour.open("calendario", "/dashboard/calendario", () => heading(page, "Calendario"));
   await tour.open("configuracion", "/dashboard/configuracion", () => heading(page, /Configuración/i));
   await tour.open("cursos", "/dashboard/aula", () => visible(page, "Matemática Básica"));
+
+  // --- qa: recorrido completo (administrador) ---
+  const period = `Período de verano (${tag})`;
+  await tour.open("periodos", "/dashboard/configuracion/periodos", () => heading(page, "Períodos académicos"));
+  await tour.step("periodos crear", async () => {
+    await page.getByRole("button", { name: "Crear período" }).click();
+    await page.getByLabel("Nombre del período").fill(period);
+    const year = Number(demoDayKey(0).slice(0, 4)) + 1;
+    await page.getByLabel("Empieza el").fill(tag === "movil" ? `${year}-07-01` : `${year}-09-01`);
+    await page.getByLabel("Termina el").fill(tag === "movil" ? `${year}-08-15` : `${year}-12-15`);
+    await page.getByRole("button", { name: "Crear período" }).click();
+    await done(page, /Período creado/);
+    await heading(page, period);
+  });
+  await tour.open("datos de la institucion", "/dashboard/configuracion/institucion", () => heading(page, "Datos de la institución"));
+
+  const charged = tag === "movil" ? "Ana Rodríguez" : "Pedro Jiménez";
+  const concept = `Uniforme escolar (${tag})`;
+  await tour.open("cobros", "/dashboard/pagos", async () => {
+    await heading(page, "Cobros");
+    await visible(page, "Inscripción del período");
+  });
+  await tour.step("cobros crear cargo formulario", async () => {
+    if (!(await page.getByRole("heading", { name: "Crear cargo" }).isVisible().catch(() => false))) {
+      await page.getByRole("button", { name: "Crear cargo" }).click();
+    }
+    await page.getByLabel("Estudiante", { exact: true }).fill(charged.split(" ")[0]);
+    await page.getByRole("button", { name: new RegExp(charged) }).first().click();
+    await page.getByLabel("Concepto").fill(concept);
+    await page.getByLabel("Monto", { exact: true }).fill("2500.00");
+    await page.getByLabel("Fecha de vencimiento").fill(demoDayKey(15));
+  });
+  await tour.step("cobros cargo creado", async () => {
+    await page.getByRole("button", { name: "Crear cargo", exact: true }).click();
+    await done(page, new RegExp(`Cargo creado para ${charged}`));
+    await expect(page.getByRole("listitem").filter({ hasText: concept })).toBeVisible();
+  });
+  await tour.step("cobros pago parcial", async () => {
+    const row = page.getByRole("listitem").filter({ hasText: concept });
+    await row.getByRole("button", { name: "Registrar pago" }).click();
+    await row.getByLabel("Monto recibido").fill("1000.00");
+    await row.getByRole("button", { name: "Guardar pago" }).click();
+    await expect(row.getByRole("status").filter({ hasText: /Pago registrado/ })).toBeVisible();
+    await expect(row.getByText("Pago parcial", { exact: true })).toBeVisible();
+  });
+
+  const applicant = `Lucía Fernández (${tag})`;
+  await tour.open("admisiones", "/dashboard/admisiones", async () => {
+    await heading(page, "Admisiones");
+    await visible(page, "Carmen Báez");
+  });
+  await tour.step("admisiones registrar solicitud", async () => {
+    await page.getByRole("button", { name: "Registrar solicitud" }).click();
+    await page.getByLabel("Nombre completo").fill(applicant);
+    await page.getByLabel("Correo", { exact: true }).fill(`lucia.${tag}@correo.test`);
+    await page.getByLabel("Programa de interés (opcional)").fill("Bachillerato Técnico");
+    await page.getByRole("button", { name: "Registrar solicitud" }).click();
+    await page.waitForURL(/\/admisiones\/[^/?#]+$/);
+    await heading(page, applicant);
+  });
+  await tour.step("admisiones avanzar a admitido", async () => {
+    for (const stage of ["Documentos", "En revisión", "Admitido"]) {
+      await page.getByRole("button", { name: `Pasar a «${stage}»` }).click();
+      await expect(page.getByRole("button", { name: `Pasar a «${stage}»` })).toHaveCount(0);
+    }
+    await expect(page.getByRole("button", { name: "Convertir en estudiante" })).toBeVisible();
+  });
+  await tour.step("admisiones convertir confirmar", async () => {
+    await page.getByRole("button", { name: "Convertir en estudiante" }).click();
+    await page.getByLabel(/Enviarle la invitación ahora/).uncheck();
+    await expect(page.getByRole("button", { name: "Sí, convertir en estudiante" })).toBeVisible();
+  });
+  await tour.step("admisiones convertida", async () => {
+    await page.getByRole("button", { name: "Sí, convertir en estudiante" }).click();
+    await visible(page, "Ya es estudiante de la institución.");
+  });
+
+  await tour.open("reportes", "/dashboard/analitica", () => heading(page, "Reportes"));
+  await tour.step("reportes descargar csv de cursos", async () => {
+    const response = await page.request.get("/dashboard/analitica/descargar?seccion=cursos");
+    expect(response.status(), "La descarga del CSV de cursos debe responder 200").toBe(200);
+    expect(response.headers()["content-type"] ?? "").toContain("text/csv");
+    expect((await response.text()).length).toBeGreaterThan(0);
+  });
+  await tour.open("curso asistencia", `${course}/asistencia`, () => heading(page, "Asistencia"));
+  await tour.open("curso certificados", `${course}/certificados`, () => heading(page, "Certificados"));
+  // --- fin qa: recorrido completo (administrador) ---
   // --- M5 · pagos y recibos ---
-  await tour.open("cobros", "/dashboard/pagos", () => heading(page, "Cobros"));
+  await tour.open("cobros historial", "/dashboard/pagos", () => heading(page, "Cobros"));
   await tour.step("cobros recibo", async () => {
     await page.getByText("Historial de pagos (1)").filter({ visible: true }).first().click();
     await page.getByRole("link", { name: "Ver recibo" }).filter({ visible: true }).first().click();
@@ -114,14 +232,9 @@ test("administrador", async ({ page }, info) => {
 
 test("docente", async ({ page }, info) => {
   const tag = info.project.name;
-  const tour = new Tour(page, info, "docente", 30);
-  try {
-    await tour.login(SMOKE_ACCOUNTS.teacher);
-  } catch (error) {
-    await tour.aborted(`No se pudo iniciar sesión: ${String(error).slice(0, 200)}`);
-    tour.finish();
-    return;
-  }
+  const graded = tag === "movil" ? "Rosa Almonte" : "Juan Castillo";
+  const tour = new Tour(page, info, "docente", 100);
+  if (!(await start(tour, SMOKE_ACCOUNTS.teacher))) return;
 
   await tour.open("inicio", "/dashboard", async () => {
     await heading(page, "¿Qué tengo hoy?");
@@ -183,6 +296,19 @@ test("docente", async ({ page }, info) => {
     await expect(row.getByText("Publicada", { exact: true })).toBeVisible();
   });
   await tour.open("tarea detalle docente", `${course}/tareas/${seed.assignmentId}`, () => visible(page, "Problemas de suma y resta"));
+  // --- qa: recorrido completo (calificar la entrega sembrada) ---
+  await tour.step("tarea abrir entrega", async () => {
+    await page.getByRole("listitem").filter({ hasText: graded }).getByRole("link", { name: /Calificar|Ver o corregir/ }).click();
+    await page.waitForURL(/entrega=/);
+    await heading(page, `Entrega de ${graded}`);
+  });
+  await tour.step("tarea entrega calificada", async () => {
+    await page.getByLabel(/^Nota \(de 0 a/).fill("85");
+    await page.getByLabel("Comentario para el estudiante (opcional)").fill("Buen trabajo. Revisa el problema 3: faltó escribir el procedimiento.");
+    await page.getByRole("button", { name: "Guardar nota" }).click();
+    await done(page, /Nota (guardada|corregida)/);
+  });
+  // --- fin qa ---
 
   await tour.open("banco de preguntas", `${course}/preguntas`, () => visible(page, "¿Cuánto es 27 + 15?"));
   await tour.open("pregunta nueva", `${course}/preguntas/nueva`);
@@ -193,6 +319,15 @@ test("docente", async ({ page }, info) => {
     await visible(page, /Prueba corta|suma y resta/);
   });
   await tour.open("examen resultados", `${course}/examenes/${seed.examId}/resultados`);
+  // --- qa: recorrido completo (revisar la respuesta corta sembrada) ---
+  await tour.step("examen respuesta corta revisada", async () => {
+    const card = page.getByRole("listitem").filter({ has: page.getByRole("heading", { name: graded, exact: true }) });
+    await card.getByLabel(/^Puntos \(de 0 a/).fill("3");
+    await card.getByLabel(/^Comentario/).fill("Bien explicado.");
+    await card.getByRole("button", { name: "Guardar revisión" }).click();
+    await expect(card.getByText("Calificado", { exact: true })).toBeVisible();
+  });
+  // --- fin qa ---
 
   await tour.open("calificaciones", `${course}/calificaciones`, async () => {
     const simple = page.getByRole("button", { name: "Usar configuración sencilla" });
@@ -200,9 +335,37 @@ test("docente", async ({ page }, info) => {
       await simple.click();
       await done(page, /Listo/);
     }
-    await heading(page, "Notas de 2 estudiantes");
+    await heading(page, /^Notas de \d+ estudiantes$/);
     await visible(page, "Ana Rodríguez");
   });
+  // --- qa: recorrido completo (nota manual en Calificaciones) ---
+  const activity = `Participación ${tag}`;
+  await tour.step("calificaciones actividad nueva", async () => {
+    await page.getByText("Agregar actividad calificable", { exact: true }).click();
+    const form = page.locator("form").filter({ has: page.getByRole("button", { name: "Agregar actividad" }) });
+    await form.getByLabel("Título").fill(activity);
+    await form.getByLabel("Puntaje máximo").fill("10");
+    await form.getByRole("button", { name: "Agregar actividad" }).click();
+    await visible(page, activity);
+  });
+  await tour.step("calificaciones nota manual abierta", async () => {
+    if (tag === "movil") {
+      const card = page.getByRole("listitem").filter({ has: page.locator("summary", { hasText: graded }) });
+      await card.locator("summary").click();
+      await card.getByRole("link", { name: new RegExp(escape(activity)) }).click();
+    } else {
+      await page.getByRole("link", { name: new RegExp(`^${escape(graded)}, ${escape(activity)}:`) }).click();
+    }
+    await page.waitForURL(/nota=/);
+    await expect(page.getByLabel(/^Nota \(de 0 a 10\)/)).toBeVisible();
+  });
+  await tour.step("calificaciones nota manual guardada", async () => {
+    await page.getByLabel(/^Nota \(de 0 a 10\)/).fill("9");
+    await page.getByRole("button", { name: "Guardar nota" }).click();
+    await page.waitForURL((url) => !url.search.includes("nota="));
+    await heading(page, /^Notas de \d+ estudiantes$/);
+  });
+  // --- fin qa ---
 
   const liveClass = `Clase de dudas (${tag})`;
   await tour.open("clases en vivo", `${course}/clases`, () => visible(page, "Repaso de la unidad 1"));
@@ -216,6 +379,32 @@ test("docente", async ({ page }, info) => {
     await visible(page, liveClass);
   });
   await tour.open("editar curso", `${course}/editar`);
+
+  // --- qa: recorrido completo (asistencia y certificados) ---
+  await tour.open("asistencia", `${course}/asistencia`, () => heading(page, "Asistencia"));
+  await tour.step("asistencia de hoy con una ausencia", async () => {
+    await page.getByRole("group", { name: new RegExp(graded) }).getByText("Ausente", { exact: true }).click();
+    const correction = await page.getByRole("button", { name: "Guardar cambios" }).isVisible().catch(() => false);
+    await page.getByRole("button", { name: /^(Guardar asistencia|Guardar cambios)$/ }).click();
+    // Defecto conocido: la primera vez que se guarda un día el formulario se vuelve a montar y el mensaje
+    // «Asistencia guardada» no llega a verse; lo único que cambia es el título a «Corregir asistencia».
+    if (correction) await done(page, /Asistencia corregida/);
+    else await heading(page, "Corregir asistencia");
+  });
+  await tour.open("certificados", `${course}/certificados`, () => heading(page, "Certificados"));
+  await tour.step("certificados marcar completado", async () => {
+    const row = page.getByRole("listitem").filter({ hasText: graded });
+    await row.getByRole("button", { name: "Marcar curso como completado" }).click();
+    await row.getByRole("button", { name: "Sí, marcar como completado" }).click();
+    await expect(row.getByRole("button", { name: "Emitir certificado" })).toBeVisible();
+  });
+  await tour.step("certificados emitido", async () => {
+    const row = page.getByRole("listitem").filter({ hasText: graded });
+    await row.getByRole("button", { name: "Emitir certificado" }).click();
+    await expect(row.getByRole("link", { name: "Ver certificado" })).toBeVisible();
+  });
+  // --- fin qa ---
+
   await tour.open("avisos", "/dashboard/comunidad", () => visible(page, "Bienvenidos al nuevo período"));
   await tour.open("calendario", "/dashboard/calendario", () => heading(page, "Calendario"));
   await tour.open("mi perfil", "/dashboard/perfil", async () => {
@@ -228,14 +417,8 @@ test("docente", async ({ page }, info) => {
 test("estudiante", async ({ page }, info) => {
   const mobile = info.project.name === "movil";
   const email = mobile ? SMOKE_ACCOUNTS.student1 : SMOKE_ACCOUNTS.student2;
-  const tour = new Tour(page, info, "estudiante", 60);
-  try {
-    await tour.login(email);
-  } catch (error) {
-    await tour.aborted(`No se pudo iniciar sesión: ${String(error).slice(0, 200)}`);
-    tour.finish();
-    return;
-  }
+  const tour = new Tour(page, info, "estudiante", 200);
+  if (!(await start(tour, email))) return;
 
   await tour.open("inicio", "/dashboard", async () => {
     await heading(page, "¿Qué tengo hoy?");
@@ -302,8 +485,22 @@ test("estudiante", async ({ page }, info) => {
     await heading(page, "Mi perfil");
     await visible(page, email);
   });
+
+  // --- qa: recorrido completo (estudiante) ---
+  await tour.open("mi asistencia", `${course}/asistencia`, () => heading(page, "Mi asistencia"));
+  await tour.open("mi certificado curso en marcha", `${course}/certificados`, () => heading(page, "Mi certificado"));
+  await tour.open("mi certificado curso terminado", `/dashboard/aula/${seed.finishedCourseId}/certificados`, () => heading(page, /Ya tienes tu certificado/));
+  await tour.open("mis certificados", "/dashboard/mis-certificados", async () => {
+    await heading(page, "Mis certificados");
+    await visible(page, "Taller de Lectura");
+  });
+  await tour.open("mi estado de cuenta", "/dashboard/mi-cuenta", async () => {
+    await heading(page, "Mi cuenta");
+    await visible(page, mobile ? "Inscripción del período" : "Mensualidad");
+  });
+  // --- fin qa ---
   // --- M5 · pagos y recibos ---
-  await tour.open("mi estado de cuenta", "/dashboard/mi-cuenta", () => heading(page, "Mi cuenta"));
+  await tour.open("mi cuenta recibos", "/dashboard/mi-cuenta", () => heading(page, "Mi cuenta"));
   await tour.step("mi recibo", async () => {
     await page.getByRole("link", { name: "Ver recibo" }).filter({ visible: true }).first().click();
     await page.waitForURL(/\/dashboard\/mi-cuenta\/recibo\//);
@@ -312,3 +509,60 @@ test("estudiante", async ({ page }, info) => {
   // --- fin M5 ---
   tour.finish();
 });
+
+// --- qa: recorrido completo (tutor, coordinador y público) ---
+test("tutor", async ({ page }, info) => {
+  const tour = new Tour(page, info, "tutor", 300);
+  if (!(await start(tour, SMOKE_ACCOUNTS.parent))) return;
+
+  await tour.open("inicio", "/dashboard", () => heading(page, "¿Qué necesitas hacer hoy?"));
+  await tour.open("mis hijos", "/dashboard/hijos", async () => {
+    await heading(page, "Mis hijos");
+    await visible(page, "Pedro Jiménez");
+  });
+  await tour.step("resumen del hijo", async () => {
+    await page.getByRole("link", { name: /Ana Rodríguez/ }).first().click();
+    await page.waitForURL(new RegExp(`/hijos/${seed.studentIds[0]}`));
+    await heading(page, "Ana Rodríguez");
+  });
+  await tour.open("estado de cuenta", "/dashboard/mi-cuenta", async () => {
+    await heading(page, /Cuenta de Ana Rodríguez/);
+    await visible(page, "Inscripción del período");
+  });
+  await tour.open("estado de cuenta otro hijo", `/dashboard/mi-cuenta?estudiante=${seed.studentIds[1]}`, () => heading(page, /Cuenta de Pedro Jiménez/));
+  // El tutor no tiene «Calendario» en su menú (las fechas de cada hijo están en su resumen): no se visita.
+  await tour.open("avisos", "/dashboard/comunidad", () => heading(page, "Avisos"));
+  tour.finish();
+});
+
+test("coordinador", async ({ page }, info) => {
+  const tour = new Tour(page, info, "coordinador", 350);
+  if (!(await start(tour, SMOKE_ACCOUNTS.coordinator))) return;
+
+  await tour.open("inicio", "/dashboard", () => heading(page, "¿Qué necesitas hacer hoy?"));
+  await tour.open("personas", "/dashboard/gestion", async () => {
+    await heading(page, "Personas");
+    await visible(page, "Ana Rodríguez");
+  });
+  await tour.open("cursos", "/dashboard/aula", () => visible(page, "Matemática Básica"));
+  await tour.open("curso portada", course, () => heading(page, "Matemática Básica"));
+  await tour.open("avisos", "/dashboard/comunidad", () => visible(page, "Bienvenidos al nuevo período"));
+  await tour.open("admisiones", "/dashboard/admisiones", () => heading(page, "Admisiones"));
+  await tour.open("calendario", "/dashboard/calendario", () => heading(page, "Calendario"));
+  tour.finish();
+});
+
+test("publico", async ({ page }, info) => {
+  const tour = new Tour(page, info, "publico", 400);
+  await tour.open("entrar", "/login", () => heading(page, "Bienvenido"));
+  await tour.open("recuperar contrasena", "/recuperar", () => expect(page.getByLabel(/Correo/).first()).toBeVisible());
+  await tour.open("certificado publico", `/certificados/${seed.certificateCode}`, async () => {
+    await heading(page, "Certificado de finalización");
+    await visible(page, "Ana Rodríguez");
+  });
+  // Pantallas públicas que otras piezas están construyendo: se recorren cuando existan en la rama.
+  if (existsSync(join(process.cwd(), "src/app/solicitud"))) await tour.open("solicitud de admision", "/solicitud");
+  if (existsSync(join(process.cwd(), "src/app/cursos"))) await tour.open("catalogo de cursos", "/cursos");
+  tour.finish();
+});
+// --- fin qa ---

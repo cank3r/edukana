@@ -34,4 +34,8 @@ export default function writeSmokeReport() {
   }
   if (!records.length) lines.push("No se registró ninguna pantalla: el recorrido no llegó a empezar. Revisa el log del servidor y el reporte de Playwright.", "");
   writeFileSync(join(process.cwd(), SMOKE_DIR, "smoke-report.md"), lines.join("\n"));
+  // Resumen corto al final del log: el comentario del commit solo muestra sus últimas líneas.
+  const failures = records.filter((record) => record.status === "FALLA");
+  console.log(`Recorrido: ${records.length} pantallas, ${failures.length} con defectos, ${count("ADVERTENCIA")} con advertencias.`);
+  for (const row of failures) console.log(`FALLA ${row.project} · ${row.role} · ${row.screen}: ${row.detail.slice(0, 220)}`);
 }

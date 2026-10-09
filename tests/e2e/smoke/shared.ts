@@ -12,6 +12,13 @@ export const SMOKE_ACCOUNTS = {
   teacher: "docente@instituto-demo.test",
   student1: "ana@instituto-demo.test",
   student2: "pedro@instituto-demo.test",
+  /** Estudiantes que no entran: tienen entrega y examen sembrados para que el docente los califique. */
+  student3: "rosa@instituto-demo.test",
+  student4: "juan@instituto-demo.test",
+  coordinator: "coordinacion@instituto-demo.test",
+  parent: "marisol@instituto-demo.test",
+  /** Administrador de una segunda institución vacía: ve «Primeros pasos». */
+  newAdmin: "direccion@colegio-nuevo.test",
 } as const;
 
 export type SmokeSeed = {
@@ -25,6 +32,12 @@ export type SmokeSeed = {
   groupId: string;
   announcementId: string;
   studentIds: string[];
+  /** Rosa (la califica el docente en móvil) y Juan (en escritorio). */
+  gradedStudentIds: string[];
+  /** Curso ya terminado, con certificados emitidos a Ana y Pedro. */
+  finishedCourseId: string;
+  /** Código del certificado de Ana en el curso terminado (página pública). */
+  certificateCode: string;
 };
 
 export function loadSeed(): SmokeSeed {
