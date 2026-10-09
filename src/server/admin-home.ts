@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { countPendingInvitations } from "@/server/people/invitations";
+import { plural } from "@/lib/ux";
 
 /** Días que una entrega puede esperar calificación antes de avisar a quien administra. */
 export const STALE_SUBMISSION_DAYS = 7;
@@ -26,7 +27,6 @@ export type AdminHome = { institutionName: string; hasPeriod: boolean; numbers: 
 /** Avisos que repiten un paso de «Primeros pasos»: mientras la guía se vea, no se muestran dos veces. */
 export const ALERTS_IN_FIRST_STEPS: AdminHomeAlert["id"][] = ["period-missing", "invitations", "empty-courses"];
 
-const plural = (count: number, one: string, many: string) => (count === 1 ? `1 ${one}` : `${count} ${many}`);
 
 /**
  * Números y pendientes del inicio de quien administra, ya calculados.

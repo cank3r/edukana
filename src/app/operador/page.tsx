@@ -4,13 +4,13 @@ import { INSTITUTION_TYPE_OPTIONS } from "@/server/platform/institution-settings
 import { listInstitutionsForOperator, OPERATOR_LIST_LIMIT } from "@/server/platform/operator";
 import { getOperatorEmail } from "@/server/platform/operator-session";
 import { formatOperatorDate } from "./format";
+import { plural } from "@/lib/ux";
 
 export const dynamic = "force-dynamic";
 
 const primary = "inline-flex min-h-11 items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 font-semibold text-white";
 const fieldClass = "min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-base outline-none focus:border-blue-500";
 const typeLabel = (type: string) => INSTITUTION_TYPE_OPTIONS.find((option) => option.value === type)?.label ?? "Otro";
-const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
 
 export default async function OperatorHomePage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const params = await searchParams;

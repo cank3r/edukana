@@ -2,11 +2,11 @@ import Link from "next/link";
 import { AlertTriangle, CalendarDays, ChevronRight, CreditCard, Users } from "lucide-react";
 import type { GuardianActor } from "@/server/family/guardian-portal";
 import { getParentHome } from "@/server/parent-home";
+import { plural } from "@/lib/ux";
 
 type Props = { user: GuardianActor; userName?: string | null };
 
 const sectionTitle = "mb-3 text-lg font-bold text-slate-900";
-const plural = (count: number, one: string, many: string) => (count === 1 ? `1 ${one}` : `${count} ${many}`);
 
 /** Inicio del tutor: qué pasa con cada hijo y qué requiere su atención. */
 export async function ParentHome({ user, userName }: Props) {

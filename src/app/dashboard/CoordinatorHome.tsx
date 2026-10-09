@@ -3,13 +3,13 @@ import { AlertCircle, BookOpen, ChevronRight, ClipboardCheck, Megaphone, UserPlu
 import type { Capability } from "@/lib/capabilities";
 import { STALE_SUBMISSION_DAYS } from "@/server/admin-home";
 import { getCoordinatorHome, type CoordinatorActor } from "@/server/coordinator-home";
+import { plural } from "@/lib/ux";
 
 type Props = { actor: CoordinatorActor; capabilities: ReadonlySet<Capability>; userName?: string | null };
 
 const sectionTitle = "mb-3 text-lg font-bold text-slate-900";
 const card = "rounded-xl border border-slate-200 bg-white p-4";
 const smallLink = "inline-flex min-h-11 items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-blue-400";
-const plural = (count: number, one: string, many: string) => (count === 1 ? `1 ${one}` : `${count} ${many}`);
 /** Cuántos cursos por completar se listan aquí; el resto está en «Cursos». */
 const GAPS_SHOWN = 6;
 
