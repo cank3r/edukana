@@ -26,6 +26,7 @@ export function navigationForRole(role: EdukanaRole, effective?: ReadonlySet<Cap
     ...(role !== "PARENT" || can("child.announcements.view") ? [common.community] : []),
     ...(can("admissions.manage") ? [{ label: "Admisiones", href: "/dashboard/admisiones", icon: "admissions" } as NavigationItem] : []),
     ...(can("finance.manage") ? [{ label: "Cobros", href: "/dashboard/pagos", icon: "payments" } as NavigationItem] : []),
+    ...(can("finance.manage") ? [{ label: "Ventas", href: "/dashboard/ventas", icon: "payments" } as NavigationItem] : []),
     ...(can("schedule.view") ? [common.calendar] : []),
     ...(can("analytics.view") ? [{ label: "Reportes", href: "/dashboard/analitica", icon: "analytics" } as NavigationItem] : []),
     ...(can("tenant.settings.manage") || can("roles.permissions.manage") ? [{ label: "Configuración", href: "/dashboard/configuracion", icon: "settings" } as NavigationItem] : []),
@@ -63,7 +64,7 @@ export function spanishLabel(value: string | null | undefined): string {
 
 const BREADCRUMB_LABELS: Record<string, string> = {
   dashboard: "Inicio", aula: "Cursos", gestion: "Personas", estudiantes: "Estudiantes", portal: "Mi aprendizaje",
-  comunidad: "Avisos", admisiones: "Admisiones", pagos: "Cobros", calendario: "Calendario", analitica: "Reportes", configuracion: "Configuración", roles: "Roles y permisos", tutores: "Tutores", hijos: "Mis hijos", "puesta-en-marcha": "Puesta en marcha", periodos: "Períodos", institucion: "Datos de la institución", asistencia: "Asistencia", certificados: "Certificados", "mis-certificados": "Mis certificados", "mi-cuenta": "Mi estado de cuenta", perfil: "Mi perfil", contenido: "Contenido", leccion: "Lección", clases: "Clases en vivo", tareas: "Tareas", preguntas: "Banco de preguntas", examenes: "Exámenes", presentar: "Exámenes", calificaciones: "Calificaciones", "mis-notas": "Mis notas", editar: "Editar", nuevo: "Nuevo", nueva: "Nueva", resultados: "Resultados", resultado: "Resultado", accesos: "Importar e invitar", programas: "Programas", grupos: "Grupos",
+  comunidad: "Avisos", admisiones: "Admisiones", pagos: "Cobros", calendario: "Calendario", analitica: "Reportes", configuracion: "Configuración", roles: "Roles y permisos", tutores: "Tutores", hijos: "Mis hijos", "puesta-en-marcha": "Puesta en marcha", periodos: "Períodos", institucion: "Datos de la institución", asistencia: "Asistencia", certificados: "Certificados", "mis-certificados": "Mis certificados", "mi-cuenta": "Mi estado de cuenta", perfil: "Mi perfil", contenido: "Contenido", leccion: "Lección", clases: "Clases en vivo", tareas: "Tareas", preguntas: "Banco de preguntas", examenes: "Exámenes", presentar: "Exámenes", calificaciones: "Calificaciones", "mis-notas": "Mis notas", editar: "Editar", nuevo: "Nuevo", nueva: "Nueva", resultados: "Resultados", resultado: "Resultado", accesos: "Importar e invitar", programas: "Programas", grupos: "Grupos", ventas: "Ventas", recibo: "Recibo",
   notificaciones: "Notificaciones",
 };
 
