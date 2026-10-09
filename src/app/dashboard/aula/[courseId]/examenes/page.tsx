@@ -27,7 +27,6 @@ export default async function ExamsPage({ params }: { params: Promise<{ courseId
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-4 sm:p-8">
       <header>
-        <Link href={base} className="inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 underline">← {data.course.name}</Link>
         <h1 className="text-2xl font-bold" style={{ color: "var(--navy)" }}>Exámenes</h1>
         <p className="mt-1 text-sm text-slate-600">Arma exámenes con las preguntas del banco, publícalos y revisa cómo les fue a tus estudiantes.</p>
         <div className="mt-4 flex flex-wrap gap-2">

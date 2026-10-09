@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useRef, useState } from "react";
+import { useActionState, useEffect, useId, useRef, useState } from "react";
 import {
   deleteAssignmentAction,
   gradeSubmissionAction,
@@ -18,8 +18,20 @@ const field = "mt-1 min-h-11 w-full rounded-lg border border-slate-300 bg-white 
 const label = "block text-sm font-medium text-slate-900";
 const empty: AssignmentActionState = { ok: false, message: "" };
 
+const NOTICE_EVENT = "edukana:tareas-mensaje";
+
+/** Mensaje de una acción. Cuando otra acción de la pantalla muestra el suyo, este desaparece. */
 function Notice({ state }: { state: AssignmentActionState }) {
-  if (!state.message) return null;
+  const id = useId();
+  const [replaced, setReplaced] = useState<AssignmentActionState | null>(null);
+  useEffect(() => {
+    if (!state.message) return;
+    window.dispatchEvent(new CustomEvent<string>(NOTICE_EVENT, { detail: id }));
+    const hide = (event: Event) => { if ((event as CustomEvent<string>).detail !== id) setReplaced(state); };
+    window.addEventListener(NOTICE_EVENT, hide);
+    return () => window.removeEventListener(NOTICE_EVENT, hide);
+  }, [state, id]);
+  if (!state.message || replaced === state) return null;
   return (
     <p role={state.ok ? "status" : "alert"} className={`mt-3 rounded-lg p-3 text-sm ${state.ok ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-800"}`}>
       {state.message}

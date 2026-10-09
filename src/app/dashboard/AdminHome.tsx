@@ -38,7 +38,7 @@ export async function AdminHome({ institutionId, userName, canManagePeople, canP
 
       <section className="mb-8" aria-labelledby="acciones-frecuentes">
         <h2 id="acciones-frecuentes" className="mb-3 text-lg font-bold text-slate-900">Acciones frecuentes</h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-2 sm:grid-cols-2 sm:gap-3 lg:grid-cols-3">
           {actions.map((action) => (
             <Link key={action.label} href={action.href} className="flex min-h-14 items-center gap-3 rounded-xl border border-slate-200 bg-white p-4 font-semibold text-slate-900 hover:border-blue-300 hover:shadow-sm">
               <span className="rounded-lg bg-blue-50 p-2 text-blue-700">{action.icon}</span>
@@ -51,12 +51,13 @@ export async function AdminHome({ institutionId, userName, canManagePeople, canP
 
       <section className="mb-8" aria-labelledby="en-numeros">
         <h2 id="en-numeros" className="mb-3 text-lg font-bold text-slate-900">Tu institución en números</h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {/* En el celular, dos cifras por fila para no obligar a bajar tanto. */}
+        <div className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-3">
           {figures.map((figure) => (
-            <Link key={figure.label} href={figure.href} className="block min-h-11 rounded-xl border border-slate-200 bg-white p-5 hover:border-blue-300 hover:shadow-sm">
-              <p className="text-2xl font-bold text-slate-900">{figure.value}</p>
-              <p className="text-sm text-slate-600">{figure.label}</p>
-              {figure.value === 0 && <p className="mt-2 text-sm text-slate-700">{figure.empty}</p>}
+            <Link key={figure.label} href={figure.href} className="block min-h-11 rounded-xl border border-slate-200 bg-white p-3 hover:border-blue-300 hover:shadow-sm sm:p-5">
+              <p className="text-xl font-bold text-slate-900 sm:text-2xl">{figure.value}</p>
+              <p className="text-xs leading-snug text-slate-600 sm:text-sm">{figure.label}</p>
+              {figure.value === 0 && <p className="mt-1 text-xs leading-snug text-slate-700 sm:mt-2 sm:text-sm">{figure.empty}</p>}
             </Link>
           ))}
         </div>

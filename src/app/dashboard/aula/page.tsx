@@ -42,20 +42,22 @@ export default async function AulaPage({ searchParams }: { searchParams: Promise
           period: { select: { name: true } },
           _count: { select: { enrollments: { where: { status: { in: ["ACTIVE", "COMPLETED"] } } } } },
           // Solo el estudiante trae su propia inscripción, para mostrar su avance.
-          enrollments: { where: { studentId: isStudent ? user.id : "__ninguna__" }, select: { progressPercent: true }, take: 1 },
+          enrollments: { where: { studentId: isStudent ? user.id : "__ninguna__" }, select: { progressPercent: true, status: true, finalGrade: true }, take: 1 },
         },
       })
     : [];
 
   const filtering = Boolean(q) || archived;
+  // Docente y estudiante ven solo sus cursos: el título coincide con «Mis cursos» del menú.
+  const ownCourses = isStudent || user.role === "TEACHER";
   const tab = (active: boolean) => `inline-flex min-h-11 items-center rounded-lg px-4 text-sm font-semibold ${active ? "bg-blue-600 text-white" : "border border-slate-300 bg-white text-slate-800"}`;
 
   return (
     <div className="mx-auto max-w-6xl p-4 sm:p-8">
       <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: "var(--navy)" }}>{isStudent ? "Mis cursos" : "Cursos"}</h1>
-          <p className="mt-1 text-sm text-slate-600">{isStudent ? "Entra a un curso para seguir estudiando." : "Crea cursos, entra a trabajar en ellos y archiva los que ya terminaron."}</p>
+          <h1 className="text-2xl font-bold" style={{ color: "var(--navy)" }}>{ownCourses ? "Mis cursos" : "Cursos"}</h1>
+          <p className="mt-1 text-sm text-slate-600">{isStudent ? "Entra a un curso para seguir estudiando. Los que terminaste siguen aquí, con tu nota final." : "Crea cursos, entra a trabajar en ellos y archiva los que ya terminaron."}</p>
         </div>
         {canCreate && <Link href="/dashboard/aula/nuevo" className={primary}><Plus size={18} aria-hidden="true" />Crear curso</Link>}
       </header>
@@ -106,12 +108,14 @@ export default async function AulaPage({ searchParams }: { searchParams: Promise
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {courses.map((course) => {
             const status = courseStatusLabel(course);
-            const progress = Math.round(course.enrollments[0]?.progressPercent ?? 0);
+            const own = course.enrollments[0];
+            const progress = Math.round(own?.progressPercent ?? 0);
             return (
               <li key={course.id}>
                 <Link href={`/dashboard/aula/${course.id}`} className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 transition-shadow hover:shadow-md">
                   <div className="flex flex-wrap items-center gap-2">
                     {!isStudent && <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusStyle[status]}`}>{status}</span>}
+                    {own?.status === "COMPLETED" && <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800">Completado</span>}
                     {course.code && <span className="rounded bg-slate-100 px-2 py-1 font-mono text-xs text-slate-700">{course.code}</span>}
                   </div>
                   <h2 className="mt-3 text-lg font-bold" style={{ color: "var(--navy)" }}>{course.name}</h2>
@@ -122,6 +126,7 @@ export default async function AulaPage({ searchParams }: { searchParams: Promise
                         <div className="h-full rounded-full bg-emerald-500" style={{ width: `${progress}%` }} />
                       </div>
                       <p className="mt-1 text-xs text-slate-600">{progress}% completado</p>
+                      {own?.finalGrade != null && <p className="mt-2 text-sm text-slate-900">Nota final: <strong>{own.finalGrade}</strong></p>}
                     </div>
                   )}
                   <div className="mt-auto flex items-center justify-between pt-4 text-sm text-slate-600">

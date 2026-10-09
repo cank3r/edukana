@@ -56,9 +56,6 @@ export default async function GradebookPage({
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-4 sm:p-8">
       <header>
-        <Link href={`/dashboard/aula/${book.course.id}`} className="inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 underline">
-          ← Volver a {book.course.name}
-        </Link>
         <h1 className="text-2xl font-bold" style={{ color: "var(--navy)" }}>Calificaciones</h1>
         <p className="mt-1 text-sm text-slate-600">Toca una nota para ponerla o corregirla. Los estudiantes solo ven las actividades que publiques.</p>
       </header>

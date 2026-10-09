@@ -29,10 +29,11 @@ export default async function CourseContentPage({ params }: { params: Promise<{ 
         <p className="mt-1 text-sm text-slate-600">
           Organiza el curso en capítulos y lecciones. Los estudiantes solo ven lo que está publicado, en el orden que aparece aquí.
         </p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Link className={linkButton} href={`/dashboard/aula/${course.id}`}>Volver al curso</Link>
-          {firstVisibleLesson && <Link className={linkButton} href={`/dashboard/aula/${course.id}/leccion/${firstVisibleLesson.id}`}>Ver como estudiante</Link>}
-        </div>
+        {firstVisibleLesson && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link className={linkButton} href={`/dashboard/aula/${course.id}/leccion/${firstVisibleLesson.id}`}>Ver como estudiante</Link>
+          </div>
+        )}
         {!firstVisibleLesson && lessonCount > 0 && (
           <p className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
             Los estudiantes todavía no ven nada: publica un capítulo y al menos una de sus lecciones.

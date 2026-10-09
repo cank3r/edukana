@@ -58,6 +58,12 @@ export default async function ExamResultPage({
         <p className="mt-2 text-3xl font-bold text-slate-950">
           {result.pendingReview ? "Llevas" : "Obtuviste"} {points(result.score)} de {points(result.maxScore)}
         </p>
+        {result.passed !== null && (
+          <p className={`mt-2 inline-block rounded-lg px-3 py-1.5 text-base font-bold ${result.passed ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-800"}`}>
+            {result.passed ? "Aprobado" : "No aprobado"}
+            <span className="ml-1 font-normal">· se aprueba con {result.passingPercent} %</span>
+          </p>
+        )}
         {result.pendingReview && (
           <p className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
             Tu docente todavía debe revisar tus respuestas escritas. Tu nota final puede subir cuando termine.
@@ -78,7 +84,11 @@ export default async function ExamResultPage({
       </section>
 
       {result.review === null ? (
-        <p className="rounded-xl border border-slate-200 bg-white p-5 text-slate-700">Este examen no muestra el detalle de las respuestas. Si tienes dudas sobre tu nota, habla con tu docente.</p>
+        <p className="rounded-xl border border-slate-200 bg-white p-5 text-slate-700">
+          {result.reviewLater
+            ? "Verás las respuestas correctas cuando ya no te queden intentos o cuando cierre el examen."
+            : "Este examen no muestra el detalle de las respuestas. Si tienes dudas sobre tu nota, habla con tu docente."}
+        </p>
       ) : (
         <section aria-labelledby="detalle">
           <h2 id="detalle" className="text-lg font-bold text-slate-950">Pregunta por pregunta</h2>

@@ -8,7 +8,6 @@ import { CertificateList, IssueAllPanel, ShareTools } from "./CertificateTools";
 export const dynamic = "force-dynamic";
 
 const card = "rounded-xl border border-slate-200 bg-white p-4 sm:p-5";
-const back = "inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 underline";
 const day = (value: Date, timeZone: string) => new Intl.DateTimeFormat("es", { timeZone, dateStyle: "long" }).format(value);
 const NOTES: Record<string, string> = { COMPLETED: "Curso completado", FAILED: "No aprobó", DROPPED: "Retirado" };
 
@@ -38,7 +37,6 @@ function ManagerView({ data }: { data: CourseCertificates }) {
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-4 sm:p-8">
       <header>
-        <Link className={back} href={`/dashboard/aula/${course.id}`}>← Volver a {course.name}</Link>
         <h1 className="mt-1 text-2xl font-bold" style={{ color: "var(--navy)" }}>Certificados</h1>
         <p className="mt-1 text-sm text-slate-600">Entrega el certificado a quienes terminaron el curso. Cada uno tiene un enlace público para comprobar que es auténtico.</p>
       </header>
@@ -110,7 +108,6 @@ function StudentView({ data }: { data: MyCourseCertificate }) {
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-4 sm:p-8">
       <header>
-        <Link className={back} href={`/dashboard/aula/${course.id}`}>← Volver a {course.name}</Link>
         <h1 className="mt-1 text-2xl font-bold" style={{ color: "var(--navy)" }}>Mi certificado</h1>
       </header>
 

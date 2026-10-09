@@ -11,6 +11,7 @@ import { roleLabel } from "@/lib/ux";
 import { AnnouncementComposer } from "@/components/dashboard/AnnouncementComposer";
 import { AnnouncementOwnerTools } from "./AnnouncementOwnerTools";
 import { AnnouncementContent } from "@/components/dashboard/AnnouncementContent";
+import { AnnouncementFlash } from "@/components/dashboard/AnnouncementFlash";
 import { Calendar, ExternalLink, Megaphone, Pin } from "lucide-react";
 
 const announcementSelect = {
@@ -92,6 +93,7 @@ export default async function ComunidadPage() {
   return <div className="mx-auto max-w-5xl p-4 sm:p-8">
     <header className="mb-6"><h1 className="text-2xl font-bold" style={{ color: "var(--navy)" }}>Avisos</h1><p className="mt-1 text-sm text-slate-500">{canPublish ? "Mensajes para las personas de tu institución. Aquí los publicas y los lees." : "Mensajes de tu institución para ti."}</p></header>
     {announcements.length > 0 && composer && <div className="mb-6">{composer}</div>}
+    <AnnouncementFlash />
     <div className="space-y-4">{announcements.map((announcement) => <AnnouncementCard announcement={announcement} key={announcement.id} readableCourseIds={readableCourseIds} viewerRole={user.role} canEdit={canManage || announcement.authorId === user.id} />)}{announcements.length === 0 && <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center sm:p-10"><Megaphone aria-hidden="true" className="mx-auto mb-3 text-slate-300" size={40} /><p className="font-semibold">Todavía no hay avisos</p><p className="mx-auto mt-1 max-w-md text-sm text-slate-500">Un aviso es un mensaje corto que la institución publica para que lo lean las personas que elija: todos, solo estudiantes, docentes, tutores o un curso.{composer ? " Publica el primero cuando quieras." : " Cuando haya uno para ti, aparecerá aquí."}</p>{composer && <div className="mt-5">{composer}</div>}</div>}</div>
   </div>;
 }

@@ -31,6 +31,7 @@ export type ExamDraft = {
   durationMinutes: number | null;
   maxAttempts: number;
   showReview: boolean;
+  passingPercent: number | null;
   gradeCategoryName: string | null;
   attemptCount: number;
   questions: Array<{ bankItemId: string; type: QuestionKind; prompt: string; points: number }>;
@@ -52,6 +53,7 @@ export function ExamForm({ courseId, bank, categories, exam, timezoneLabel }: { 
   const [opensAt, setOpensAt] = useState(exam?.opensAt ?? "");
   const [closesAt, setClosesAt] = useState(exam?.closesAt ?? "");
   const [showReview, setShowReview] = useState(exam?.showReview ?? true);
+  const [passingPercent, setPassingPercent] = useState(exam?.passingPercent ? String(exam.passingPercent) : "");
   const [gradeCategoryId, setGradeCategoryId] = useState("");
   const [search, setSearch] = useState("");
 
@@ -83,6 +85,7 @@ export function ExamForm({ courseId, bank, categories, exam, timezoneLabel }: { 
     opensAt,
     closesAt,
     showReview,
+    passingPercent: passingPercent.trim() === "" ? null : toNumber(passingPercent),
     gradeCategoryId,
   });
 
@@ -93,7 +96,7 @@ export function ExamForm({ courseId, bank, categories, exam, timezoneLabel }: { 
 
       {locked && (
         <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
-          Este examen ya tiene {exam!.attemptCount === 1 ? "1 intento" : `${exam!.attemptCount} intentos`} de estudiantes. Para que todos sean evaluados con las mismas reglas, ya no se pueden cambiar las preguntas, los puntos, el tiempo, los intentos permitidos ni si se muestran las respuestas. Sí puedes cambiar el título, las instrucciones y las fechas, y publicarlo u ocultarlo.
+          Este examen ya tiene {exam!.attemptCount === 1 ? "1 intento" : `${exam!.attemptCount} intentos`} de estudiantes. Para que todos sean evaluados con las mismas reglas, ya no se pueden cambiar las preguntas, los puntos, el tiempo, los intentos permitidos ni si se muestran las respuestas. Sí puedes cambiar el título, las instrucciones, las fechas y el porcentaje para aprobar, y publicarlo u ocultarlo.
         </p>
       )}
 
@@ -193,6 +196,11 @@ export function ExamForm({ courseId, bank, categories, exam, timezoneLabel }: { 
             <input type="number" inputMode="numeric" min="1" max="10" step="1" required disabled={locked} value={maxAttempts} onChange={(event) => setMaxAttempts(event.target.value)} className={field} />
           </label>
           <label className="block text-sm font-semibold text-slate-900">
+            Porcentaje para aprobar <span className="font-normal text-slate-600">(opcional)</span>
+            <input type="number" inputMode="numeric" min="1" max="100" step="1" value={passingPercent} onChange={(event) => setPassingPercent(event.target.value)} className={field} placeholder="Ejemplo: 70" />
+            <span className="mt-1 block font-normal text-slate-600">Con él, cada nota dice «Aprobado» o «No aprobado». Si lo dejas vacío, solo se muestra la nota.</span>
+          </label>
+          <label className="block text-sm font-semibold text-slate-900">
             Se abre <span className="font-normal text-slate-600">(opcional)</span>
             <input type="datetime-local" value={opensAt} onChange={(event) => setOpensAt(event.target.value)} className={field} />
           </label>
@@ -204,7 +212,7 @@ export function ExamForm({ courseId, bank, categories, exam, timezoneLabel }: { 
         <p className="text-sm text-slate-600">Las fechas usan la hora de la institución ({timezoneLabel}). Sin fechas, el examen está disponible mientras esté publicado.</p>
         <label className="flex min-h-11 items-center gap-3 text-sm font-semibold text-slate-900">
           <input type="checkbox" checked={showReview} disabled={locked} onChange={(event) => setShowReview(event.target.checked)} className="h-5 w-5" />
-          Mostrar respuestas correctas al terminar
+          Mostrar respuestas correctas cuando el estudiante ya no tenga intentos o el examen cierre
         </label>
         {!exam && categories.length > 0 && (
           <label className="block text-sm font-semibold text-slate-900">

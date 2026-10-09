@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { addDaysToDateKey, zonedDateKey, zonedTimeToUtc, zonedTimeValue } from "../src/lib/timezone";
+import { addDaysToDateKey, timeZoneDisplayName, zonedDateKey, zonedTimeToUtc, zonedTimeValue } from "../src/lib/timezone";
 
 const iso = (date: string, time: string, zone: string) => zonedTimeToUtc(date, time, zone)?.toISOString() ?? null;
 
@@ -54,4 +54,11 @@ test("sumar semanas conserva la hora local aunque cambie el horario", () => {
   const next = addDaysToDateKey("2026-03-05", 7)!;
   assert.equal(iso("2026-03-05", "18:00", "America/New_York"), "2026-03-05T23:00:00.000Z");
   assert.equal(iso(next, "18:00", "America/New_York"), "2026-03-12T22:00:00.000Z");
+});
+
+test("la zona se muestra con un nombre legible, sin barras ni guiones bajos", () => {
+  assert.equal(timeZoneDisplayName("America/Santo_Domingo"), "hora de Santo Domingo");
+  assert.equal(timeZoneDisplayName("America/Argentina/Buenos_Aires"), "hora de Buenos Aires");
+  assert.equal(timeZoneDisplayName("UTC"), "hora universal");
+  assert.equal(timeZoneDisplayName(""), "hora universal");
 });

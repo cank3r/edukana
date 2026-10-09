@@ -57,7 +57,7 @@ export async function TeacherHome({ user, userName }: Props) {
 
           <section className="mb-8" aria-labelledby="clases-en-vivo">
             <h2 id="clases-en-vivo" className={sectionTitle}>Mis próximas clases en vivo</h2>
-            <LiveClassList classes={home.liveClasses} empty="No tienes clases en vivo en los próximos 7 días." />
+            <LiveClassList classes={home.liveClasses} empty="No tienes clases en vivo en los próximos 7 días." host />
           </section>
 
           <section className="mb-8" aria-labelledby="mis-cursos">

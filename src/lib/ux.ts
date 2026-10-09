@@ -16,11 +16,12 @@ const common = {
 
 export function navigationForRole(role: EdukanaRole, effective?: ReadonlySet<Capability> | readonly Capability[]): NavigationItem[] {
   const can = (capability: Capability) => hasCapability(role, capability, effective);
-  const courses = role === "TEACHER" ? { ...common.courses, label: "Mis cursos" } : common.courses;
+  // Docente y estudiante solo ven sus cursos: el menú lo dice igual que el título de la página.
+  const courses = role === "TEACHER" || role === "STUDENT" ? { ...common.courses, label: "Mis cursos" } : common.courses;
+  const student = role === "STUDENT" && can("student.portal.view");
   return [
     common.home,
     ...(role === "PARENT" && can("child.portal.view") ? [{ label: "Mis hijos", href: "/dashboard/hijos", icon: "portal" } as NavigationItem] : []),
-    ...(role === "STUDENT" && can("student.portal.view") ? [{ label: "Mi aprendizaje", href: "/dashboard/portal", icon: "portal" } as NavigationItem] : []),
     ...(can("people.view") ? [{ label: "Personas", href: "/dashboard/gestion", icon: "people" } as NavigationItem] : []),
     ...(can("course.view") ? [courses] : []),
     ...(role !== "PARENT" || can("child.announcements.view") ? [common.community] : []),
@@ -29,7 +30,22 @@ export function navigationForRole(role: EdukanaRole, effective?: ReadonlySet<Cap
     ...(can("schedule.view") ? [common.calendar] : []),
     ...(can("analytics.view") ? [{ label: "Reportes", href: "/dashboard/analitica", icon: "analytics" } as NavigationItem] : []),
     ...(can("tenant.settings.manage") || can("roles.permissions.manage") ? [{ label: "Configuración", href: "/dashboard/configuracion", icon: "settings" } as NavigationItem] : []),
+    ...(student ? [
+      { label: "Mi estado de cuenta", href: "/dashboard/mi-cuenta", icon: "payments" } as NavigationItem,
+      { label: "Mis certificados", href: "/dashboard/mis-certificados", icon: "portal" } as NavigationItem,
+    ] : []),
   ];
+}
+
+export const MAX_MAIN_NAVIGATION = 5;
+
+/**
+ * Como máximo cinco entradas visibles por rol: si hay más, las primeras cuatro quedan a la vista
+ * y el resto se agrupa bajo «Más» (que cuenta como la quinta).
+ */
+export function groupNavigation(items: NavigationItem[]): { main: NavigationItem[]; more: NavigationItem[] } {
+  if (items.length <= MAX_MAIN_NAVIGATION) return { main: items, more: [] };
+  return { main: items.slice(0, MAX_MAIN_NAVIGATION - 1), more: items.slice(MAX_MAIN_NAVIGATION - 1) };
 }
 
 const STATUS_LABELS: Record<string, string> = {

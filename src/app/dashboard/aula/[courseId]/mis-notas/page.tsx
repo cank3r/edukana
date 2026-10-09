@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { formatNumber } from "@/lib/gradebook-calc";
@@ -22,9 +21,6 @@ export default async function MyGradesPage({ params }: { params: Promise<{ cours
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-4 sm:p-8">
       <header>
-        <Link href={`/dashboard/aula/${grades.course.id}`} className="inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 underline">
-          ← Volver a {grades.course.name}
-        </Link>
         <h1 className="text-2xl font-bold" style={{ color: "var(--navy)" }}>Mis notas</h1>
       </header>
 

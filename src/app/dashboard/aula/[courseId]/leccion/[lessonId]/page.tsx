@@ -131,8 +131,6 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
 
   return (
     <div className="mx-auto max-w-6xl p-4 sm:p-8">
-      <Link href={courseHref} className="inline-flex min-h-11 items-center text-sm font-semibold text-blue-700">← {view.course.name}</Link>
-
       {view.mode === "preview" && (
         <p role="note" className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm font-medium text-amber-900">
           Vista previa: así la ve el estudiante.{!lesson.isPublished && " Esta lección todavía no está publicada, así que los estudiantes aún no la ven."}
