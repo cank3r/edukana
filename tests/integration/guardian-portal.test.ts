@@ -177,6 +177,18 @@ test("asistencia, clases y estado de cuenta: aparecen solo cuando el vínculo y 
   assert.deepEqual(view.account.charges.map((charge) => [charge.id, charge.amountCents, charge.overdue]), [["it_gp_pay_overdue", 150000, true], ["it_gp_pay_pending", 100050, false]]);
   assert.deepEqual(view.account.totals, [{ currency: "DOP", owedCents: 250050, overdueCents: 150000 }]);
 
+  // Lo que debe sale de los pagos reales: un pago parcial baja el saldo; uno anulado no cuenta.
+  await db.payment.createMany({
+    data: [
+      { id: "it_gp_payment", institutionId: A.institutionId, conceptId: "it_gp_pay_overdue", amountCents: 50000, method: "CASH", paidOn: past, recordedById: A.admin.id },
+      { id: "it_gp_payment_void", institutionId: A.institutionId, conceptId: "it_gp_pay_overdue", amountCents: 30000, method: "CASH", paidOn: past, recordedById: A.admin.id, voidedAt: past, voidReason: "Prueba" },
+    ],
+  });
+  view = await getChildOverview(A.parent, A.student.id, now);
+  assert.deepEqual(view?.account?.charges.map((charge) => [charge.id, charge.amountCents, charge.status]), [["it_gp_pay_overdue", 100000, "PARTIAL"], ["it_gp_pay_pending", 100050, "PENDING"]]);
+  assert.deepEqual(view?.account?.totals, [{ currency: "DOP", owedCents: 200050, overdueCents: 100000 }]);
+  await db.payment.deleteMany({ where: { id: { in: ["it_gp_payment", "it_gp_payment_void"] } } });
+
   await db.guardianship.update({ where: { id: A.guardianshipId }, data: { canViewFinance: false } });
   assert.equal((await getChildOverview(A.parent, A.student.id, now))?.account, null, "sin permiso del vínculo no hay estado de cuenta");
 

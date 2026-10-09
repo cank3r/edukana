@@ -100,6 +100,15 @@ test("administrador", async ({ page }, info) => {
   await tour.open("calendario", "/dashboard/calendario", () => heading(page, "Calendario"));
   await tour.open("configuracion", "/dashboard/configuracion", () => heading(page, /Configuración/i));
   await tour.open("cursos", "/dashboard/aula", () => visible(page, "Matemática Básica"));
+  // --- M5 · pagos y recibos ---
+  await tour.open("cobros", "/dashboard/pagos", () => heading(page, "Cobros"));
+  await tour.step("cobros recibo", async () => {
+    await page.getByText("Historial de pagos (1)").filter({ visible: true }).first().click();
+    await page.getByRole("link", { name: "Ver recibo" }).filter({ visible: true }).first().click();
+    await page.waitForURL(/\/dashboard\/pagos\/recibo\//);
+    await heading(page, "Recibo de pago");
+  });
+  // --- fin M5 ---
   tour.finish();
 });
 
@@ -293,5 +302,13 @@ test("estudiante", async ({ page }, info) => {
     await heading(page, "Mi perfil");
     await visible(page, email);
   });
+  // --- M5 · pagos y recibos ---
+  await tour.open("mi estado de cuenta", "/dashboard/mi-cuenta", () => heading(page, "Mi cuenta"));
+  await tour.step("mi recibo", async () => {
+    await page.getByRole("link", { name: "Ver recibo" }).filter({ visible: true }).first().click();
+    await page.waitForURL(/\/dashboard\/mi-cuenta\/recibo\//);
+    await heading(page, "Recibo de pago");
+  });
+  // --- fin M5 ---
   tour.finish();
 });

@@ -23,6 +23,7 @@ import { createChapter, createLesson, setChapterPublished, setLessonPublished } 
 import { createCourse, setCoursePublished } from "@/server/courses/course";
 import { enrollStudents } from "@/server/courses/enrollment";
 import { createLiveClasses } from "@/server/courses/live-classes";
+import { createCharge, recordPayment } from "@/server/finance/charges";
 import { SMOKE_ACCOUNTS, SMOKE_PASSWORD, SMOKE_SEED_FILE, type SmokeSeed } from "./shared";
 
 const TIME_ZONE = "America/Santo_Domingo";
@@ -182,6 +183,14 @@ async function main() {
     },
     select: { id: true },
   });
+
+  // --- M5 · pagos y recibos ---
+  // Un cargo por estudiante con un pago parcial, para recorrer el historial de pagos y los recibos.
+  for (const student of [student1, student2]) {
+    const charge = must("cargo de mensualidad", await createCharge(admin, { studentId: student.id, concept: "Mensualidad de prueba", amountCents: 350_000, dueDate: dayKey(10) }));
+    must("pago de la mensualidad", await recordPayment(admin, { chargeId: charge.chargeId ?? "", amountCents: 100_000, paidOn: dayKey(0), method: "CASH", note: "Pago de prueba" }));
+  }
+  // --- fin M5 ---
 
   const seed: SmokeSeed = {
     institutionId,

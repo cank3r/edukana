@@ -5,13 +5,15 @@ import { canViewGuardianArea, type GuardianLink } from "@/lib/guardianship-polic
 import { zonedDateKey } from "@/lib/timezone";
 import type { EdukanaRole } from "@/types/next-auth";
 import {
+  amountInWords,
   centsToDecimal,
+  chargeBalanceOf,
   chargeCents,
   dateKeyToStored,
   dueDateKey,
   formatMoney,
   institutionCurrency,
-  paidCentsOf,
+  receiptNumber,
   shownStatus,
   statusForPaid,
   MAX_CENTS,
@@ -22,9 +24,16 @@ import {
 /**
  * Cobros sin pasarela. Todo se calcula en centavos enteros.
  *
- * El modelo `PaymentConcept` no tiene dónde guardar cada pago ni el total pagado, así que cada pago
- * se registra como una fila de `AuditLog` (acción FINANCE_PAYMENT_RECORDED) y lo pagado de un cargo
- * es la suma de esas filas. El estado del cargo (PENDING, PARTIAL, PAID) se actualiza con cada pago.
+ * Cada pago es una fila de `Payment` (tabla `payments`). Lo pagado de un cargo es la suma de sus pagos
+ * no anulados; el estado del cargo (PENDING, PARTIAL, PAID) y su `paidAt` se derivan de esa suma y se
+ * guardan en la misma transacción que registra o anula el pago, con la fila del cargo bloqueada.
+ * Un pago nunca se borra: se anula con motivo (`voidedAt`, `voidReason`) y deja de contar.
+ *
+ * Compatibilidad con pagos antiguos: antes de existir la tabla, cada pago se guardaba como una fila de
+ * `AuditLog` (acción FINANCE_PAYMENT_RECORDED). Esas filas se leen SOLO como respaldo para los cargos
+ * que no tienen ninguna fila en `payments`. La primera vez que un cargo así recibe un pago nuevo, sus
+ * pagos antiguos se copian a `payments` en la misma transacción, y desde entonces solo cuenta la tabla.
+ * Los pagos antiguos que aún no se copiaron se muestran sin recibo y no se pueden anular.
  */
 
 type Actor = { id: string; institutionId: string; role: EdukanaRole };
@@ -33,7 +42,19 @@ type Tx = Prisma.TransactionClient;
 export type PaymentMethod = "CASH" | "TRANSFER" | "CARD" | "OTHER";
 export const PAYMENT_METHODS: readonly PaymentMethod[] = ["CASH", "TRANSFER", "CARD", "OTHER"];
 
-export type PaymentEntry = { id: string; amountCents: number; paidOn: string; method: PaymentMethod; note: string };
+export type PaymentEntry = {
+  id: string;
+  amountCents: number;
+  /** Día del pago, `AAAA-MM-DD`. */
+  paidOn: string;
+  method: PaymentMethod;
+  note: string;
+  recordedByName: string;
+  /** Pago anulado: deja de contar, pero se conserva en el historial. */
+  voided: { at: string; reason: string } | null;
+  /** Pago antiguo leído del registro de auditoría: no tiene recibo y no se puede anular. */
+  legacy: boolean;
+};
 export type ChargeRow = {
   id: string;
   studentId: string | null;
@@ -70,6 +91,41 @@ export type StudentAccount = {
 };
 export type ChargeTarget = { kind: "group" | "course"; id: string; name: string; students: number };
 export type FinanceResult = { ok: true } | { ok: false; message: string };
+export type PaymentResult = { ok: true; paymentId: string } | { ok: false; message: string };
+/** Saldo de un cargo según sus pagos reales. Lo comparten cobros, portal, familia y reportes. */
+export type ChargeBalance = {
+  conceptId: string;
+  studentId: string | null;
+  currency: string;
+  amountCents: number;
+  paidCents: number;
+  balanceCents: number;
+  /** Estado derivado de lo pagado (PENDING, PARTIAL, PAID o CANCELLED; OVERDUE solo si así quedó guardado). */
+  status: ChargeStatus;
+  /** Estado que se muestra hoy en la zona de la institución (vencido si pasó la fecha). */
+  shownStatus: ShownStatus;
+  dueKey: string | null;
+  /** Dinero recibido por día (`AAAA-MM-DD`), sin pagos anulados. */
+  received: Array<{ paidOn: string; amountCents: number }>;
+};
+export type PaymentReceipt = {
+  id: string;
+  number: string;
+  institution: { name: string };
+  student: { id: string; name: string };
+  concept: string;
+  periodName: string;
+  currency: string;
+  amountCents: number;
+  amountWords: string;
+  method: PaymentMethod;
+  paidOn: string;
+  note: string;
+  recordedByName: string;
+  /** Día en que se registró, en la zona de la institución. */
+  recordedOn: string;
+  voided: { on: string; reason: string } | null;
+};
 export type GroupChargeResult =
   | { ok: true; created: number; repeated: boolean; amountCents: number; currency: string; targetName: string }
   | { ok: false; message: string };
@@ -78,17 +134,20 @@ export const FINANCE_AUDIT = {
   created: "FINANCE_CHARGE_CREATED",
   batch: "FINANCE_GROUP_CHARGES_CREATED",
   payment: "FINANCE_PAYMENT_RECORDED",
+  voided: "FINANCE_PAYMENT_VOIDED",
   updated: "FINANCE_CHARGE_UPDATED",
   cancelled: "FINANCE_CHARGE_CANCELLED",
   deleted: "FINANCE_CHARGE_DELETED",
 } as const;
 
 const ENTITY = "PaymentConcept";
+const PAYMENT_ENTITY = "Payment";
 const BATCH_ENTITY = "PaymentBatch";
 const LIST_LIMIT = 200;
 const MAX_GROUP = 1000;
 const NO_PERMISSION = "No tienes permiso para gestionar cobros.";
 const NOT_FOUND = "No encontramos ese cargo. Puede que alguien lo haya borrado; recarga la página.";
+const PAYMENT_NOT_FOUND = "No encontramos ese pago. Recarga la página e inténtalo de nuevo.";
 // El bloqueo de la fila del cargo (FOR UPDATE) serializa los pagos; READ COMMITTED basta.
 const rowLocked = { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted } as const;
 
@@ -111,77 +170,173 @@ async function institutionContext(institutionId: string, now: Date) {
   return { currency: institutionCurrency(institution?.settings), todayKey };
 }
 
-function readPayment(log: { id: string; changes: Prisma.JsonValue | null }): PaymentEntry | null {
+const CHUNK = 5000;
+const dayKey = (date: Date) => date.toISOString().slice(0, 10);
+
+function chunks<T>(items: T[]): T[][] {
+  const out: T[][] = [];
+  for (let index = 0; index < items.length; index += CHUNK) out.push(items.slice(index, index + CHUNK));
+  return out;
+}
+
+/** Pago antiguo guardado en `AuditLog` (antes de existir la tabla `payments`). */
+function readLegacyPayment(log: { id: string; changes: Prisma.JsonValue | null }): PaymentEntry | null {
   const data = log.changes && typeof log.changes === "object" && !Array.isArray(log.changes) ? (log.changes as Record<string, unknown>) : null;
   if (!data) return null;
   const amountCents = data.amountCents;
   if (typeof amountCents !== "number" || !Number.isInteger(amountCents) || amountCents <= 0) return null;
   const method = PAYMENT_METHODS.includes(data.method as PaymentMethod) ? (data.method as PaymentMethod) : "OTHER";
-  return { id: log.id, amountCents, paidOn: typeof data.paidOn === "string" ? data.paidOn : "", method, note: typeof data.note === "string" ? data.note : "" };
+  return {
+    id: log.id,
+    amountCents,
+    paidOn: typeof data.paidOn === "string" ? data.paidOn : "",
+    method,
+    note: typeof data.note === "string" ? data.note : "",
+    recordedByName: "",
+    voided: null,
+    legacy: true,
+  };
 }
 
-const sum = (entries: PaymentEntry[]) => entries.reduce((total, entry) => total + entry.amountCents, 0);
+const sum = (entries: Array<{ amountCents: number }>) => entries.reduce((total, entry) => total + entry.amountCents, 0);
+const active = (entries: PaymentEntry[]) => entries.filter((entry) => !entry.voided);
 
-async function recordedPayments(client: Tx | typeof db, institutionId: string, chargeId: string) {
-  const logs = await client.auditLog.findMany({
-    where: { institutionId, entity: ENTITY, entityId: chargeId, action: FINANCE_AUDIT.payment },
-    select: { id: true, changes: true },
-    orderBy: { createdAt: "asc" },
-  });
-  return logs.map(readPayment).filter((entry): entry is PaymentEntry => entry !== null);
+type LoadedPayments = { entries: PaymentEntry[]; fromTable: boolean };
+
+/**
+ * Pagos de los cargos indicados (o de toda la institución con `conceptIds = null`), del más antiguo al
+ * más nuevo, incluidos los anulados. Los cargos sin ninguna fila en `payments` toman sus pagos antiguos
+ * del registro de auditoría (compatibilidad; ver el comentario al inicio del archivo).
+ */
+async function loadPayments(client: Tx | typeof db, institutionId: string, conceptIds: string[] | null): Promise<Map<string, LoadedPayments>> {
+  const byConcept = new Map<string, LoadedPayments>();
+  for (const ids of conceptIds === null ? [null] : chunks(conceptIds)) {
+    const rows = await client.payment.findMany({
+      where: { institutionId, ...(ids ? { conceptId: { in: ids } } : {}) },
+      select: { id: true, conceptId: true, amountCents: true, method: true, paidOn: true, note: true, voidedAt: true, voidReason: true, recordedBy: { select: { name: true } } },
+      orderBy: [{ paidOn: "asc" }, { createdAt: "asc" }],
+    });
+    for (const row of rows) {
+      const entry: PaymentEntry = {
+        id: row.id,
+        amountCents: row.amountCents,
+        paidOn: dayKey(row.paidOn),
+        method: PAYMENT_METHODS.includes(row.method as PaymentMethod) ? (row.method as PaymentMethod) : "OTHER",
+        note: row.note ?? "",
+        recordedByName: row.recordedBy.name,
+        voided: row.voidedAt ? { at: row.voidedAt.toISOString(), reason: row.voidReason ?? "" } : null,
+        legacy: false,
+      };
+      const current = byConcept.get(row.conceptId);
+      if (current) current.entries.push(entry);
+      else byConcept.set(row.conceptId, { entries: [entry], fromTable: true });
+    }
+  }
+
+  const missing = conceptIds === null ? null : conceptIds.filter((id) => !byConcept.has(id));
+  for (const ids of missing === null ? [null] : chunks(missing)) {
+    const logs = await client.auditLog.findMany({
+      where: { institutionId, entity: ENTITY, action: FINANCE_AUDIT.payment, ...(ids ? { entityId: { in: ids } } : {}) },
+      select: { id: true, entityId: true, changes: true },
+      orderBy: { createdAt: "asc" },
+    });
+    for (const log of logs) {
+      if (!log.entityId) continue;
+      const current = byConcept.get(log.entityId);
+      if (current?.fromTable) continue; // Con filas en la tabla, los registros antiguos ya no cuentan.
+      const entry = readLegacyPayment(log);
+      if (!entry) continue;
+      if (current) current.entries.push(entry);
+      else byConcept.set(log.entityId, { entries: [entry], fromTable: false });
+    }
+  }
+  return byConcept;
+}
+
+type BalanceSource = {
+  id: string;
+  studentId: string | null;
+  amount: number;
+  amountCents: number | null;
+  currency: string;
+  dueDate: Date | null;
+  paidAt: Date | null;
+  status: string;
+};
+const BALANCE_SELECT = { id: true, studentId: true, amount: true, amountCents: true, currency: true, dueDate: true, paidAt: true, status: true } as const;
+
+function balanceOf(charge: BalanceSource, loaded: LoadedPayments | undefined, todayKey: string): ChargeBalance {
+  const amountCents = chargeCents(charge);
+  const current = active(loaded?.entries ?? []);
+  const activeCents = sum(current);
+  const { paidCents, balanceCents, status } = chargeBalanceOf(charge.status as ChargeStatus, amountCents, activeCents, loaded?.fromTable ?? false);
+  const received = current.map((entry) => ({ paidOn: entry.paidOn, amountCents: entry.amountCents }));
+  // Cargo antiguo guardado como pagado sin todos sus pagos registrados: la diferencia cuenta el día de `paidAt`.
+  if (paidCents > activeCents && charge.paidAt) received.push({ paidOn: dayKey(charge.paidAt), amountCents: paidCents - activeCents });
+  const dueKey = dueDateKey(charge.dueDate);
+  return {
+    conceptId: charge.id,
+    studentId: charge.studentId,
+    currency: charge.currency,
+    amountCents,
+    paidCents,
+    balanceCents,
+    status,
+    shownStatus: shownStatus(status, dueKey, todayKey),
+    dueKey,
+    received,
+  };
+}
+
+/**
+ * Saldo real de cada cargo pedido, según sus pagos no anulados. Solo devuelve cargos de la institución
+ * indicada (un id ajeno simplemente no aparece).
+ *
+ * Es la función compartida para leer lo pagado: la usan el portal del estudiante, el estado de cuenta del
+ * hijo y los reportes, en vez del estado guardado o del decimal antiguo. Consultas: 4 (más una por cada
+ * 5000 cargos).
+ */
+export async function chargeBalances(institutionId: string, conceptIds: readonly string[], now = new Date()): Promise<Map<string, ChargeBalance>> {
+  const ids = [...new Set(conceptIds.filter(Boolean))];
+  if (!institutionId || ids.length === 0) return new Map();
+  const charges: BalanceSource[] = [];
+  for (const part of chunks(ids)) {
+    charges.push(...(await db.paymentConcept.findMany({ where: { institutionId, id: { in: part } }, select: BALANCE_SELECT })));
+  }
+  if (charges.length === 0) return new Map();
+  const [{ todayKey }, payments] = await Promise.all([
+    institutionContext(institutionId, now),
+    loadPayments(db, institutionId, charges.map((charge) => charge.id)),
+  ]);
+  return new Map(charges.map((charge) => [charge.id, balanceOf(charge, payments.get(charge.id), todayKey)]));
 }
 
 /** Cargos con lo pagado y el estado que se muestra. `where` ya debe traer la institución. */
-async function loadRows(institutionId: string, where: Prisma.PaymentConceptWhereInput, todayKey: string, allLogs: boolean) {
+async function loadRows(institutionId: string, where: Prisma.PaymentConceptWhereInput, todayKey: string, wholeInstitution: boolean) {
   const charges = await db.paymentConcept.findMany({
     where: { AND: [{ institutionId }, where] },
-    select: {
-      id: true,
-      studentId: true,
-      periodId: true,
-      concept: true,
-      amount: true,
-      amountCents: true,
-      currency: true,
-      dueDate: true,
-      paidAt: true,
-      status: true,
-      student: { select: { name: true } },
-      period: { select: { name: true } },
-    },
+    select: { ...BALANCE_SELECT, periodId: true, concept: true, student: { select: { name: true } }, period: { select: { name: true } } },
     orderBy: [{ dueDate: "asc" }, { createdAt: "desc" }],
   });
-  const logs = charges.length
-    ? await db.auditLog.findMany({
-        where: {
-          institutionId,
-          entity: ENTITY,
-          action: { in: [FINANCE_AUDIT.payment, FINANCE_AUDIT.cancelled] },
-          ...(allLogs ? {} : { entityId: { in: charges.map((charge) => charge.id) } }),
-        },
-        select: { id: true, entityId: true, action: true, changes: true },
-        orderBy: { createdAt: "asc" },
-      })
-    : [];
-  const paymentsBy = new Map<string, PaymentEntry[]>();
+  if (charges.length === 0) return [];
+  const ids = charges.map((charge) => charge.id);
+  const [payments, cancellations] = await Promise.all([
+    loadPayments(db, institutionId, wholeInstitution ? null : ids),
+    db.auditLog.findMany({
+      where: { institutionId, entity: ENTITY, action: FINANCE_AUDIT.cancelled, ...(wholeInstitution ? {} : { entityId: { in: ids } }) },
+      select: { entityId: true, changes: true },
+      orderBy: { createdAt: "asc" },
+    }),
+  ]);
   const reasonBy = new Map<string, string>();
-  for (const log of logs) {
-    if (!log.entityId) continue;
-    if (log.action === FINANCE_AUDIT.cancelled) {
-      const reason = (log.changes as Record<string, unknown> | null)?.reason;
-      if (typeof reason === "string") reasonBy.set(log.entityId, reason);
-      continue;
-    }
-    const entry = readPayment(log);
-    if (entry) paymentsBy.set(log.entityId, [...(paymentsBy.get(log.entityId) ?? []), entry]);
+  for (const log of cancellations) {
+    const reason = (log.changes as Record<string, unknown> | null)?.reason;
+    if (log.entityId && typeof reason === "string") reasonBy.set(log.entityId, reason);
   }
 
-  const rows = charges.map((charge) => {
-    const amountCents = chargeCents(charge);
-    const payments = paymentsBy.get(charge.id) ?? [];
-    const stored = charge.status as ChargeStatus;
-    const paidCents = paidCentsOf(stored, amountCents, sum(payments));
-    const dueKey = dueDateKey(charge.dueDate);
+  return charges.map((charge) => {
+    const loaded = payments.get(charge.id);
+    const balance = balanceOf(charge, loaded, todayKey);
     const row: ChargeRow = {
       id: charge.id,
       studentId: charge.studentId,
@@ -190,19 +345,16 @@ async function loadRows(institutionId: string, where: Prisma.PaymentConceptWhere
       periodId: charge.periodId,
       periodName: charge.period?.name ?? "",
       currency: charge.currency,
-      amountCents,
-      paidCents,
-      balanceCents: stored === "CANCELLED" ? 0 : Math.max(0, amountCents - paidCents),
-      dueKey,
-      status: shownStatus(stored, dueKey, todayKey),
-      cancelReason: stored === "CANCELLED" ? reasonBy.get(charge.id) ?? "" : "",
-      payments,
+      amountCents: balance.amountCents,
+      paidCents: balance.paidCents,
+      balanceCents: balance.balanceCents,
+      dueKey: balance.dueKey,
+      status: balance.shownStatus,
+      cancelReason: balance.status === "CANCELLED" ? reasonBy.get(charge.id) ?? "" : "",
+      payments: loaded?.entries ?? [],
     };
-    // Cargo antiguo marcado como pagado sin pagos registrados: se cuenta en el mes de `paidAt`.
-    const legacyPaidAt = stored === "PAID" && payments.length === 0 ? charge.paidAt : null;
-    return { row, legacyPaidAt };
+    return { row, balance };
   });
-  return rows;
 }
 
 function totals(rows: ChargeRow[]) {
@@ -212,7 +364,7 @@ function totals(rows: ChargeRow[]) {
   for (const row of rows) {
     owed += row.balanceCents;
     if (row.status === "OVERDUE") overdue += row.balanceCents;
-    paid += row.status === "CANCELLED" ? row.payments.reduce((total, entry) => total + entry.amountCents, 0) : row.paidCents;
+    paid += row.paidCents;
   }
   return { owed, overdue, paid };
 }
@@ -224,11 +376,11 @@ export async function listCharges(actor: Actor, filters: ChargeFilters = {}, now
   const loaded = await loadRows(actor.institutionId, {}, todayKey, true);
   const rows = loaded.map((item) => item.row);
 
+  // «Cobrado este mes»: pagos no anulados cuyo día de pago (`Payment.paidOn`) cae en el mes de hoy.
   const month = todayKey.slice(0, 7);
   let collected = 0;
-  for (const { row, legacyPaidAt } of loaded) {
-    for (const entry of row.payments) if (entry.paidOn.startsWith(month)) collected += entry.amountCents;
-    if (legacyPaidAt && legacyPaidAt.toISOString().startsWith(month)) collected += row.amountCents;
+  for (const { balance } of loaded) {
+    for (const entry of balance.received) if (entry.paidOn.startsWith(month)) collected += entry.amountCents;
   }
   const { owed, overdue } = totals(rows);
 
@@ -449,6 +601,7 @@ export async function createGroupCharges(
   }, rowLocked);
 }
 
+/** Bloquea la fila del cargo (FOR UPDATE) y lee sus pagos con la fila ya bloqueada. */
 async function lockCharge(tx: Tx, institutionId: string, chargeId: string) {
   if (!chargeId) return null;
   const locked = await tx.$queryRaw<Array<{ id: string }>>`
@@ -458,13 +611,53 @@ async function lockCharge(tx: Tx, institutionId: string, chargeId: string) {
   if (!locked[0]) return null;
   const charge = await tx.paymentConcept.findUnique({
     where: { id: chargeId },
-    select: { id: true, studentId: true, concept: true, amount: true, amountCents: true, currency: true, dueDate: true, paidAt: true, status: true },
+    select: { ...BALANCE_SELECT, concept: true },
   });
   if (!charge) return null;
-  const amountCents = chargeCents(charge);
-  const payments = await recordedPayments(tx, institutionId, chargeId);
-  const status = charge.status as ChargeStatus;
-  return { ...charge, status, amountCents, payments, paidCents: paidCentsOf(status, amountCents, sum(payments)) };
+  const loaded = (await loadPayments(tx, institutionId, [chargeId])).get(chargeId);
+  const balance = balanceOf(charge, loaded, "");
+  return {
+    ...charge,
+    status: charge.status as ChargeStatus,
+    amountCents: balance.amountCents,
+    paidCents: balance.paidCents,
+    payments: loaded?.entries ?? [],
+    fromTable: loaded?.fromTable ?? false,
+  };
+}
+
+/**
+ * Copia a `payments` los pagos antiguos (registro de auditoría) de un cargo que aún no tiene filas, para
+ * que el pago nuevo no los deje de contar. Si quien registró el pago antiguo ya no existe, se atribuye a
+ * quien hace la copia y la nota lo dice.
+ */
+async function copyLegacyPayments(tx: Tx, institutionId: string, conceptId: string, actorId: string) {
+  const logs = await tx.auditLog.findMany({
+    where: { institutionId, entity: ENTITY, entityId: conceptId, action: FINANCE_AUDIT.payment },
+    select: { id: true, userId: true, changes: true, createdAt: true },
+    orderBy: { createdAt: "asc" },
+  });
+  const userIds = [...new Set(logs.map((log) => log.userId).filter((id): id is string => Boolean(id)))];
+  const known = new Set(
+    (await tx.user.findMany({ where: { id: { in: userIds }, institutionId }, select: { id: true } })).map((user) => user.id),
+  );
+  const data = logs.flatMap((log) => {
+    const entry = readLegacyPayment(log);
+    if (!entry) return [];
+    const recorder = log.userId && known.has(log.userId) ? log.userId : null;
+    const note = [entry.note, recorder ? "" : "Pago anterior copiado al historial nuevo."].filter(Boolean).join(" · ");
+    return [{
+      institutionId,
+      conceptId,
+      amountCents: entry.amountCents,
+      method: entry.method,
+      paidOn: dateKeyToStored(entry.paidOn) ?? log.createdAt,
+      note: note || null,
+      recordedById: recorder ?? actorId,
+      createdAt: log.createdAt,
+    }];
+  });
+  if (data.length) await tx.payment.createMany({ data });
 }
 
 /** Registra un pago: suma a lo pagado y deja el cargo con pago parcial o pagado. Nunca más de lo que se debe. */
@@ -472,7 +665,7 @@ export async function recordPayment(
   actor: Actor,
   input: { chargeId: string; amountCents: number; paidOn: string; method: string; note?: string },
   now = new Date(),
-): Promise<FinanceResult> {
+): Promise<PaymentResult> {
   if (!(await canManageFinance(actor))) return { ok: false, message: NO_PERMISSION };
   const institutionId = actor.institutionId;
   if (!Number.isInteger(input.amountCents) || input.amountCents <= 0) return { ok: false, message: "Escribe un monto mayor que cero, por ejemplo 1500.00." };
@@ -493,17 +686,62 @@ export async function recordPayment(
     if (input.amountCents > balance) {
       return { ok: false, message: `El pago no puede ser mayor que lo que se debe: ${formatMoney(balance, charge.currency)}.` } as const;
     }
-    const paidCents = charge.paidCents + input.amountCents;
-    const status = statusForPaid(charge.amountCents, paidCents);
-    await tx.paymentConcept.update({ where: { id: charge.id }, data: { status, paidAt: status === "PAID" ? paidDate : null } });
+    if (!charge.fromTable && charge.payments.length > 0) await copyLegacyPayments(tx, institutionId, charge.id, actor.id);
+    const payment = await tx.payment.create({
+      data: { institutionId, conceptId: charge.id, amountCents: input.amountCents, method: input.method, paidOn: paidDate, note: note || null, recordedById: actor.id },
+      select: { id: true },
+    });
+    const after = chargeBalanceOf(charge.status, charge.amountCents, charge.paidCents + input.amountCents, true);
+    await tx.paymentConcept.update({ where: { id: charge.id }, data: { status: after.status, paidAt: after.status === "PAID" ? paidDate : null } });
     await tx.auditLog.create({
       data: {
         institutionId,
         userId: actor.id,
         action: FINANCE_AUDIT.payment,
-        entity: ENTITY,
-        entityId: charge.id,
-        changes: { studentId: charge.studentId, amountCents: input.amountCents, paidOn: input.paidOn, method: input.method, note, paidCentsAfter: paidCents, statusAfter: status },
+        entity: PAYMENT_ENTITY,
+        entityId: payment.id,
+        changes: { conceptId: charge.id, studentId: charge.studentId, amountCents: input.amountCents, paidOn: input.paidOn, method: input.method, note, paidCentsAfter: after.paidCents, statusAfter: after.status },
+      },
+    });
+    return { ok: true, paymentId: payment.id } as const;
+  }, rowLocked);
+}
+
+/**
+ * Anula un pago con motivo: deja de contar y el cargo se recalcula en la misma transacción. El pago no se
+ * borra; sigue en el historial y su recibo queda marcado como anulado.
+ */
+export async function voidPayment(actor: Actor, input: { paymentId: string; reason: string }, now = new Date()): Promise<FinanceResult> {
+  if (!(await canManageFinance(actor))) return { ok: false, message: NO_PERMISSION };
+  const institutionId = actor.institutionId;
+  const reason = input.reason.trim();
+  if (!reason) return { ok: false, message: "Escribe el motivo por el que se anula el pago." };
+  if (reason.length > 300) return { ok: false, message: "El motivo es muy largo. Usa 300 letras o menos." };
+  const target = input.paymentId
+    ? await db.payment.findFirst({ where: { id: input.paymentId, institutionId }, select: { conceptId: true } })
+    : null;
+  if (!target) return { ok: false, message: PAYMENT_NOT_FOUND };
+
+  return db.$transaction(async (tx) => {
+    const charge = await lockCharge(tx, institutionId, target.conceptId);
+    if (!charge) return { ok: false, message: NOT_FOUND } as const;
+    const payment = charge.payments.find((entry) => entry.id === input.paymentId && !entry.legacy);
+    if (!payment) return { ok: false, message: PAYMENT_NOT_FOUND } as const;
+    if (payment.voided) return { ok: false, message: "Este pago ya estaba anulado." } as const;
+    await tx.payment.update({ where: { id: payment.id }, data: { voidedAt: now, voidReason: reason } });
+    const stillPaid = sum(active(charge.payments)) - payment.amountCents;
+    const after = chargeBalanceOf(charge.status, charge.amountCents, stillPaid, true);
+    if (charge.status !== "CANCELLED") {
+      await tx.paymentConcept.update({ where: { id: charge.id }, data: { status: after.status, paidAt: after.status === "PAID" ? charge.paidAt : null } });
+    }
+    await tx.auditLog.create({
+      data: {
+        institutionId,
+        userId: actor.id,
+        action: FINANCE_AUDIT.voided,
+        entity: PAYMENT_ENTITY,
+        entityId: payment.id,
+        changes: { conceptId: charge.id, studentId: charge.studentId, amountCents: payment.amountCents, paidOn: payment.paidOn, reason, paidCentsAfter: after.paidCents, statusAfter: after.status },
       },
     });
     return { ok: true } as const;
@@ -661,4 +899,61 @@ export async function getStudentAccount(viewer: Actor, studentId: string, now = 
   const charges = rows.filter((row) => row.status !== "CANCELLED" || row.payments.length > 0);
   const { owed, overdue, paid } = totals(charges);
   return { student, currency, owedCents: owed, overdueCents: overdue, paidCents: paid, charges };
+}
+
+/**
+ * Recibo de un pago, solo lectura. Lo ve quien gestiona cobros en la institución, el estudiante dueño
+ * del cargo y su tutor con permiso de finanzas y vínculo activo. Null en cualquier otro caso (incluido
+ * un pago de otra institución), sin decir si existe.
+ */
+export async function getPaymentReceipt(viewer: Actor, paymentId: string): Promise<PaymentReceipt | null> {
+  if (!paymentId || !viewer.id || !viewer.institutionId) return null;
+  const payment = await db.payment.findFirst({
+    where: { id: paymentId, institutionId: viewer.institutionId },
+    select: {
+      id: true,
+      amountCents: true,
+      method: true,
+      paidOn: true,
+      note: true,
+      createdAt: true,
+      voidedAt: true,
+      voidReason: true,
+      recordedBy: { select: { name: true } },
+      institution: { select: { name: true, timezone: true } },
+      concept: { select: { concept: true, currency: true, studentId: true, student: { select: { id: true, name: true } }, period: { select: { name: true } } } },
+    },
+  });
+  if (!payment) return null;
+  const studentId = payment.concept.studentId;
+  const allowed =
+    (await canManageFinance(viewer)) ||
+    (studentId !== null && (await accountStudentsFor(viewer)).some((student) => student.id === studentId));
+  if (!allowed) return null;
+
+  const localDay = (instant: Date) => {
+    try {
+      return zonedDateKey(instant, payment.institution.timezone || "America/Santo_Domingo");
+    } catch {
+      return zonedDateKey(instant, "America/Santo_Domingo");
+    }
+  };
+  const currency = payment.concept.currency;
+  return {
+    id: payment.id,
+    number: receiptNumber(payment.id),
+    institution: { name: payment.institution.name },
+    student: { id: payment.concept.student?.id ?? "", name: payment.concept.student?.name ?? "Cargo general" },
+    concept: payment.concept.concept,
+    periodName: payment.concept.period?.name ?? "",
+    currency,
+    amountCents: payment.amountCents,
+    amountWords: amountInWords(payment.amountCents, currency),
+    method: PAYMENT_METHODS.includes(payment.method as PaymentMethod) ? (payment.method as PaymentMethod) : "OTHER",
+    paidOn: dayKey(payment.paidOn),
+    note: payment.note ?? "",
+    recordedByName: payment.recordedBy.name,
+    recordedOn: localDay(payment.createdAt),
+    voided: payment.voidedAt ? { on: localDay(payment.voidedAt), reason: payment.voidReason ?? "" } : null,
+  };
 }
