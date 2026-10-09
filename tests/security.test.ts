@@ -159,7 +159,8 @@ test("curso, assets y mutaciones comparten el alcance central", () => {
     join(process.cwd(), "src", "app", "dashboard", "aula", "page.tsx"),
     join(process.cwd(), "src", "app", "dashboard", "aula", "[courseId]", "page.tsx"),
     join(process.cwd(), "src", "app", "api", "assets", "route.ts"),
-    join(process.cwd(), "src", "app", "api", "assets", "[assetId]", "route.ts"),
+    // `/api/assets/[assetId]` autoriza con `assetReadAccess` (M2 · archivos).
+    join(process.cwd(), "src", "server", "courses", "uploads.ts"),
     join(process.cwd(), "src", "app", "dashboard", "academico", "actions.ts"),
   ];
   for (const file of files) assert.match(readFileSync(file, "utf8"), /@\/lib\/course-scope/);

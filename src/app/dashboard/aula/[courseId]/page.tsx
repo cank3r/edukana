@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import type { ReactNode } from "react";
@@ -39,6 +40,7 @@ export default async function CourseHomePage({ params }: { params: Promise<{ cou
       teacherId: true,
       isPublished: true,
       archivedAt: true,
+      imageUrl: true,
       completionThreshold: true,
       teacher: { select: { name: true } },
       period: { select: { name: true } },
@@ -89,7 +91,8 @@ export default async function CourseHomePage({ params }: { params: Promise<{ cou
 
   return (
     <div className="mx-auto max-w-5xl p-4 sm:p-8">
-      <header className="mb-6 rounded-3xl p-6 text-white sm:p-8" style={{ background: "linear-gradient(135deg,var(--navy),#173b9c)" }}>
+      <header className="mb-6 overflow-hidden rounded-3xl p-6 text-white sm:p-8" style={{ background: "linear-gradient(135deg,var(--navy),#173b9c)" }}>
+        {course.imageUrl && <Image src={course.imageUrl} alt="" width={1024} height={320} unoptimized priority className="-mx-6 -mt-6 mb-5 aspect-[16/5] w-[calc(100%+3rem)] max-w-none object-cover sm:-mx-8 sm:-mt-8 sm:w-[calc(100%+4rem)]" />}
         <div className="flex flex-wrap items-center gap-2">
           {!isStudent && <span className={`rounded-full px-3 py-1 text-xs font-semibold ${statusStyle[status]}`}>{status}</span>}
           {course.code && <span className="rounded bg-white/10 px-2 py-1 font-mono text-xs text-cyan-100">{course.code}</span>}

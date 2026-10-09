@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { getEffectiveCapabilities } from "@/lib/authorization";
 import { courseWhereForScope, resolveCourseWriteScope } from "@/lib/course-scope";
 import { db } from "@/lib/db";
+import { ImageUploader } from "@/components/dashboard/ImageUploader";
 import { courseUsage } from "@/server/courses/course";
 import { CourseForm } from "../../nuevo/CourseForm";
 import { CourseStateTools } from "./CourseStateTools";
@@ -20,7 +21,7 @@ export default async function EditCoursePage({ params }: { params: Promise<{ cou
 
   const course = await db.course.findFirst({
     where: { id: courseId, ...where },
-    select: { id: true, name: true, description: true, code: true, maxStudents: true, teacherId: true, periodId: true, isPublished: true, archivedAt: true, teacher: { select: { id: true, name: true } } },
+    select: { id: true, name: true, description: true, code: true, maxStudents: true, teacherId: true, periodId: true, isPublished: true, archivedAt: true, imageUrl: true, teacher: { select: { id: true, name: true } } },
   });
   if (!course) notFound();
 
@@ -49,6 +50,10 @@ export default async function EditCoursePage({ params }: { params: Promise<{ cou
           periods={periods}
           fixedTeacherId={scope.kind === "teacher" ? scope.teacherId : undefined}
         />
+      </section>
+      <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-labelledby="imagen-curso">
+        <h2 id="imagen-curso" className="mb-4 text-lg font-bold text-slate-950">Imagen del curso</h2>
+        <ImageUploader purpose="course-image" courseId={course.id} imageUrl={course.imageUrl} alt={`Imagen del curso ${course.name}`} />
       </section>
       <section className="rounded-2xl border border-slate-200 bg-white p-5" aria-labelledby="estado-curso">
         <h2 id="estado-curso" className="mb-4 text-lg font-bold text-slate-950">Quién ve el curso</h2>

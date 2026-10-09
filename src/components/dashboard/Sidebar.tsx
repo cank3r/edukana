@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { useEffect, useState } from "react";
 import {
   BarChart2, Bell, BookOpen, Building2, Calendar, ChevronRight, CreditCard, GraduationCap,
   LayoutDashboard, LogOut, Megaphone, Menu, Settings, UserCircle, UserPlus, Users,
@@ -119,11 +120,30 @@ export default function Sidebar({ user, capabilities, unreadNotifications = 0 }:
           <LogOut size={18} /><span className="hidden md:block">Cerrar sesión</span>
         </button>
         <Link href="/dashboard/perfil" title="Mi perfil" aria-label={`Mi perfil: ${user.name ?? ""}`} className="hidden items-center gap-3 rounded-lg px-3 py-2.5 transition-all hover:bg-white/10 md:flex" style={{ background: "rgba(255,255,255,0.04)" }}>
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ background: "var(--blue)" }}>{user.name?.charAt(0).toUpperCase() ?? "U"}</div>
+          <Avatar initial={user.name?.charAt(0).toUpperCase() ?? "U"} />
           <div className="min-w-0"><p className="truncate text-sm font-medium text-white">{user.name}</p><p className="truncate text-xs" style={{ color: "#6B7DA8" }}>{user.email}</p></div>
         </Link>
       </div>
       </aside>
     </>
+  );
+}
+
+/** Foto de perfil propia (la pide a `/api/avatar`); si no hay o no carga, la inicial. */
+function Avatar({ initial }: { initial: string }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let active = true;
+    fetch("/api/avatar", { cache: "no-store" })
+      .then((response) => (response.ok ? (response.json() as Promise<{ url: string | null }>) : { url: null }))
+      .then((data) => { if (active) setUrl(data.url); })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, []);
+  return (
+    <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs font-bold text-white" style={{ background: "var(--blue)" }}>
+      {initial}
+      {url && <Image src={url} alt="" width={32} height={32} unoptimized className="absolute inset-0 h-full w-full object-cover" onError={() => setUrl(null)} />}
+    </div>
   );
 }
