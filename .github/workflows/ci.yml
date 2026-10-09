@@ -23,9 +23,9 @@ env:
   GH_TOKEN: ${{ github.token }}
 
 # Registros legibles: cada paso deja su salida completa en `registros/NN-paso.log`. Los pasos siguen aunque
-# uno falle (continue-on-error) para tener todas las salidas; al final se publican en la rama `ci-registros`
-# (carpeta `<sha>/<job>/` + `<sha>/RESUMEN.md`) y el último paso marca el job en rojo si algo falló.
-#   git fetch origin ci-registros && git show FETCH_HEAD:<sha>/RESUMEN.md
+# uno falle (continue-on-error) para tener todas las salidas; cada job guarda logs y RESUMEN.md
+# en un artefacto por SHA/run/attempt con 14 días de retención. El último paso conserva el fallo.
+# No se publican, sobrescriben ni purgan ramas de registros o capturas.
 
 jobs:
   validate:
@@ -62,7 +62,9 @@ jobs:
       - name: Pruebas unitarias
         id: unit
         continue-on-error: true
-        run: set -o pipefail; npm test 2>&1 | tee registros/05-npm-test.log
+        run: |
+          set -o pipefail
+          { npm test && node --require ./tests/integration/stub-server-only.cjs --import tsx --test tests/exam-submit-enrollment.test.ts; } 2>&1 | tee registros/05-npm-test.log
       - name: Pruebas de integración con dos instituciones
         id: integration
         continue-on-error: true
@@ -107,14 +109,21 @@ jobs:
             done
           } > registros/RESUMEN.md
           cat registros/RESUMEN.md >> "$GITHUB_STEP_SUMMARY"
-      - name: Publicar registros en la rama ci-registros
+      - name: Guardar registros y resumen
         if: always()
-        run: bash .github/workflows/publicar-registros.sh validate registros
+        uses: actions/upload-artifact@v4
+        with:
+          name: registros-${{ github.sha }}-validate-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            registros/*.log
+            registros/*.md
+          if-no-files-found: warn
+          retention-days: 14
       - name: Publicar el error como comentario del commit
         if: always() && contains(join(steps.*.outcome, ','), 'failure')
         run: |
           primero=$(grep '| failure |' registros/RESUMEN.md | head -n 1 | grep -o '[0-9][0-9]-[a-z-]*\.log' || true)
-          { echo "**CI validate falló** en \`${GITHUB_REF_NAME}\`. Registros completos: rama \`ci-registros\`, carpeta \`${GITHUB_SHA}/validate/\`."; echo; sed -n '/^| Paso/,$p' registros/RESUMEN.md; echo; echo "Últimas líneas de \`${primero}\`:"; echo; echo '```'; grep -v '^\s*$' "registros/${primero}" | tail -n 80 | cut -c1-400; echo '```'; } > comment.md
+          { echo "**CI validate falló** en \`${GITHUB_REF_NAME}\`. Registros completos y resumen en los artefactos de esta ejecución: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}."; echo; sed -n '/^| Paso/,$p' registros/RESUMEN.md; echo; echo "Últimas líneas de \`${primero}\`:"; echo; echo '```'; grep -v '^\s*$' "registros/${primero}" | tail -n 80 | cut -c1-400; echo '```'; } > comment.md
           gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/comments" -F body=@comment.md --jq .html_url
       - name: Resultado
         if: always()
@@ -184,29 +193,43 @@ jobs:
               grep '^FALLA ' smoke.log | sed 's/\x1b\[[0-9;]*m//g' | cut -c1-300
               echo '```'
             fi
-            echo; echo "Capturas en la rama \`qa-capturas\`."
+            echo; echo "Capturas y registros en los artefactos de esta ejecución: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}."
           } > registros/RESUMEN.md
           cat registros/RESUMEN.md >> "$GITHUB_STEP_SUMMARY"
-      - name: Publicar registros en la rama ci-registros
+      - name: Guardar registros y resumen
         if: always()
-        run: bash .github/workflows/publicar-registros.sh browser-smoke registros
-      - name: Publicar capturas e informe en la rama qa-capturas
+        uses: actions/upload-artifact@v4
+        with:
+          name: registros-${{ github.sha }}-browser-smoke-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            registros/*.log
+            registros/*.md
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Preparar capturas e informe como artefacto
+        id: capture_files
         if: always()
         run: |
           set -e
+          bundle="$(mktemp -d "$RUNNER_TEMP/edukana-capturas.XXXXXX")"
+          echo "path=$bundle" >> "$GITHUB_OUTPUT"
           [ -d smoke-artifacts ] || exit 0
-          rm -rf /tmp/pub && mkdir -p /tmp/pub
-          cp -r smoke-artifacts/screenshots /tmp/pub/ 2>/dev/null || true
-          cp -r smoke-artifacts/texts /tmp/pub/ 2>/dev/null || true
-          cp smoke-artifacts/smoke-report.md /tmp/pub/ 2>/dev/null || true
-          tail -n 200 smoke-artifacts/server.log > /tmp/pub/server-tail.log 2>/dev/null || true
-          tail -n 150 smoke.log > /tmp/pub/recorrido-tail.log 2>/dev/null || true
-          printf '# Capturas del recorrido\n\nRama: `%s`\nCommit: `%s`\nResultado: %s\n' "$GITHUB_REF_NAME" "$GITHUB_SHA" "${{ steps.tour.outcome }}" > /tmp/pub/README.md
-          cd /tmp/pub && git init -q -b qa-capturas && git add -A
-          git -c user.name="edukana-ci" -c user.email="ci@users.noreply.github.com" commit -q -m "capturas de ${GITHUB_REF_NAME} @ ${GITHUB_SHA::7}"
-          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" qa-capturas
+          cp -r smoke-artifacts/screenshots "$bundle/" 2>/dev/null || true
+          cp -r smoke-artifacts/texts "$bundle/" 2>/dev/null || true
+          cp smoke-artifacts/smoke-report.md "$bundle/" 2>/dev/null || true
+          tail -n 200 smoke-artifacts/server.log > "$bundle/server-tail.log" 2>/dev/null || true
+          tail -n 150 smoke.log > "$bundle/recorrido-tail.log" 2>/dev/null || true
+          printf '# Capturas del recorrido\n\nRama: `%s`\nCommit: `%s`\nResultado: %s\n' "$GITHUB_REF_NAME" "$GITHUB_SHA" "${{ steps.tour.outcome }}" > "$bundle/README.md"
+      - name: Guardar capturas e informe
+        if: always() && steps.capture_files.outputs.path != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: capturas-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ steps.capture_files.outputs.path }}/
+          if-no-files-found: warn
+          retention-days: 14
       - name: Publicar el resultado como comentario del commit
         if: always()
         run: |
-          { echo "**Recorrido en navegador: ${{ steps.tour.outcome }}** en \`${GITHUB_REF_NAME}\`. Capturas en la rama \`qa-capturas\`; registros en \`ci-registros\`, carpeta \`${GITHUB_SHA}/browser-smoke/\`."; echo; echo '```'; tail -n 60 smoke.log 2>/dev/null | cut -c1-300; echo '```'; } > comment.md
+          { echo "**Recorrido en navegador: ${{ steps.tour.outcome }}** en \`${GITHUB_REF_NAME}\`. Capturas, registros y resúmenes en los artefactos de esta ejecución: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}."; echo; echo '```'; tail -n 60 smoke.log 2>/dev/null | cut -c1-300; echo '```'; } > comment.md
           gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/comments" -F body=@comment.md --jq .html_url
