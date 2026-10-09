@@ -118,7 +118,7 @@ before(async () => {
   await db.paymentConcept.createMany({
     data: [
       { id: "rp_p1", ...a, periodId: PERIOD, studentId: S1, concept: "Rp Mensualidad", amount: 100, amountCents: 10_000, status: "PAID", paidAt: daysAgo(2) },
-      { id: "rp_p2", ...a, periodId: PERIOD, studentId: S2, concept: "Rp Mensualidad", amount: 50, amountCents: 5_000, status: "PENDING", dueDate: daysAgo(1) },
+      { id: "rp_p2", ...a, periodId: PERIOD, studentId: S2, concept: "Rp Mensualidad", amount: 50, amountCents: 5_000, status: "PENDING", dueDate: daysAgo(3) },
       { id: "rp_p3", ...a, periodId: PERIOD, studentId: S3, concept: "Rp Anulado", amount: 70, amountCents: 7_000, status: "CANCELLED" },
       { id: "rp_pb", ...b, periodId: "b_period", studentId: SB, concept: "Rp Cobro de B", amount: 999, amountCents: 99_900, status: "PAID", paidAt: daysAgo(2) },
     ],
@@ -329,8 +329,9 @@ test("cobros: no se devuelven sin permiso de cobros", async () => {
 
   const finance = await reportCsvFile(A.admin, "cobros", { periodId: PERIOD }, now);
   assert.ok(finance);
-  assert.match(finance.content, /Cobrado,DOP,1,100\r\n/);
-  assert.match(finance.content, /Por cobrar,DOP,1,50\r\n/);
+  // Estado, moneda, cantidad, monto, pagado (pagos reales no anulados) y lo que falta por cobrar.
+  assert.match(finance.content, /Cobrado,DOP,1,100,100,0\r\n/);
+  assert.match(finance.content, /Por cobrar,DOP,1,50,0,50\r\n/);
   assert.doesNotMatch(finance.content, /999/);
 });
 
@@ -361,4 +362,20 @@ test("CSV: marca UTF-8 y celdas escapadas", async () => {
   assert.ok(access?.content.includes("Rp Beto,rp_s2@a.test,Estudiante\r\n"));
   assert.ok(!access?.content.includes("rp_sb@b.test"));
   for (const section of ["docentes", "grupos", "programas"] as const) assert.ok(await reportCsvFile(A.admin, section, { periodId: PERIOD }, now));
+});
+
+test("cobros: lo cobrado y lo pendiente salen de los pagos reales, sin contar los anulados", async () => {
+  const payment = await db.payment.create({
+    data: { institutionId: A.institutionId, conceptId: "rp_p2", amountCents: 2_000, method: "CASH", paidOn: dateOnly(daysAgo(1)), recordedById: A.admin.id },
+  });
+  let summary = await getFinanceSummary(admin, filters, now);
+  assert.deepEqual(
+    [summary?.collectedCents, summary?.pendingCents, summary?.overdueCents, summary?.collectedLast30Cents],
+    [12_000, 3_000, 3_000, 12_000],
+    "un pago parcial suma a lo cobrado y baja lo pendiente aunque el estado guardado diga pendiente",
+  );
+  await db.payment.update({ where: { id: payment.id }, data: { voidedAt: new Date(), voidReason: "Prueba" } });
+  summary = await getFinanceSummary(admin, filters, now);
+  assert.deepEqual([summary?.collectedCents, summary?.pendingCents, summary?.overdueCents], [10_000, 5_000, 5_000]);
+  await db.payment.delete({ where: { id: payment.id } });
 });

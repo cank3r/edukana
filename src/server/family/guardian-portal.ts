@@ -6,6 +6,7 @@ import { getEffectiveCapabilities } from "@/lib/authorization";
 import { db } from "@/lib/db";
 import { courseAverage, type AveragePeriod } from "@/lib/gradebook-calc";
 import { canViewGuardianArea, type GuardianArea } from "@/lib/guardianship-policy";
+import { chargeBalances } from "@/server/finance/charges";
 import { formatWhen, safeTimezone } from "@/server/student-home";
 import type { EdukanaRole } from "@/types/next-auth";
 
@@ -115,6 +116,7 @@ export type ChildEvent = { id: string; title: string; startDate: Date };
 export type ChildAccount = {
   /** Un total por moneda, en centavos enteros. */
   totals: Array<{ currency: string; owedCents: number; overdueCents: number }>;
+  /** Cargos con saldo. `amountCents` es lo que falta pagar de ese cargo (descontados los pagos no anulados). */
   charges: Array<{ id: string; concept: string; amountCents: number; currency: string; dueDate: Date | null; status: string; overdue: boolean }>;
 };
 export type ChildAlert = { kind: "overdue" | "attendance"; text: string };
@@ -480,8 +482,8 @@ export async function getChildOverview(actor: GuardianActor, studentId: string, 
       : [],
     access.permissions.finance
       ? db.paymentConcept.findMany({
-          where: { institutionId, studentId: access.student.id, status: { in: [...OWED_STATUSES] } },
-          select: { id: true, concept: true, amount: true, amountCents: true, currency: true, dueDate: true, status: true },
+          where: { institutionId, studentId: access.student.id, status: { not: "CANCELLED" } },
+          select: { id: true, concept: true, dueDate: true },
           orderBy: [{ dueDate: "asc" }, { id: "asc" }],
           take: 100,
         })
@@ -490,15 +492,19 @@ export async function getChildOverview(actor: GuardianActor, studentId: string, 
 
   let account: ChildAccount | null = null;
   if (access.permissions.finance) {
+    // Lo que se debe sale de los pagos reales (no anulados), no del estado guardado.
+    const balances = await chargeBalances(institutionId, charges.map((charge) => charge.id), now);
     const totals = new Map<string, { currency: string; owedCents: number; overdueCents: number }>();
-    const items = charges.map((charge) => {
-      const amountCents = charge.amountCents ?? Math.round(charge.amount * 100);
-      const overdue = charge.status === "OVERDUE" || (charge.dueDate !== null && charge.dueDate < now);
-      const total = totals.get(charge.currency) ?? { currency: charge.currency, owedCents: 0, overdueCents: 0 };
+    const items = charges.flatMap((charge) => {
+      const balance = balances.get(charge.id);
+      if (!balance || balance.balanceCents <= 0 || !OWED_STATUSES.includes(balance.status as (typeof OWED_STATUSES)[number])) return [];
+      const amountCents = balance.balanceCents;
+      const overdue = balance.shownStatus === "OVERDUE" || (charge.dueDate !== null && charge.dueDate < now);
+      const total = totals.get(balance.currency) ?? { currency: balance.currency, owedCents: 0, overdueCents: 0 };
       total.owedCents += amountCents;
       if (overdue) total.overdueCents += amountCents;
-      totals.set(charge.currency, total);
-      return { id: charge.id, concept: charge.concept, amountCents, currency: charge.currency, dueDate: charge.dueDate, status: charge.status, overdue };
+      totals.set(balance.currency, total);
+      return [{ id: charge.id, concept: charge.concept, amountCents, currency: balance.currency, dueDate: charge.dueDate, status: balance.status, overdue }];
     });
     account = { totals: [...totals.values()], charges: items };
   }

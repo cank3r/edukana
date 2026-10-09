@@ -88,6 +88,85 @@ export function paidCentsOf(status: ChargeStatus, amountCents: number, recordedC
   return Math.min(recordedCents, amountCents);
 }
 
+/**
+ * Saldo de un cargo a partir de lo pagado (pagos no anulados), en centavos.
+ *
+ * - `hasPaymentRows`: el cargo tiene filas en la tabla de pagos (aunque estén anuladas). Entonces lo
+ *   pagado es exactamente la suma de los pagos vigentes y el estado se deriva de ella.
+ * - Sin filas (cargo antiguo): se respeta la regla anterior; un cargo guardado como pagado sin pagos
+ *   registrados cuenta como pagado completo.
+ *
+ * El estado devuelto es el que corresponde guardar (PENDING, PARTIAL, PAID o CANCELLED); un OVERDUE
+ * antiguo guardado se conserva mientras no esté pagado.
+ */
+export function chargeBalanceOf(stored: ChargeStatus, amountCents: number, activePaidCents: number, hasPaymentRows: boolean) {
+  const paidCents = hasPaymentRows ? Math.min(activePaidCents, amountCents) : paidCentsOf(stored, amountCents, activePaidCents);
+  if (stored === "CANCELLED") return { paidCents, balanceCents: 0, status: "CANCELLED" as ChargeStatus };
+  const derived = statusForPaid(amountCents, paidCents);
+  const status: ChargeStatus = derived !== "PAID" && stored === "OVERDUE" ? "OVERDUE" : derived;
+  return { paidCents, balanceCents: Math.max(0, amountCents - paidCents), status };
+}
+
+/** Número corto y estable del recibo, derivado del identificador del pago: «A1B2C3D4». */
+export function receiptNumber(paymentId: string): string {
+  const clean = paymentId.replace(/[^A-Za-z0-9]/g, "");
+  return clean.slice(-8).toUpperCase().padStart(8, "0");
+}
+
+const UNITS = [
+  "cero", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve",
+  "diez", "once", "doce", "trece", "catorce", "quince", "dieciséis", "diecisiete", "dieciocho", "diecinueve",
+  "veinte", "veintiuno", "veintidós", "veintitrés", "veinticuatro", "veinticinco", "veintiséis", "veintisiete", "veintiocho", "veintinueve",
+];
+const TENS = ["", "", "", "treinta", "cuarenta", "cincuenta", "sesenta", "setenta", "ochenta", "noventa"];
+const HUNDREDS = ["", "ciento", "doscientos", "trescientos", "cuatrocientos", "quinientos", "seiscientos", "setecientos", "ochocientos", "novecientos"];
+
+function belowThousand(n: number): string {
+  if (n === 0) return "";
+  if (n === 100) return "cien";
+  const rest = n % 100;
+  const parts = n >= 100 ? [HUNDREDS[Math.floor(n / 100)]] : [];
+  if (rest > 0) parts.push(rest < 30 ? UNITS[rest] : `${TENS[Math.floor(rest / 10)]}${rest % 10 ? ` y ${UNITS[rest % 10]}` : ""}`);
+  return parts.join(" ");
+}
+
+/** «uno» delante de un sustantivo se acorta: «un mil» no, pero «veintiún mil», «un peso», «treinta y un pesos». */
+const shorten = (words: string) => words.replace(/veintiuno$/, "veintiún").replace(/uno$/, "un");
+
+/** Número entero en letras, en español: 3500 → «tres mil quinientos». */
+export function integerToWords(value: number): string {
+  const n = Math.trunc(Math.abs(value));
+  if (n === 0) return "cero";
+  const millions = Math.floor(n / 1_000_000);
+  const thousands = Math.floor((n % 1_000_000) / 1000);
+  const rest = n % 1000;
+  const parts: string[] = [];
+  if (millions) parts.push(millions === 1 ? "un millón" : `${shorten(integerToWords(millions))} millones`);
+  if (thousands) parts.push(thousands === 1 ? "mil" : `${shorten(belowThousand(thousands))} mil`);
+  if (rest) parts.push(belowThousand(rest));
+  return parts.join(" ");
+}
+
+const CURRENCY_WORDS: Record<string, [string, string]> = {
+  DOP: ["peso dominicano", "pesos dominicanos"],
+  USD: ["dólar estadounidense", "dólares estadounidenses"],
+  EUR: ["euro", "euros"],
+  MXN: ["peso mexicano", "pesos mexicanos"],
+  COP: ["peso colombiano", "pesos colombianos"],
+};
+
+/** Monto en letras para un recibo: 350000 centavos DOP → «Tres mil quinientos pesos dominicanos con 00/100». */
+export function amountInWords(cents: number, currency: string = DEFAULT_CURRENCY): string {
+  const units = Math.trunc(cents / 100);
+  const fraction = String(Math.abs(cents % 100)).padStart(2, "0");
+  const [one, many] = CURRENCY_WORDS[currency] ?? [currency, currency];
+  const words = units === 1 ? "un" : shorten(integerToWords(units));
+  // «un millón de pesos», «dos millones de pesos»: con millones exactos se agrega «de».
+  const joiner = units >= 1_000_000 && units % 1_000_000 === 0 ? " de" : "";
+  const text = `${words}${joiner} ${units === 1 ? one : many} con ${fraction}/100`;
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 /** Las fechas de vencimiento se guardan al mediodía UTC del día elegido: el día se lee en UTC. */
 export function dueDateKey(dueDate: Date | null): string | null {
   return dueDate ? dueDate.toISOString().slice(0, 10) : null;

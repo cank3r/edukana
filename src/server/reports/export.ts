@@ -1,8 +1,8 @@
 import "server-only";
 
-import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { roleLabel } from "@/lib/ux";
+import { chargeBalances } from "@/server/finance/charges";
 import type { EdukanaRole } from "@/types/next-auth";
 import { cleanReportFilters, listReportFilterOptions, resolveReportAccess, type ReportAccess, type ReportActor, type ReportFilters } from "./access";
 import { reportCsv, type CsvValue } from "./csv";
@@ -25,7 +25,7 @@ const one = (value: number | null) => (value === null ? null : Math.round(value 
 const date = (value: Date | null) => (value ? value.toISOString().slice(0, 10) : null);
 const PAYMENT_STATUS: Record<string, string> = { PAID: "Cobrado", PENDING: "Por cobrar", OVERDUE: "Vencido", PARTIAL: "Pago parcial", CANCELLED: "Anulado" };
 
-/** Filas de una sección, con encabezados. Null si esa sección no es para quien la pide. Consultas: 1 por sección. */
+/** Filas de una sección, con encabezados. Null si esa sección no es para quien la pide. Consultas: 1 por sección (cobros: 1 + las de `chargeBalances`). */
 export async function reportSectionRows(access: ReportAccess, filters: ReportFilters, section: ReportSection, now = new Date()): Promise<CsvValue[][] | null> {
   const all = { limit: EXPORT_ROWS };
   if (section === "cursos") {
@@ -71,16 +71,28 @@ export async function reportSectionRows(access: ReportAccess, filters: ReportFil
     const { rows } = await getProgramReport(access, filters, { ...all, sort: { key: "nombre", desc: false } });
     return [["Programa", "Cursos", "Estudiantes", "Avance promedio (%)"], ...rows.map((row) => [row.name, row.courses, row.students, one(row.averageProgress)])];
   }
-  // Cobros: totales por estado. Sin permiso de cobros no se consulta nada.
+  // Cobros: totales por estado, con lo pagado real (pagos no anulados). Sin permiso de cobros no se consulta nada.
   if (!access.canSeeFinance) return null;
-  const totals = await db.$queryRaw<Array<{ status: string; currency: string; charges: number; cents: number }>>(Prisma.sql`
-    SELECT status::text AS status, currency, COUNT(*)::int AS charges, SUM(COALESCE("amountCents", ROUND(amount * 100))::bigint)::float8 AS cents
-    FROM payment_concepts
-    WHERE "institutionId" = ${access.institutionId} ${filters.periodId ? Prisma.sql`AND "periodId" = ${filters.periodId}` : Prisma.empty}
-    GROUP BY status, currency
-    ORDER BY status, currency
-  `);
-  return [["Estado", "Moneda", "Cantidad de cobros", "Monto"], ...totals.map((row) => [PAYMENT_STATUS[row.status] ?? row.status, row.currency, row.charges, Math.round(row.cents) / 100])];
+  const charges = await db.paymentConcept.findMany({
+    where: { institutionId: access.institutionId, ...(filters.periodId ? { periodId: filters.periodId } : {}) },
+    select: { id: true },
+  });
+  const balances = await chargeBalances(access.institutionId, charges.map((charge) => charge.id), now);
+  const groups = new Map<string, { status: string; currency: string; charges: number; cents: number; paid: number; owed: number }>();
+  for (const balance of balances.values()) {
+    const key = `${balance.status}|${balance.currency}`;
+    const group = groups.get(key) ?? { status: balance.status, currency: balance.currency, charges: 0, cents: 0, paid: 0, owed: 0 };
+    group.charges += 1;
+    group.cents += balance.amountCents;
+    group.paid += balance.paidCents;
+    group.owed += balance.balanceCents;
+    groups.set(key, group);
+  }
+  const totals = [...groups.values()].sort((a, b) => a.status.localeCompare(b.status) || a.currency.localeCompare(b.currency));
+  return [
+    ["Estado", "Moneda", "Cantidad de cobros", "Monto", "Pagado", "Por cobrar"],
+    ...totals.map((row) => [PAYMENT_STATUS[row.status] ?? row.status, row.currency, row.charges, row.cents / 100, row.paid / 100, row.owed / 100]),
+  ];
 }
 
 /**
