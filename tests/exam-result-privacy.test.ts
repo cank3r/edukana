@@ -23,7 +23,7 @@ const fake = {
   examAttempt: { findFirst: async () => attempt() },
   enrollment: { findFirst: async () => enrollmentAllowed ? { id: "enrollment", status: "ACTIVE" } : null },
   exam: { findFirst: async () => ({
-    ...attempt().exam, instructions: null, durationMinutes: 1,
+    ...attempt().exam, isPublished: true, instructions: null, durationMinutes: 1,
     course: { name: "Course", institution: { timezone: "UTC" } },
     _count: { questions: 1 }, attempts: [attempt()],
   }) },
