@@ -138,6 +138,7 @@ model User {
   courseOrders            CourseOrder[]
   courseReviews           CourseReview[]
 
+  @@unique([institutionId, id])
   @@unique([institutionId, email])
   @@unique([institutionId, identityId])
   @@index([institutionId, role])
@@ -211,6 +212,7 @@ model AcademicPeriod {
   paymentConcepts PaymentConcept[]
   gradingPeriods  GradingPeriod[]
 
+  @@unique([institutionId, id])
   @@index([institutionId, startDate])
   @@map("academic_periods")
 }
@@ -220,9 +222,9 @@ model Course {
   institutionId       String
   institution         Institution         @relation(fields: [institutionId], references: [id], onDelete: Cascade)
   periodId            String
-  period              AcademicPeriod      @relation(fields: [periodId], references: [id])
+  period              AcademicPeriod      @relation(fields: [institutionId, periodId], references: [institutionId, id])
   teacherId           String
-  teacher             User                @relation("TeacherCourses", fields: [teacherId], references: [id])
+  teacher             User                @relation("TeacherCourses", fields: [institutionId, teacherId], references: [institutionId, id])
   name                String
   code                String?
   description         String?
@@ -261,6 +263,7 @@ model Course {
   reviews             CourseReview[]
   relatedAnnouncements AnnouncementRelatedCourse[]
 
+  @@unique([institutionId, id])
   @@unique([institutionId, code])
   @@index([institutionId, teacherId])
   @@map("courses")
@@ -336,12 +339,12 @@ enum LessonType {
 
 model Enrollment {
   id              String           @id @default(cuid())
-  institutionId   String?
-  institution     Institution?     @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  institutionId   String
+  institution     Institution      @relation(fields: [institutionId], references: [id], onDelete: Cascade)
   studentId       String
-  student         User             @relation(fields: [studentId], references: [id])
+  student         User             @relation(fields: [institutionId, studentId], references: [institutionId, id])
   courseId        String
-  course          Course           @relation(fields: [courseId], references: [id])
+  course          Course           @relation(fields: [institutionId, courseId], references: [institutionId, id])
   status          EnrollmentStatus @default(ACTIVE)
   finalGrade      Float?
   progressPercent Float            @default(0)
@@ -840,6 +843,7 @@ model PaymentConcept {
   createdAt     DateTime        @default(now())
   payments      Payment[]
 
+  @@unique([institutionId, id])
   @@index([institutionId, status])
   @@index([institutionId, studentId])
   @@map("payment_concepts")
@@ -1176,6 +1180,7 @@ model Program {
   courses       ProgramCourse[]
   groups        StudentGroup[]
 
+  @@unique([institutionId, id])
   @@unique([institutionId, name])
   @@map("programs")
 }
@@ -1183,9 +1188,9 @@ model Program {
 model ProgramCourse {
   institutionId String
   programId     String
-  program       Program @relation(fields: [programId], references: [id], onDelete: Cascade)
+  program       Program @relation(fields: [institutionId, programId], references: [institutionId, id], onDelete: Cascade)
   courseId      String
-  course        Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course        Course  @relation(fields: [institutionId, courseId], references: [institutionId, id], onDelete: Cascade)
   order         Int     @default(0)
 
   @@id([programId, courseId])
@@ -1198,7 +1203,7 @@ model StudentGroup {
   institutionId String
   institution   Institution          @relation(fields: [institutionId], references: [id], onDelete: Cascade)
   programId     String?
-  program       Program?             @relation(fields: [programId], references: [id], onDelete: SetNull)
+  program       Program?             @relation(fields: [institutionId, programId], references: [institutionId, id], onDelete: Restrict)
   name          String
   description   String?
   startsOn      DateTime             @db.Date
@@ -1209,6 +1214,7 @@ model StudentGroup {
   members       StudentGroupMember[]
   courses       StudentGroupCourse[]
 
+  @@unique([institutionId, id])
   @@unique([institutionId, name])
   @@map("student_groups")
 }
@@ -1216,9 +1222,9 @@ model StudentGroup {
 model StudentGroupMember {
   institutionId String
   groupId       String
-  group         StudentGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  group         StudentGroup @relation(fields: [institutionId, groupId], references: [institutionId, id], onDelete: Cascade)
   userId        String
-  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User         @relation(fields: [institutionId, userId], references: [institutionId, id], onDelete: Cascade)
   joinedAt      DateTime     @default(now())
 
   @@id([groupId, userId])
@@ -1229,9 +1235,9 @@ model StudentGroupMember {
 model StudentGroupCourse {
   institutionId String
   groupId       String
-  group         StudentGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  group         StudentGroup @relation(fields: [institutionId, groupId], references: [institutionId, id], onDelete: Cascade)
   courseId      String
-  course        Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course        Course       @relation(fields: [institutionId, courseId], references: [institutionId, id], onDelete: Cascade)
 
   @@id([groupId, courseId])
   @@index([institutionId])
@@ -1243,14 +1249,14 @@ model LiveClass {
   institutionId   String
   institution     Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
   courseId        String
-  course          Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course          Course      @relation(fields: [institutionId, courseId], references: [institutionId, id], onDelete: Cascade)
   title           String
   description     String?
   startsAt        DateTime
   durationMinutes Int         @default(60)
   joinUrl         String
   createdById     String
-  createdBy       User        @relation("LiveClassCreator", fields: [createdById], references: [id])
+  createdBy       User        @relation("LiveClassCreator", fields: [institutionId, createdById], references: [institutionId, id])
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 
@@ -1266,13 +1272,13 @@ model Payment {
   institutionId String
   institution   Institution    @relation(fields: [institutionId], references: [id], onDelete: Cascade)
   conceptId     String
-  concept       PaymentConcept @relation(fields: [conceptId], references: [id], onDelete: Cascade)
+  concept       PaymentConcept @relation(fields: [institutionId, conceptId], references: [institutionId, id], onDelete: Cascade)
   amountCents   Int
   method        String
   paidOn        DateTime       @db.Date
   note          String?
   recordedById  String
-  recordedBy    User           @relation("PaymentRecorder", fields: [recordedById], references: [id])
+  recordedBy    User           @relation("PaymentRecorder", fields: [institutionId, recordedById], references: [institutionId, id])
   voidedAt      DateTime?
   voidReason    String?
   createdAt     DateTime       @default(now())
@@ -1287,7 +1293,7 @@ model Notification {
   institutionId String
   institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
   userId        String
-  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User        @relation(fields: [institutionId, userId], references: [institutionId, id], onDelete: Cascade)
   kind          String
   title         String
   body          String?
@@ -1313,6 +1319,7 @@ model Coupon {
   createdAt     DateTime      @default(now())
   orders        CourseOrder[]
 
+  @@unique([institutionId, id])
   @@unique([institutionId, code])
   @@map("coupons")
 }
@@ -1322,11 +1329,11 @@ model CourseOrder {
   institutionId String
   institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
   courseId      String
-  course        Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course        Course      @relation(fields: [institutionId, courseId], references: [institutionId, id], onDelete: Cascade)
   buyerId       String
-  buyer         User        @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  buyer         User        @relation(fields: [institutionId, buyerId], references: [institutionId, id], onDelete: Cascade)
   couponId      String?
-  coupon        Coupon?     @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  coupon        Coupon?     @relation(fields: [institutionId, couponId], references: [institutionId, id], onDelete: Restrict)
   amountCents   Int
   currency      String      @default("DOP")
   status        String      @default("PENDING")
@@ -1346,9 +1353,9 @@ model CourseReview {
   institutionId String
   institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
   courseId      String
-  course        Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course        Course      @relation(fields: [institutionId, courseId], references: [institutionId, id], onDelete: Cascade)
   userId        String
-  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User        @relation(fields: [institutionId, userId], references: [institutionId, id], onDelete: Cascade)
   rating        Int
   comment       String?
   createdAt     DateTime    @default(now())
