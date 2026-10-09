@@ -5,6 +5,7 @@ import { courseWhereForScope, resolveCourseReadScope } from "@/lib/course-scope"
 import { getCommunityAnnouncementWhere } from "@/lib/announcement-data";
 import { db } from "@/lib/db";
 import { AdminHome } from "./AdminHome";
+import { CoordinatorHome } from "./CoordinatorHome";
 import { StudentHome } from "./StudentHome";
 import { TeacherHome } from "./TeacherHome";
 import { AlertCircle, BookOpen, CalendarCheck, ChevronRight, CreditCard, Megaphone, Users } from "lucide-react";
@@ -21,6 +22,7 @@ export default async function DashboardPage() {
   if (capabilities.has("tenant.settings.manage")) return <AdminHome institutionId={iid} userName={user.name} canManagePeople={capabilities.has("people.manage")} canPublish={capabilities.has("announcement.publish")} />;
   if (user.role === "STUDENT" && capabilities.has("student.portal.view")) return <StudentHome user={{ id: user.id, institutionId: iid }} userName={user.name} />;
   if (user.role === "TEACHER" && capabilities.has("course.view") && capabilities.has("course.manage")) return <TeacherHome user={{ id: user.id, institutionId: iid }} userName={user.name} />;
+  if (user.role === "COORDINATOR" && capabilities.has("course.view")) return <CoordinatorHome actor={{ id: user.id, institutionId: iid, role: user.role }} capabilities={capabilities} userName={user.name} />;
   const courseWhere = courseWhereForScope(iid, resolveCourseReadScope(user, capabilities));
   let attention: TaskLink[] = [];
   let continueItems: TaskLink[] = [];
@@ -33,12 +35,12 @@ export default async function DashboardPage() {
       db.paymentConcept.count({ where: { institutionId: iid, studentId: user.id, status: { in: ["PENDING", "OVERDUE", "PARTIAL"] } } }),
     ]);
     attention = [
-      ...(pendingTasks > 0 ? [{ href: "/dashboard/portal", title: "Completar tareas", detail: `${pendingTasks} tareas pendientes`, icon: <CalendarCheck size={18} /> }] : []),
-      ...(pendingPayments > 0 ? [{ href: "/dashboard/portal", title: "Revisar estado de cuenta", detail: `${pendingPayments} pagos pendientes`, icon: <CreditCard size={18} /> }] : []),
+      ...(pendingTasks > 0 ? [{ href: "/dashboard/aula", title: "Completar tareas", detail: `${pendingTasks} tareas pendientes`, icon: <CalendarCheck size={18} /> }] : []),
+      ...(pendingPayments > 0 ? [{ href: "/dashboard/mi-cuenta", title: "Revisar estado de cuenta", detail: `${pendingPayments} pagos pendientes`, icon: <CreditCard size={18} /> }] : []),
     ];
-    continueItems = [{ href: "/dashboard/portal", title: "Continuar aprendiendo", detail: `${courses} cursos activos`, icon: <BookOpen size={18} /> }];
+    continueItems = [{ href: "/dashboard/aula", title: "Continuar aprendiendo", detail: `${courses} cursos activos`, icon: <BookOpen size={18} /> }];
     if (capabilities.has("schedule.view")) continueItems.push({ href: "/dashboard/calendario", title: "Ver próximas fechas", detail: "Calendario académico", icon: <CalendarCheck size={18} /> });
-    summary = [{ label: "Cursos activos", value: courses, href: "/dashboard/portal" }, { label: "Tareas pendientes", value: pendingTasks, href: "/dashboard/portal" }, { label: "Pagos pendientes", value: pendingPayments, href: "/dashboard/portal" }];
+    summary = [{ label: "Cursos activos", value: courses, href: "/dashboard/aula" }, { label: "Tareas pendientes", value: pendingTasks, href: "/dashboard/aula" }, { label: "Pagos pendientes", value: pendingPayments, href: "/dashboard/mi-cuenta" }];
   } else if (user.role === "TEACHER" && capabilities.has("course.view")) {
     const [courses, students, submissions] = await Promise.all([
       db.course.count({ where: { institutionId: iid, teacherId: user.id } }),

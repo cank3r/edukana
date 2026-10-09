@@ -130,10 +130,10 @@ export async function createAnnouncement(_state: ActionState, formData: FormData
     await notifyAnnouncementPublished(user, { title: data.title, content: data.content, audience });
     revalidatePath("/dashboard/comunidad");
     revalidatePath("/dashboard/hijos");
-    return { ok: true, message: "Anuncio publicado correctamente." };
+    return { ok: true, message: "Aviso publicado." };
   } catch (error) {
     const correlationId = crypto.randomUUID();
     console.error("createAnnouncement failed", { correlationId, error });
-    return { ok: false, message: `No se pudo publicar el anuncio. Intenta de nuevo. Código: ${correlationId}` };
+    return { ok: false, message: `No se pudo publicar el aviso. Intenta de nuevo. Código: ${correlationId}` };
   }
 }

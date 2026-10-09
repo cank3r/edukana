@@ -15,6 +15,7 @@ import {
   zonedInputToDate,
   type ExamInput,
 } from "@/server/assessment/exam-admin";
+import { examPassed } from "@/server/assessment/exam-pass";
 import { createQuestion, deleteQuestion, getQuestion, listQuestions, updateQuestion } from "@/server/assessment/question-bank";
 import { startExamAttempt, submitExamAttempt } from "@/server/exams";
 import { A, B, ensureSeed } from "./setup";
@@ -412,4 +413,41 @@ test("revisión: las respuestas cortas quedan pendientes hasta que quien gestion
   const twice = await reviewExamAttempt(A.teacher, started.attemptId, { answers: { [shortAnswer.id]: { score: 0 } } });
   assert.equal(twice.ok, false);
   assert.equal((await db.gradeEntry.findUniqueOrThrow({ where: { id: entry.id } })).score, 4.5);
+});
+
+test("aprobar: el porcentaje para aprobar se valida, se guarda, se corrige aunque haya intentos y llega a resultados", async () => {
+  const [mc, tf] = [await question("mc"), await question("tf")];
+  const questions = [{ bankItemId: mc, points: 2 }, { bankItemId: tf, points: 1 }];
+  for (const bad of [0, 101, 55.5, Number.NaN]) {
+    const result = await createExam(A.teacher, A.courseId, examInput(questions, { title: `${TAG} Aprobar inválido`, passingPercent: bad }));
+    assert.equal(result.ok, false, String(bad));
+    assert.match(!result.ok ? result.message : "", /porcentaje para aprobar/);
+  }
+  const examId = await exam(questions, { title: `${TAG} Aprobar`, passingPercent: 60 });
+  assert.equal((await getExamForm(A.teacher, A.courseId, examId))?.exam?.passingPercent, 60);
+  assert.equal(await getExamForm(B.teacher, A.courseId, examId), null, "otra institución no lo ve");
+  assert.ok((await setExamPublished(A.teacher, examId, true)).ok);
+
+  const started = await startExamAttempt(student, examId);
+  assert.ok(started.ok);
+  if (!started.ok) return;
+  assert.deepEqual(await submitExamAttempt(student, started.attemptId, { [mc]: "3", [tf]: "Verdadero" }), { ok: true, attemptNumber: 1, status: "GRADED", score: 1, maxScore: 3 });
+  assert.equal((await getExamResults(A.teacher, examId))?.exam.passingPercent, 60);
+  assert.equal(examPassed(1, 3, 60), false);
+
+  // Con intentos sí se corrige: no cambia ninguna nota, todos se comparan con el valor vigente.
+  const lowered = await updateExam(A.teacher, examId, examInput(questions, { title: `${TAG} Aprobar`, passingPercent: 30 }));
+  assert.ok(lowered.ok, !lowered.ok ? lowered.message : "");
+  const after30 = await getExamResults(A.teacher, examId);
+  assert.equal(after30?.exam.passingPercent, 30);
+  assert.deepEqual(after30?.attempts.map((item) => [item.status, item.score, item.maxScore]), [["GRADED", 1, 3]]);
+  assert.equal(examPassed(1, 3, 30), true);
+  assert.equal(await getExamResults(B.teacher, examId), null);
+
+  const cleared = await updateExam(A.teacher, examId, examInput(questions, { title: `${TAG} Aprobar`, passingPercent: null }));
+  assert.ok(cleared.ok, !cleared.ok ? cleared.message : "");
+  assert.equal((await db.exam.findUniqueOrThrow({ where: { id: examId } })).passingPercent, null);
+  assert.equal(examPassed(1, 3, null), null);
+  assert.equal(examPassed(7, 10, 70), true, "justo en el límite aprueba");
+  assert.equal(examPassed(null, 10, 70), null, "sin nota no hay veredicto");
 });

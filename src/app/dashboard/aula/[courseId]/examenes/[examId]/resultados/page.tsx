@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getExamResults, type AttemptView } from "@/server/assessment/exam-admin";
+import { examPassed } from "@/server/assessment/exam-pass";
 import { ReviewAttempt } from "../../ExamTools";
 
 export const dynamic = "force-dynamic";
@@ -30,11 +31,11 @@ export default async function ExamResultsPage({ params }: { params: Promise<{ co
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-4 sm:p-8">
       <header>
-        <Link href={base} className="inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 underline">← Exámenes</Link>
         <h1 className="break-words text-2xl font-bold" style={{ color: "var(--navy)" }}>Resultados: {data.exam.title}</h1>
         <p className="mt-1 text-sm text-slate-600">
           {data.exam.courseName} · El examen vale {number(data.exam.totalPoints)} {data.exam.totalPoints === 1 ? "punto" : "puntos"}.{" "}
           {data.exam.countsForGrade ? "La nota pasa al libro de calificaciones." : "Es de práctica: la nota no pasa al libro de calificaciones."}
+          {data.exam.passingPercent !== null && ` Se aprueba con ${data.exam.passingPercent} %.`}
         </p>
         <Link href={`${base}/${data.exam.id}`} className="mt-3 inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 font-semibold text-slate-800">Editar examen</Link>
       </header>
@@ -56,11 +57,13 @@ export default async function ExamResultsPage({ params }: { params: Promise<{ co
         <ul className="space-y-3">
           {attempts.map((attempt) => {
             const short = attempt.answers.filter((answer) => answer.type === "SHORT_ANSWER");
+            const passed = attempt.status === "GRADED" ? examPassed(attempt.score, attempt.maxScore ?? data.exam.totalPoints, data.exam.passingPercent) : null;
             return (
               <li key={attempt.id} className="rounded-xl border border-slate-200 bg-white p-4">
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="break-words text-lg font-bold text-slate-950">{attempt.studentName}</h2>
                   <span className={`rounded-full px-3 py-1 text-xs font-bold ${STATUS[attempt.status].tone}`}>{STATUS[attempt.status].label}</span>
+                  {passed !== null && <span className={`rounded-full px-3 py-1 text-xs font-bold ${passed ? "bg-emerald-100 text-emerald-900" : "bg-red-100 text-red-900"}`}>{passed ? "Aprobado" : "No aprobado"}</span>}
                 </div>
                 <dl className="mt-2 grid gap-x-4 gap-y-1 text-sm text-slate-700 sm:grid-cols-2">
                   <div><dt className="inline font-semibold">Intento: </dt><dd className="inline">{attempt.attemptNumber}</dd></div>

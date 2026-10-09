@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { deleteAnnouncementAction, updateAnnouncementAction, type AnnouncementActionState } from "@/server/actions/announcements";
+import { showAnnouncementMessage } from "@/components/dashboard/AnnouncementFlash";
 
 const empty: AnnouncementActionState = { ok: false, message: "" };
 const secondary = "min-h-11 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 disabled:opacity-60";
@@ -13,11 +14,21 @@ type Editable = { id: string; title: string; content: string; isPinned: boolean 
 export function AnnouncementOwnerTools({ announcement }: { announcement: Editable }) {
   const [mode, setMode] = useState<"idle" | "edit" | "delete">("idle");
   const [editState, editAction, saving] = useActionState(async (state: AnnouncementActionState, data: FormData) => {
+    showAnnouncementMessage("");
     const result = await updateAnnouncementAction(state, data);
-    if (result.ok) setMode("idle");
+    if (result.ok) {
+      setMode("idle");
+      showAnnouncementMessage(result.message);
+    }
     return result;
   }, empty);
-  const [deleteState, deleteAction, deleting] = useActionState(deleteAnnouncementAction, empty);
+  // El aviso borrado desaparece de la lista: su confirmación se muestra arriba, no dentro de la tarjeta.
+  const [deleteState, deleteAction, deleting] = useActionState(async (state: AnnouncementActionState, data: FormData) => {
+    showAnnouncementMessage("");
+    const result = await deleteAnnouncementAction(state, data);
+    if (result.ok) showAnnouncementMessage(`${result.message} «${announcement.title}» ya no aparece en la lista.`);
+    return result;
+  }, empty);
 
   return (
     <div className="mt-4 border-t border-slate-200/70 pt-3">
@@ -62,8 +73,8 @@ export function AnnouncementOwnerTools({ announcement }: { announcement: Editabl
         </form>
       )}
 
-      {[editState, deleteState].map((state, index) => state.message && (
-        <p key={index} role={state.ok ? "status" : "alert"} className={`mt-3 rounded-lg p-3 text-sm ${state.ok ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-800"}`}>{state.message}</p>
+      {[editState, deleteState].map((state, index) => state.message && !state.ok && (
+        <p key={index} role="alert" className="mt-3 rounded-lg bg-red-50 p-3 text-sm text-red-800">{state.message}</p>
       ))}
     </div>
   );

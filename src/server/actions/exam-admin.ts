@@ -35,6 +35,7 @@ function readExam(formData: FormData): ExamInput | null {
     if (!raw || typeof raw !== "object") return null;
     const questions = Array.isArray(raw.questions) ? (raw.questions as Array<Record<string, unknown>>) : [];
     const duration = raw.durationMinutes;
+    const passing = raw.passingPercent;
     return {
       title: String(raw.title ?? ""),
       instructions: String(raw.instructions ?? ""),
@@ -44,6 +45,7 @@ function readExam(formData: FormData): ExamInput | null {
       opensAt: String(raw.opensAt ?? ""),
       closesAt: String(raw.closesAt ?? ""),
       showReview: raw.showReview === true,
+      passingPercent: passing === null || passing === undefined || passing === "" ? null : number(passing),
       gradeCategoryId: String(raw.gradeCategoryId ?? "") || undefined,
     };
   } catch {

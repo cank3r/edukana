@@ -79,14 +79,14 @@ export function RolePermissionsEditor({ roles, actorCapabilities }: { roles: Rol
         </div>
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
           <p className="flex items-center gap-2 font-semibold"><AlertTriangle size={17} /> Seguridad primero</p>
-          <p className="mt-1">No puedes conceder ni revocar permisos que no posees. El servidor preserva esas capacidades aunque no se envíen desde este formulario.</p>
+          <p className="mt-1">No puedes conceder ni revocar permisos que no posees. Esos permisos se conservan como están aunque no aparezcan en este formulario.</p>
         </div>
       </div>
 
       {config.restriction && <div role="note" className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900"><strong>Rol protegido.</strong> {config.restriction}</div>}
 
       <div className="relative">
-        <label className="sr-only" htmlFor="permission-search">Buscar capacidades</label>
+        <label className="sr-only" htmlFor="permission-search">Buscar permisos</label>
         <Search size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
         <input id="permission-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar permisos…" className="w-full rounded-xl border border-slate-300 bg-white py-3 pl-10 pr-4 text-sm outline-none focus:border-blue-500" />
       </div>

@@ -107,3 +107,10 @@ export function formatZonedDay(instant: Date, timeZone: string): string {
 export function formatZonedTime(instant: Date, timeZone: string): string {
   return new Intl.DateTimeFormat("es", { timeZone, hour: "numeric", minute: "2-digit", hour12: true }).format(instant);
 }
+
+/** Nombre legible de la zona para mostrar a personas: «America/Santo_Domingo» → «hora de Santo Domingo». */
+export function timeZoneDisplayName(timeZone: string): string {
+  if (!timeZone || timeZone === "UTC" || timeZone.startsWith("Etc/")) return "hora universal";
+  const city = (timeZone.split("/").pop() ?? timeZone).replaceAll("_", " ");
+  return `hora de ${city}`;
+}

@@ -13,7 +13,7 @@ export type ExamStatus = "DRAFT" | "PUBLISHED" | "CLOSED";
 const NO_COURSE = "No encontramos ese curso o no tienes permiso para gestionarlo.";
 const NO_EXAM = "No encontramos ese examen.";
 export const LOCKED_MESSAGE =
-  "Este examen ya tiene intentos de estudiantes. Para que todos sean evaluados con las mismas reglas, ya no se pueden cambiar las preguntas, los puntos, el tiempo, los intentos permitidos ni si se muestran las respuestas. Sí puedes cambiar el título, las instrucciones, las fechas y publicarlo u ocultarlo.";
+  "Este examen ya tiene intentos de estudiantes. Para que todos sean evaluados con las mismas reglas, ya no se pueden cambiar las preguntas, los puntos, el tiempo, los intentos permitidos ni si se muestran las respuestas. Sí puedes cambiar el título, las instrucciones, las fechas, el porcentaje para aprobar y publicarlo u ocultarlo.";
 
 // ---------------------------------------------------------------------------
 // Fechas en la zona horaria de la institución
@@ -165,6 +165,7 @@ export async function getExamForm(actor: Manager, courseId: string, examId?: str
             maxAttempts: true,
             isPublished: true,
             showReview: true,
+            passingPercent: true,
             gradeItem: { select: { category: { select: { name: true } }, _count: { select: { entries: true } } } },
             questions: { orderBy: { order: "asc" }, select: { bankItemId: true, points: true, snapshot: true, bankItem: { select: bankFields } } },
             attempts: { select: { studentId: true } },
@@ -188,6 +189,7 @@ export async function getExamForm(actor: Manager, courseId: string, examId?: str
       maxAttempts: exam.maxAttempts,
       isPublished: exam.isPublished,
       showReview: exam.showReview,
+      passingPercent: exam.passingPercent,
       status: examStatus(exam),
       gradeCategoryName: exam.gradeItem?.category.name ?? null,
       gradeEntries: exam.gradeItem?._count.entries ?? 0,
@@ -217,6 +219,8 @@ export type ExamInput = {
   opensAt?: string;
   closesAt?: string;
   showReview: boolean;
+  /** Porcentaje de la nota para aprobar (1 a 100); null o vacío = el examen no dice «Aprobado». */
+  passingPercent?: number | null;
   /** Solo al crear: categoría del libro de calificaciones donde cuenta la nota. */
   gradeCategoryId?: string;
 };
@@ -244,6 +248,12 @@ const examSchema = z.object({
     .min(1, "Debe permitirse al menos 1 intento.")
     .max(10, "El máximo es 10 intentos."),
   showReview: z.boolean(),
+  passingPercent: z
+    .number({ message: "El porcentaje para aprobar debe ser un número entero entre 1 y 100." })
+    .int("El porcentaje para aprobar debe ser un número entero entre 1 y 100.")
+    .min(1, "El porcentaje para aprobar debe ser un número entero entre 1 y 100.")
+    .max(100, "El porcentaje para aprobar debe ser un número entero entre 1 y 100.")
+    .nullish(),
 });
 
 type Parsed = z.infer<typeof examSchema> & { opensAt: Date | null; closesAt: Date | null };
@@ -311,6 +321,7 @@ export async function createExam(actor: Manager, courseId: string, input: ExamIn
         durationMinutes: data.durationMinutes ?? null,
         maxAttempts: data.maxAttempts,
         showReview: data.showReview,
+        passingPercent: data.passingPercent ?? null,
         isPublished: false,
         questions: {
           create: data.questions.map((question, order) => ({
@@ -376,7 +387,9 @@ export async function updateExam(actor: Manager, examId: string, input: ExamInpu
   if (!parsed.ok) return parsed;
   const data = parsed.data;
   const scope = { institutionId: actor.institutionId, courseId: managed.courseId };
-  const basics = { title: data.title, instructions: data.instructions || null, opensAt: data.opensAt, closesAt: data.closesAt };
+  // El porcentaje para aprobar no cambia ninguna nota: todos los intentos se comparan con el valor vigente,
+  // por eso se puede corregir aunque ya haya intentos.
+  const basics = { title: data.title, instructions: data.instructions || null, opensAt: data.opensAt, closesAt: data.closesAt, passingPercent: data.passingPercent ?? null };
 
   return db.$transaction(async (tx) => {
     // Mismo primer bloqueo que startExamAttempt: nunca decidir con preguntas o conteos anteriores a la espera.
@@ -551,6 +564,7 @@ export async function getExamResults(actor: Manager, examId: string, now = new D
       courseId: true,
       isPublished: true,
       closesAt: true,
+      passingPercent: true,
       course: { select: { name: true } },
       gradeItem: { select: { gradingPeriod: { select: { isPublished: true } } } },
       questions: { orderBy: { order: "asc" }, select: { bankItemId: true, order: true, points: true, snapshot: true, bankItem: { select: bankFields } } },
@@ -610,6 +624,7 @@ export async function getExamResults(actor: Manager, examId: string, now = new D
       courseName: exam.course.name,
       status: examStatus(exam, now),
       totalPoints: total(exam.questions),
+      passingPercent: exam.passingPercent,
       countsForGrade: Boolean(exam.gradeItem),
       gradesPublished: exam.gradeItem?.gradingPeriod.isPublished ?? false,
     },

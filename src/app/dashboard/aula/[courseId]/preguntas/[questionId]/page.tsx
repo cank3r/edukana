@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getQuestion } from "@/server/assessment/question-bank";
@@ -17,7 +16,6 @@ export default async function EditQuestionPage({ params }: { params: Promise<{ c
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-4 sm:p-8">
       <header>
-        <Link href={back} className="inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 underline">← Banco de preguntas</Link>
         <h1 className="text-2xl font-bold" style={{ color: "var(--navy)" }}>Editar pregunta</h1>
       </header>
       <section className="rounded-xl border border-slate-200 bg-white p-5">

@@ -11,7 +11,6 @@ export const dynamic = "force-dynamic";
 
 const card = "rounded-xl border border-slate-200 bg-white p-5";
 const badge = "rounded-full px-2 py-1 text-xs font-semibold";
-const back = "inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 underline";
 const STATE_STYLE: Record<RosterState, string> = {
   "Sin entregar": "bg-slate-100 text-slate-700",
   Entregada: "bg-blue-50 text-blue-700",
@@ -48,7 +47,6 @@ export default async function AssignmentPage({ params, searchParams }: { params:
     return (
       <div className="mx-auto max-w-3xl space-y-6 p-4 sm:p-8">
         <header>
-          <Link className={back} href={list}>← Volver a mis tareas</Link>
           <h1 className="text-2xl font-bold" style={{ color: "var(--navy)" }}>{assignment.title}</h1>
           <p className="mt-1 text-sm text-slate-600">
             {dueLabel(assignment.dueDate, now, zone)}
@@ -110,7 +108,6 @@ export default async function AssignmentPage({ params, searchParams }: { params:
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-4 sm:p-8">
       <header>
-        <Link className={back} href={list}>← Volver a tareas</Link>
         <div className="flex flex-wrap items-start justify-between gap-2">
           <h1 className="text-2xl font-bold" style={{ color: "var(--navy)" }}>{assignment.title}</h1>
           <span className={`${badge} ${assignment.isPublished ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-700"}`}>{assignment.isPublished ? "Publicada" : "Borrador"}</span>

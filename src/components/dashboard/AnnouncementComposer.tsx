@@ -5,6 +5,7 @@ import { useActionState, useRef, useState } from "react";
 import { Bold, Heading2, ImagePlus, Italic, Link2, List, ListOrdered, MessageSquareQuote, Video } from "lucide-react";
 import { createAnnouncement, type ActionState } from "@/app/dashboard/actions";
 import { AnnouncementContent } from "@/components/dashboard/AnnouncementContent";
+import { showAnnouncementMessage } from "@/components/dashboard/AnnouncementFlash";
 import { approximateRecipients, audienceText, hasAudience, simpleAudienceFields, SIMPLE_AUDIENCE_OPTIONS, type AudienceFields, type SimpleAudience } from "@/lib/announcement-compose";
 
 type Option = { id: string; name: string; detail?: string; role?: string };
@@ -43,8 +44,13 @@ export function AnnouncementComposer({ courses, people, units, canTargetPeople }
   const textarea = useRef<HTMLTextAreaElement>(null);
   const form = useRef<HTMLFormElement>(null);
   const [state, action, pending] = useActionState(async (previous: ActionState, data: FormData) => {
+    showAnnouncementMessage("");
     const result = await createAnnouncement(previous, data);
     if (result.ok) {
+      // Publicado: el formulario se cierra y el mensaje aparece arriba de la lista.
+      const panel = form.current?.closest("details");
+      if (panel) panel.open = false;
+      showAnnouncementMessage("Aviso publicado. Ya aparece en la lista.");
       setTitle("");
       setContent("");
       setChoice("institution");
@@ -168,7 +174,6 @@ export function AnnouncementComposer({ courses, people, units, canTargetPeople }
 
   return <form action={action} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" ref={form}>
     <div className={review ? "hidden" : "space-y-6 p-4 sm:p-6"} key={formKey}>
-      {state.ok && <p className="rounded-lg bg-emerald-50 px-3 py-3 text-sm font-semibold text-emerald-800" role="status">Aviso publicado. Ya aparece en la lista de abajo.</p>}
       <div>
         <label className="mb-1 block text-sm font-semibold" htmlFor="announcement-title">Título</label>
         <input className={input} id="announcement-title" maxLength={140} minLength={4} name="title" onChange={(event) => setTitle(event.target.value)} placeholder="Ej. Reunión de familias el viernes" required value={title} />

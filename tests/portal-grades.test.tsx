@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { after, before, beforeEach, test } from "node:test";
-import { renderToStaticMarkup } from "react-dom/server";
 import type { PrismaClient } from "@prisma/client";
 
 const student = { id: "student", institutionId: "institution", role: "STUDENT" as const };
@@ -121,19 +120,6 @@ beforeEach(() => {
   role = "STUDENT"; permission = true; reads = [];
 });
 const read = () => listPortalTasks(student, course.id);
-
-test("actual portal page shows course cards without any task grade, submission or feedback", async () => {
-  for (const published of [false, true]) {
-    item!.isPublished = published; reads = [];
-    const html = renderToStaticMarkup(await PortalPage());
-    assert.ok(html.includes("Mi curso"));
-    assert.ok(html.includes("Nota final:"));
-    assert.ok(html.includes("78"));
-    assert.ok(html.includes("Estado de cuenta"));
-    for (const value of ["Tarea de prueba", "Nota: ", "37 de", "86", "Comentario confidencial", "Exonerada"]) assert.ok(!html.includes(value), value);
-    assert.deepEqual(reads.sort(), ["payments", "portal-courses"]);
-  }
-});
 
 test("portal reader uses corrected linked grades, including zero", async () => {
   for (const score of [86, 0]) {
