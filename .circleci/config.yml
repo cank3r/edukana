@@ -71,6 +71,7 @@ jobs:
       EDUKANA_INTEGRATION_DB: "1"
       SMOKE_BASE_URL: http://127.0.0.1:3000
       INDEPENDENT_SIGNUP_ENABLED: "true"
+      PLATFORM_OPERATOR_EMAILS: "direccion@colegio-nuevo.test"
     steps:
       - checkout
       - restore_cache:

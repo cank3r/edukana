@@ -656,3 +656,21 @@ test("publico", async ({ page }, info) => {
   tour.finish();
 });
 // --- fin qa ---
+
+// Backoffice A: seeded newAdmin is the dedicated platform operator in CI.
+test("operador tablero", async ({ page }, info) => {
+  const tour = new Tour(page, info, "operador", 500);
+  if (!(await start(tour, SMOKE_ACCOUNTS.newAdmin))) return;
+  await tour.open("tablero del negocio", "/operador/tablero", async () => {
+    await heading(page, "Tablero del negocio");
+    await heading(page, "Ventas del catálogo este mes");
+    await heading(page, "Instituciones que requieren atención");
+  });
+  tour.finish();
+});
+test("administrador sin permiso operador", async ({ page }, info) => {
+  const tour = new Tour(page, info, "sin permiso operador", 510);
+  if (!(await start(tour, SMOKE_ACCOUNTS.admin))) return;
+  const response = await page.goto("/operador/tablero");
+  expect(response?.status()).toBe(404);
+});

@@ -22,6 +22,10 @@ export default async function OperatorLayout({ children }: { children: React.Rea
           Volver a mi institución
         </Link>
       </header>
+      <nav aria-label="Panel de la plataforma" className="flex flex-wrap gap-2 border-b bg-white px-4 py-2 sm:px-8">
+        <Link href="/operador/tablero" className="inline-flex min-h-11 items-center rounded-lg px-3 font-semibold text-blue-700">Tablero</Link>
+        <Link href="/operador" className="inline-flex min-h-11 items-center rounded-lg px-3 font-semibold text-blue-700">Instituciones</Link>
+      </nav>
       <main id="contenido-operador" tabIndex={-1}>{children}</main>
     </div>
   );
