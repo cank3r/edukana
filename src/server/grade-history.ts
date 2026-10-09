@@ -1,4 +1,5 @@
 import type { Prisma } from "@prisma/client";
+import { hasUnarchivableSubmissionFiles, SubmissionRevisionUnavailable } from "./assessment/assignment-policies";
 
 type Tx = Prisma.TransactionClient;
 
@@ -58,14 +59,15 @@ export async function writeGradeEntry(tx: Tx, input: GradeWrite, now = new Date(
 
 /**
  * Conserva la versión vigente de una entrega antes de reemplazarla. Devuelve false si no
- * había entrega previa.
+ * había entrega previa. Rechaza enlaces que el esquema de revisiones no puede conservar.
  */
 export async function archiveSubmissionVersion(tx: Tx, scope: { assignmentId: string; studentId: string; institutionId: string }) {
   const current = await tx.submission.findUnique({
     where: { assignmentId_studentId: { assignmentId: scope.assignmentId, studentId: scope.studentId } },
-    select: { id: true, content: true, submittedAt: true, assets: { select: { id: true } } },
+    select: { id: true, content: true, fileUrls: true, submittedAt: true, assets: { select: { id: true } } },
   });
   if (!current) return false;
+  if (hasUnarchivableSubmissionFiles(current.fileUrls)) throw new SubmissionRevisionUnavailable();
   await tx.submissionRevision.create({
     data: {
       institutionId: scope.institutionId,

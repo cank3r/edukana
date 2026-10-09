@@ -87,7 +87,7 @@ export async function setAssignmentPublishedAction(_state: AssignmentActionState
   }
 }
 
-/** Borrar. Campos: `assignmentId`, `reason` (obligatorio si hay entregas). */
+/** Borrar una tarea sin entregas ni notas. Campos: `assignmentId`, `reason` (opcional). */
 export async function deleteAssignmentAction(_state: AssignmentActionState, formData: FormData): Promise<AssignmentActionState> {
   const actor = await requireManager();
   if (typeof actor === "string") return { ok: false, message: actor };
