@@ -1,5 +1,6 @@
 import "server-only";
 
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { getEffectiveCapabilities } from "@/lib/authorization";
 import { courseWhereForScope, resolveCourseWriteScope } from "@/lib/course-scope";
@@ -365,13 +366,31 @@ export async function updateManualItem(actor: GradebookActor, input: ItemInput &
   return done("Actividad actualizada.");
 }
 
-/** Borra una actividad manual junto con sus notas. */
+/** Solo borra actividades manuales vacías; las notas, exoneraciones y revisiones se conservan. */
 export async function deleteManualItem(actor: GradebookActor, gradeItemId: string): Promise<GradebookResult> {
   const item = await manageableItem(actor, gradeItemId);
   if (!item) return fail(NO_ITEM);
   if (item.assignmentId || item.examId) return fail("Esta actividad viene de una tarea o un examen. Bórrala desde su pantalla.");
-  await db.gradeItem.deleteMany({ where: { id: item.id, institutionId: actor.institutionId } });
-  return done(`Se borró «${item.title}» con sus notas.`);
+  return db.$transaction(async (tx) => {
+    // FOR UPDATE conflicts with the FK's KEY SHARE lock on new GradeEntry rows.
+    // READ COMMITTED then sees entries committed while we waited, before any cascade.
+    const [locked] = await tx.$queryRaw<Array<{
+      id: string; title: string; assignmentId: string | null; examId: string | null;
+    }>>`
+      SELECT "id", "title", "assignmentId", "examId" FROM "grade_items"
+      WHERE "id" = ${item.id} AND "institutionId" = ${actor.institutionId} AND "courseId" = ${item.courseId}
+      FOR UPDATE`;
+    if (!locked) return fail(NO_ITEM);
+    if (locked.assignmentId || locked.examId) {
+      return fail("Esta actividad viene de una tarea o un examen. Bórrala desde su pantalla.");
+    }
+    // Every revision belongs to an entry. Do not filter by score, enrollment status or tenant:
+    // even an exemption or an inconsistent legacy row must prevent a destructive cascade.
+    const entry = await tx.gradeEntry.findFirst({ where: { gradeItemId: locked.id }, select: { id: true } });
+    if (entry) return fail("Esta actividad tiene notas, exoneraciones o historial y no se puede borrar. Puedes editarla.");
+    await tx.gradeItem.deleteMany({ where: { id: locked.id, institutionId: actor.institutionId } });
+    return done(`Se borró «${locked.title}».`);
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted });
 }
 
 /** Publica u oculta las notas de una actividad. El estudiante solo ve lo publicado. */
