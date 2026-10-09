@@ -62,7 +62,7 @@ test("libro: solo quien gestiona el curso puede prepararlo; la configuración se
   assert.equal(await db.gradingPeriod.count({ where: scope }), 1);
 });
 
-test("actividad manual: se crea oculta, y ni un docente ajeno ni otra institución pueden crearla", async () => {
+test("actividad manual: nace visible salvo que se pida oculta, y ni un docente ajeno ni otra institución pueden crearla", async () => {
   const input = { courseId: A.courseId, title: TRICKY_TITLE, maxScore: 10, categoryId };
   for (const outsider of [A.teacher2, A.student, B.teacher, B.coordinator]) {
     assert.equal((await createManualItem(outsider, input)).ok, false);
@@ -73,7 +73,9 @@ test("actividad manual: se crea oculta, y ni un docente ajeno ni otra instituci�
 
   assert.equal((await createManualItem(A.teacher, input)).ok, true);
   const item = await db.gradeItem.findFirstOrThrow({ where: scope });
-  assert.equal(item.isPublished, false);
+  assert.equal(item.isPublished, true, "por omisión el estudiante ve la nota");
+  // El resto de las pruebas parte de la actividad oculta.
+  assert.equal((await setItemPublished(A.teacher, item.id, false)).ok, true);
   assert.equal(item.gradingPeriodId, periodId);
   assert.equal(item.institutionId, A.institutionId);
   itemId = item.id;
@@ -152,7 +154,7 @@ test("mis notas: el estudiante solo ve lo publicado y solo lo suyo", async () =>
   assert.deepEqual({ groups: hidden?.groups, average: hidden?.average, pending: hidden?.pending }, { groups: [], average: null, pending: [] });
 
   // Una segunda actividad se queda oculta.
-  await createManualItem(A.teacher, { courseId: A.courseId, title: "Zeta oculta", maxScore: 100, categoryId });
+  await createManualItem(A.teacher, { courseId: A.courseId, title: "Zeta oculta", maxScore: 100, categoryId, isPublished: false });
   const hiddenItem = await db.gradeItem.findFirstOrThrow({ where: { ...scope, title: "Zeta oculta" } });
   await saveGrade(A.teacher, { gradeItemId: hiddenItem.id, enrollmentId: ENROLLMENT_1, score: 0 });
 

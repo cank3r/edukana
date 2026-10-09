@@ -50,7 +50,7 @@ export default async function AssignmentPage({ params, searchParams }: { params:
           <h1 className="text-2xl font-bold" style={{ color: "var(--navy)" }}>{assignment.title}</h1>
           <p className="mt-1 text-sm text-slate-600">
             {dueLabel(assignment.dueDate, now, zone)}
-            {assignment.dueDate ? ` (${formatDateTime(assignment.dueDate, zone)})` : ""} · Vale {assignment.maxScore} puntos
+            {assignment.dueDate && assignment.dueDate < now ? ` (${formatDateTime(assignment.dueDate, zone)})` : ""} · Vale {assignment.maxScore} puntos
             {assignment.dueDate ? (assignment.allowLate ? " · Acepta entregas tarde" : " · No acepta entregas tarde") : ""}
           </p>
         </header>
@@ -114,7 +114,7 @@ export default async function AssignmentPage({ params, searchParams }: { params:
         </div>
         <p className="mt-1 text-sm text-slate-600">
           {dueLabel(assignment.dueDate, now, zone)}
-          {assignment.dueDate ? ` (${formatDateTime(assignment.dueDate, zone)})` : ""} · Puntaje máximo: {assignment.maxScore}
+          {assignment.dueDate && assignment.dueDate < now ? ` (${formatDateTime(assignment.dueDate, zone)})` : ""} · Puntaje máximo: {assignment.maxScore}
         </p>
         <p className="mt-1 text-sm font-medium text-slate-800">
           {delivered} de {students.length} {students.length === 1 ? "estudiante entregó" : "estudiantes entregaron"} · {waiting.length} por calificar

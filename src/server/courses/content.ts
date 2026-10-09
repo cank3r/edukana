@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getEffectiveCapabilities } from "@/lib/authorization";
 import { courseWhereForScope, resolveCourseWriteScope } from "@/lib/course-scope";
 import { db } from "@/lib/db";
+import { recalculateCourseProgress } from "@/server/courses/lesson-progress";
 import type { EdukanaRole } from "@/types/next-auth";
 
 /**
@@ -172,6 +173,7 @@ export async function setChapterPublished(actor: Actor, chapterId: string, publi
     const chapter = await tx.courseSection.findFirst({ where: { id: chapterId, institutionId: actor.institutionId, course: where }, select: { id: true, courseId: true } });
     if (!chapter) return { ok: false, message: NOT_FOUND_CHAPTER } as const;
     await tx.courseSection.update({ where: { id: chapter.id }, data: { isPublished: publish } });
+    await recalculateCourseProgress(tx, actor.institutionId, chapter.courseId);
     await audit(tx, actor, publish ? "COURSE_CHAPTER_PUBLISHED" : "COURSE_CHAPTER_HIDDEN", "CourseSection", chapter.id, { courseId: chapter.courseId });
     return { ok: true, courseId: chapter.courseId, id: chapter.id } as const;
   });
@@ -217,6 +219,7 @@ export async function deleteChapter(actor: Actor, chapterId: string): Promise<Co
     if (!chapter) return { ok: false, message: NOT_FOUND_CHAPTER } as const;
     await tx.courseSection.delete({ where: { id: chapter.id } });
     await renumberChapters(tx, actor.institutionId, chapter.courseId);
+    await recalculateCourseProgress(tx, actor.institutionId, chapter.courseId);
     await audit(tx, actor, "COURSE_CHAPTER_DELETED", "CourseSection", chapter.id, { courseId: chapter.courseId, title: chapter.title, lessonsDeleted: chapter._count.lessons });
     return { ok: true, courseId: chapter.courseId } as const;
   });
@@ -239,6 +242,7 @@ export async function createLesson(actor: Actor, chapterId: string, input: Lesso
       data: { institutionId: actor.institutionId, courseId: chapter.courseId, sectionId: chapter.id, order: (last?.order ?? -1) + 1, ...lessonData(parsed.data) },
       select: { id: true },
     });
+    await recalculateCourseProgress(tx, actor.institutionId, chapter.courseId);
     await audit(tx, actor, "COURSE_LESSON_CREATED", "Lesson", lesson.id, { courseId: chapter.courseId, chapterId: chapter.id, title: parsed.data.title, type: parsed.data.type });
     return { ok: true, courseId: chapter.courseId, id: lesson.id } as const;
   });
@@ -265,6 +269,7 @@ export async function setLessonPublished(actor: Actor, lessonId: string, publish
     const lesson = await tx.lesson.findFirst({ where: { id: lessonId, institutionId: actor.institutionId, course: where }, select: { id: true, courseId: true } });
     if (!lesson) return { ok: false, message: NOT_FOUND_LESSON } as const;
     await tx.lesson.update({ where: { id: lesson.id }, data: { isPublished: publish } });
+    await recalculateCourseProgress(tx, actor.institutionId, lesson.courseId);
     await audit(tx, actor, publish ? "COURSE_LESSON_PUBLISHED" : "COURSE_LESSON_HIDDEN", "Lesson", lesson.id, { courseId: lesson.courseId });
     return { ok: true, courseId: lesson.courseId, id: lesson.id } as const;
   });
@@ -303,6 +308,7 @@ export async function deleteLesson(actor: Actor, lessonId: string): Promise<Cont
     if (!lesson) return { ok: false, message: NOT_FOUND_LESSON } as const;
     await tx.lesson.delete({ where: { id: lesson.id } });
     await renumberLessons(tx, actor.institutionId, lesson.sectionId);
+    await recalculateCourseProgress(tx, actor.institutionId, lesson.courseId);
     await audit(tx, actor, "COURSE_LESSON_DELETED", "Lesson", lesson.id, { courseId: lesson.courseId, chapterId: lesson.sectionId, title: lesson.title });
     return { ok: true, courseId: lesson.courseId } as const;
   });

@@ -133,7 +133,10 @@ function LessonForm({ chapterId, lesson, onClose }: { chapterId?: string; lesson
   );
 }
 
-/** Editar, Subir, Bajar, Publicar/Ocultar y Borrar (con confirmación que dice el impacto). */
+/**
+ * «Editar» siempre a la vista; Subir, Bajar, Publicar/Ocultar y Borrar (con confirmación que dice
+ * el impacto) agrupados en «Más» para que en el celular no ocupen dos líneas por elemento.
+ */
 function ItemActions({ kind, id, name, isFirst, isLast, isPublished, onEdit, deleteImpact }: { kind: "chapter" | "lesson"; id: string; name: string; isFirst: boolean; isLast: boolean; isPublished: boolean; onEdit: () => void; deleteImpact: string }) {
   const [confirming, setConfirming] = useState(false);
   const { state, pending, send } = useContentAction(contentItemAction, () => setConfirming(false));
@@ -147,12 +150,22 @@ function ItemActions({ kind, id, name, isFirst, isLast, isPublished, onEdit, del
   }
   return (
     <div className="mt-3">
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-start gap-2">
         <button type="button" className={smallButton} disabled={pending} onClick={onEdit} aria-label={`Editar ${what} ${name}`}>Editar</button>
-        <button type="button" className={smallButton} disabled={pending || isFirst} onClick={() => run("up")} aria-label={`Subir ${what} ${name}`}>Subir</button>
-        <button type="button" className={smallButton} disabled={pending || isLast} onClick={() => run("down")} aria-label={`Bajar ${what} ${name}`}>Bajar</button>
-        <button type="button" className={smallButton} disabled={pending} onClick={() => run(isPublished ? "hide" : "publish")} aria-label={`${isPublished ? "Ocultar" : "Publicar"} ${what} ${name}`}>{isPublished ? "Ocultar" : "Publicar"}</button>
-        <button type="button" className={`${smallButton} text-red-700`} disabled={pending || confirming} onClick={() => setConfirming(true)} aria-label={`Borrar ${what} ${name}`}>Borrar</button>
+        <details className="group">
+          <summary
+            className={`${smallButton} inline-flex cursor-pointer list-none items-center gap-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 [&::-webkit-details-marker]:hidden`}
+            aria-label={`Más acciones ${kind === "chapter" ? "del capítulo" : "de la lección"} ${name}`}
+          >
+            Más <span aria-hidden="true" className="transition-transform group-open:rotate-180">▾</span>
+          </summary>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button type="button" className={smallButton} disabled={pending || isFirst} onClick={() => run("up")} aria-label={`Subir ${what} ${name}`}>Subir</button>
+            <button type="button" className={smallButton} disabled={pending || isLast} onClick={() => run("down")} aria-label={`Bajar ${what} ${name}`}>Bajar</button>
+            <button type="button" className={smallButton} disabled={pending} onClick={() => run(isPublished ? "hide" : "publish")} aria-label={`${isPublished ? "Ocultar" : "Publicar"} ${what} ${name}`}>{isPublished ? "Ocultar" : "Publicar"}</button>
+            <button type="button" className={`${smallButton} text-red-700`} disabled={pending || confirming} onClick={() => setConfirming(true)} aria-label={`Borrar ${what} ${name}`}>Borrar</button>
+          </div>
+        </details>
       </div>
       {confirming && (
         <div className="mt-3 rounded-lg bg-red-50 p-4 text-sm text-red-900" role="alertdialog" aria-label={`Confirmar borrar ${what}`}>

@@ -106,16 +106,25 @@ const STATE = {
   pending: "bg-slate-100 text-slate-700",
 } as const;
 
-export function CertificateList({ courseId, showGrades, rows }: { courseId: string; showGrades: boolean; rows: CertificateRowView[] }) {
+export function CertificateList({ courseId, showGrades, threshold, rows }: { courseId: string; showGrades: boolean; threshold: number; rows: CertificateRowView[] }) {
   return (
     <ul className="mt-3 space-y-3">
-      {rows.map((row) => <CertificateRow key={row.enrollmentId} courseId={courseId} showGrades={showGrades} row={row} />)}
+      {rows.map((row) => <CertificateRow key={row.enrollmentId} courseId={courseId} showGrades={showGrades} threshold={threshold} row={row} />)}
     </ul>
   );
 }
 
-function CertificateRow({ courseId, showGrades, row }: { courseId: string; showGrades: boolean; row: CertificateRowView }) {
+/** Lo que le falta, dicho en concreto: «Le falta avance: 40 %». */
+function pendingLabel(row: CertificateRowView, threshold: number) {
+  if (row.note) return "No cumple los requisitos";
+  const gap = Math.max(0, Math.round((threshold - row.progressPercent) * 100) / 100);
+  return `Le falta avance: ${gap} %`;
+}
+
+function CertificateRow({ courseId, showGrades, threshold, row }: { courseId: string; showGrades: boolean; threshold: number; row: CertificateRowView }) {
   const [asking, setAsking] = useState<"" | "revoke" | "complete">("");
+  // Solo se muestra el aviso de la última acción: los anteriores quedan desfasados.
+  const [last, setLast] = useState<"" | "issue" | "complete" | "reopen" | "revoke">("");
   const [issued, issue, issuing] = useActionState(issueCertificateAction, empty);
   const [completed, complete, completing] = useActionState(markCourseCompletedAction, empty);
   const [reopened, reopen, reopening] = useActionState(reopenCourseCompletionAction, empty);
@@ -129,7 +138,7 @@ function CertificateRow({ courseId, showGrades, row }: { courseId: string; showG
   // La pregunta se cierra sola cuando la fila cambia de estado tras confirmar.
   const askingRevoke = asking === "revoke" && row.state === "issued";
   const askingComplete = asking === "complete" && row.state === "pending";
-  const label = row.state === "issued" ? `Certificado emitido el ${row.issuedOn}` : row.state === "eligible" ? "Cumple los requisitos" : "Aún no";
+  const label = row.state === "issued" ? `Certificado emitido el ${row.issuedOn}` : row.state === "eligible" ? "Cumple los requisitos" : pendingLabel(row, threshold);
 
   return (
     <li className="rounded-xl border border-slate-200 p-4">
@@ -163,13 +172,13 @@ function CertificateRow({ courseId, showGrades, row }: { courseId: string; showG
             </>
           )}
           {row.state === "eligible" && (
-            <form action={issue}>
+            <form action={issue} onSubmit={() => setLast("issue")}>
               {hidden}
               <button className={primary} type="submit" disabled={issuing}>{issuing ? "Emitiendo…" : "Emitir certificado"}</button>
             </form>
           )}
           {row.state === "eligible" && row.canReopen && (
-            <form action={reopen}>
+            <form action={reopen} onSubmit={() => setLast("reopen")}>
               {hidden}
               <button className={secondary} type="submit" disabled={reopening}>{reopening ? "Reabriendo…" : "Quitar el completado"}</button>
             </form>
@@ -181,7 +190,7 @@ function CertificateRow({ courseId, showGrades, row }: { courseId: string; showG
       )}
 
       {askingComplete && (
-        <form action={complete} className="mt-3 rounded-lg bg-amber-50 p-4">
+        <form action={complete} onSubmit={() => setLast("complete")} className="mt-3 rounded-lg bg-amber-50 p-4">
           {hidden}
           <p className="text-sm font-semibold text-amber-900">
             {row.name} lleva {row.progressPercent}% del curso. Si lo marcas como completado, contará como terminado aunque le falten lecciones y podrás emitir su certificado.
@@ -195,7 +204,7 @@ function CertificateRow({ courseId, showGrades, row }: { courseId: string; showG
       )}
 
       {askingRevoke && (
-        <form action={revoke} className="mt-3 rounded-lg bg-red-50 p-4">
+        <form action={revoke} onSubmit={() => setLast("revoke")} className="mt-3 rounded-lg bg-red-50 p-4">
           {hidden}
           <p className="text-sm font-semibold text-red-900">
             Vas a anular el certificado de {row.name}. Su enlace público dejará de verificar: quien lo abra verá que fue anulado, y el estudiante ya no lo verá entre sus certificados.
@@ -212,10 +221,10 @@ function CertificateRow({ courseId, showGrades, row }: { courseId: string; showG
         </form>
       )}
 
-      <Notice ok={issued.ok} message={issued.message} />
-      <Notice ok={completed.ok} message={completed.message} />
-      <Notice ok={reopened.ok} message={reopened.message} />
-      <Notice ok={revoked.ok} message={revoked.message} />
+      {last === "issue" && <Notice ok={issued.ok} message={issued.message} />}
+      {last === "complete" && <Notice ok={completed.ok} message={completed.message} />}
+      {last === "reopen" && <Notice ok={reopened.ok} message={reopened.message} />}
+      {last === "revoke" && <Notice ok={revoked.ok} message={revoked.message} />}
     </li>
   );
 }

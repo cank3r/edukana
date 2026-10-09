@@ -6,6 +6,7 @@ import { getCommunityAnnouncementWhere } from "@/lib/announcement-data";
 import { db } from "@/lib/db";
 import { AdminHome } from "./AdminHome";
 import { CoordinatorHome } from "./CoordinatorHome";
+import { ParentHome } from "./ParentHome";
 import { StudentHome } from "./StudentHome";
 import { TeacherHome } from "./TeacherHome";
 import { AlertCircle, BookOpen, CalendarCheck, ChevronRight, CreditCard, Megaphone, Users } from "lucide-react";
@@ -22,6 +23,7 @@ export default async function DashboardPage() {
   if (capabilities.has("tenant.settings.manage")) return <AdminHome institutionId={iid} userName={user.name} canManagePeople={capabilities.has("people.manage")} canPublish={capabilities.has("announcement.publish")} />;
   if (user.role === "STUDENT" && capabilities.has("student.portal.view")) return <StudentHome user={{ id: user.id, institutionId: iid }} userName={user.name} />;
   if (user.role === "TEACHER" && capabilities.has("course.view") && capabilities.has("course.manage")) return <TeacherHome user={{ id: user.id, institutionId: iid }} userName={user.name} />;
+  if (user.role === "PARENT" && capabilities.has("child.portal.view")) return <ParentHome user={{ id: user.id, institutionId: iid, role: user.role }} userName={user.name} />;
   if (user.role === "COORDINATOR" && capabilities.has("course.view")) return <CoordinatorHome actor={{ id: user.id, institutionId: iid, role: user.role }} capabilities={capabilities} userName={user.name} />;
   const courseWhere = courseWhereForScope(iid, resolveCourseReadScope(user, capabilities));
   let attention: TaskLink[] = [];
@@ -70,7 +72,7 @@ export default async function DashboardPage() {
     if (capabilities.has("admissions.manage")) summary.push({ label: "Admisiones abiertas", value: admissions, href: "/dashboard/admisiones" });
   } else if (user.role === "PARENT") {
     const linkedChildren = capabilities.has("child.portal.view") ? await db.guardianship.count({ where: { institutionId: iid, parentId: user.id, status: "ACTIVE", parent: { institutionId: iid, role: "PARENT", status: "ACTIVE" }, student: { institutionId: iid, role: "STUDENT", status: "ACTIVE" } } }) : 0;
-    continueItems = capabilities.has("child.portal.view") ? [{ href: "/dashboard/hijos", title: "Abrir Mis hijos", detail: linkedChildren ? `${linkedChildren} vínculo(s) activo(s)` : "Sin vínculos activos", icon: <Users size={18} /> }] : [];
+    continueItems = capabilities.has("child.portal.view") ? [{ href: "/dashboard/hijos", title: "Abrir Mis hijos", detail: linkedChildren ? (linkedChildren === 1 ? "1 hijo vinculado" : `${linkedChildren} hijos vinculados`) : "Sin hijos vinculados", icon: <Users size={18} /> }] : [];
     summary = capabilities.has("child.portal.view") ? [{ label: "Hijos vinculados", value: linkedChildren, href: "/dashboard/hijos" }] : [];
   } else {
     const announcements = await db.announcement.count({ where: await getCommunityAnnouncementWhere(user, { canManage: false, canPublish: false }) });
