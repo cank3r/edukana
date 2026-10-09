@@ -1378,3 +1378,27 @@ model CourseReview {
   @@index([institutionId, courseId])
   @@map("course_reviews")
 }
+
+// --- Backoffice F ---
+enum PlatformAnnouncementLevel {
+ INFO
+ WARNING
+}
+enum PlatformAnnouncementAudience {
+ ALL
+ ADMINS
+ INDEPENDENT
+}
+model PlatformAnnouncement {
+ id String @id @default(cuid())
+ title String
+ body String
+ level PlatformAnnouncementLevel @default(INFO)
+ audience PlatformAnnouncementAudience @default(ALL)
+ startsAt DateTime
+ endsAt DateTime?
+ createdBy String
+ createdAt DateTime @default(now())
+ @@index([startsAt, endsAt])
+ @@map("platform_announcements")
+}
