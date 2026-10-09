@@ -70,6 +70,7 @@ jobs:
       LOCAL_STORAGE_SECRET: circleci-local-storage-secret-at-least-32-characters
       EDUKANA_INTEGRATION_DB: "1"
       SMOKE_BASE_URL: http://127.0.0.1:3000
+      INDEPENDENT_SIGNUP_ENABLED: "true"
     steps:
       - checkout
       - restore_cache:

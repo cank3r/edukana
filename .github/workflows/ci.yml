@@ -129,6 +129,7 @@ jobs:
       LOCAL_STORAGE_ROOT: /tmp/edukana-smoke-storage
       LOCAL_STORAGE_SECRET: ci-local-storage-secret-at-least-32-characters
       SMOKE_BASE_URL: http://127.0.0.1:3000
+      INDEPENDENT_SIGNUP_ENABLED: "true"
     services:
       postgres:
         image: postgres:16
