@@ -151,8 +151,8 @@ test("defaults de permisos permanecen exactos y manage no llega a TEACHER", () =
     SUPER_ADMIN: [...CAPABILITIES],
     ADMIN: [...CAPABILITIES],
     COORDINATOR: ["course.view", "course.view.all", "course.manage", "course.roster.view", "schedule.view", "people.view", "admissions.manage", "announcement.publish", "announcement.manage"],
-    TEACHER: ["course.view", "course.manage", "course.roster.view", "schedule.view"],
-    STUDENT: ["student.portal.view", "course.view", "course.participate", "schedule.view"],
+    TEACHER: ["course.view", "course.manage", "course.roster.view", "schedule.view", "ai.use"],
+    STUDENT: ["student.portal.view", "course.view", "course.participate", "schedule.view", "ai.use"],
     PARENT: ["child.portal.view", "child.academics.view", "child.attendance.view", "child.schedule.view", "child.announcements.view"],
   };
   for (const role of Object.keys(expected) as EdukanaRole[]) {

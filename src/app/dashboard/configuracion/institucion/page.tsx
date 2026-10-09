@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { InstitutionSettingsForm } from "./InstitutionSettingsForm";
 import { getInstitutionBranding } from "@/server/platform/branding";
 import { BrandColorForm } from "./BrandColorForm";
+import { AiInstitutionSetting } from "@/components/ai/AiInstitutionSetting";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +40,7 @@ export default async function InstitutionSettingsPage() {
         <ImageUploader purpose="logo" imageUrl={logo?.logoUrl ?? null} alt={`Logo de ${institution.name}`} />
       </section>
       <BrandColorForm current={branding?.brandColor ?? null} />
+      <AiInstitutionSetting institutionId={user.institutionId} />
     </div>
   );
 }
