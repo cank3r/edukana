@@ -526,10 +526,10 @@ test("tutor", async ({ page }, info) => {
     await heading(page, "Ana Rodríguez");
   });
   await tour.open("estado de cuenta", "/dashboard/mi-cuenta", async () => {
-    await heading(page, /Cuenta de Ana Rodríguez/);
+    await heading(page, /Estado de cuenta de Ana Rodríguez/);
     await visible(page, "Inscripción del período");
   });
-  await tour.open("estado de cuenta otro hijo", `/dashboard/mi-cuenta?estudiante=${seed.studentIds[1]}`, () => heading(page, /Cuenta de Pedro Jiménez/));
+  await tour.open("estado de cuenta otro hijo", `/dashboard/mi-cuenta?estudiante=${seed.studentIds[1]}`, () => heading(page, /Estado de cuenta de Pedro Jiménez/));
   // El tutor no tiene «Calendario» en su menú (las fechas de cada hijo están en su resumen): no se visita.
   await tour.open("avisos", "/dashboard/comunidad", () => heading(page, "Avisos"));
   tour.finish();
