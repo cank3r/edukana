@@ -81,6 +81,7 @@ function ManagerView({ data }: { data: CourseCertificates }) {
           <CertificateList
             courseId={course.id}
             showGrades={data.hasGrades}
+            threshold={course.completionThreshold}
             rows={rows.map((row) => ({
               enrollmentId: row.enrollmentId,
               name: row.name,
@@ -131,6 +132,12 @@ function StudentView({ data }: { data: MyCourseCertificate }) {
         </section>
       )}
 
+      {/* Con certificado o con el curso completado, «Tu avance … se pide …» ya no dice nada útil. */}
+      {certificate || data.completed ? (
+        <p className="text-sm text-slate-600">
+          Todos tus certificados están en <Link className="font-semibold text-blue-700 underline" href="/dashboard/mis-certificados">Mis certificados</Link>.
+        </p>
+      ) : (
       <section className={card} aria-labelledby="como-voy">
         <h2 id="como-voy" className="text-lg font-bold text-slate-950">Cómo vas</h2>
         <dl className="mt-2 grid grid-cols-2 gap-3 text-sm">
@@ -151,6 +158,7 @@ function StudentView({ data }: { data: MyCourseCertificate }) {
           Todos tus certificados están en <Link className="font-semibold text-blue-700 underline" href="/dashboard/mis-certificados">Mis certificados</Link>.
         </p>
       </section>
+      )}
     </div>
   );
 }

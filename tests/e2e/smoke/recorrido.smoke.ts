@@ -263,8 +263,11 @@ test("docente", async ({ page }, info) => {
     await card.getByLabel("Título de la lección").fill(lesson);
     await card.getByLabel("Contenido").fill("Repasa las unidades 1 y 2 antes de la prueba corta.");
     await card.getByRole("button", { name: "Guardar lección" }).click();
+    // Publicar/Ocultar está dentro de «Más» de cada elemento.
+    await page.getByLabel(`Más acciones de la lección ${lesson}`).click();
     await page.getByRole("button", { name: `Publicar lección ${lesson}` }).click();
     await expect(page.getByRole("button", { name: `Ocultar lección ${lesson}` })).toBeVisible();
+    await page.getByLabel(`Más acciones del capítulo ${chapter}`).click();
     await page.getByRole("button", { name: `Publicar capítulo ${chapter}` }).click();
     await expect(page.getByRole("button", { name: `Ocultar capítulo ${chapter}` })).toBeVisible();
   });
@@ -507,6 +510,13 @@ test("estudiante", async ({ page }, info) => {
     await heading(page, "Recibo de pago");
   });
   // --- fin M5 ---
+  // --- M9 · video en lecciones ---
+  await tour.open("leccion con video", `${course}/leccion/${seed.lessonIds[1]}`, async () => {
+    await heading(page, "Video: contar de diez en diez");
+    await expect(page.locator('iframe[title^="Video:"][src^="https://www.youtube-nocookie.com/embed/"]')).toBeVisible();
+    await expect(page.getByRole("button", { name: /Marcar como (no )?completada|Terminar/ }).first()).toBeVisible();
+  });
+  // --- fin M9 ---
   tour.finish();
 });
 
@@ -515,7 +525,7 @@ test("tutor", async ({ page }, info) => {
   const tour = new Tour(page, info, "tutor", 300);
   if (!(await start(tour, SMOKE_ACCOUNTS.parent))) return;
 
-  await tour.open("inicio", "/dashboard", () => heading(page, "¿Qué necesitas hacer hoy?"));
+  await tour.open("inicio", "/dashboard", () => heading(page, "¿Cómo van mis hijos?"));
   await tour.open("mis hijos", "/dashboard/hijos", async () => {
     await heading(page, "Mis hijos");
     await visible(page, "Pedro Jiménez");

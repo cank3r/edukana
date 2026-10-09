@@ -48,6 +48,8 @@ export type MyCourseCertificate = {
   /** Cumple los requisitos pero su docente aún no lo ha emitido. */
   eligible: boolean;
   missing: string;
+  /** La matrícula figura como curso completado. */
+  completed: boolean;
 };
 export type MyCertificate = { code: string; issuedAt: Date; courseId: string; courseName: string };
 
@@ -355,6 +357,7 @@ export async function getMyCourseCertificate(actor: Actor, courseId: string): Pr
     certificate: certificate ? { code: certificate.verificationCode, issuedAt: certificate.issuedAt } : null,
     eligible: !certificate && !missing,
     missing,
+    completed: status === "COMPLETED",
   };
 }
 

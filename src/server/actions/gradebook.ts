@@ -64,15 +64,17 @@ export async function saveCategoriesAction(_state: GradebookActionState, formDat
   );
 }
 
-/** Crea o edita una actividad manual. Campos: `courseId`, `gradeItemId` (vacío al crear), `title`, `maxScore`, `categoryId`. */
+/** Crea o edita una actividad manual. Campos: `courseId`, `gradeItemId` (vacío al crear), `title`, `maxScore`, `categoryId`, `isPublished` (casilla, solo al crear). */
 export async function saveManualItemAction(_state: GradebookActionState, formData: FormData): Promise<GradebookActionState> {
   const courseId = text(formData, "courseId");
   const gradeItemId = text(formData, "gradeItemId");
   const maxScore = numberOrNull(text(formData, "maxScore"));
   if (maxScore === null) return { ok: false, message: "Escribe el puntaje máximo." };
   const input = { title: text(formData, "title"), maxScore, categoryId: text(formData, "categoryId") };
+  // La casilla «Mostrar la nota a los estudiantes» solo existe al crear (viene marcada).
+  const isPublished = formData.get("isPublished") === "on";
   return run("saveManualItemAction", courseId, (actor) =>
-    gradeItemId ? updateManualItem(actor, { ...input, gradeItemId }) : createManualItem(actor, { ...input, courseId }),
+    gradeItemId ? updateManualItem(actor, { ...input, gradeItemId }) : createManualItem(actor, { ...input, courseId, isPublished }),
   );
 }
 

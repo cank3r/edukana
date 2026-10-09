@@ -20,7 +20,7 @@ const LESSON_TYPE_OPTIONS = [
 const typeLabel = (type: string) => LESSON_TYPE_OPTIONS.find((option) => option.value === type)?.label ?? "Texto";
 
 type LessonFile = { id: string; name: string; canRemove: boolean };
-type LessonView = { id: string; title: string; summary: string; content: string; type: string; estimatedMinutes: number; isPublished: boolean; files: LessonFile[] };
+type LessonView = { id: string; title: string; summary: string; content: string; videoUrl: string; type: string; estimatedMinutes: number; isPublished: boolean; files: LessonFile[] };
 type ChapterView = { id: string; title: string; description: string; isPublished: boolean; lessons: LessonView[] };
 type ServerAction = (state: ContentActionState, formData: FormData) => Promise<ContentActionState>;
 
@@ -87,8 +87,10 @@ export function AddChapter({ courseId, label, primary = false }: { courseId: str
 function LessonForm({ chapterId, lesson, onClose }: { chapterId?: string; lesson?: LessonView; onClose: () => void }) {
   const { state, pending, onSubmit } = useContentAction(saveLessonAction, onClose);
   const [type, setType] = useState(lesson?.type ?? "TEXT");
-  // En una lección de video, el contenido guardado es solo el enlace; en las demás, el texto.
-  const startedAsVideo = lesson?.type === "VIDEO";
+  // Formato anterior: una lección de video guardaba solo el enlace en el contenido. Al editarla,
+  // ese enlace pasa al campo del video y el contenido queda libre para el texto.
+  const legacyLink = lesson?.type === "VIDEO" && !lesson.videoUrl && /^https?:\/\/\S+$/.test(lesson.content.trim()) ? lesson.content.trim() : "";
+  const isVideo = type === "VIDEO";
   return (
     <form onSubmit={onSubmit} className="mt-3 space-y-3 rounded-lg bg-slate-50 p-4">
       {lesson ? <input type="hidden" name="lessonId" value={lesson.id} /> : <input type="hidden" name="chapterId" value={chapterId} />}
@@ -106,19 +108,28 @@ function LessonForm({ chapterId, lesson, onClose }: { chapterId?: string; lesson
           {LESSON_TYPE_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
         </select>
       </label>
-      {type === "VIDEO" ? (
-        <label className="block text-sm font-medium text-slate-900">
-          Enlace del video
-          <input key="video" name="content" type="url" inputMode="url" required maxLength={2000} defaultValue={startedAsVideo ? lesson?.content : ""} placeholder="https://www.youtube.com/watch?v=…" className={fieldClass} />
-          <span className="mt-1 block text-sm font-normal text-slate-600">Copia el enlace desde YouTube, Vimeo u otro sitio y pégalo aquí.</span>
-        </label>
-      ) : (
-        <label className="block text-sm font-medium text-slate-900">
-          Contenido
-          <textarea key="text" name="content" rows={8} maxLength={50000} defaultValue={startedAsVideo ? "" : lesson?.content} placeholder={type === "ACTIVITY" ? "Explica qué debe hacer el estudiante" : "Escribe aquí la lección"} className={fieldClass} />
-          {type === "DOCUMENT" && <span className="mt-1 block text-sm font-normal text-slate-600">Después de guardar podrás adjuntar el archivo desde «Archivos» en la lección.</span>}
-        </label>
-      )}
+      <label className="block text-sm font-medium text-slate-900">
+        {isVideo ? "Enlace del video" : "Video (opcional)"}
+        <input
+          name="videoUrl"
+          type="text"
+          inputMode="url"
+          autoComplete="off"
+          required={isVideo}
+          maxLength={2000}
+          defaultValue={lesson?.videoUrl || legacyLink}
+          placeholder="https://www.youtube.com/watch?v=…"
+          className={fieldClass}
+        />
+        <span className="mt-1 block text-sm font-normal text-slate-600">
+          Copia el enlace desde YouTube, Vimeo, Google Drive o de un archivo .mp4 y pégalo aquí. Se mostrará arriba del texto.
+        </span>
+      </label>
+      <label className="block text-sm font-medium text-slate-900">
+        {isVideo ? "Texto debajo del video (opcional)" : "Contenido"}
+        <textarea name="content" rows={isVideo ? 4 : 8} maxLength={50000} defaultValue={legacyLink ? "" : lesson?.content} placeholder={type === "ACTIVITY" ? "Explica qué debe hacer el estudiante" : "Escribe aquí la lección"} className={fieldClass} />
+        {type === "DOCUMENT" && <span className="mt-1 block text-sm font-normal text-slate-600">Después de guardar podrás adjuntar el archivo desde «Archivos» en la lección.</span>}
+      </label>
       <label className="block text-sm font-medium text-slate-900">
         Minutos estimados
         <input name="estimatedMinutes" type="number" inputMode="numeric" min={1} max={600} step={1} required defaultValue={lesson?.estimatedMinutes ?? 10} className={`${fieldClass} max-w-32`} />
@@ -133,7 +144,10 @@ function LessonForm({ chapterId, lesson, onClose }: { chapterId?: string; lesson
   );
 }
 
-/** Editar, Subir, Bajar, Publicar/Ocultar y Borrar (con confirmación que dice el impacto). */
+/**
+ * «Editar» siempre a la vista; Subir, Bajar, Publicar/Ocultar y Borrar (con confirmación que dice
+ * el impacto) agrupados en «Más» para que en el celular no ocupen dos líneas por elemento.
+ */
 function ItemActions({ kind, id, name, isFirst, isLast, isPublished, onEdit, deleteImpact }: { kind: "chapter" | "lesson"; id: string; name: string; isFirst: boolean; isLast: boolean; isPublished: boolean; onEdit: () => void; deleteImpact: string }) {
   const [confirming, setConfirming] = useState(false);
   const { state, pending, send } = useContentAction(contentItemAction, () => setConfirming(false));
@@ -147,12 +161,22 @@ function ItemActions({ kind, id, name, isFirst, isLast, isPublished, onEdit, del
   }
   return (
     <div className="mt-3">
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap items-start gap-2">
         <button type="button" className={smallButton} disabled={pending} onClick={onEdit} aria-label={`Editar ${what} ${name}`}>Editar</button>
-        <button type="button" className={smallButton} disabled={pending || isFirst} onClick={() => run("up")} aria-label={`Subir ${what} ${name}`}>Subir</button>
-        <button type="button" className={smallButton} disabled={pending || isLast} onClick={() => run("down")} aria-label={`Bajar ${what} ${name}`}>Bajar</button>
-        <button type="button" className={smallButton} disabled={pending} onClick={() => run(isPublished ? "hide" : "publish")} aria-label={`${isPublished ? "Ocultar" : "Publicar"} ${what} ${name}`}>{isPublished ? "Ocultar" : "Publicar"}</button>
-        <button type="button" className={`${smallButton} text-red-700`} disabled={pending || confirming} onClick={() => setConfirming(true)} aria-label={`Borrar ${what} ${name}`}>Borrar</button>
+        <details className="group">
+          <summary
+            className={`${smallButton} inline-flex cursor-pointer list-none items-center gap-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700 [&::-webkit-details-marker]:hidden`}
+            aria-label={`Más acciones ${kind === "chapter" ? "del capítulo" : "de la lección"} ${name}`}
+          >
+            Más <span aria-hidden="true" className="transition-transform group-open:rotate-180">▾</span>
+          </summary>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button type="button" className={smallButton} disabled={pending || isFirst} onClick={() => run("up")} aria-label={`Subir ${what} ${name}`}>Subir</button>
+            <button type="button" className={smallButton} disabled={pending || isLast} onClick={() => run("down")} aria-label={`Bajar ${what} ${name}`}>Bajar</button>
+            <button type="button" className={smallButton} disabled={pending} onClick={() => run(isPublished ? "hide" : "publish")} aria-label={`${isPublished ? "Ocultar" : "Publicar"} ${what} ${name}`}>{isPublished ? "Ocultar" : "Publicar"}</button>
+            <button type="button" className={`${smallButton} text-red-700`} disabled={pending || confirming} onClick={() => setConfirming(true)} aria-label={`Borrar ${what} ${name}`}>Borrar</button>
+          </div>
+        </details>
       </div>
       {confirming && (
         <div className="mt-3 rounded-lg bg-red-50 p-4 text-sm text-red-900" role="alertdialog" aria-label={`Confirmar borrar ${what}`}>
@@ -258,7 +282,7 @@ function LessonRow({ courseId, lesson, number, isFirst, isLast, chapterPublished
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="break-words font-semibold text-slate-950">{number} {lesson.title}</p>
-          <p className="text-sm text-slate-600">{typeLabel(lesson.type)} · {lesson.estimatedMinutes} min</p>
+          <p className="text-sm text-slate-600">{typeLabel(lesson.type)}{lesson.videoUrl && lesson.type !== "VIDEO" ? " con video" : ""} · {lesson.estimatedMinutes} min</p>
           {lesson.summary && <p className="mt-1 break-words text-sm text-slate-700">{lesson.summary}</p>}
         </div>
         <StatusBadge published={lesson.isPublished} />
