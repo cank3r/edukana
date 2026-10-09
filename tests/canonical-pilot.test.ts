@@ -50,7 +50,8 @@ test("el contrato conserva guardian, anuncios, storage y persistencia en el reco
   const guide = source("docs", "canonical-mvp-pilot.md");
   const guardian = source("src", "lib", "guardian-portal.ts");
   const announcements = source("src", "lib", "announcements.ts");
-  const assets = source("src", "app", "api", "assets", "[assetId]", "route.ts");
+  // La autorización de lectura de `/api/assets/[assetId]` vive en `assetReadAccess` (M2 · archivos).
+  const assets = source("src", "app", "api", "assets", "[assetId]", "route.ts") + source("src", "server", "courses", "uploads.ts");
   assert.match(guide, /cerrar sesión y volver a entrar/i);
   assert.match(guide, /imagen o video permitido/);
   assert.match(guardian, /status: "ACTIVE"/);

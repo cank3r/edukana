@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { roleLabel } from "@/lib/ux";
+import { ImageUploader } from "@/components/dashboard/ImageUploader";
 import { OwnDataForm, OwnPasswordForm } from "./ProfileForms";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +18,7 @@ export default async function OwnProfilePage() {
       name: true,
       email: true,
       phone: true,
+      avatarUrl: true,
       role: true,
       institution: { select: { name: true } },
       identity: { select: { passwordHash: true } },
@@ -48,6 +50,11 @@ export default async function OwnProfilePage() {
             <dd className="break-words text-base font-semibold text-slate-950">{me.institution.name}</dd>
           </div>
         </dl>
+      </section>
+
+      <section className="rounded-xl border border-slate-200 bg-white p-5" aria-labelledby="perfil-foto">
+        <h2 id="perfil-foto" className="mb-3 text-lg font-bold text-slate-950">Mi foto</h2>
+        <ImageUploader purpose="avatar" imageUrl={me.avatarUrl} alt={`Foto de ${me.name}`} />
       </section>
 
       <section className="rounded-xl border border-slate-200 bg-white p-5" aria-labelledby="perfil-datos">

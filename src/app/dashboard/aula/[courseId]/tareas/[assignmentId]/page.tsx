@@ -3,7 +3,9 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getEffectiveCapabilities } from "@/lib/authorization";
 import { assignmentForStudent, assignmentRoster, dueLabel, formatDateTime, type RosterState } from "@/server/assessment/assignments";
-import { GradeForm, SubmitForm } from "../AssignmentTools";
+import { submissionFilesForManager, submissionFilesForStudent } from "@/server/courses/submission-files";
+import { GradeForm } from "../AssignmentTools";
+import { FileList, SubmitWithFiles } from "./SubmissionFiles";
 
 export const dynamic = "force-dynamic";
 
@@ -42,6 +44,7 @@ export default async function AssignmentPage({ params, searchParams }: { params:
     if (!data || data.course.id !== courseId) notFound();
     const zone = data.course.institution.timezone;
     const { assignment, submission } = data;
+    const files = await submissionFilesForStudent({ id: user.id, institutionId: user.institutionId }, assignment.id);
     return (
       <div className="mx-auto max-w-3xl space-y-6 p-4 sm:p-8">
         <header>
@@ -79,10 +82,11 @@ export default async function AssignmentPage({ params, searchParams }: { params:
             <p className="mt-1 text-sm text-slate-600">Aún no has entregado esta tarea.</p>
           )}
           {data.canSubmit ? (
-            <SubmitForm assignmentId={assignment.id} content={submission?.content ?? ""} link={submission?.link ?? ""} resubmitting={Boolean(submission)} />
+            <SubmitWithFiles assignmentId={assignment.id} content={submission?.content ?? ""} link={submission?.link ?? ""} resubmitting={Boolean(submission)} currentFiles={files.current} pendingFiles={files.pending} />
           ) : (
             <>
               {submission && <Work content={submission.content} links={submission.link ? [submission.link] : []} />}
+              <FileList files={files.current} title="Archivos entregados" />
               <p className="mt-3 rounded-lg bg-slate-50 p-3 text-sm text-slate-700">{data.cannotSubmitReason}</p>
             </>
           )}
@@ -100,6 +104,7 @@ export default async function AssignmentPage({ params, searchParams }: { params:
   const here = `${list}/${assignment.id}`;
   const open = (submissionId: string) => `${here}?entrega=${encodeURIComponent(submissionId)}#entrega`;
   const nextId = waiting.find((id) => id !== selected?.submission?.id) ?? null;
+  const selectedFiles = selected?.submission ? await submissionFilesForManager({ id: user.id, institutionId: user.institutionId, role: user.role, capabilities }, selected.submission.id) : [];
   const delivered = students.filter((student) => student.submission).length;
 
   return (
@@ -132,6 +137,7 @@ export default async function AssignmentPage({ params, searchParams }: { params:
             {selected.submission.previousVersions > 0 ? ` El estudiante la cambió ${selected.submission.previousVersions} ${selected.submission.previousVersions === 1 ? "vez" : "veces"}; esta es la versión más reciente.` : ""}
           </p>
           <Work content={selected.submission.content} links={selected.submission.links} />
+          <FileList files={selectedFiles} title="Archivos entregados" />
           <GradeForm
             key={selected.submission.id}
             submissionId={selected.submission.id}
