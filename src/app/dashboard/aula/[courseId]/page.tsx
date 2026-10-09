@@ -7,7 +7,7 @@ import { getEffectiveCapabilities } from "@/lib/authorization";
 import { canManageCourse, courseWhereForScope, resolveCourseReadScope, resolveCourseWriteScope } from "@/lib/course-scope";
 import { db } from "@/lib/db";
 import { spanishLabel } from "@/lib/ux";
-import { AttendanceForm, CertificateForm, EnrollmentCompletionForm, ScheduleForm } from "@/components/dashboard/AcademicForms";
+import { AttendanceForm, CertificateForm, EnrollmentCompletionForm } from "@/components/dashboard/AcademicForms";
 import { courseListWhere, courseStatusLabel } from "@/server/courses/course";
 
 export const dynamic = "force-dynamic";
@@ -15,8 +15,6 @@ export const dynamic = "force-dynamic";
 const card = "rounded-2xl border border-slate-200 bg-white p-5";
 const tool = "rounded-xl border border-slate-200 bg-white px-4 [&>summary]:flex [&>summary]:min-h-11 [&>summary]:cursor-pointer [&>summary]:items-center [&>summary]:gap-2 [&>summary]:py-3 [&>summary]:font-semibold [&>summary]:text-slate-900";
 const dateOnly = (value: Date) => new Intl.DateTimeFormat("es", { dateStyle: "medium", timeZone: "UTC" }).format(value);
-const time = (minutes: number) => `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
-const day = ["", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 const statusStyle = { Publicado: "bg-emerald-400/20 text-emerald-100", Borrador: "bg-amber-400/20 text-amber-100", Archivado: "bg-white/15 text-slate-100" } as const;
 
 export default async function CourseHomePage({ params }: { params: Promise<{ courseId: string }> }) {
@@ -44,7 +42,6 @@ export default async function CourseHomePage({ params }: { params: Promise<{ cou
       completionThreshold: true,
       teacher: { select: { name: true } },
       period: { select: { name: true } },
-      scheduleSlots: { orderBy: [{ weekday: "asc" }, { startMinutes: "asc" }] },
       _count: { select: { lessons: true, assignments: true, exams: true, questionBank: true, liveClasses: true } },
     },
   });
@@ -197,22 +194,7 @@ export default async function CourseHomePage({ params }: { params: Promise<{ cou
         <div className="space-y-3">
           <Link className={`${tool} flex min-h-11 items-center gap-2 p-4 font-semibold text-slate-900`} href={`${base}/asistencia`}><Users size={18} aria-hidden="true" />{isStudent ? "Mi asistencia" : "Tomar y revisar asistencia"}</Link>
 
-          <details className={tool} id="horario">
-            <summary><CalendarDays size={18} aria-hidden="true" />Horario</summary>
-            <div className="space-y-4 pb-4">
-              {course.scheduleSlots.length ? (
-                <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {course.scheduleSlots.map((slot) => (
-                    <li className="rounded-xl bg-slate-50 p-4" key={slot.id}>
-                      <p className="font-bold text-slate-900">{day[slot.weekday]} {time(slot.startMinutes)}–{time(slot.endMinutes)}</p>
-                      <p className="text-sm text-slate-600">{slot.classroom}</p>
-                    </li>
-                  ))}
-                </ul>
-              ) : <p className="text-sm text-slate-600">Este curso todavía no tiene horario.</p>}
-              {canManage && <ScheduleForm courseId={course.id} />}
-            </div>
-          </details>
+          <Link className={`${tool} flex min-h-11 items-center gap-2 p-4 font-semibold text-slate-900`} href={`${base}/horario`}><CalendarDays size={18} aria-hidden="true" />{canManage ? "Organizar el horario" : "Horario del curso"}</Link>
 
           <Link className={`${tool} flex min-h-11 items-center gap-2 p-4 font-semibold text-slate-900`} href={`${base}/certificados`}><GraduationCap size={18} aria-hidden="true" />{isStudent ? "Mi certificado" : "Certificados del curso"}</Link>
         </div>
