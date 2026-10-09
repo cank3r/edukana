@@ -15,12 +15,28 @@ export const newPasswordSchema = z
   .regex(/[A-Za-zÁÉÍÓÚáéíóúÑñ]/, "Incluye al menos una letra.")
   .regex(/\d/, "Incluye al menos un número.");
 
-const hashToken = (token: string) => createHash("sha256").update(token).digest("hex");
+export const hashToken = (token: string) => createHash("sha256").update(token).digest("hex");
 
-function appUrl() {
+export function appUrl() {
   const value = process.env.APP_URL ?? process.env.AUTH_URL ?? process.env.NEXTAUTH_URL;
   if (!value) throw new Error("APP_URL es obligatorio para enviar enlaces de recuperación.");
   return value.replace(/\/$/, "");
+}
+
+/**
+ * Crea un enlace de un solo uso para definir la contraseña y devuelve el valor en claro,
+ * que solo viaja en el correo: en la base queda su hash.
+ */
+export async function issuePasswordToken(
+  client: Pick<typeof db, "passwordResetToken">,
+  input: { userId: string; minutes: number },
+  now = new Date(),
+) {
+  const token = randomBytes(32).toString("base64url");
+  await client.passwordResetToken.create({
+    data: { userId: input.userId, tokenHash: hashToken(token), expiresAt: new Date(now.getTime() + input.minutes * 60_000) },
+  });
+  return token;
 }
 
 /**
@@ -41,14 +57,7 @@ export async function requestPasswordReset(input: { email: string; ip: string },
   const memberships = await listActiveMemberships(identity.id);
   if (!memberships.length) return;
 
-  const token = randomBytes(32).toString("base64url");
-  await db.passwordResetToken.create({
-    data: {
-      userId: memberships[0].id,
-      tokenHash: hashToken(token),
-      expiresAt: new Date(now.getTime() + RESET_TOKEN_MINUTES * 60_000),
-    },
-  });
+  const token = await issuePasswordToken(db, { userId: memberships[0].id, minutes: RESET_TOKEN_MINUTES }, now);
   const places = memberships.map((item) => item.institution.name).join(", ");
   try {
     await getEmailProvider().send({
