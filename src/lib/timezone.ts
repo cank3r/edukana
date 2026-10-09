@@ -91,6 +91,9 @@ export function zonedTimeToUtc(date: string, time: string, timeZone: string): Da
 export function addDaysToDateKey(date: string, days: number): string | null {
   const match = DATE_RE.exec(date);
   if (!match) return null;
+  const start = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+  // Una fecha imposible (31 de febrero) no se corrige en silencio.
+  if (start.getUTCMonth() !== Number(match[2]) - 1) return null;
   const moved = new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]) + days));
   return `${moved.getUTCFullYear()}-${pad(moved.getUTCMonth() + 1)}-${pad(moved.getUTCDate())}`;
 }

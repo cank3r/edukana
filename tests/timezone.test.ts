@@ -50,6 +50,7 @@ test("sumar semanas conserva la hora local aunque cambie el horario", () => {
   assert.equal(addDaysToDateKey("2026-02-25", 7), "2026-03-04");
   assert.equal(addDaysToDateKey("2026-12-28", 7), "2027-01-04");
   assert.equal(addDaysToDateKey("mal", 7), null);
+  assert.equal(addDaysToDateKey("2027-02-31", 0), null);
   const next = addDaysToDateKey("2026-03-05", 7)!;
   assert.equal(iso("2026-03-05", "18:00", "America/New_York"), "2026-03-05T23:00:00.000Z");
   assert.equal(iso(next, "18:00", "America/New_York"), "2026-03-12T22:00:00.000Z");
