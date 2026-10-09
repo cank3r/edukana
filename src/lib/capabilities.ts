@@ -4,7 +4,11 @@ export const CAPABILITY_CATALOG = {
   "student.portal.view": { group: "Aprendizaje", label: "Ver portal estudiantil", description: "Consulta la experiencia personal de aprendizaje." },
   "course.view": { group: "Académico", label: "Ver cursos", description: "Accede a cursos dentro del alcance propio del rol." },
   "course.view.all": { group: "Académico", label: "Ver todos los cursos", description: "Consulta todos los cursos de la institución." },
-  "course.manage": { group: "Académico", label: "Gestionar cursos", description: "Crea y modifica contenido, evaluaciones y calificaciones." },
+  "course.manage": { group: "Académico", label: "Gestionar cursos", description: "Administra contenido y actividades dentro del alcance permitido." },
+  "course.create": { group: "Académico", label: "Crear cursos", description: "Crea cursos nuevos en la institución.", critical: true },
+  "course.edit": { group: "Académico", label: "Editar cursos", description: "Corrige datos de cursos dentro del alcance permitido." },
+  "course.publish": { group: "Académico", label: "Publicar cursos", description: "Hace visibles los cursos para sus estudiantes.", critical: true },
+  "course.archive": { group: "Académico", label: "Archivar cursos", description: "Retira cursos de uso activo sin borrar su historial.", critical: true },
   "course.participate": { group: "Aprendizaje", label: "Participar en cursos", description: "Entrega tareas, presenta exámenes y registra progreso." },
   "course.roster.view": { group: "Académico", label: "Ver listas de estudiantes", description: "Consulta participantes y resultados de los cursos permitidos." },
   "schedule.view": { group: "Académico", label: "Ver horarios", description: "Consulta calendario y bloques de clase permitidos." },
@@ -40,8 +44,8 @@ const capabilities = (...values: Capability[]) => new Set(values);
 export const SYSTEM_ROLE_CAPABILITIES: Record<EdukanaRole, ReadonlySet<Capability>> = {
   SUPER_ADMIN: capabilities(...CAPABILITIES),
   ADMIN: capabilities(...CAPABILITIES),
-  COORDINATOR: capabilities("course.view", "course.view.all", "course.manage", "course.roster.view", "schedule.view", "people.view", "admissions.manage", "announcement.publish", "announcement.manage"),
-  TEACHER: capabilities("course.view", "course.manage", "course.roster.view", "schedule.view"),
+  COORDINATOR: capabilities("course.view", "course.view.all", "course.manage", "course.create", "course.edit", "course.publish", "course.archive", "course.roster.view", "schedule.view", "people.view", "admissions.manage", "announcement.publish", "announcement.manage"),
+  TEACHER: capabilities("course.view", "course.manage", "course.edit", "course.roster.view", "schedule.view"),
   STUDENT: capabilities("student.portal.view", "course.view", "course.participate", "schedule.view"),
   // Every child capability still requires an ACTIVE Guardianship and its matching per-link flag.
   PARENT: capabilities("child.portal.view", "child.academics.view", "child.attendance.view", "child.schedule.view", "child.announcements.view"),
@@ -50,8 +54,8 @@ export const SYSTEM_ROLE_CAPABILITIES: Record<EdukanaRole, ReadonlySet<Capabilit
 export const ROLE_ALLOWED_CAPABILITIES: Record<EdukanaRole, ReadonlySet<Capability>> = {
   SUPER_ADMIN: capabilities(...CAPABILITIES),
   ADMIN: capabilities(...CAPABILITIES),
-  COORDINATOR: capabilities("course.view", "course.view.all", "course.manage", "course.roster.view", "schedule.view", "people.view", "admissions.manage", "announcement.publish", "announcement.manage", "analytics.view"),
-  TEACHER: capabilities("course.view", "course.manage", "course.roster.view", "schedule.view", "people.view", "announcement.publish", "announcement.manage"),
+  COORDINATOR: capabilities("course.view", "course.view.all", "course.manage", "course.create", "course.edit", "course.publish", "course.archive", "course.roster.view", "schedule.view", "people.view", "admissions.manage", "announcement.publish", "announcement.manage", "analytics.view"),
+  TEACHER: capabilities("course.view", "course.manage", "course.edit", "course.roster.view", "schedule.view", "people.view", "announcement.publish", "announcement.manage"),
   STUDENT: capabilities("student.portal.view", "course.view", "course.participate", "schedule.view"),
   PARENT: capabilities("child.portal.view", "child.academics.view", "child.attendance.view", "child.schedule.view", "child.announcements.view", "child.finance.view"),
 };

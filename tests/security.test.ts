@@ -3,6 +3,7 @@ import test from "node:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { canAccessDashboardPath, isPublicPath } from "../src/lib/access";
+import { courseListWhere } from "../src/server/courses/course";
 import { loginSchema } from "../src/lib/validation";
 
 test("normaliza un login válido", () => {
@@ -80,10 +81,13 @@ test("usa cargas directas firmadas y restringe quién puede prepararlas", () => 
 
 
 test("minimiza los datos del curso para estudiantes y bloquea cursos completados", () => {
-  const classroom = readFileSync(join(process.cwd(), "src", "app", "dashboard", "aula", "page.tsx"), "utf8");
+  assert.deepEqual(courseListWhere("institution-a", { kind: "student", studentId: "student-a" }), {
+    institutionId: "institution-a",
+    enrollments: { some: { studentId: "student-a", status: { in: ["ACTIVE", "COMPLETED"] } } },
+    isPublished: true,
+    archivedAt: null,
+  });
   const course = readFileSync(join(process.cwd(), "src", "app", "dashboard", "aula", "[courseId]", "page.tsx"), "utf8");
-  assert.match(classroom, /!capabilities\.has\("course\.view"\)/);
-  assert.match(classroom, /capabilities\.has\("course\.roster\.view"\) && <span/);
   assert.match(course, /studentId: user\.id, status: \{ in: \["ACTIVE", "COMPLETED"\]/);
   assert.match(course, /questionBank: \{ where: canManage \? \{\} : \{ id: "__restricted__" \}/);
   assert.doesNotMatch(course, /bankItem: true/);
