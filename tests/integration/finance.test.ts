@@ -380,6 +380,8 @@ test("recibo: lo ven quien cobra, el estudiante dueño y su tutor autorizado; na
   assert.equal(await getPaymentReceipt(A.student, ""), null);
 
   // Tutor: permiso del rol Y marca de finanzas en el vínculo, y solo los recibos de su hijo.
+  // (Una prueba anterior deja el permiso del rol concedido: se parte de cero.)
+  await db.roleCapabilityOverride.deleteMany({ where: { institutionId: A.institutionId, role: "PARENT", capability: "child.finance.view" } });
   assert.equal(await getPaymentReceipt(A.parent, paymentId), null);
   await db.guardianship.update({ where: { id: A.guardianshipId }, data: { canViewFinance: true } });
   assert.equal(await getPaymentReceipt(A.parent, paymentId), null, "sin permiso del rol");
