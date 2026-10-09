@@ -100,8 +100,9 @@ $env:PILOT_PARENT_EMAIL = "<tutor nuevo y exclusivo del run>"
 $env:PILOT_USER_PASSWORD = "<contraseña temporal segura para las cuentas nuevas>"
 # Solo si Vercel Deployment Protection está habilitado:
 $env:VERCEL_AUTOMATION_BYPASS_SECRET = "<secreto de automatización de Vercel>"
-npm run test:pilot:preview
 ```
+
+> **Obsoleto:** el runner `tests/e2e/canonical-pilot.spec.mjs` recorría pantallas que ya no existen y se retiró el script `npm run test:pilot:preview`. El recorrido vigente en navegador es `tests/e2e/smoke/recorrido.smoke.ts` (`npm run test:smoke`).
 
 `PILOT_HEADLESS=false` permite observar el recorrido. Las capturas y trazas de fallos se escriben en `$env:KIROCREW_SCRATCH`; no se guardan dentro del repositorio. `npm run test:pilot:config` valida las protecciones sin acceder a ningún entorno.
 

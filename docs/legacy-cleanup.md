@@ -25,7 +25,7 @@ Este documento identifica restos Alpha y contratos que deben migrarse. S0 no eli
 ## Archivos grandes a dividir al tocar el dominio
 
 - `src/app/dashboard/aula/[courseId]/page.tsx`: dividir por pestañas/rutas y view models.
-- `src/app/dashboard/academico/actions.ts`: separar acciones por agregado.
+- `src/app/dashboard/academico/actions.ts`: ya solo conserva `saveScheduleSlot` (horario de la portada del curso); las demás acciones viven en `src/server/actions/*`.
 - Páginas y acciones que importan `db`: migrar gradualmente a `src/server/data/**`.
 
 ## Regla de limpieza

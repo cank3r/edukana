@@ -1,20 +1,18 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import type { ReactNode } from "react";
-import { Award, BarChart3, BookOpen, CalendarDays, CheckCircle2, ChevronRight, Circle, ClipboardCheck, GraduationCap, HelpCircle, Pencil, PlayCircle, ShieldCheck, Users, Video } from "lucide-react";
+import { BarChart3, BookOpen, CalendarDays, CheckCircle2, ChevronRight, Circle, ClipboardCheck, GraduationCap, HelpCircle, Pencil, PlayCircle, Users, Video } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { getEffectiveCapabilities } from "@/lib/authorization";
 import { canManageCourse, courseWhereForScope, resolveCourseReadScope, resolveCourseWriteScope } from "@/lib/course-scope";
 import { db } from "@/lib/db";
-import { spanishLabel } from "@/lib/ux";
-import { AttendanceForm, CertificateForm, EnrollmentCompletionForm, ScheduleForm } from "@/components/dashboard/AcademicForms";
+import { ScheduleForm } from "@/components/dashboard/AcademicForms";
 import { courseListWhere, courseStatusLabel } from "@/server/courses/course";
 
 export const dynamic = "force-dynamic";
 
 const card = "rounded-2xl border border-slate-200 bg-white p-5";
 const tool = "rounded-xl border border-slate-200 bg-white px-4 [&>summary]:flex [&>summary]:min-h-11 [&>summary]:cursor-pointer [&>summary]:items-center [&>summary]:gap-2 [&>summary]:py-3 [&>summary]:font-semibold [&>summary]:text-slate-900";
-const dateOnly = (value: Date) => new Intl.DateTimeFormat("es", { dateStyle: "medium", timeZone: "UTC" }).format(value);
 const time = (minutes: number) => `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
 const day = ["", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 const statusStyle = { Publicado: "bg-emerald-400/20 text-emerald-100", Borrador: "bg-amber-400/20 text-amber-100", Archivado: "bg-white/15 text-slate-100" } as const;
@@ -64,21 +62,6 @@ export default async function CourseHomePage({ params }: { params: Promise<{ cou
     : [];
   const own = isStudent ? enrollments[0] : undefined;
   if (isStudent && !own) notFound();
-
-  const attendanceSessions = isStudent || canViewRoster
-    ? await db.attendanceSession.findMany({
-        where: { courseId: course.id },
-        orderBy: { date: "desc" },
-        take: 30,
-        select: { id: true, date: true, title: true, records: { where: isStudent ? { enrollmentId: own!.id } : {}, select: { enrollmentId: true, status: true } } },
-      })
-    : [];
-  const attendanceSummary = enrollments.map((enrollment) => {
-    const records = attendanceSessions.flatMap((session) => session.records).filter((record) => record.enrollmentId === enrollment.id);
-    const attended = records.filter((record) => record.status === "PRESENT" || record.status === "LATE").length;
-    return { id: enrollment.id, name: enrollment.student.name, attended, total: records.length, percent: records.length ? Math.round((attended / records.length) * 100) : 0 };
-  });
-  const nameByEnrollment = new Map(enrollments.map((enrollment) => [enrollment.id, enrollment.student.name]));
 
   // Temario del estudiante: solo capítulos y lecciones publicados, con lo que ya completó.
   const sections = isStudent

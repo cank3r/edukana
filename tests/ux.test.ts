@@ -2,10 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
-import { loadLegacyExamForm } from "./helpers/legacy-exam-actions.mjs";
-import { breadcrumbLabel, COURSE_MORE_AREAS, COURSE_TABS, navigationForRole, roleLabel, spanishLabel } from "../src/lib/ux";
+import { breadcrumbLabel, navigationForRole, roleLabel, spanishLabel } from "../src/lib/ux";
 
 test("muestra módulos claros y propios de cada rol", () => {
   assert.deepEqual(navigationForRole("STUDENT").map((item) => item.label), ["Inicio", "Mi aprendizaje", "Cursos", "Avisos", "Calendario"]);
@@ -28,11 +25,6 @@ test("localiza estados visibles y conserva un fallback legible", () => {
   assert.equal(breadcrumbLabel("analitica"), "Reportes");
 });
 
-test("ofrece las seis áreas principales y las dos áreas adicionales del curso", () => {
-  assert.deepEqual(COURSE_TABS.map((tab) => tab.label), ["Resumen", "Contenido", "Estudiantes", "Asistencia", "Tareas y exámenes", "Calificaciones"]);
-  assert.deepEqual(COURSE_MORE_AREAS.map((tab) => tab.label), ["Horario", "Certificados"]);
-});
-
 test("el login conserva las credenciales fuera de la URL sin JavaScript", () => {
   const login = readFileSync(join(process.cwd(), "src", "app", "login", "page.tsx"), "utf8");
   assert.match(login, /method="post"/);
@@ -53,23 +45,6 @@ test("la navegación móvil muestra destinos con etiquetas legibles", () => {
   assert.match(sidebar, /Navegación móvil/);
   assert.match(sidebar, /<span>\{item\.label\}<\/span>/);
   assert.match(sidebar, /> Menú/);
-});
-
-test("el selector móvil del curso expone las ocho áreas sin desplazamiento horizontal", () => {
-  const tabs = readFileSync(join(process.cwd(), "src", "components", "dashboard", "CourseTabs.tsx"), "utf8");
-  assert.match(tabs, /htmlFor="course-section-selector"/);
-  assert.match(tabs, /visibleTabs\.map/);
-  assert.match(tabs, /COURSE_MORE_AREAS\.map/);
-  assert.match(tabs, /md:hidden/);
-});
-
-test("la entrada del examen ofrece navegación accesible hacia el flujo con tiempo", async () => {
-  const ExamAttemptForm = await loadLegacyExamForm();
-  const html = renderToStaticMarkup(createElement(ExamAttemptForm, { courseId: "curso" }));
-  assert.match(html, /<a[^>]+href="\/dashboard\/aula\/curso\/presentar"/);
-  assert.match(html, />Ver mis exámenes<\/a>/);
-  assert.match(html, /min-h-11/);
-  assert.doesNotMatch(html, /<form|<textarea|<input/);
 });
 
 test("el dashboard oculta pendientes en cero y usa el término Cobros", () => {

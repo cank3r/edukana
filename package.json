@@ -15,7 +15,6 @@
     "test:auth": "tsx --test tests/security.test.ts",
     "test:integration": "node --require ./tests/integration/stub-server-only.cjs --import tsx --test --test-concurrency=1 \"tests/integration/**/*.test.ts\"",
     "test:pilot:config": "node --test tests/canonical-pilot-runner.test.mjs",
-    "test:pilot:preview": "playwright test --config=playwright.pilot.config.mjs",
     "test:smoke:seed": "node --require ./tests/integration/stub-server-only.cjs --import tsx tests/e2e/smoke/seed.ts",
     "test:smoke": "playwright test --config=playwright.smoke.config.ts",
     "postinstall": "prisma generate",
