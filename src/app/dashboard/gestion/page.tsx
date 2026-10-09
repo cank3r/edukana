@@ -29,6 +29,7 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
   const capabilities = await getEffectiveCapabilities(user.institutionId, user.role);
   if (!capabilities.has("people.view")) redirect("/dashboard");
   const canManage = capabilities.has("people.manage");
+  const canOrganize = capabilities.has("academic.structure.manage");
 
   const params = await searchParams;
   const q = typeof params.q === "string" ? params.q.trim().slice(0, 100) : "";
@@ -75,10 +76,14 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
         </p>
       </header>
 
-      {canManage && (
+      {(canManage || canOrganize) && (
         <div className="space-y-3">
-          <AddPerson key={params.agregar ? "abierto" : "cerrado"} canAddAdmin={user.role === "ADMIN" || user.role === "SUPER_ADMIN"} startOpen={Boolean(params.agregar)} />
-          <Link href="/dashboard/gestion/accesos" className="inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 underline">Importar desde archivo e invitar</Link>
+          {canManage && <AddPerson key={params.agregar ? "abierto" : "cerrado"} canAddAdmin={user.role === "ADMIN" || user.role === "SUPER_ADMIN"} startOpen={Boolean(params.agregar)} />}
+          <div className="flex flex-wrap gap-x-5">
+            {canManage && <Link href="/dashboard/gestion/accesos" className="inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 underline">Importar desde archivo e invitar</Link>}
+            {canOrganize && <Link href="/dashboard/gestion/programas" className="inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 underline">Programas</Link>}
+            {canOrganize && <Link href="/dashboard/gestion/grupos" className="inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 underline">Grupos</Link>}
+          </div>
         </div>
       )}
 
