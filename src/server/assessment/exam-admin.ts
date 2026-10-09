@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { reviewedExamScore } from "@/lib/lms";
 import { questionSnapshot, type QuestionSnapshot } from "@/server/exams";
 import { writeGradeEntry } from "@/server/grade-history";
+import { notifyExamPublished } from "@/server/notifications/events";
 import { findManagedCourse, readOptions, type Manager, type QuestionKind } from "./question-bank";
 
 export type ExamResult = { ok: true; id: string; courseId: string; message: string } | { ok: false; message: string };
@@ -460,6 +461,7 @@ export async function setExamPublished(actor: Manager, examId: string, publish: 
     await tx.exam.update({ where: { id: exam.id }, data: { isPublished: publish } });
     if (exam.gradeItem) await tx.gradeItem.update({ where: { id: exam.gradeItem.id }, data: { isPublished: publish } });
   });
+  if (publish && !exam.isPublished) await notifyExamPublished(actor.institutionId, exam.id);
   return {
     ok: true,
     id: exam.id,

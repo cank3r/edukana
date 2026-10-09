@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { notifyEnrolledWithinTransaction } from "@/server/notifications/events";
 import { cleanIds, fail, isUniqueViolation, type AcademicActor, type AcademicResult } from "./programs";
 
 const GROUP_NOT_FOUND = "No encontramos ese grupo.";
@@ -374,6 +375,7 @@ export async function enrollGroupInCourses(actor: AcademicActor, groupId: string
         data: missing.map((student) => ({ institutionId: actor.institutionId, studentId: student.id, courseId: course.id, status: "ACTIVE" as const })),
         skipDuplicates: true,
       });
+      await notifyEnrolledWithinTransaction(tx, actor.institutionId, { courseId: course.id, studentIds: missing.map((student) => student.id) });
       return { ...plan, enrolled: created.count };
     }, rowLocked);
     if (outcome) courses.push(outcome);
