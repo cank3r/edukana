@@ -20,6 +20,7 @@ model Institution {
   domain             String?             @unique
   timezone           String              @default("America/Santo_Domingo")
   language           String              @default("es")
+  brandColor         String?
   plan               Plan                @default(FREE)
   settings           Json                @default("{}")
   createdAt          DateTime            @default(now())
@@ -66,6 +67,11 @@ model Institution {
   programs                Program[]
   studentGroups           StudentGroup[]
   liveClasses             LiveClass[]
+  payments                Payment[]
+  notifications           Notification[]
+  courseOrders            CourseOrder[]
+  coupons                 Coupon[]
+  courseReviews           CourseReview[]
 
   @@map("institutions")
 }
@@ -127,6 +133,10 @@ model User {
   gradeEntryRevisions     GradeEntryRevision[] @relation("GradeRevisionActor")
   groupMemberships        StudentGroupMember[]
   createdLiveClasses      LiveClass[] @relation("LiveClassCreator")
+  recordedPayments        Payment[] @relation("PaymentRecorder")
+  notifications           Notification[]
+  courseOrders            CourseOrder[]
+  courseReviews           CourseReview[]
 
   @@unique([institutionId, email])
   @@unique([institutionId, identityId])
@@ -222,6 +232,10 @@ model Course {
   completionThreshold Int                 @default(100)
   isPublished         Boolean             @default(true)
   archivedAt          DateTime?
+  imageUrl            String?
+  isPublic            Boolean             @default(false)
+  priceCents          Int?
+  currency            String              @default("DOP")
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
   enrollments         Enrollment[]
@@ -243,6 +257,8 @@ model Course {
   programCourses      ProgramCourse[]
   groupCourses        StudentGroupCourse[]
   liveClasses         LiveClass[]
+  orders              CourseOrder[]
+  reviews             CourseReview[]
   relatedAnnouncements AnnouncementRelatedCourse[]
 
   @@unique([institutionId, code])
@@ -592,6 +608,7 @@ model Exam {
   maxAttempts     Int            @default(1)
   isPublished     Boolean        @default(false)
   showReview      Boolean        @default(true)
+  passingPercent  Int?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   questions       ExamQuestion[]
@@ -786,6 +803,8 @@ model AdmissionLead {
   documents       Json?
   notes           String?        @db.Text
   source          String?
+  convertedUserId String?
+  convertedAt     DateTime?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
@@ -819,6 +838,7 @@ model PaymentConcept {
   status        PaymentStatus   @default(PENDING)
   notes         String?
   createdAt     DateTime        @default(now())
+  payments      Payment[]
 
   @@index([institutionId, status])
   @@index([institutionId, studentId])
@@ -1101,6 +1121,7 @@ model SubmissionRevision {
   submission    Submission  @relation(fields: [submissionId], references: [id], onDelete: Cascade)
   content       String?     @db.Text
   assetIds      Json        @default("[]")
+  fileUrls      Json?
   submittedAt   DateTime
   createdAt     DateTime    @default(now())
 
@@ -1236,4 +1257,104 @@ model LiveClass {
   @@index([institutionId, startsAt])
   @@index([courseId, startsAt])
   @@map("live_classes")
+}
+
+// --- Tanda 3: pagos, notificaciones y venta de cursos ---
+
+model Payment {
+  id            String         @id @default(cuid())
+  institutionId String
+  institution   Institution    @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  conceptId     String
+  concept       PaymentConcept @relation(fields: [conceptId], references: [id], onDelete: Cascade)
+  amountCents   Int
+  method        String
+  paidOn        DateTime       @db.Date
+  note          String?
+  recordedById  String
+  recordedBy    User           @relation("PaymentRecorder", fields: [recordedById], references: [id])
+  voidedAt      DateTime?
+  voidReason    String?
+  createdAt     DateTime       @default(now())
+
+  @@index([institutionId, conceptId])
+  @@index([institutionId, paidOn])
+  @@map("payments")
+}
+
+model Notification {
+  id            String      @id @default(cuid())
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind          String
+  title         String
+  body          String?
+  href          String?
+  readAt        DateTime?
+  createdAt     DateTime    @default(now())
+
+  @@index([userId, readAt])
+  @@index([institutionId, createdAt])
+  @@map("notifications")
+}
+
+model Coupon {
+  id            String        @id @default(cuid())
+  institutionId String
+  institution   Institution   @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  code          String
+  percentOff    Int
+  maxUses       Int?
+  usedCount     Int           @default(0)
+  expiresAt     DateTime?
+  isActive      Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  orders        CourseOrder[]
+
+  @@unique([institutionId, code])
+  @@map("coupons")
+}
+
+model CourseOrder {
+  id            String      @id @default(cuid())
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  courseId      String
+  course        Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  buyerId       String
+  buyer         User        @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  couponId      String?
+  coupon        Coupon?     @relation(fields: [couponId], references: [id], onDelete: SetNull)
+  amountCents   Int
+  currency      String      @default("DOP")
+  status        String      @default("PENDING")
+  paymentMethod String?
+  paymentNote   String?
+  paidAt        DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([institutionId, status])
+  @@index([courseId, buyerId])
+  @@map("course_orders")
+}
+
+model CourseReview {
+  id            String      @id @default(cuid())
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  courseId      String
+  course        Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating        Int
+  comment       String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([courseId, userId])
+  @@index([institutionId, courseId])
+  @@map("course_reviews")
 }

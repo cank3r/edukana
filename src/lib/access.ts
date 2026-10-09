@@ -1,7 +1,7 @@
 import { hasCapability, type Capability } from "@/lib/capabilities";
 import type { EdukanaRole } from "@/types/next-auth";
 
-const PUBLIC_ROUTES = ["/login", "/setup", "/certificados", "/recuperar", "/restablecer"] as const;
+const PUBLIC_ROUTES = ["/login", "/setup", "/certificados", "/recuperar", "/restablecer", "/cursos", "/ensena"] as const;
 
 const DASHBOARD_ACCESS: ReadonlyArray<{ prefix: string; capability: Capability }> = [
   { prefix: "/dashboard/configuracion/tutores", capability: "guardianship.manage" },
