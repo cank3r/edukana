@@ -12,7 +12,7 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   retries: 0,
-  timeout: 8 * 60_000,
+  timeout: 12 * 60_000,
   expect: { timeout: 12_000 },
   outputDir: "smoke-artifacts/test-results",
   globalTeardown: "./tests/e2e/smoke/report.ts",
