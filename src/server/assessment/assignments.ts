@@ -5,6 +5,13 @@ import { courseWhereForScope, resolveCourseWriteScope } from "@/lib/course-scope
 import { db } from "@/lib/db";
 import { archiveSubmissionVersion, writeGradeEntry } from "@/server/grade-history";
 import type { EdukanaRole } from "@/types/next-auth";
+import {
+  ASSIGNMENT_RETENTION_MESSAGE,
+  assignmentDeletionBlocked,
+  assignmentSubmissionAccess,
+  studentAssignmentGrade,
+  SubmissionRevisionUnavailable,
+} from "./assignment-policies";
 
 /** Quien gestiona el curso: docente titular o quien puede ver y gestionar todos los cursos. */
 export type AssignmentManager = { id: string; institutionId: string; role: EdukanaRole; capabilities: ReadonlySet<Capability> };
@@ -242,9 +249,14 @@ export async function saveAssignment(actor: AssignmentManager, input: Assignment
   const existing = await managedAssignment(actor, input.assignmentId);
   if (!existing || existing.courseId !== course.id) return fail(NOT_FOUND);
   if (data.maxScore < existing.maxScore) {
-    const above = await db.submission.count({ where: { assignmentId: existing.id, score: { gt: data.maxScore } } });
-    if (above > 0) {
-      return fail(`Ya hay ${plural(above, "nota mayor", "notas mayores")} que ${data.maxScore}. Corrige esas notas antes de bajar el puntaje máximo.`);
+    const [submissionGrades, gradebookGrades] = await Promise.all([
+      db.submission.count({ where: { assignmentId: existing.id, score: { gt: data.maxScore } } }),
+      existing.gradeItem
+        ? db.gradeEntry.count({ where: { gradeItemId: existing.gradeItem.id, score: { gt: data.maxScore } } })
+        : Promise.resolve(0),
+    ]);
+    if (submissionGrades > 0 || gradebookGrades > 0) {
+      return fail(`Ya hay notas mayores que ${data.maxScore}. Corrige esas notas antes de bajar el puntaje máximo.`);
     }
   }
   await db.$transaction(async (tx) => {
@@ -270,43 +282,50 @@ export async function setAssignmentPublished(actor: AssignmentManager, assignmen
   return { ok: true, courseId: existing.courseId };
 }
 
-/**
- * Borra una tarea. Con ella se van sus entregas y las versiones anteriores de cada entrega
- * (la base las borra en cascada) y, si contaba para la nota, su columna del libro de
- * calificaciones con las notas y el historial de correcciones.
- *
- * Con entregas, el motivo es obligatorio y queda en la bitácora. Si la tarea tiene notas en un
- * período de calificaciones ya publicado no se borra: se ofrece ocultarla.
- */
-export async function deleteAssignment(actor: AssignmentManager, input: { assignmentId: string; reason?: string }): Promise<AssignmentResult<{ deletedSubmissions: number }>> {
-  const existing = await managedAssignment(actor, input.assignmentId);
-  if (!existing) return fail(NOT_FOUND);
-  const reason = input.reason?.trim().slice(0, 500) ?? "";
-  const [submissions, graded] = await Promise.all([
-    db.submission.count({ where: { assignmentId: existing.id } }),
-    db.submission.count({ where: { assignmentId: existing.id, status: "GRADED" } }),
-  ]);
-  const gradebookEntries = existing.gradeItem?._count.entries ?? 0;
-  if (existing.gradeItem?.gradingPeriod.isPublished && gradebookEntries > 0) {
-    return fail("Esta tarea tiene notas en un período de calificaciones ya publicado y no se puede borrar. Puedes ocultarla: los estudiantes dejan de verla y las notas se conservan.");
+/** Solo borra tareas sin entregas ni notas. Ocultar conserva cualquier historia académica. */
+export async function deleteAssignment(
+  actor: AssignmentManager,
+  input: { assignmentId: string; reason?: string },
+): Promise<AssignmentResult<{ deletedSubmissions: number }>> {
+  const where = managedCourseWhere(actor);
+  if (!where || !input.assignmentId) return fail(NOT_FOUND);
+  try {
+    return await db.$transaction(async (tx) => {
+      const existing = await tx.assignment.findFirst({
+        where: { id: input.assignmentId, course: where },
+        select: {
+          id: true, title: true, courseId: true,
+          _count: { select: { submissions: true } },
+          gradeItem: { select: { id: true, _count: { select: { entries: true } } } },
+        },
+      });
+      if (!existing) return fail(NOT_FOUND);
+      if (assignmentDeletionBlocked(existing._count.submissions, existing.gradeItem?._count.entries ?? 0)) {
+        return fail(ASSIGNMENT_RETENTION_MESSAGE);
+      }
+      if (existing.gradeItem) await tx.gradeItem.delete({ where: { id: existing.gradeItem.id } });
+      await tx.assignment.delete({ where: { id: existing.id } });
+      await tx.auditLog.create({
+        data: {
+          institutionId: actor.institutionId,
+          userId: actor.id,
+          action: "ASSIGNMENT_DELETED",
+          entity: "Assignment",
+          entityId: existing.id,
+          changes: {
+            title: existing.title, courseId: existing.courseId,
+            reason: input.reason?.trim().slice(0, 500) || null, submissions: 0, graded: 0, gradebookEntries: 0,
+          },
+        },
+      });
+      return { ok: true as const, courseId: existing.courseId, deletedSubmissions: 0 };
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2034") {
+      return fail("La tarea cambió mientras intentabas borrarla. Recarga la página para revisar sus entregas y notas.");
+    }
+    throw error;
   }
-  if (submissions > 0 && reason.length < 5) return fail("Escribe el motivo para borrar una tarea que ya tiene entregas.");
-
-  await db.$transaction(async (tx) => {
-    if (existing.gradeItem) await tx.gradeItem.delete({ where: { id: existing.gradeItem.id } });
-    await tx.assignment.delete({ where: { id: existing.id } });
-    await tx.auditLog.create({
-      data: {
-        institutionId: actor.institutionId,
-        userId: actor.id,
-        action: "ASSIGNMENT_DELETED",
-        entity: "Assignment",
-        entityId: existing.id,
-        changes: { title: existing.title, courseId: existing.courseId, reason: reason || null, submissions, graded, gradebookEntries },
-      },
-    });
-  });
-  return { ok: true, courseId: existing.courseId, deletedSubmissions: submissions };
 }
 
 /** Categorías del libro de calificaciones donde puede contar una tarea nueva. */
@@ -337,19 +356,19 @@ export async function listAssignmentsForManager(actor: AssignmentManager, course
       allowLate: true,
       isPublished: true,
       submissions: { where: { status: { not: "DRAFT" } }, select: { status: true } },
-      gradeItem: { select: { gradingPeriod: { select: { isPublished: true } }, _count: { select: { entries: true } } } },
+      _count: { select: { submissions: true } },
+      gradeItem: { select: { _count: { select: { entries: true } } } },
     },
   });
   return {
     course,
-    assignments: assignments.map(({ submissions, gradeItem, ...assignment }) => ({
+    assignments: assignments.map(({ submissions, gradeItem, _count, ...assignment }) => ({
       ...assignment,
       submissionCount: submissions.length,
       toGradeCount: submissions.filter((submission) => submission.status === "SUBMITTED").length,
       gradedCount: submissions.filter((submission) => submission.status === "GRADED").length,
       countsForGrade: Boolean(gradeItem),
-      /** Notas en un período ya publicado: no se puede borrar, solo ocultar. */
-      deleteBlocked: Boolean(gradeItem?.gradingPeriod.isPublished && gradeItem._count.entries > 0),
+      deleteBlocked: assignmentDeletionBlocked(_count.submissions, gradeItem?._count.entries ?? 0),
     })),
   };
 }
@@ -503,13 +522,6 @@ export async function gradeSubmission(
 
 export type StudentGroup = "Pendientes" | "Entregadas" | "Calificadas";
 
-function canStillSubmit(assignment: { dueDate: Date | null; allowLate: boolean }, status: string | null, isActive: boolean, now: Date): { allowed: boolean; why: string } {
-  if (!isActive) return { allowed: false, why: "Ya no estás inscrito en este curso, así que no puedes entregar." };
-  if (status === "GRADED") return { allowed: false, why: "Tu docente ya calificó esta entrega y no se puede cambiar." };
-  if (assignment.dueDate && assignment.dueDate < now && !assignment.allowLate) return { allowed: false, why: "La fecha límite ya pasó y esta tarea no acepta entregas tarde." };
-  return { allowed: true, why: "" };
-}
-
 /** Las tareas publicadas del curso con la entrega propia. Null si no está inscrito. */
 export async function listAssignmentsForStudent(student: AssignmentStudent, courseId: string, now = new Date()) {
   const course = await studentCourse(student, courseId);
@@ -523,20 +535,35 @@ export async function listAssignmentsForStudent(student: AssignmentStudent, cour
       dueDate: true,
       maxScore: true,
       allowLate: true,
-      submissions: { where: { studentId: student.id }, select: { status: true, score: true, submittedAt: true } },
+      submissions: {
+        where: { studentId: student.id },
+        select: { status: true, score: true, fileUrls: true, submittedAt: true },
+      },
+      gradeItem: {
+        select: {
+          isPublished: true,
+          entries: {
+            where: { institutionId: student.institutionId, enrollmentId: course.enrollmentId },
+            select: { score: true, feedback: true, isExcused: true },
+          },
+        },
+      },
     },
   });
   return {
     course,
-    assignments: assignments.map(({ submissions, ...assignment }) => {
+    assignments: assignments.map(({ submissions, gradeItem, ...assignment }) => {
       const own = submissions[0] ?? null;
-      const group: StudentGroup = own?.status === "GRADED" ? "Calificadas" : own?.status === "SUBMITTED" ? "Entregadas" : "Pendientes";
+      const grade = studentAssignmentGrade(own, gradeItem);
+      const group: StudentGroup = grade.graded
+        ? "Calificadas"
+        : own && own.status !== "DRAFT" ? "Entregadas" : "Pendientes";
       return {
         ...assignment,
         group,
-        score: own?.status === "GRADED" ? own.score : null,
+        score: grade.score,
         submittedAt: own && own.status !== "DRAFT" ? own.submittedAt : null,
-        canSubmit: canStillSubmit(assignment, own?.status ?? null, course.isActive, now).allowed,
+        canSubmit: assignmentSubmissionAccess(assignment, own, course.isActive, now).allowed,
       };
     }),
   };
@@ -559,15 +586,24 @@ export async function assignmentForStudent(student: AssignmentStudent, assignmen
         where: { studentId: student.id },
         select: { content: true, fileUrls: true, status: true, score: true, feedback: true, submittedAt: true, gradedAt: true, _count: { select: { revisions: true } } },
       },
+      gradeItem: {
+        select: {
+          isPublished: true,
+          entries: {
+            where: { institutionId: student.institutionId, enrollment: { studentId: student.id } },
+            select: { score: true, feedback: true, isExcused: true },
+          },
+        },
+      },
     },
   });
   if (!assignment) return null;
   const course = await studentCourse(student, assignment.courseId);
   if (!course) return null;
-  const { submissions, ...rest } = assignment;
+  const { submissions, gradeItem, ...rest } = assignment;
   const own = submissions[0] && submissions[0].status !== "DRAFT" ? submissions[0] : null;
-  const graded = own?.status === "GRADED";
-  const submit = canStillSubmit(assignment, own?.status ?? null, course.isActive, now);
+  const grade = studentAssignmentGrade(own, gradeItem);
+  const submit = assignmentSubmissionAccess(assignment, own, course.isActive, now);
   return {
     course,
     assignment: { ...rest, instructions: rest.instructions ?? "" },
@@ -577,9 +613,7 @@ export async function assignmentForStudent(student: AssignmentStudent, assignmen
           link: readLinks(own.fileUrls)[0] ?? "",
           submittedAt: own.submittedAt,
           late: Boolean(assignment.dueDate && own.submittedAt > assignment.dueDate),
-          graded,
-          score: graded ? own.score : null,
-          feedback: graded ? (own.feedback ?? "") : "",
+          ...grade,
           previousVersions: own._count.revisions,
         }
       : null,
@@ -604,7 +638,7 @@ function cleanLink(value: string): { ok: true; link: string | null } | { ok: fal
 /**
  * Entrega o vuelve a entregar una tarea con texto, un enlace o ambos. Se puede reenviar
  * mientras no esté calificada y no haya vencido (o la tarea acepte entregas tarde). Cada
- * reenvío conserva la versión anterior.
+ * reenvío permitido conserva la versión anterior; los enlaces previos bloquean el reenvío.
  */
 export async function submitAssignment(
   student: AssignmentStudent,
@@ -630,19 +664,35 @@ export async function submitAssignment(
   if (!content && !link.link) return fail("Escribe tu respuesta o pega un enlace antes de entregar.");
   if (content.length > 30000) return fail("El texto es demasiado largo. Acórtalo o comparte un enlace al documento.");
 
-  return db.$transaction(async (tx) => {
-    const key = { assignmentId: assignment.id, studentId: student.id };
-    const current = await tx.submission.findUnique({ where: { assignmentId_studentId: key }, select: { status: true } });
-    const allowed = canStillSubmit(assignment, current?.status ?? null, true, now);
-    if (!allowed.allowed) return fail(allowed.why);
-    const resubmitted = Boolean(current && current.status !== "DRAFT");
-    if (resubmitted) await archiveSubmissionVersion(tx, { ...key, institutionId: student.institutionId });
-    const fields = { content: content || null, fileUrls: link.link ? [link.link] : Prisma.JsonNull, status: "SUBMITTED" as const, submittedAt: now };
-    await tx.submission.upsert({
-      where: { assignmentId_studentId: key },
-      create: { institutionId: student.institutionId, ...key, enrollmentId: enrollment.id, ...fields },
-      update: { ...fields, score: null, feedback: null, gradedAt: null },
-    });
-    return { ok: true as const, courseId: assignment.courseId, assignmentId: assignment.id, resubmitted, late: Boolean(assignment.dueDate && assignment.dueDate < now) };
-  });
+  try {
+    return await db.$transaction(async (tx) => {
+      const key = { assignmentId: assignment.id, studentId: student.id };
+      const current = await tx.submission.findUnique({
+        where: { assignmentId_studentId: key }, select: { status: true, fileUrls: true },
+      });
+      const allowed = assignmentSubmissionAccess(assignment, current, true, now);
+      if (!allowed.allowed) return fail(allowed.why);
+      const resubmitted = Boolean(current && current.status !== "DRAFT");
+      if (resubmitted) await archiveSubmissionVersion(tx, { ...key, institutionId: student.institutionId });
+      const fields = {
+        content: content || null, fileUrls: link.link ? [link.link] : Prisma.JsonNull,
+        status: "SUBMITTED" as const, submittedAt: now,
+      };
+      await tx.submission.upsert({
+        where: { assignmentId_studentId: key },
+        create: { institutionId: student.institutionId, ...key, enrollmentId: enrollment.id, ...fields },
+        update: { ...fields, score: null, feedback: null, gradedAt: null },
+      });
+      return {
+        ok: true as const, courseId: assignment.courseId, assignmentId: assignment.id,
+        resubmitted, late: Boolean(assignment.dueDate && assignment.dueDate < now),
+      };
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  } catch (error) {
+    if (error instanceof SubmissionRevisionUnavailable) return fail(error.message);
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2034") {
+      return fail("Tu entrega cambió mientras intentabas enviarla. Recarga la página antes de volver a entregar.");
+    }
+    throw error;
+  }
 }

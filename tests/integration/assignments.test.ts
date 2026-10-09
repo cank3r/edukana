@@ -149,19 +149,19 @@ test("acceso: docente de otro curso, estudiantes y personas de otra institución
   assert.ok(await listAssignmentsForManager(manager(A.coordinator), A.courseId));
 });
 
-test("estudiante: entrega con texto y enlace https, y al reenviar queda guardada la versión anterior", async () => {
+test("estudiante: entrega texto y al reenviar queda guardada la versión anterior", async () => {
   rejected(await submitAssignment(student, { assignmentId, content: "  ", link: "" }, NOW), /respuesta o pega un enlace/);
   rejected(await submitAssignment(student, { assignmentId, content: "Texto", link: "http://sin-candado.test/doc" }, NOW), /https/);
   rejected(await submitAssignment(student, { assignmentId, content: "Texto", link: "javascript:alert(1)" }, NOW), /https/);
 
-  const first = ok(await submitAssignment(student, { assignmentId, content: "Primera versión", link: "https://docs.ejemplo.test/ensayo" }, NOW));
+  const first = ok(await submitAssignment(student, { assignmentId, content: "Primera versión" }, NOW));
   assert.equal(first.resubmitted, false);
   assert.equal(first.late, false);
   const saved = await db.submission.findUniqueOrThrow({ where: { assignmentId_studentId: { assignmentId, studentId: student.id } } });
   assert.equal(saved.institutionId, A.institutionId);
   assert.equal(saved.enrollmentId, "a_enrollment");
   assert.equal(saved.status, "SUBMITTED");
-  assert.deepEqual(saved.fileUrls, ["https://docs.ejemplo.test/ensayo"]);
+  assert.equal(saved.fileUrls, null);
   assert.equal(await db.submissionRevision.count({ where: { submissionId: saved.id } }), 0);
 
   const later = new Date(NOW.getTime() + 60_000);
@@ -259,29 +259,109 @@ test("corregir una nota: sin motivo se rechaza y con motivo queda en el historia
   assert.equal((await db.submission.findUniqueOrThrow({ where: { id: submission.id } })).feedback, "Buen trabajo");
 });
 
-test("borrar con entregas: se bloquea con notas publicadas, exige motivo y dice cuántas se pierden", async () => {
+test("borrar con entregas o notas: conserva la historia incluso en un período sin publicar", async () => {
   const row = (await listAssignmentsForManager(teacher, A.courseId))?.assignments.find((item) => item.id === assignmentId);
   assert.equal(row?.submissionCount, 2);
   assert.equal(row?.gradedCount, 1);
   assert.equal(row?.deleteBlocked, true);
   rejected(await deleteAssignment(teacher, { assignmentId, reason: "Se creó por error" }), /ocultarla/);
 
-  // Ocultar conserva entregas y notas, y el estudiante deja de verla.
   ok(await setAssignmentPublished(teacher, assignmentId, false));
   assert.equal(await assignmentForStudent(student, assignmentId, NOW), null);
-  assert.equal(await db.submission.count({ where: { assignmentId } }), 2);
-
   await db.gradingPeriod.update({ where: { id: "it_as_period" }, data: { isPublished: false } });
-  rejected(await deleteAssignment(teacher, { assignmentId }), /motivo/);
+  rejected(await deleteAssignment(teacher, { assignmentId }), /conservarse/);
+  rejected(await deleteAssignment(teacher, { assignmentId, reason: "Se creó por error" }), /conservarse/);
   assert.equal(await db.assignment.count({ where: { id: assignmentId } }), 1);
+  assert.equal(await db.submission.count({ where: { assignmentId } }), 2);
+  assert.equal(await db.gradeItem.count({ where: { assignmentId } }), 1);
+  assert.equal(await db.gradeEntryRevision.count({ where: { reason: "Error al sumar" } }), 1);
+  assert.equal(await db.auditLog.count({ where: { action: "ASSIGNMENT_DELETED", entityId: assignmentId } }), 0);
+});
 
-  assert.equal(ok(await deleteAssignment(teacher, { assignmentId, reason: "Se creó por error" })).deletedSubmissions, 2);
-  assert.equal(await db.assignment.count({ where: { id: assignmentId } }), 0);
-  assert.equal(await db.submission.count({ where: { assignmentId } }), 0);
-  assert.equal(await db.gradeItem.count({ where: { categoryId: "it_as_category" } }), 0);
-  assert.equal(await db.gradeEntryRevision.count({ where: { reason: "Error al sumar" } }), 0);
-  const log = await db.auditLog.findFirstOrThrow({ where: { action: "ASSIGNMENT_DELETED", entityId: assignmentId } });
-  assert.equal(log.userId, A.teacher.id);
-  assert.equal((log.changes as unknown as { reason: string; submissions: number }).reason, "Se creó por error");
-  assert.equal((log.changes as unknown as { reason: string; submissions: number }).submissions, 2);
+test("entrega con enlaces: rechaza reemplazarla y conserva texto, enlace, fecha e historia", async () => {
+  const id = ok(await saveAssignment(teacher, { ...draft, title: "Ensayo con enlaces", publish: true })).assignmentId;
+  ok(await submitAssignment(student, { assignmentId: id, content: "Original", link: "https://docs.ejemplo.test/original" }, NOW));
+  const original = await db.submission.findUniqueOrThrow({
+    where: { assignmentId_studentId: { assignmentId: id, studentId: student.id } },
+  });
+  const detail = await assignmentForStudent(student, id, NOW);
+  assert.equal(detail?.canSubmit, false);
+  assert.match(detail?.cannotSubmitReason ?? "", /enlaces/);
+  assert.equal((await listAssignmentsForStudent(student, A.courseId, NOW))?.assignments.find((item) => item.id === id)?.canSubmit, false);
+  for (const link of [undefined, "https://docs.ejemplo.test/nuevo"]) {
+    rejected(await submitAssignment(student, { assignmentId: id, content: "Cambio", link }, NOW), /enlaces/);
+  }
+  assert.deepEqual(await db.submission.findUniqueOrThrow({ where: { id: original.id } }), original);
+  assert.equal(await db.submissionRevision.count({ where: { submissionId: original.id } }), 0);
+});
+
+test("privacidad: el listado y el detalle siguen la publicación y la nota vigente del libro", async () => {
+  const id = ok(await saveAssignment(teacher, { ...draft, title: "Ensayo privado", publish: true, categoryId: "it_as_category" })).assignmentId;
+  ok(await submitAssignment(student, { assignmentId: id, content: "Trabajo" }, NOW));
+  const submission = await db.submission.findUniqueOrThrow({
+    where: { assignmentId_studentId: { assignmentId: id, studentId: student.id } },
+  });
+  ok(await gradeSubmission(teacher, { submissionId: submission.id, score: 20, feedback: "Comentario inicial" }, NOW));
+  const item = await db.gradeItem.findUniqueOrThrow({ where: { assignmentId: id } });
+  await db.gradeItem.update({ where: { id: item.id }, data: { isPublished: false } });
+  const hidden = await assignmentForStudent(student, id, NOW);
+  assert.equal(hidden?.submission?.graded, false);
+  assert.equal(hidden?.submission?.score, null);
+  assert.equal(hidden?.submission?.feedback, "");
+  assert.equal(JSON.stringify(hidden).includes("Comentario inicial"), false);
+  const hiddenList = (await listAssignmentsForStudent(student, A.courseId, NOW))?.assignments.find((task) => task.id === id);
+  assert.equal(hiddenList?.score, null);
+  assert.equal(hiddenList?.group, "Entregadas");
+
+  await db.gradeEntry.update({
+    where: { gradeItemId_enrollmentId: { gradeItemId: item.id, enrollmentId: "a_enrollment" } },
+    data: { score: 85, feedback: "Comentario corregido" },
+  });
+  await db.gradeItem.update({ where: { id: item.id }, data: { isPublished: true } });
+  assert.equal((await db.submission.findUniqueOrThrow({ where: { id: submission.id } })).score, 20);
+  const published = await assignmentForStudent(student, id, NOW);
+  assert.equal(published?.submission?.score, 85);
+  assert.equal(published?.submission?.feedback, "Comentario corregido");
+  assert.equal((await listAssignmentsForStudent(student, A.courseId, NOW))?.assignments.find((task) => task.id === id)?.score, 85);
+  rejected(await saveAssignment(teacher, { ...draft, assignmentId: id, maxScore: 60 }), /puntaje máximo/);
+  assert.equal((await db.assignment.findUniqueOrThrow({ where: { id } })).maxScore, 100);
+});
+
+test("una tarea sin columna conserva la nota y el comentario de su entrega", async () => {
+  const id = ok(await saveAssignment(teacher, { ...draft, title: "Ensayo sin columna", publish: true })).assignmentId;
+  ok(await submitAssignment(student, { assignmentId: id, content: "Trabajo" }, NOW));
+  const submission = await db.submission.findUniqueOrThrow({
+    where: { assignmentId_studentId: { assignmentId: id, studentId: student.id } },
+  });
+  ok(await gradeSubmission(teacher, { submissionId: submission.id, score: 0, feedback: "Revisar" }, NOW));
+  const view = await assignmentForStudent(student, id, NOW);
+  assert.equal(view?.submission?.graded, true);
+  assert.equal(view?.submission?.score, 0);
+  assert.equal(view?.submission?.feedback, "Revisar");
+  assert.equal((await listAssignmentsForStudent(student, A.courseId, NOW))?.assignments.find((task) => task.id === id)?.score, 0);
+});
+
+test("borrar también conserva borradores y notas sin entrega", async () => {
+  const draftId = ok(await saveAssignment(teacher, { ...draft, title: "Ensayo con borrador" })).assignmentId;
+  await db.submission.create({
+    data: {
+      institutionId: A.institutionId, assignmentId: draftId, studentId: student.id,
+      enrollmentId: "a_enrollment", content: "Borrador", status: "DRAFT",
+    },
+  });
+  rejected(await deleteAssignment(teacher, { assignmentId: draftId }), /conservarse/);
+  assert.equal((await listAssignmentsForManager(teacher, A.courseId))?.assignments.find((task) => task.id === draftId)?.deleteBlocked, true);
+  assert.equal(await db.submission.count({ where: { assignmentId: draftId } }), 1);
+
+  const id = ok(await saveAssignment(teacher, { ...draft, title: "Ensayo con nota solamente", categoryId: "it_as_category" })).assignmentId;
+  const item = await db.gradeItem.findUniqueOrThrow({ where: { assignmentId: id } });
+  await db.gradeEntry.create({
+    data: {
+      institutionId: A.institutionId, gradeItemId: item.id, enrollmentId: "a_enrollment",
+      score: 25, gradedById: A.teacher.id,
+    },
+  });
+  rejected(await deleteAssignment(teacher, { assignmentId: id }), /conservarse/);
+  assert.equal((await listAssignmentsForManager(teacher, A.courseId))?.assignments.find((task) => task.id === id)?.deleteBlocked, true);
+  assert.equal(await db.gradeEntry.count({ where: { gradeItemId: item.id } }), 1);
 });
