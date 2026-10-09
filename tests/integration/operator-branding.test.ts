@@ -7,7 +7,7 @@ import {
 } from "@/server/platform/brand-color";
 import { getInstitutionBranding, getPublicBrandingBySlug, updateBrandColor } from "@/server/platform/branding";
 import { createInstitution } from "@/server/platform/institutions";
-import { getInstitutionForOperator, listInstitutionsForOperator, resendAdminInvitation } from "@/server/platform/operator";
+import { getInstitutionForOperator, listInstitutionsForOperator, resendAdminInvitation, type OperatorInstitutionRow } from "@/server/platform/operator";
 import { suggestSlug } from "@/server/platform/slug";
 import { A, B, ensureSeed } from "./setup";
 
@@ -57,7 +57,7 @@ test("el listado trae todas las instituciones con sus propios conteos", async ()
   const rows = await listInstitutionsForOperator(OPERATOR.toUpperCase());
   assert.ok(rows);
   for (const institutionId of [A.institutionId, B.institutionId]) {
-    const row = rows.find((item) => item.id === institutionId);
+    const row: OperatorInstitutionRow | undefined = rows.find((item) => item.id === institutionId);
     assert.ok(row, `falta ${institutionId}`);
     assert.equal(row.activePeople, await db.user.count({ where: { institutionId, status: "ACTIVE" } }));
     assert.equal(row.courses, await db.course.count({ where: { institutionId, archivedAt: null } }));
