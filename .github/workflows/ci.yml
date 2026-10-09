@@ -1,0 +1,116 @@
+name: CI
+
+on:
+  push:
+    branches-ignore: [qa-capturas]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/edukana
+  DIRECT_URL: postgresql://ci:ci@127.0.0.1:5432/edukana
+  AUTH_SECRET: ci-build-only-secret-at-least-32-characters-long
+  CERTIFICATE_SECRET: ci-certificate-secret-at-least-32-characters
+  AUTH_URL: http://127.0.0.1:3000
+  APP_URL: http://127.0.0.1:3000
+  AUTH_TRUST_HOST: "true"
+  EDUKANA_INTEGRATION_DB: "1"
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_USER: ci, POSTGRES_PASSWORD: ci, POSTGRES_DB: edukana }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ci -d edukana" --health-interval 5s --health-timeout 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: Validar y generar Prisma
+        run: npx prisma validate && npx prisma generate
+      - name: Migrar PostgreSQL desde cero
+        run: npx prisma migrate deploy 2>&1 | tee -a ci.log
+      - name: Migraciones coinciden con schema.prisma
+        run: npx prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --exit-code 2>&1 | tee ci.log
+      - name: Pruebas unitarias
+        run: set -o pipefail; npm test 2>&1 | tee ci.log
+      - name: Pruebas de integración con dos instituciones
+        run: set -o pipefail; npm run test:integration 2>&1 | tee ci.log
+      - name: ESLint
+        run: set -o pipefail; npm run lint 2>&1 | tee ci.log
+      - name: TypeScript
+        run: set -o pipefail; npm run typecheck 2>&1 | tee ci.log
+      - name: Compilar producción
+        run: set -o pipefail; npm run build 2>&1 | tee ci.log
+      - name: Publicar el error como comentario del commit
+        if: failure()
+        run: |
+          { echo "**CI validate falló** en \`${GITHUB_REF_NAME}\`. Últimas líneas:"; echo; echo '```'; grep -v '^\s*$' ci.log | grep -iv "^ok \|^# Subtest\|duration_ms\|^    ---\|^    \.\.\." | tail -n 120 | cut -c1-400; echo '```'; } > comment.md
+          gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/comments" -F body=@comment.md --jq .html_url
+
+  browser-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      LOCAL_STORAGE_ROOT: /tmp/edukana-smoke-storage
+      LOCAL_STORAGE_SECRET: ci-local-storage-secret-at-least-32-characters
+      SMOKE_BASE_URL: http://127.0.0.1:3000
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_USER: ci, POSTGRES_PASSWORD: ci, POSTGRES_DB: edukana }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ci -d edukana" --health-interval 5s --health-timeout 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npx prisma generate && npx prisma migrate deploy
+      - name: Sembrar el Instituto Demo
+        run: npm run test:smoke:seed
+      - name: Compilar producción
+        run: npm run build
+      - name: Arrancar la aplicación
+        run: |
+          mkdir -p smoke-artifacts "$LOCAL_STORAGE_ROOT"
+          nohup npm run start -- -H 127.0.0.1 -p 3000 > smoke-artifacts/server.log 2>&1 &
+          for i in $(seq 1 60); do curl -fsS -o /dev/null http://127.0.0.1:3000/login && exit 0; sleep 2; done
+          tail -n 50 smoke-artifacts/server.log; exit 1
+      - name: Recorrido en navegador
+        id: tour
+        run: set -o pipefail; npm run test:smoke 2>&1 | tee smoke.log
+      - name: Publicar capturas e informe en la rama qa-capturas
+        if: always()
+        run: |
+          set -e
+          [ -d smoke-artifacts ] || exit 0
+          rm -rf /tmp/pub && mkdir -p /tmp/pub
+          cp -r smoke-artifacts/screenshots /tmp/pub/ 2>/dev/null || true
+          cp -r smoke-artifacts/texts /tmp/pub/ 2>/dev/null || true
+          cp smoke-artifacts/smoke-report.md /tmp/pub/ 2>/dev/null || true
+          tail -n 200 smoke-artifacts/server.log > /tmp/pub/server-tail.log 2>/dev/null || true
+          tail -n 150 smoke.log > /tmp/pub/recorrido-tail.log 2>/dev/null || true
+          printf '# Capturas del recorrido\n\nRama: `%s`\nCommit: `%s`\nResultado: %s\n' "$GITHUB_REF_NAME" "$GITHUB_SHA" "${{ steps.tour.outcome }}" > /tmp/pub/README.md
+          cd /tmp/pub && git init -q -b qa-capturas && git add -A
+          git -c user.name="edukana-ci" -c user.email="ci@users.noreply.github.com" commit -q -m "capturas de ${GITHUB_REF_NAME} @ ${GITHUB_SHA::7}"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" qa-capturas
+      - name: Publicar el resultado como comentario del commit
+        if: always()
+        run: |
+          { echo "**Recorrido en navegador: ${{ steps.tour.outcome }}** en \`${GITHUB_REF_NAME}\`. Capturas en la rama \`qa-capturas\`."; echo; echo '```'; tail -n 60 smoke.log 2>/dev/null | cut -c1-300; echo '```'; } > comment.md
+          gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/comments" -F body=@comment.md --jq .html_url

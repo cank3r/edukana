@@ -143,7 +143,7 @@ export class Tour {
       if (overflow.length) warnings.push(`Desbordamiento horizontal: ${overflow.join("; ")}.`);
     }
 
-    const file = `${String(this.order).padStart(2, "0")}-${slug(this.role)}-${slug(screen)}.png`;
+    const file = `${String(this.order).padStart(2, "0")}-${slug(this.role)}-${slug(screen)}.jpg`;
     const directory = join(process.cwd(), SMOKE_DIR, "screenshots", this.project);
     mkdirSync(directory, { recursive: true });
     await this.capture(join(directory, file)).catch((error) => {
@@ -154,7 +154,7 @@ export class Tour {
     const textDirectory = join(process.cwd(), SMOKE_DIR, "texts", this.project);
     mkdirSync(textDirectory, { recursive: true });
     const text = await this.page.locator("body").innerText({ timeout: 5_000 }).catch(() => "(no se pudo leer el texto)");
-    writeFileSync(join(textDirectory, file.replace(/\.png$/, ".txt")), `${this.page.url()}\n\n${text.replace(/\n{3,}/g, "\n\n")}\n`);
+    writeFileSync(join(textDirectory, file.replace(/\.jpg$/, ".txt")), `${this.page.url()}\n\n${text.replace(/\n{3,}/g, "\n\n")}\n`);
 
     const url = new URL(this.page.url());
     this.records.push({
@@ -190,7 +190,7 @@ export class Tour {
     const grow = Boolean(original) && extra > 0;
     if (grow && original) await this.page.setViewportSize({ width: original.width, height: Math.min(original.height + extra + 16, 12_000) });
     try {
-      await this.page.screenshot({ path, fullPage: true, animations: "disabled" });
+      await this.page.screenshot({ path, fullPage: true, animations: "disabled", type: "jpeg", quality: 55 });
     } finally {
       if (grow && original) await this.page.setViewportSize(original);
     }
