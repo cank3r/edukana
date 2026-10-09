@@ -7,12 +7,11 @@ import { canManageCourse, courseWhereForScope, resolveCourseReadScope, resolveCo
 import { calculateWeightedGrade } from "@/lib/lms";
 import { spanishLabel } from "@/lib/ux";
 import CourseTabs from "@/components/dashboard/CourseTabs";
-import { AssetUpload, AssignmentForm, AttendanceForm, CertificateForm, EnrollmentCompletionForm, EnrollmentForm, ExamAttemptForm, ExamForm, ExamReviewForm, GradebookForm, LessonForm, ProgressForm, PublishForm, QuestionForm, ReviewForm, ScheduleForm, SectionForm, SubmissionForm } from "@/components/dashboard/AcademicForms";
+import { AssetUpload, AttendanceForm, CertificateForm, EnrollmentCompletionForm, EnrollmentForm, ExamAttemptForm, ExamForm, ExamReviewForm, GradebookForm, LessonForm, ProgressForm, PublishForm, QuestionForm, ScheduleForm, SectionForm } from "@/components/dashboard/AcademicForms";
 import { Award, BarChart3, BookOpen, CalendarDays, CheckCircle2, ClipboardCheck, FileText, GraduationCap, PlayCircle, ShieldCheck, Upload, Users } from "lucide-react";
 
 const card = "rounded-2xl border border-slate-200 bg-white p-5";
 const details = "rounded-xl border border-slate-200 bg-white p-4 [&>summary]:cursor-pointer [&>summary]:font-semibold [&>summary]:text-blue-700";
-const date = (value: Date | null) => value ? new Intl.DateTimeFormat("es", { dateStyle: "medium", timeStyle: "short" }).format(value) : "Sin fecha";
 const dateOnly = (value: Date) => new Intl.DateTimeFormat("es", { dateStyle: "medium", timeZone: "UTC" }).format(value);
 const time = (minutes: number) => `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
 const day = ["", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
@@ -78,10 +77,7 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ c
       },
       assignments: {
         where: canManage ? {} : { isPublished: true },
-        orderBy: { dueDate: "asc" },
-        include: {
-          submissions: { where: isStudent ? { studentId: user.id } : {}, include: { student: { select: { name: true } }, assets: true } },
-            },
+        select: { id: true },
       },
       questionBank: { where: canManage ? {} : { id: "__restricted__" }, orderBy: { createdAt: "asc" } },
       exams: {
@@ -137,7 +133,19 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ c
 
       <section id="tareas-examenes"><Title icon={<ClipboardCheck />} title="Tareas y exámenes" subtitle="Crea, entrega y revisa actividades de evaluación desde un mismo espacio." /></section>
 
-      <section id="asignaciones"><Title icon={<ClipboardCheck />} title="Asignaciones y entregas" subtitle="Instrucciones, fechas, entrega del estudiante, revisión docente y puntuación." />{course.assignments.length ? <div className="space-y-4">{course.assignments.map((assignment) => <article className={card} key={assignment.id}><div className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-bold">{assignment.title}</h3><p className="text-xs text-slate-500">Entrega: {date(assignment.dueDate)} · {assignment.maxScore} puntos</p></div>{canManage && <div className="flex items-center gap-2"><span className="text-xs">{assignment.isPublished ? "Publicada" : "Borrador"}</span><PublishForm entity="assignment" id={assignment.id} published={assignment.isPublished} /></div>}</div><p className="mt-3 whitespace-pre-wrap text-sm">{assignment.instructions ?? assignment.description}</p>{isStudent && <div className="mt-4 space-y-3">{isReadOnlyStudent ? <p className="rounded-lg bg-slate-100 p-3 text-sm text-slate-700">Curso completado: la entrega está disponible solo para consulta.</p> : <SubmissionForm assignmentId={assignment.id} />}{assignment.submissions[0] && <><p className="text-sm">Estado: <strong>{spanishLabel(assignment.submissions[0].status)}</strong>{assignment.submissions[0].score != null && ` · ${assignment.submissions[0].score}/${assignment.maxScore}`}</p>{!isReadOnlyStudent && <AssetUpload courseId={course.id} assignmentId={assignment.id} submissionId={assignment.submissions[0].id} kind="DOCUMENT" />}</>}</div>}{canManage && <div className="mt-4 space-y-3">{assignment.submissions.map((submission) => <div className="rounded-xl border p-3" key={submission.id}><p className="font-semibold">{submission.student.name}</p><p className="my-2 whitespace-pre-wrap text-sm">{submission.content}</p>{submission.assets.map((asset) => <a href={`/api/assets/${asset.id}`} className="text-sm text-blue-700 underline" key={asset.id}>{asset.originalName}</a>)}<ReviewForm submissionId={submission.id} maxScore={assignment.maxScore} /></div>)}{!assignment.submissions.length && <p className="text-sm text-slate-500">Sin entregas.</p>}</div>}</article>)}</div> : <Empty text="No hay asignaciones." />}{canManage && <details className={`${details} mt-4`}><summary>Nueva asignación</summary><div className="mt-4"><AssignmentForm courseId={course.id} categories={categories} /></div></details>}</section>
+      <section id="asignaciones" className={card}>
+        <Title icon={<ClipboardCheck />} title="Tareas" subtitle={canManage
+          ? "Crea tareas, revisa las entregas y guarda las notas con su historial."
+          : "Consulta las instrucciones, entrega tu trabajo y revisa tus notas publicadas."} />
+        {!course.assignments.length && <p className="mb-4 text-sm text-slate-600">{canManage
+          ? "Este curso aún no tiene tareas. Abre Tareas y elige «Crear tarea» para empezar."
+          : "Tu docente aún no ha publicado tareas en este curso."}</p>}
+        {isReadOnlyStudent && <p className="mb-4 text-sm text-slate-600">Curso completado: la entrega está disponible solo para consulta.</p>}
+        {(canManage || isStudent) && <Link href={`/dashboard/aula/${course.id}/tareas`}
+          className="inline-flex min-h-11 items-center rounded-lg bg-blue-600 px-4 py-3 text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700">
+          {canManage ? "Gestionar tareas" : "Ver mis tareas"}
+        </Link>}
+      </section>
 
       <section id="examenes"><Title icon={<GraduationCap />} title="Exámenes y banco de preguntas" subtitle="Selección múltiple, verdadero/falso y respuesta corta con intentos y revisión." />{canManage && <div className="mb-4 grid gap-4 lg:grid-cols-2"><details className={details}><summary>Agregar pregunta al banco ({course.questionBank.length})</summary><div className="mt-4"><QuestionForm courseId={course.id} /></div></details><details className={details}><summary>Crear examen desde el banco</summary><div className="mt-4"><ExamForm courseId={course.id} categories={categories} /></div></details></div>}<div className="space-y-4">{course.exams.map((exam) => <article className={card} key={exam.id}><h3 className="font-bold">{exam.title}</h3><p className="text-sm text-slate-500">{exam.questions.length} preguntas · {exam.maxAttempts} intento(s) · {exam.durationMinutes ?? "Sin límite"} min</p>{exam.instructions && <p className="mt-2 text-sm">{exam.instructions}</p>}{isStudent && <div className="mt-4">{isReadOnlyStudent ? <p className="rounded-lg bg-slate-100 p-3 text-sm text-slate-700">Curso completado: los exámenes están disponibles solo para consulta.</p> : <ExamAttemptForm examId={exam.id} questions={exam.questions.map((q) => ({ id: q.bankItem.id, prompt: q.bankItem.prompt, type: q.bankItem.type, options: q.bankItem.options, points: q.points }))} />}{exam.attempts.map((attempt) => <p className="mt-2 text-sm" key={attempt.id}>Intento {attempt.attemptNumber}: {spanishLabel(attempt.status)} · {attempt.score ?? "Pendiente"}/{attempt.maxScore}</p>)}</div>}{canManage && <div className="mt-3 space-y-2">{exam.attempts.map((attempt) => <div className="rounded-lg bg-slate-50 p-3 text-sm" key={attempt.id}><p className="font-medium">{attempt.student.name}: {spanishLabel(attempt.status)} · {attempt.score ?? 0}/{attempt.maxScore ?? "—"}</p>{attempt.status === "SUBMITTED" && <div className="mt-3"><ExamReviewForm attemptId={attempt.id} answers={attempt.answers.filter((answer) => answer.bankItem.type === "SHORT_ANSWER").map((answer) => ({ id: answer.id, prompt: answer.bankItem.prompt, response: answer.response, points: exam.questions.find((question) => question.bankItemId === answer.bankItemId)?.points ?? 0, score: answer.score, feedback: answer.feedback }))} /></div>}</div>)}</div>}</article>)}</div></section>
 
