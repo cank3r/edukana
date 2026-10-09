@@ -43,7 +43,7 @@ export function DatePicker({ courseId, date, today }: { courseId: string; date: 
   );
 }
 
-type Row = { studentId: string; name: string; status: Status; note: string; withdrawn: boolean };
+type Row = { studentId: string; name: string; status: Status; note: string; withdrawn: boolean; completed: boolean };
 
 export function TakeAttendance({
   courseId,
@@ -111,6 +111,7 @@ export function TakeAttendance({
                 <legend className="font-semibold text-slate-950">
                   {row.name}
                   {row.withdrawn && <span className="ml-2 rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">Ya no está en el curso</span>}
+                  {row.completed && <span className="ml-2 rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-800">Completó el curso</span>}
                 </legend>
                 <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {OPTIONS.map((option) => (

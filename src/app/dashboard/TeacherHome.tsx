@@ -32,10 +32,10 @@ export async function TeacherHome({ user, userName }: Props) {
         <>
           <section className="mb-8" aria-labelledby="por-calificar">
             <h2 id="por-calificar" className={sectionTitle}>Por calificar</h2>
-            {home.toGrade.length === 0 ? (
+            {home.toGrade.length === 0 && home.toReview.length === 0 ? (
               <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
                 <p className="font-semibold text-emerald-900">Todo al día</p>
-                <p className="text-sm text-emerald-800">No hay entregas esperando nota.</p>
+                <p className="text-sm text-emerald-800">No hay entregas ni exámenes esperando revisión.</p>
               </div>
             ) : (
               <ul className="space-y-3">
@@ -46,6 +46,18 @@ export async function TeacherHome({ user, userName }: Props) {
                       <span className="min-w-0 flex-1">
                         <span className="block break-words font-semibold text-slate-950">{course.name}</span>
                         <span className="block text-sm text-slate-700">{plural(course.toGrade, "entrega espera", "entregas esperan")} nota</span>
+                      </span>
+                      <ChevronRight className="shrink-0 text-slate-500" size={18} aria-hidden="true" />
+                    </Link>
+                  </li>
+                ))}
+                {home.toReview.map((exam) => (
+                  <li key={exam.examId}>
+                    <Link href={`/dashboard/aula/${exam.courseId}/examenes/${exam.examId}/resultados`} className="flex min-h-14 items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 hover:border-amber-400">
+                      <span className="shrink-0 rounded-lg bg-white p-2 text-amber-700"><ClipboardCheck size={20} aria-hidden="true" /></span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block break-words font-semibold text-slate-950">{exam.examTitle}</span>
+                        <span className="block text-sm text-slate-700">{exam.courseName} · {plural(exam.attempts, "intento tiene", "intentos tienen")} respuestas por revisar</span>
                       </span>
                       <ChevronRight className="shrink-0 text-slate-500" size={18} aria-hidden="true" />
                     </Link>

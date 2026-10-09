@@ -89,6 +89,44 @@ async function publishedOutline(client: Prisma.TransactionClient, institutionId:
   });
 }
 
+/** Porcentaje con dos decimales; sin lecciones publicadas el avance es 0. */
+export function progressPercentOf(completedLessons: number, totalLessons: number) {
+  return totalLessons ? Math.round((completedLessons / totalLessons) * 10000) / 100 : 0;
+}
+
+/**
+ * Recalcula el avance de todas las matrículas activas del curso con las lecciones publicadas
+ * de ahora. Se llama dentro de la misma transacción que publica, oculta, crea o borra contenido,
+ * para que «20 % · 1 de 6» nunca quede desfasado. Las matrículas completadas no se tocan.
+ */
+export async function recalculateCourseProgress(tx: Prisma.TransactionClient, institutionId: string, courseId: string) {
+  const sections = await publishedOutline(tx, institutionId, courseId);
+  const ordered = sections.flatMap((section) => section.lessons.map((item) => item.id));
+  const enrollments = await tx.enrollment.findMany({
+    where: { institutionId, courseId, status: "ACTIVE" },
+    select: { id: true, progressPercent: true },
+  });
+  if (enrollments.length === 0) return;
+  const done = ordered.length
+    ? await tx.lessonProgress.groupBy({
+        by: ["enrollmentId"],
+        where: { institutionId, enrollmentId: { in: enrollments.map((row) => row.id) }, completed: true, lessonId: { in: ordered } },
+        _count: { _all: true },
+      })
+    : [];
+  const completedBy = new Map(done.map((row) => [row.enrollmentId, row._count._all]));
+  // Una actualización por porcentaje distinto, no una por estudiante.
+  const byPercent = new Map<number, string[]>();
+  for (const row of enrollments) {
+    const percent = progressPercentOf(completedBy.get(row.id) ?? 0, ordered.length);
+    if (percent === row.progressPercent) continue;
+    byPercent.set(percent, [...(byPercent.get(percent) ?? []), row.id]);
+  }
+  for (const [progressPercent, ids] of byPercent) {
+    await tx.enrollment.updateMany({ where: { id: { in: ids }, institutionId }, data: { progressPercent } });
+  }
+}
+
 async function manageableCourse(actor: Actor, courseId: string) {
   const capabilities = await getEffectiveCapabilities(actor.institutionId, actor.role);
   const where = courseWhereForScope(actor.institutionId, resolveCourseWriteScope(actor, capabilities));
@@ -250,7 +288,7 @@ export async function setLessonCompleted(actor: Actor, input: LessonRef & { comp
       where: { enrollmentId: enrollment.id, completed: true, lessonId: { in: ordered } },
     });
     const totalLessons = ordered.length;
-    const progressPercent = totalLessons ? Math.round((completedLessons / totalLessons) * 10000) / 100 : 0;
+    const progressPercent = progressPercentOf(completedLessons, totalLessons);
     await tx.enrollment.update({ where: { id: enrollment.id }, data: { progressPercent } });
 
     const index = ordered.indexOf(lesson.id);

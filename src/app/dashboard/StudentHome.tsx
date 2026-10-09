@@ -114,10 +114,15 @@ export function CourseCard({ course }: { course: StudentCourse }) {
         {course.completed && <span className="shrink-0 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800">Completado</span>}
       </div>
       <p className="mt-1 text-sm text-slate-600">{course.teacherName}</p>
-      <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={course.progressPercent} aria-label={`Avance en ${course.name}`}>
-        <div className="h-full rounded-full bg-blue-700" style={{ width: `${course.progressPercent}%` }} />
-      </div>
-      <p className="mt-1 text-sm text-slate-700">{course.progressPercent}% completado</p>
+      {/* Un curso completado dice «Completado» (arriba) y su nota final, no un avance de lecciones. */}
+      {!course.completed && (
+        <>
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={course.progressPercent} aria-label={`Avance en ${course.name}`}>
+            <div className="h-full rounded-full bg-blue-700" style={{ width: `${course.progressPercent}%` }} />
+          </div>
+          <p className="mt-1 text-sm text-slate-700">{course.progressPercent}% completado</p>
+        </>
+      )}
       {course.finalGrade !== null && <p className="mt-2 text-sm text-slate-900">Nota final: <strong>{course.finalGrade}</strong></p>}
     </Link>
   );
