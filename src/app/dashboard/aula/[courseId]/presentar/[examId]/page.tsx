@@ -38,7 +38,7 @@ export default async function TakeExamPage({ params }: { params: Promise<{ cours
   if (!student) return <NothingHere title="Examen" message="Esta página es para que los estudiantes presenten sus exámenes." href={`/dashboard/aula/${courseId}`} label="Volver al curso" />;
   const intro = await getExamIntro(student, examId);
   if (!intro || intro.courseId !== courseId) {
-    return <NothingHere title="Examen" message="No encontramos este examen entre los de tus cursos. Puede que tu docente lo haya retirado." href={listHref} label="Ver mis exámenes" />;
+    return <NothingHere title="Examen" message="Este examen no está disponible para ti. Puede que tu docente lo haya retirado o que ya no tengas un intento vigente. Si estabas respondiendo, consulta a tu docente." href={listHref} label="Ver mis exámenes" />;
   }
 
   const ongoing = intro.startBlock === "course_finished" ? null : await getOngoingAttempt(student, examId);
@@ -60,6 +60,10 @@ export default async function TakeExamPage({ params }: { params: Promise<{ cours
         resultHref={`${listHref}/${examId}/resultado?intento=${ongoing.attemptId}`}
       />
     );
+  }
+  // El tiempo o la matrícula pueden cambiar entre las dos lecturas. No ofrecer otro inicio con datos anteriores.
+  if (intro.hasOngoingAttempt && intro.startBlock !== "course_finished") {
+    return <NothingHere title="Examen" message="No pudimos retomar tu intento. Puede que haya terminado el tiempo o que tu matrícula haya cambiado. Vuelve a consultar; si el problema continúa, habla con tu docente." href={listHref} label="Ver mis exámenes" />;
   }
 
   const resultHref = `${listHref}/${examId}/resultado`;

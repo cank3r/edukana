@@ -27,7 +27,7 @@ export default async function ExamResultPage({
 
   const intro = await getExamIntro(student, examId);
   if (!intro || intro.courseId !== courseId) {
-    return <NothingHere title="Resultado del examen" message="No encontramos este examen entre los de tus cursos." href={`/dashboard/aula/${courseId}/presentar`} label="Ver mis exámenes" />;
+    return <NothingHere title="Resultado del examen" message="El resultado de este examen no está disponible aquí. Puede que tu docente haya retirado el examen. Si necesitas confirmar tu entrega, consulta a tu docente." href={`/dashboard/aula/${courseId}/presentar`} label="Ver mis exámenes" />;
   }
   const attemptId = typeof requested === "string" && requested ? requested : intro.lastFinishedAttemptId;
   const result = attemptId ? await getAttemptResult(student, attemptId) : null;
@@ -35,7 +35,7 @@ export default async function ExamResultPage({
     return (
       <NothingHere
         title="Resultado del examen"
-        message={intro.hasOngoingAttempt ? "Tienes este examen en curso. Cuando lo envíes, aquí verás tu resultado." : intro.hasUnsubmittedExpiredAttempt
+        message={intro.hasOngoingAttempt ? "Tienes este examen en curso. Continúa para enviar tus respuestas. Podrás consultar el resultado cuando esté disponible." : intro.hasUnsubmittedExpiredAttempt
           ? "El tiempo de un intento terminó, pero aún no hay un envío confirmado. No hay resultado para ese intento. Si acabas de enviarlo, espera y vuelve a consultar; si no, habla con tu docente."
           : "Todavía no tienes un resultado de este examen."}
         href={examHref}
