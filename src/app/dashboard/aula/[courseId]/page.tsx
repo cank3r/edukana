@@ -142,7 +142,7 @@ export default async function CourseHomePage({ params }: { params: Promise<{ cou
 
           <nav aria-label="Áreas del curso" className="mb-8 grid gap-3 sm:grid-cols-2">
             <AreaCard href={`${base}/tareas`} icon={<ClipboardCheck />} title="Tareas" text="Mira qué tienes pendiente y entrega." />
-            <AreaCard href={`${base}/examenes`} icon={<GraduationCap />} title="Exámenes" text="Presenta tus exámenes y revisa los resultados." />
+            <AreaCard href={`${base}/presentar`} icon={<GraduationCap />} title="Exámenes" text="Presenta tus exámenes y revisa los resultados." />
             <AreaCard href={`${base}/mis-notas`} icon={<BarChart3 />} title="Mis notas" text="Consulta cómo vas en el curso." />
             <AreaCard href={`${base}/clases`} icon={<Video />} title="Clases en vivo" text="Entra a la próxima clase." />
           </nav>
