@@ -139,11 +139,11 @@ test("acciones validan roles y tenant transaccionalmente y auditan activación y
 });
 
 test("DAL deriva identidad del padre y responde null a IDs sin vínculo", () => {
-  const source = readFileSync(join(process.cwd(), "src", "lib", "guardian-portal.ts"), "utf8");
-  assert.match(source, /parentId: parent\.id/);
-  assert.match(source, /studentId,/);
+  const source = readFileSync(join(process.cwd(), "src", "server", "family", "guardian-portal.ts"), "utf8");
+  assert.match(source, /parentId: actor\.id/);
+  assert.match(source, /\.\.\.\(studentId !== undefined \? \{ studentId \} : \{\}\)/);
   assert.match(source, /status: "ACTIVE"/);
-  assert.match(source, /student: \{ institutionId: parent\.institutionId, role: "STUDENT", status: "ACTIVE" \}/);
-  assert.match(source, /if \(!guardianship\) return null/);
-  assert.doesNotMatch(source, /select: \{.*email: true/);
+  assert.match(source, /student: \{ institutionId: actor\.institutionId, role: "STUDENT", status: "ACTIVE" \}/);
+  assert.match(source, /if \(!access \|\| access\.student\.id !== studentId\) return null/);
+  assert.doesNotMatch(source, /email: true/);
 });

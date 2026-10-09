@@ -67,7 +67,7 @@ test("reserva el portal personal para estudiantes", () => {
 
 test("usa cargas directas firmadas y restringe quién puede prepararlas", () => {
   const route = readFileSync(join(process.cwd(), "src", "app", "api", "assets", "route.ts"), "utf8");
-  const form = readFileSync(join(process.cwd(), "src", "components", "dashboard", "AcademicForms.tsx"), "utf8");
+  const form = readFileSync(join(process.cwd(), "src", "app", "dashboard", "aula", "[courseId]", "contenido", "ContentEditor.tsx"), "utf8");
   assert.match(route, /createPrivateAssetUpload/);
   assert.match(route, /getEffectiveCapabilities\(user\.institutionId, user\.role\)/);
   assert.match(route, /capabilities\.has\("course\.manage"\)/);
@@ -113,13 +113,17 @@ test("aísla finanzas y horarios en todas las capas visibles", () => {
 test("las acciones del servidor usan el registro central de capacidades", () => {
   const actions = readFileSync(join(process.cwd(), "src", "app", "dashboard", "actions.ts"), "utf8");
   const academicActions = readFileSync(join(process.cwd(), "src", "app", "dashboard", "academico", "actions.ts"), "utf8");
+  const charges = readFileSync(join(process.cwd(), "src", "server", "finance", "charges.ts"), "utf8");
+  const lessonProgress = readFileSync(join(process.cwd(), "src", "server", "courses", "lesson-progress.ts"), "utf8");
   assert.match(actions, /userHasCapability\(user, capability\)/);
   assert.match(academicActions, /getEffectiveCapabilities\(user\.institutionId, user\.role\)/);
   for (const source of [actions, academicActions]) {
     assert.doesNotMatch(source, /requireUser\(\[/);
   }
-  assert.match(actions, /requireUser\("finance\.manage"\)/);
-  assert.match(academicActions, /requireUser\("course\.participate"\)/);
+  assert.match(actions, /requireUser\("announcement\.publish"\)/);
+  assert.match(academicActions, /requireUser\("course\.manage"\)/);
+  assert.match(charges, /getEffectiveCapabilities\(actor\.institutionId, actor\.role\)\)\.has\("finance\.manage"\)/);
+  assert.match(lessonProgress, /if \(!capabilities\.has\("course\.participate"\)\)/);
 });
 
 
