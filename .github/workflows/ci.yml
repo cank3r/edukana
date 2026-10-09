@@ -94,7 +94,7 @@ jobs:
       - name: Recorrido en navegador
         id: tour
         run: set -o pipefail; npm run test:smoke 2>&1 | tee smoke.log
-      - name: Publicar capturas e informe en la rama qa-capturas
+      - name: Preparar capturas e informe como artefacto
         if: always()
         run: |
           set -e
@@ -106,11 +106,16 @@ jobs:
           tail -n 200 smoke-artifacts/server.log > /tmp/pub/server-tail.log 2>/dev/null || true
           tail -n 150 smoke.log > /tmp/pub/recorrido-tail.log 2>/dev/null || true
           printf '# Capturas del recorrido\n\nRama: `%s`\nCommit: `%s`\nResultado: %s\n' "$GITHUB_REF_NAME" "$GITHUB_SHA" "${{ steps.tour.outcome }}" > /tmp/pub/README.md
-          cd /tmp/pub && git init -q -b qa-capturas && git add -A
-          git -c user.name="edukana-ci" -c user.email="ci@users.noreply.github.com" commit -q -m "capturas de ${GITHUB_REF_NAME} @ ${GITHUB_SHA::7}"
-          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" qa-capturas
+      - name: Guardar capturas e informe
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: capturas-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: /tmp/pub/
+          if-no-files-found: warn
+          retention-days: 14
       - name: Publicar el resultado como comentario del commit
         if: always()
         run: |
-          { echo "**Recorrido en navegador: ${{ steps.tour.outcome }}** en \`${GITHUB_REF_NAME}\`. Capturas en la rama \`qa-capturas\`."; echo; echo '```'; tail -n 60 smoke.log 2>/dev/null | cut -c1-300; echo '```'; } > comment.md
+          { echo "**Recorrido en navegador: ${{ steps.tour.outcome }}** en \`${GITHUB_REF_NAME}\`. Capturas e informe en los artefactos de esta ejecución: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}."; echo; echo '```'; tail -n 60 smoke.log 2>/dev/null | cut -c1-300; echo '```'; } > comment.md
           gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/comments" -F body=@comment.md --jq .html_url
