@@ -1,55 +1,86 @@
-import Image from "next/image";
 import Link from "next/link";
-import { AnnouncementContent } from "@/components/dashboard/AnnouncementContent";
-import { safeAnnouncementHref } from "@/lib/announcements";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
+import { AlertTriangle, CalendarDays, ChevronRight, Users } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { getEffectiveCapabilities } from "@/lib/authorization";
-import { getLinkedChildren, getParentChildView } from "@/lib/guardian-portal";
-import { spanishLabel } from "@/lib/ux";
-import { BookOpen, CalendarDays, CheckCircle2, CreditCard, Megaphone, Users } from "lucide-react";
+import { listMyChildren } from "@/server/family/guardian-portal";
 
-const card = "rounded-xl border border-slate-200 bg-white p-4";
-const money = (amount: number, currency: string) => new Intl.NumberFormat("es-DO", { style: "currency", currency, maximumFractionDigits: 0 }).format(amount);
-const date = (value: Date | null) => value ? new Intl.DateTimeFormat("es", { dateStyle: "medium" }).format(value) : "Sin fecha";
-const dateOnly = (value: Date) => new Intl.DateTimeFormat("es", { dateStyle: "medium", timeZone: "UTC" }).format(value);
-const time = (minutes: number) => `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
-const days = ["", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
-
-export default async function ChildrenPortalPage({ searchParams }: { searchParams: Promise<{ child?: string }> }) {
+export default async function ChildrenPortalPage({ searchParams }: { searchParams: Promise<{ child?: string | string[] }> }) {
   const session = await auth();
   const user = session?.user;
   if (!user?.id || !user.institutionId) redirect("/login");
   const capabilities = await getEffectiveCapabilities(user.institutionId, user.role);
   if (user.role !== "PARENT" || !capabilities.has("child.portal.view")) redirect("/dashboard");
-  const children = await getLinkedChildren(user, capabilities);
-  if (!children.length) return <EmptyPortal />;
-  const requestedChild = (await searchParams).child;
-  const selectedId = requestedChild ?? children[0].student.id;
-  if (requestedChild && !children.some((link) => link.student.id === requestedChild)) notFound();
-  const view = await getParentChildView(user, capabilities, selectedId);
-  if (!view) notFound();
 
-  return <div className="mx-auto max-w-6xl p-4 sm:p-8"><header className="mb-6"><p className="text-sm font-semibold text-blue-700">Portal de tutores</p><h1 className="text-2xl font-bold">Mis hijos</h1><p className="mt-1 text-sm text-slate-500">Solo se muestran áreas autorizadas para el vínculo activo seleccionado.</p></header>
-    <nav aria-label="Seleccionar hijo" className="mb-6 flex flex-wrap gap-2">{children.map((link) => <Link key={link.id} href={`/dashboard/hijos?child=${encodeURIComponent(link.student.id)}`} aria-current={link.student.id === selectedId ? "page" : undefined} className={`rounded-full px-4 py-2 text-sm font-semibold ${link.student.id === selectedId ? "bg-blue-600 text-white" : "border border-slate-300 bg-white text-slate-700"}`}>{link.student.name}</Link>)}</nav>
-    <div className="mb-6 rounded-2xl border border-blue-200 bg-blue-50 p-5"><h2 className="text-xl font-bold text-blue-950">{view.child.name}</h2><p className="text-sm text-blue-800">Las autorizaciones se aplican por separado a este vínculo.</p></div>
+  // `listMyChildren` vuelve a comprobar el vínculo activo y los permisos de cada hijo en el servidor.
+  const children = await listMyChildren({ id: user.id, institutionId: user.institutionId, role: user.role });
+  if (children.length === 0) return <EmptyPortal />;
 
-    <div className="space-y-8">
-      {view.permissions.academics && <section><Heading icon={<BookOpen />} title="Progreso académico" />{view.courses.length ? <div className="grid gap-4 md:grid-cols-2">{view.courses.map((enrollment) => <article className={card} key={enrollment.id}><h3 className="font-bold">{enrollment.course.name}</h3><p className="text-xs text-slate-500">{enrollment.course.code ?? "Sin código"} · {spanishLabel(enrollment.status)}</p><p className="mt-3 text-2xl font-bold text-blue-700">{Math.round(enrollment.progressPercent)}%</p><p className="text-xs text-slate-500">Progreso registrado</p>{enrollment.course.assignments.length > 0 && <div className="mt-4"><h4 className="text-sm font-semibold">Próximas tareas</h4>{enrollment.course.assignments.map((task) => <p className="mt-1 text-sm text-slate-600" key={task.id}>{task.title} · {date(task.dueDate)}</p>)}</div>}{enrollment.gradeEntries.length > 0 && <div className="mt-4"><h4 className="text-sm font-semibold">Calificaciones publicadas</h4>{enrollment.gradeEntries.map((grade, index) => <p className="mt-1 text-sm text-slate-600" key={`${grade.gradeItem.title}-${index}`}>{grade.gradeItem.title}: {grade.isExcused ? "Excusado" : `${grade.score ?? "Pendiente"}/${grade.gradeItem.maxScore}`}</p>)}</div>}</article>)}</div> : <Empty text="No hay cursos activos o completados para este estudiante." />}</section>}
+  // Enlaces antiguos (`?child=`) y familias con un solo hijo van directo al resumen.
+  const requested = (await searchParams).child;
+  const target = typeof requested === "string" ? children.find((child) => child.studentId === requested) : children.length === 1 ? children[0] : undefined;
+  if (target) redirect(`/dashboard/hijos/${encodeURIComponent(target.studentId)}`);
 
-      {view.permissions.attendance && <section><Heading icon={<Users />} title="Asistencia" />{view.attendance.length ? <div className="space-y-2">{view.attendance.map((record) => <div className={card} key={record.id}><p className="font-semibold">{record.course.name}</p><p className="text-sm text-slate-600">{dateOnly(record.date)} · {spanishLabel(record.status)}</p></div>)}</div> : <Empty text="No hay registros de asistencia disponibles." />}</section>}
-
-      {view.permissions.schedule && <section><Heading icon={<CalendarDays />} title="Horario y eventos" /><div className="grid gap-3 md:grid-cols-2">{view.schedule.map((slot) => <article className={card} key={slot.id}><p className="font-semibold">{slot.course.name}</p><p className="text-sm text-slate-600">{days[slot.weekday]} {time(slot.startMinutes)}–{time(slot.endMinutes)} · {slot.classroom}</p></article>)}{view.events.map((event) => <article className={card} key={event.id}><p className="font-semibold">{event.title}</p><p className="text-sm text-slate-600">{date(event.startDate)}</p></article>)}</div>{!view.schedule.length && !view.events.length && <Empty text="No hay horarios o eventos disponibles." />}</section>}
-
-      {view.permissions.announcements && <section><Heading icon={<Megaphone />} title="Avisos relevantes" />{view.announcements.length ? <div className="space-y-3">{view.announcements.map((announcement) => { const safeUrl = announcement.externalUrl ? safeAnnouncementHref(announcement.externalUrl) : null; return <article className={card} key={announcement.id}><h3 className="font-semibold">{announcement.title}</h3><div className="mt-2"><AnnouncementContent content={announcement.content} mentionIds={new Set(announcement.mentions.map((mention) => mention.userId))} /></div>{announcement.assets.length > 0 && <div className="mt-3 grid gap-2 sm:grid-cols-2">{announcement.assets.map((asset) => asset.mimeType.startsWith("image/") ? <Image alt={asset.originalName} className="h-40 w-full rounded-lg object-cover" height={320} key={asset.id} src={`/api/assets/${asset.id}`} unoptimized width={640} /> : <video aria-label={asset.originalName} className="h-40 w-full rounded-lg bg-black object-contain" controls key={asset.id} preload="metadata" src={`/api/assets/${asset.id}`} />)}</div>}{announcement.relatedCourses.length > 0 && <div className="mt-3 grid gap-2 sm:grid-cols-2">{announcement.relatedCourses.map(({ course }) => <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm" key={course.id}><strong>{course.name}</strong><span className="block text-xs text-slate-500">{course.code ?? "Sin código"}</span><span className="mt-1 block text-xs text-slate-500">Vista informativa para tutores.</span></div>)}</div>}{safeUrl && <a className="mt-3 inline-block text-sm font-semibold text-blue-700 underline" href={safeUrl} rel="noopener noreferrer" target={safeUrl.startsWith("https:") ? "_blank" : undefined}>Abrir enlace relacionado</a>}<p className="mt-2 text-xs text-slate-400">{date(announcement.publishedAt)}</p></article>; })}</div> : <Empty text="No hay avisos disponibles para este vínculo." />}</section>}
-
-      {view.permissions.finance && <section><Heading icon={<CreditCard />} title="Estado de cuenta autorizado" />{view.finances.length ? <div className="space-y-2">{view.finances.map((payment) => <article className={card} key={payment.id}><div className="flex justify-between gap-3"><div><p className="font-semibold">{payment.concept}</p><p className="text-xs text-slate-500">{date(payment.dueDate)} · {spanishLabel(payment.status)}</p></div><strong>{money(payment.amount, payment.currency)}</strong></div></article>)}</div> : <Empty text="No hay cargos disponibles." />}</section>}
-
-      {!Object.values(view.permissions).some(Boolean) && <Empty text="Este vínculo está activo, pero todavía no tiene áreas de información autorizadas." />}
+  return (
+    <div className="mx-auto max-w-4xl p-4 sm:p-8">
+      <header className="mb-6">
+        <h1 className="text-2xl font-bold" style={{ color: "var(--navy)" }}>Mis hijos</h1>
+        <p className="mt-1 text-sm text-slate-600">Elige a quién quieres ver. Aquí solo se consulta: no se cambia nada.</p>
+      </header>
+      <ul className="grid gap-3 sm:grid-cols-2">
+        {children.map((child) => (
+          <li key={child.studentId}>
+            <Link href={`/dashboard/hijos/${encodeURIComponent(child.studentId)}`} className="block min-h-11 rounded-xl border border-slate-200 bg-white p-4 hover:border-blue-300 hover:shadow-sm">
+              <div className="flex items-start justify-between gap-3">
+                <h2 className="min-w-0 break-words text-lg font-bold text-slate-900">{child.name}</h2>
+                <ChevronRight className="shrink-0 text-slate-400" size={20} aria-hidden="true" />
+              </div>
+              {child.activeCourses !== null && (
+                <>
+                  <p className="mt-2 text-sm text-slate-700">
+                    {child.activeCourses === 0 ? "Sin cursos en marcha" : child.activeCourses === 1 ? "1 curso en marcha" : `${child.activeCourses} cursos en marcha`}
+                    {child.averageProgress !== null && ` · avance promedio ${child.averageProgress} %`}
+                  </p>
+                  {child.averageProgress !== null && (
+                    <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-200" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={child.averageProgress} aria-label={`Avance promedio de ${child.name}`}>
+                      <div className="h-full rounded-full bg-blue-700" style={{ width: `${child.averageProgress}%` }} />
+                    </div>
+                  )}
+                </>
+              )}
+              {child.permissions.schedule && (
+                <p className="mt-3 flex items-start gap-2 text-sm text-slate-700">
+                  <CalendarDays className="mt-0.5 shrink-0 text-blue-700" size={16} aria-hidden="true" />
+                  <span>{child.nextClass ? `Próxima clase: ${child.nextClass.title} (${child.nextClass.courseName}) · ${child.nextClass.when}` : "Sin clases en vivo programadas"}</span>
+                </p>
+              )}
+              {child.alerts.length > 0 && (
+                <ul className="mt-3 space-y-1">
+                  {child.alerts.map((alert) => (
+                    <li key={alert.kind} className="flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-900">
+                      <AlertTriangle className="mt-0.5 shrink-0" size={16} aria-hidden="true" />{alert.text}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <p className="mt-3 text-sm font-semibold text-blue-700">Ver su resumen</p>
+            </Link>
+          </li>
+        ))}
+      </ul>
     </div>
-  </div>;
+  );
 }
 
-function EmptyPortal() { return <div className="mx-auto max-w-2xl p-8"><div className="rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center"><CheckCircle2 className="mx-auto mb-3 text-slate-300" size={40} /><h1 className="text-xl font-bold">Sin hijos vinculados</h1><p className="mt-2 text-sm text-slate-500">No existe un vínculo activo para tu cuenta. No se muestran datos institucionales ni estudiantiles.</p></div></div>; }
-function Heading({ icon, title }: { icon: React.ReactNode; title: string }) { return <h2 className="mb-3 flex items-center gap-2 text-lg font-bold"><span className="text-blue-700">{icon}</span>{title}</h2>; }
-function Empty({ text }: { text: string }) { return <p className="rounded-xl border border-dashed bg-white p-6 text-center text-sm text-slate-500">{text}</p>; }
+function EmptyPortal() {
+  return (
+    <div className="mx-auto max-w-2xl p-4 sm:p-8">
+      <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
+        <Users className="mx-auto mb-3 text-slate-400" size={40} aria-hidden="true" />
+        <h1 className="text-xl font-bold" style={{ color: "var(--navy)" }}>Todavía no tienes hijos vinculados</h1>
+        <p className="mt-2 text-sm text-slate-700">Para ver el avance, las notas y la asistencia de tu hijo o hija, la institución debe vincular tu cuenta con la suya.</p>
+        <p className="mt-2 text-sm text-slate-700">Pídelo en la administración o la coordinación de la institución. Cuando activen el vínculo, aparecerá aquí sin que tengas que hacer nada más.</p>
+      </div>
+    </div>
+  );
+}
