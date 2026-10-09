@@ -32,7 +32,6 @@ async function question(kind: "mc" | "tf" | "open", courseId = A.courseId, actor
     open: { type: "SHORT_ANSWER", prompt: `${TAG} Explica el ciclo del agua.`, answer: "Evaporación, condensación y lluvia", points: 3 },
   }[kind];
   const result = await createQuestion(actor, courseId, input);
-  assert.ok(result.ok, !result.ok ? result.message : "");
   if (!result.ok) throw new Error(result.message);
   return result.id;
 }
@@ -43,7 +42,6 @@ function examInput(questions: ExamInput["questions"], extra: Partial<ExamInput> 
 
 async function exam(questions: ExamInput["questions"], extra: Partial<ExamInput> = {}) {
   const result = await createExam(A.teacher, A.courseId, examInput(questions, extra));
-  assert.ok(result.ok, !result.ok ? result.message : "");
   if (!result.ok) throw new Error(result.message);
   return result.id;
 }
