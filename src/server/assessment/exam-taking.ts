@@ -30,6 +30,8 @@ export type StudentExamSummary = {
   best: { score: number; maxScore: number } | null;
   pendingReview: boolean;
   hasOngoingAttempt: boolean;
+  /** Venció el tiempo, pero no se ha confirmado el envío. No es un resultado. */
+  hasUnsubmittedExpiredAttempt: boolean;
   /** Intento terminado más reciente, para «Ver mi resultado». */
   lastFinishedAttemptId: string | null;
   canStart: boolean;
@@ -124,6 +126,17 @@ function isOngoing(attempt: Pick<AttemptSummary, "status" | "expiresAt">, now: D
   return attempt.status === "IN_PROGRESS" && attempt.expiresAt !== null && attempt.expiresAt > now;
 }
 
+/** Ocultar el examen no interrumpe un intento propio vigente con matrícula activa. */
+function ongoingAttemptOf(actor: Actor, now: Date) {
+  return {
+    studentId: actor.id,
+    institutionId: actor.institutionId,
+    status: "IN_PROGRESS",
+    expiresAt: { gt: now },
+    enrollment: { studentId: actor.id, institutionId: actor.institutionId, status: "ACTIVE" },
+  } satisfies Prisma.ExamAttemptWhereInput;
+}
+
 function summarize(exam: ExamFacts, attempts: AttemptSummary[], enrollmentStatus: string, now: Date): StudentExamSummary {
   const availability: ExamAvailability =
     exam.opensAt && now < exam.opensAt ? "upcoming" : exam.closesAt && now >= exam.closesAt ? "closed" : "open";
@@ -136,7 +149,7 @@ function summarize(exam: ExamFacts, attempts: AttemptSummary[], enrollmentStatus
     if (attempt.status !== "GRADED" || attempt.score === null || !attempt.maxScore) continue;
     if (!best || attempt.score > best.score) best = { score: attempt.score, maxScore: attempt.maxScore };
   }
-  const finished = attempts.filter((attempt) => !isOngoing(attempt, now));
+  const finished = attempts.filter((attempt) => attempt.status !== "IN_PROGRESS");
   const lastFinished = finished.length ? finished.reduce((a, b) => (a.attemptNumber > b.attemptNumber ? a : b)) : null;
 
   let startBlock: StartBlock | null = null;
@@ -164,6 +177,8 @@ function summarize(exam: ExamFacts, attempts: AttemptSummary[], enrollmentStatus
     best,
     pendingReview: attempts.some((attempt) => attempt.status === "SUBMITTED"),
     hasOngoingAttempt,
+    hasUnsubmittedExpiredAttempt: attempts.some((attempt) =>
+      attempt.status === "IN_PROGRESS" && attempt.expiresAt !== null && attempt.expiresAt <= now),
     lastFinishedAttemptId: lastFinished?.id ?? null,
     canStart: startBlock === null,
     startBlock,
@@ -212,9 +227,14 @@ export async function listStudentExams(
 /** Lo que se muestra antes de iniciar. No incluye ninguna pregunta. */
 export async function getExamIntro(actor: Actor, examId: string, now = new Date()): Promise<ExamIntro | null> {
   const exam = await db.exam.findFirst({
-    where: { id: examId, institutionId: actor.institutionId, isPublished: true },
+    where: {
+      id: examId,
+      institutionId: actor.institutionId,
+      OR: [{ isPublished: true }, { attempts: { some: ongoingAttemptOf(actor, now) } }],
+    },
     select: {
       id: true,
+      isPublished: true,
       title: true,
       instructions: true,
       opensAt: true,
@@ -230,8 +250,12 @@ export async function getExamIntro(actor: Actor, examId: string, now = new Date(
   if (!exam) return null;
   const enrollment = await enrollmentOf(actor, exam.courseId);
   if (!enrollment) return null;
+  const summary = summarize({ ...exam, questionCount: exam._count.questions }, exam.attempts, enrollment.status, now);
+  if (!exam.isPublished && (enrollment.status !== "ACTIVE" || !summary.hasOngoingAttempt)) return null;
   return {
-    ...summarize({ ...exam, questionCount: exam._count.questions }, exam.attempts, enrollment.status, now),
+    ...summary,
+    // La excepción solo permite retomar: no habilita inicios, notas ni resultados del examen oculto.
+    ...(!exam.isPublished ? { canStart: false, best: null, pendingReview: false, lastFinishedAttemptId: null } : {}),
     courseId: exam.courseId,
     courseName: exam.course.name,
     instructions: exam.instructions,
@@ -265,13 +289,9 @@ function snapshotOf(question: QuestionRow): QuestionSnapshot {
 export async function getOngoingAttempt(actor: Actor, examId: string, now = new Date()): Promise<OngoingAttempt | null> {
   const attempt = await db.examAttempt.findFirst({
     where: {
+      ...ongoingAttemptOf(actor, now),
       examId,
-      studentId: actor.id,
-      institutionId: actor.institutionId,
-      status: "IN_PROGRESS",
-      expiresAt: { gt: now },
-      exam: { institutionId: actor.institutionId, isPublished: true },
-      enrollment: { studentId: actor.id, status: "ACTIVE" },
+      exam: { institutionId: actor.institutionId },
     },
     select: {
       id: true,
@@ -330,7 +350,9 @@ export async function getAttemptResult(actor: Actor, attemptId: string, now = ne
       },
     },
   });
-  if (!attempt || isOngoing(attempt, now)) return null;
+  // El reloj no finaliza un intento: el envío aún puede llegar durante la tolerancia de red.
+  // No entregar claves hasta que una escritura haya confirmado un estado terminal.
+  if (!attempt || attempt.status === "IN_PROGRESS") return null;
   const enrollment = await enrollmentOf(actor, attempt.exam.courseId);
   if (!enrollment) return null;
 

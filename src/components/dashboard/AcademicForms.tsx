@@ -4,7 +4,7 @@ import { useActionState, useState } from "react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { ActionState } from "@/app/dashboard/actions";
-import { createCourse, createExam, createGradebook, createLesson, createQuestion, createSection, enrollStudent, issueCertificate, markLessonComplete, saveAttendance, saveScheduleSlot, setEnrollmentCompletion, submitExam, togglePublication } from "@/app/dashboard/academico/actions";
+import { createCourse, createExam, createGradebook, createLesson, createQuestion, createSection, enrollStudent, issueCertificate, markLessonComplete, saveAttendance, saveScheduleSlot, setEnrollmentCompletion, togglePublication } from "@/app/dashboard/academico/actions";
 
 const initial: ActionState = { ok: false, message: "" };
 const input = "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500";
@@ -52,9 +52,19 @@ export function ExamForm({ courseId, categories }: { courseId: string; categorie
   return <Form action={createExam} submitLabel="Crear examen"><Hidden name="courseId" value={courseId} /><Field label="Título" name="title" required /><label className="block text-sm font-medium">Categoría<select className={`${input} mt-1`} name="categoryId"><option value="">Sin libro de notas</option>{categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label><label className="block text-sm font-medium">Instrucciones<textarea className={`${input} mt-1`} name="instructions" rows={3} /></label><div className="grid gap-3 sm:grid-cols-2"><Field label="Intentos" name="maxAttempts" type="number" defaultValue={1} min="1" max="10" /><Field label="Duración (min)" name="durationMinutes" type="number" defaultValue={60} min="1" max="600" /></div><label className="flex gap-2 text-sm"><input type="checkbox" name="isPublished" defaultChecked /> Publicar ahora</label></Form>;
 }
 
-type ExamQuestion = { id: string; prompt: string; type: string; options: unknown; points: number };
-export function ExamAttemptForm({ examId, questions }: { examId: string; questions: ExamQuestion[] }) {
-  return <Form action={submitExam} submitLabel="Enviar examen"><Hidden name="examId" value={examId} />{questions.map((q, index) => <fieldset className="rounded-xl border p-4" key={q.id}><legend className="px-2 font-semibold">{index + 1}. {q.prompt} ({q.points} pts)</legend>{q.type === "SHORT_ANSWER" ? <div><label className="mb-1 block text-sm font-medium" htmlFor={`answer-${q.id}`}>Tu respuesta</label><textarea id={`answer-${q.id}`} className={input} name={`question_${q.id}`} required /></div> : <div className="space-y-2">{(Array.isArray(q.options) ? q.options : []).map((option) => <label className="flex gap-2" key={String(option)}><input type="radio" name={`question_${q.id}`} value={String(option)} required /> {String(option)}</label>)}</div>}</fieldset>)}</Form>;
+/** La antigua entrega queda como entrada al recorrido que inicia y controla el tiempo. */
+export function ExamAttemptForm({ courseId }: { courseId: string }) {
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-slate-600">Consulta las fechas, los intentos disponibles y tus resultados. El tiempo empieza al iniciar el examen.</p>
+      <Link
+        href={`/dashboard/aula/${encodeURIComponent(courseId)}/presentar`}
+        className="inline-flex min-h-11 items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+      >
+        Ver mis exámenes
+      </Link>
+    </div>
+  );
 }
 
 
