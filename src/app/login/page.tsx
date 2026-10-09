@@ -2,6 +2,7 @@
 
 import { Suspense, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { z } from "zod";
@@ -78,12 +79,12 @@ function LoginForm() {
             <br />
             <span style={{ color: "var(--cyan)" }}>Tú también.</span>
           </p>
-          <p className="text-sm" style={{ color: "#6B7DA8" }}>
+          <p className="text-sm" style={{ color: "#B6C4E3" }}>
             Gestiona, enseña, comunica y crece desde una sola plataforma.
           </p>
         </div>
 
-        <p className="text-xs" style={{ color: "#3A4A6B" }}>
+        <p className="text-xs" style={{ color: "#94A6CC" }}>
           © 2026 Edukana · Cerkana
         </p>
       </div>
@@ -112,15 +113,17 @@ function LoginForm() {
             Ingresa a tu institución
           </p>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form method="post" action="/api/auth/callback/credentials" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
               <label
+                htmlFor="login-email"
                 className="block text-sm font-medium mb-1.5"
                 style={{ color: "var(--navy)" }}
               >
                 Correo electrónico
               </label>
               <input
+                id="login-email"
                 {...register("email")}
                 type="email"
                 autoComplete="email"
@@ -147,12 +150,14 @@ function LoginForm() {
 
             <div>
               <label
+                htmlFor="login-password"
                 className="block text-sm font-medium mb-1.5"
                 style={{ color: "var(--navy)" }}
               >
                 Contraseña
               </label>
               <input
+                id="login-password"
                 {...register("password")}
                 type="password"
                 autoComplete="current-password"
@@ -179,6 +184,8 @@ function LoginForm() {
 
             {error && (
               <div
+                role="alert"
+                aria-live="polite"
                 className="px-4 py-3 rounded-lg text-sm"
                 style={{
                   background: "var(--coral-light)",
@@ -200,7 +207,11 @@ function LoginForm() {
             </button>
           </form>
 
-          <p className="text-xs text-center mt-8" style={{ color: "#9CA3AF" }}>
+          <p className="mt-4 text-center text-xs" style={{ color: "#64748B" }}>
+            ¿Base de datos nueva? <Link href="/setup" className="font-semibold underline" style={{ color: "var(--blue)" }}>Crear la primera institución</Link>
+          </p>
+
+          <p className="text-xs text-center mt-8" style={{ color: "#64748B" }}>
             ¿Problemas para ingresar?{" "}
             <a
               href="mailto:info@cerkana.site"

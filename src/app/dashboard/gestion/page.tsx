@@ -1,13 +1,15 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
+import { getEffectiveCapabilities } from "@/lib/authorization";
 import { db } from "@/lib/db";
 import { BookOpen, GraduationCap, Search, Users } from "lucide-react";
 
 export default async function GestionPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const session = await auth();
   const user = session!.user;
-  if (!["ADMIN", "COORDINATOR", "SUPER_ADMIN"].includes(user.role)) redirect("/dashboard");
+  const capabilities = await getEffectiveCapabilities(user.institutionId, user.role);
+  if (!capabilities.has("people.view")) redirect("/dashboard");
   const q = (await searchParams).q?.trim().slice(0, 100) ?? "";
   const studentWhere = { institutionId: user.institutionId, role: "STUDENT" as const, status: "ACTIVE" as const, ...(q ? { OR: [{ name: { contains: q, mode: "insensitive" as const } }, { email: { contains: q, mode: "insensitive" as const } }] } : {}) };
   const [students, studentCount, teacherCount] = await Promise.all([

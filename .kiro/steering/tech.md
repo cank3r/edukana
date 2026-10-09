@@ -3,42 +3,68 @@ inclusion: always
 ---
 # Edukana — Tecnología y reglas de arquitectura
 
-## Stack (no cambiar)
-Next.js 16 App Router (Server Components, Server Actions, `src/proxy.ts`), React 19, TypeScript estricto, Prisma 5 + PostgreSQL (Supabase), Auth.js v5 (JWT), Supabase Storage privado, Zod 4, Tailwind 4, react-hook-form, lucide-react. Pruebas: `node:test` + Playwright.
+`current-state.md` describe el estado real y prevalece ante contradicciones. Este archivo define el patrón para código nuevo y la migración gradual de lo existente.
 
-## Reglas obligatorias
-1. **Resolución de tenant por host.** `src/proxy.ts` resuelve el espacio por `Host` (subdominio o dominio propio verificado) y lo pasa por cabecera interna `x-tenant-id`. `app.edukana.com` es la consola de plataforma. Un host desconocido responde 404.
-2. **Contexto de petición.** `getRequestContext()` devuelve `{ tenant, user, membership, permissions, settings, terminology }`, memoizado por petición con `cache()`.
-3. **Denegar por defecto.** Cada ruta, acción y función de datos declara el permiso que exige. Sin declaración: 404 o error.
-4. **Autorización única:** `can(ctx, permission, resource?) → { allowed, reason }`. La misma función alimenta navegación, páginas, acciones, API y componentes.
-5. **Capa de datos (DAL)** en `src/server/data/**`. Solo el DAL importa Prisma. Devuelve view models mínimos por rol. Las páginas y acciones nunca llaman a `db` directamente.
-6. **Aislamiento de datos:** todo modelo de negocio tiene `tenantId`. Cliente Prisma extendido que inyecta `tenantId` en lecturas y escrituras. Row Level Security en Postgres como segunda barrera (`SET LOCAL app.tenant_id`). Cliente de plataforma separado y explícito para consultas entre espacios.
-7. **Server Actions:** `"use server"` → `getRequestContext` → `can` → Zod → verificar propiedad de cada ID → transacción → auditoría → `revalidatePath` → `{ ok, message, fieldErrors? }`. Prohibido `catch {}` vacío; registrar con ID de correlación.
-8. **Configuración tipada:** todo parámetro vive en el registro de `src/server/settings/registry.ts` con clave, tipo Zod, valor por defecto por tipo de espacio, permiso de edición y si el plan lo permite. Nada de constantes de negocio en el código.
-9. **Módulos y límites:** `hasModule(ctx, 'finance')` y `checkLimit(ctx, 'students')` antes de mostrar o ejecutar.
-10. **Trabajo en segundo plano:** tabla `Job` + worker por cron (correo, WhatsApp, PDF, importaciones, recordatorios, webhooks, cierre de intentos). Idempotente y con reintentos.
-11. **Dinero** en enteros (centavos) + moneda. **Fechas** en UTC; mostrar en zona horaria del espacio.
-12. **Archivos:** bucket privado, ruta `{tenantId}/...`, URL firmada de 5 minutos emitida solo tras `can()`.
-13. **Secretos del espacio** (pasarela, SMTP, WhatsApp, OAuth) cifrados con AES-256-GCM y clave de entorno; nunca se devuelven al cliente.
-14. **Tema:** variables CSS generadas desde `tenant.branding`; ningún color de marca fijo en componentes.
-15. **Texto:** toda cadena visible pasa por `t()` con terminología del espacio. Español por defecto, inglés opcional.
-16. **Sesión:** JWT con `userId` y `sessionVersion`; rol y permisos se cargan por petición desde la membresía, no del token.
-17. **Accesibilidad:** WCAG 2.1 AA. Móvil primero.
+## Stack
+
+Next.js 16.4 App Router, React 19, TypeScript estricto, Prisma 5, PostgreSQL/Supabase, Auth.js v5, Supabase Storage privado, Zod 4, Tailwind 4, react-hook-form, lucide-react, `node:test` y Playwright Test.
+
+## Arquitectura existente
+
+- `src/proxy.ts` redirige por autenticación; no resuelve tenants ni autoriza recursos.
+- El tenant actual es `Institution`/`institutionId` y procede de la sesión.
+- Capabilities: `src/lib/capabilities.ts` y `authorization.ts`.
+- Alcance de curso: `src/lib/course-scope.ts`.
+- Páginas y acciones todavía importan Prisma directamente.
+- No existen aún `getRequestContext`, `src/server/data`, RLS ni resolución por dominio.
+
+## Reglas obligatorias para código nuevo
+
+1. **Denegar por defecto.** Cada página, acción, API y función de datos declara capability y alcance.
+2. **Tenant físico.** Todo modelo de negocio nuevo lleva `institutionId` e índice que comienza por él.
+3. **Contexto vivo.** Construir `getRequestContext()` memoizado por petición con usuario, membresía activa, capabilities y `sessionVersion`.
+4. **Autorización central.** Evolucionar hacia `can(ctx, permission, resource?)`; mientras tanto reutilizar las políticas centrales existentes.
+5. **DAL gradual.** Código nuevo consulta Prisma desde `src/server/data/**`; acciones nuevas viven en `src/server/actions/**`.
+6. **Server Action:** contexto → permiso → Zod → propiedad/tenant de cada ID → transacción → auditoría → revalidación → resultado tipado.
+7. **Pruebas reales.** Toda acción nueva incluye Postgres con: sin permiso, ID de otro usuario e ID de otra institución.
+8. **Dinero.** Centavos enteros más moneda; migrar `Float` con backfill.
+9. **Fechas.** UTC en persistencia y zona de la institución al presentar; fechas civiles usan tipo `DATE`.
+10. **Archivos.** Privados, prefijo `{institutionId}/`, confirmación de MIME/tamaño y URL firmada tras autorización.
+11. **Integraciones.** Interfaces `MeetingProvider`, `VideoProvider`, `EmailProvider` y `AiProvider`; secretos solo en servidor.
+12. **Jobs.** Operaciones masivas, correo, imports y webhooks serán idempotentes, reintentables y observables.
+13. **Tema e idioma.** Migrar gradualmente colores y cadenas hacia branding/terminología configurables.
+14. **Accesibilidad y simplicidad.** Seguir `simplicity.md`; objetivo WCAG 2.2 AA y móvil primero.
+15. **Tamaño.** Código nuevo evita archivos >300 líneas y líneas >140 caracteres; dividir por agregado y pantalla.
+
+## Objetivos posteriores, no supuestos actuales
+
+- Resolución de institución por subdominio o dominio verificado.
+- Consola separada del operador.
+- Registro tipado de settings y módulos.
+- RLS como segunda barrera después de diseñar pool y contexto transaccional.
+- Cifrado de secretos por institución.
+- Marca blanca y traducción integral.
+
+## Deuda verificada en `cff38c6`
+
+- JWT conserva rol/institución y no revalida suspensión por petición.
+- Login sin rate limit ni recuperación.
+- CI no levanta PostgreSQL; muchas pruebas inspeccionan texto fuente.
+- Examen almacena duración pero no aplica `expiresAt` autoritativo.
+- Modelos académicos carecen de `institutionId` físico en varios agregados.
+- Dinero usa `Float`; `PaymentConcept.studentId` no tiene FK.
+- Una asistencia por curso/día, una entrega por tarea/estudiante y un docente por curso.
+- Página del curso y acciones académicas demasiado concentradas.
+- No existe alta de múltiples instituciones ni identidad global.
+- Sin importación masiva ni correo.
+- Video MP4/WebM directo sin streaming adaptable.
+- Restos Alpha documentados en `docs/legacy-cleanup.md`.
 
 ## Definición de terminado
-- Matriz automatizada permiso × rol × tipo de espacio para la feature.
-- Pruebas de URL directa, ID de otro espacio e ID de otro usuario.
-- Estados vacío, cargando, error y solo lectura.
-- Parámetros nuevos registrados en el registro de configuración con su pantalla.
-- Auditoría de las acciones sensibles.
-- Sin lectura de archivos fuente con expresiones regulares como "prueba".
 
-## Deuda actual que debe eliminarse (commit 3bfa7c7)
-- `access.ts` permite rutas no listadas.
-- `aula/[courseId]/page.tsx` carga todo para todos los roles.
-- `markLessonComplete` cambia la matrícula a COMPLETED y bloquea entregas y exámenes.
-- `User.institutionId` y `User.role` fijos; login falla con correo en dos instituciones.
-- Sin creación de usuarios, cursos, matrículas, períodos ni eventos en la interfaz.
-- Examen sin inicio ni temporizador en servidor; nota del último intento.
-- `AuditLog` sin uso; errores silenciados; totales de pagos mezclan monedas.
-- `CourseModule` duplicado de `CourseSection`/`Lesson`; `Assignment` sin tenant.
+- Comportamiento probado contra Postgres, no por regex de código.
+- Matriz permiso × rol × tenant × estado.
+- Estados vacío, cargando, error, sin permiso y solo lectura.
+- Auditoría sensible y observabilidad.
+- Simplicidad móvil verificada.
+- Recorrido E2E en Preview desplegado.

@@ -3,76 +3,73 @@ inclusion: always
 ---
 # Edukana — Gobernanza de especificaciones
 
-## Autoridad y estado
+## Precedencia
 
-Este archivo define cómo interpretar `.kiro/steering/**` y `.kiro/specs/**`.
+1. Código y migraciones reales.
+2. Decisiones aprobadas en `current-state.md`.
+3. Este archivo y demás steering reconciliado.
+4. Specs READY.
+5. Specs DRAFT como backlog no ejecutable.
 
-- `product.md`, `roles-permissions.md`, `tech.md`, `ui-ux.md`, `tenant-configuration.md`, `structure.md` y `data-model.md` establecen la dirección de producto y arquitectura.
-- Los principios de mínimo privilegio, mínima información, identidad derivada de la sesión, denegación por defecto y marca blanca son vinculantes.
-- Las specs `00` a `15` son un backlog de diseño **DRAFT**. No son instrucciones ejecutables todavía.
-- Ninguna spec se implementa automáticamente por el hecho de existir.
-- Antes de iniciar una spec, sus requisitos, diseño, dependencias, migraciones, seguridad y criterios de aceptación deben quedar consistentes y aprobados.
+`current-state.md` prevalece ante contradicciones. Ninguna spec se implementa por existir.
 
-## Puerta obligatoria antes de implementar
+## Estado
 
-Una spec solo cambia de `DRAFT` a `READY` cuando cumple todo lo siguiente:
+- Specs 00–15 siguen DRAFT hasta revisión.
+- S0 reconcilia steering y preserva el producto actual sin cambiar comportamiento.
+- El seguimiento operativo vive en `.kiro/PLAN.md` y los claims en `TEAM-COORDINATION.md`.
+- Las prioridades antiguas sobre tutor, minimización y curso completado ya están implementadas; permanecen como regresiones.
 
-1. Dependencias explícitas y sin ciclos.
-2. Modelo de datos implementable, con `tenantId`, índices y restricciones definidos.
-3. Migración, backfill, compatibilidad temporal y rollback documentados.
-4. Permisos, ámbito, relación con el recurso y estado incluidos en la matriz.
-5. Threat model para tenant, PII, archivos, tokens, integraciones y acciones sensibles.
-6. Criterios de aceptación verificables para rutas, consultas, acciones y UI.
-7. Estados vacío, error, cargando, sin permiso y solo lectura definidos.
-8. Pruebas de URL directa, ID de otro usuario e ID de otro tenant.
-9. Decisiones abiertas resueltas en el `design.md` de la spec.
-10. Revisión humana de cualquier cambio de contrato visible o irreversible.
+## Puerta DRAFT → READY
 
-## Correcciones obligatorias del paquete recibido
+1. Dependencias explícitas.
+2. Modelo con `institutionId`, relaciones e índices implementables.
+3. Migración aditiva, backfill, compatibilidad y rollback.
+4. Permisos y alcance por recurso.
+5. Threat model.
+6. Pantallas, textos y acciones definidos.
+7. Estados vacío, cargando, error, sin permiso y solo lectura.
+8. Casos sin permiso, ID ajeno e institución ajena contra Postgres real.
+9. Simplicidad móvil según `simplicity.md`.
+10. Criterio E2E desplegado.
+11. Decisiones abiertas resueltas.
+12. Aprobación humana para contratos irreversibles.
 
-1. Corregir dependencias de `08`, `09`, `11` y `14`.
-2. Separar `15` en requisitos fundacionales tempranos y hardening final, o distribuir sus gates en cada spec.
-3. Definir el contrato persistente de eventos: outbox, versión, idempotencia, orden y deduplicación.
-4. Aclarar qué modelos llevan `tenantId` físico y cómo se aplican RLS e índices.
-5. Reemplazar notaciones polimórficas ambiguas como `offeringId|groupId` por relaciones implementables.
-6. Definir entidades y ciclos de vida para API keys, webhooks, tokens, sesiones y suplantación.
-7. Completar threat models de proxy, RLS, archivos, PWA, OAuth, auditoría, pagos y datos de menores.
-8. Definir precedencia de configuración, cambio de tipo de tenant, respaldo, retención, borrado, SLO y rollback.
+## Orden aprobado
 
-## Orden de trabajo
+| Sprint | Specs | Objetivo |
+|---|---|---|
+| S0 | Steering + docs | Consolidar fuente de verdad, cambios locales y Preview. |
+| S1 | 00 + parte de 15 | Sesión viva, seguridad, examen temporal y Postgres CI. |
+| S2 | 02 + 04 + parte de 01 | Identidad global, membresías, invitaciones, CSV y alta de espacios. |
+| S3 | 05 | Course/Offering, programas, cohortes, grupos y matrícula masiva para INSTITUTE. |
+| S4 | Nueva 16 | ClassSession, semana híbrida, Panel Hoy, MeetingProvider y notificaciones. |
+| S5 | 06 | VideoProvider y streaming adaptable. |
+| S6 | 08 + 12 sin pasarela + 14 | Cobros administrativos, cierre, boletín, reportes y restore. |
+| S7–S8 | Nueva 17 | IA docente y tutor del estudiante. |
+| S9–S10 | 13 + pago online de 12 | Marketplace, pasarela y profesor independiente. |
 
-Orden base:
-
-`00 → 01 → 02 → 03 → 04 → 05 → 06 → 07`
-
-Después se ejecutan únicamente ramas cuyas dependencias corregidas estén en estado `DONE`. La existencia de ramas en el DAG no autoriza trabajo paralelo sobre contratos inestables.
-
-- `10` puede construir primero el bus y contratos de comunicación; las integraciones por dominio se completan cuando existan sus productores.
-- `12` debe existir antes de cualquier requisito que dependa de deuda, pagos o cuenta financiera.
-- `09` requiere identidad, personas, estructura académica, calificaciones, comunicación y finanzas cuando muestre pagos.
-- `11` requiere personas, matrícula, comunicación y finanzas cuando asigne planes de pago.
-- `14` requiere los dominios cuyos reportes agregará.
-- `15` aporta gates transversales desde el inicio y una revisión final antes de producción.
+Las demás specs se integran cuando el sprint productor toca sus contratos; no se implementan completas fuera de orden.
 
 ## Reglas de ejecución
 
-- Implementar una spec por vez salvo que el DAG aprobado demuestre independencia real y no exista solapamiento de archivos, esquema o contratos.
-- No iniciar la siguiente spec con tareas bloqueantes abiertas en una dependencia.
-- No aplicar migraciones destructivas, fusionar ni desplegar producción sin autorización explícita.
-- Toda decisión no cubierta se registra en el `design.md` correspondiente antes de escribir código.
-- El código existente no se considera correcto por coincidir parcialmente con una spec; debe pasar sus criterios de aceptación.
+- Leer y reclamar alcance en `TEAM-COORDINATION.md` antes de escribir.
+- Una spec a la vez por agregado compartido.
+- No iniciar un sprint con bloqueadores abiertos.
+- Trabajo paralelo solo sin solape de esquema, contratos ni archivos.
+- Adoptar `src/server` gradualmente; no refactor global sin valor funcional.
+- No mezclar formateo masivo con comportamiento.
+- No migraciones destructivas, merge ni producción sin autorización explícita.
+- Registrar decisiones en design y PLAN.
+- Una capacidad termina con E2E en Preview.
 
-## Prioridad inmediata sobre el MVP actual
+## Pruebas
 
-Antes de expandir funcionalidades:
+- Sustituir pruebas por lectura de fuente al tocar cada dominio.
+- CI levanta Postgres y dos instituciones.
+- Cada acción prueba permiso, propiedad y tenant.
+- Mantener regresiones de tutor, privacidad, scope docente, archivos y cursos completados.
 
-1. Bloquear acceso de tutores sin vínculo a cursos y datos institucionales.
-2. Eliminar nombres y correos de compañeros visibles para estudiantes.
-3. Eliminar información financiera indirecta para coordinadores y docentes.
-4. Hacer cursos completados totalmente de solo lectura.
-5. Unificar navegación, middleware, DAL, acciones y componentes bajo el mismo registro de capacidades.
-6. Ejecutar una matriz automatizada de roles, relaciones, estados y tenant.
+## S0
 
-## Registro de procedencia
-
-Paquete recibido el 2 de octubre de 2026, generado sobre `feat/edukana-real-mvp` en `3bfa7c7`. Fue auditado antes de incorporarse: no contenía secretos ni ejecutables; incluía 56 documentos Markdown y un cambio para dejar de ignorar `.kiro/`.
+S0 no cambia lógica. Debe inventariar estado/legado, crear current-state/simplicity/PLAN/coordinación, reconciliar steering, validar cambios locales y preservar/publicar solo con autorización.

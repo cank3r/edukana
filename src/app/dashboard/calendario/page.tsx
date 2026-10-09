@@ -1,11 +1,21 @@
 import { auth } from "@/lib/auth";
+import { getEffectiveCapabilities } from "@/lib/authorization";
+import { courseWhereForScope, resolveCourseReadScope } from "@/lib/course-scope";
 import { db } from "@/lib/db";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, Clock3, MapPin, UserRound } from "lucide-react";
+import { notFound } from "next/navigation";
 
-export default async function CalendarioPage() {
-  const session = await auth();
-  const user = session!.user;
-  const events = await db.calendarEvent.findMany({ where: { institutionId: user.institutionId, endDate: { gte: new Date(new Date().setHours(0, 0, 0, 0)) } }, orderBy: { startDate: "asc" }, take: 100 });
-  const date = (value: Date) => new Intl.DateTimeFormat("es", { dateStyle: "long", ...(value.getUTCHours() ? { timeStyle: "short" as const } : {}) }).format(value);
-  return <div className="mx-auto max-w-4xl p-4 sm:p-8"><div className="mb-8"><h1 className="text-2xl font-bold" style={{ color: "var(--navy)" }}>Calendario</h1><p className="mt-1 text-sm text-slate-500">Próximos eventos de tu institución</p></div><div className="space-y-3">{events.map((event) => <article key={event.id} className="flex gap-4 rounded-xl border border-slate-200 bg-white p-4"><div className="mt-1 h-10 w-1 shrink-0 rounded" style={{ background: event.color ?? "var(--blue)" }} /><div><h2 className="font-semibold">{event.title}</h2><p className="text-sm text-slate-500">{date(event.startDate)}{event.endDate ? ` – ${date(event.endDate)}` : ""}</p>{event.description && <p className="mt-2 text-sm text-slate-600">{event.description}</p>}</div></article>)}{events.length === 0 && <div className="rounded-xl border border-slate-200 bg-white p-12 text-center text-slate-500"><CalendarDays className="mx-auto mb-3 text-slate-300" size={40} />No hay eventos próximos.</div>}</div></div>;
+const days = ["", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+const time = (minutes: number) => `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
+
+export default async function CalendarPage() {
+  const session = await auth(); const user = session!.user;
+  const capabilities = await getEffectiveCapabilities(user.institutionId, user.role);
+  if (!capabilities.has("schedule.view")) notFound();
+  const courseWhere = courseWhereForScope(user.institutionId, resolveCourseReadScope(user, capabilities));
+  const [events, slots] = await Promise.all([
+    db.calendarEvent.findMany({ where: { institutionId: user.institutionId }, orderBy: { startDate: "asc" }, take: 50 }),
+    courseWhere ? db.scheduleSlot.findMany({ where: { institutionId: user.institutionId, course: courseWhere }, include: { course: { select: { name: true, code: true } }, teacher: { select: { name: true } } }, orderBy: [{ weekday: "asc" }, { startMinutes: "asc" }] }) : Promise.resolve([]),
+  ]);
+  return <div className="mx-auto max-w-7xl p-4 sm:p-8"><div className="mb-8"><h1 className="flex items-center gap-3 text-2xl font-bold"><CalendarDays className="text-blue-600" /> Horario institucional</h1><p className="text-sm text-slate-500">Cursos por día, hora, docente y aula. Los nuevos bloques se validan contra conflictos.</p></div><div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{slots.map((slot) => <article className="rounded-2xl border bg-white p-5" key={slot.id}><span className="text-xs font-bold uppercase text-blue-600">{days[slot.weekday]}</span><h2 className="mt-1 font-bold">{slot.course.name}</h2><p className="text-xs font-mono text-slate-400">{slot.course.code}</p><div className="mt-4 space-y-2 text-sm text-slate-600"><p className="flex items-center gap-2"><Clock3 size={16} />{time(slot.startMinutes)}–{time(slot.endMinutes)}</p><p className="flex items-center gap-2"><UserRound size={16} />{slot.teacher.name}</p><p className="flex items-center gap-2"><MapPin size={16} />{slot.classroom}</p></div></article>)}{!slots.length && <p className="rounded-xl border border-dashed bg-white p-8 text-sm text-slate-500">No hay bloques de clase registrados.</p>}</div>{events.length > 0 && <section className="mt-10"><h2 className="mb-3 text-lg font-bold">Eventos institucionales</h2><div className="space-y-2">{events.map((event) => <div className="rounded-xl border bg-white p-4" key={event.id}><strong>{event.title}</strong><p className="text-sm text-slate-500">{new Intl.DateTimeFormat("es", { dateStyle: "full" }).format(event.startDate)}</p></div>)}</div></section>}</div>;
 }

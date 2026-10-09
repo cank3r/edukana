@@ -2,68 +2,111 @@
 inclusion: fileMatch
 fileMatchPattern: "prisma/**"
 ---
-# Edukana — Modelo de datos objetivo
+# Edukana — Modelo de datos vigente y objetivo
 
-Migrar desde el esquema actual sin perder datos. `Institution` → `Tenant`. Todos los modelos de negocio llevan `tenantId` e índice compuesto que empieza por él.
+Migrar desde el esquema actual sin perder datos. Se conserva `Institution`/`institutionId`. Todo modelo de negocio nuevo lleva `institutionId` físico e índice que comienza por él.
 
-## Plataforma
-`Plan(id, code, name, priceModel, prices, limits Json, features Json)`
-`Tenant(id, slug @unique, name, type, status, planId, trialEndsAt, renewsAt, limits Json, modules Json, branding Json, terminology Json, createdAt)`
-`TenantDomain(id, tenantId, host @unique, kind SUBDOMAIN|CUSTOM, verifiedAt, verificationToken)`
-`TenantSetting(tenantId, key, value Json, updatedById, @@id([tenantId,key]))`
-`TenantSecret(tenantId, key, ciphertext, @@id([tenantId,key]))`
-`PlatformUser(userId, role)` · `SaasInvoice(id, tenantId, period, amountCents, currency, status)` · `UsageSnapshot(tenantId, date, students, storageBytes, videoMinutes, messages)`
-`ImpersonationSession(id, operatorId, tenantId, targetUserId, reason, startedAt, expiresAt, endedAt)`
+## Estado actual
 
-## Identidad
-`User(id, email @unique, name, passwordHash?, emailVerifiedAt, sessionVersion, locale, status)`
-`Membership(id, tenantId, userId, roleId, scopeType?, scopeId?, status, @@unique([tenantId,userId,roleId,scopeType,scopeId]))`
-`Role(id, tenantId?, key, name, isSystem, permissions String[])`
-`Invitation(id, tenantId, email, roleId, tokenHash, expiresAt, acceptedAt)` · `PasswordReset(tokenHash, userId, expiresAt, usedAt)` · `LoginAttempt`
-`PersonProfile(id, tenantId, userId, code, documentId, birthDate, phone, address, customFields Json, sensitive Json)`
-`Guardianship(id, tenantId, guardianUserId, studentUserId, relationship, perms Json, isFinancialResponsible, status)`
+El esquema contiene instituciones, usuarios ligados a institución, períodos, cursos, secciones, lecciones, matrículas, asistencia, notas, tareas, entregas, exámenes, horarios básicos, assets, certificados, admisiones, cobros, anuncios, unidades, tutorías, overrides y auditoría. El legado está en `docs/legacy-cleanup.md`.
 
-## Estructura
-`Campus` · `AcademicYear` · `Term(yearId, name, startsAt, endsAt, weight, status OPEN|CLOSED)` · `Level` · `Program(levelId, name, kind)` · `Grade(programId, name, order)` · `Group(gradeId, yearId, name, homeroomUserId, capacity)` · `Room`
-`Curriculum(programId, version)` · `CurriculumCourse(curriculumId, courseId, termNumber, credits, required)` · `Prerequisite(courseId, requiresCourseId)`
+## Plataforma objetivo
 
-## Enseñanza
-`Course(id, tenantId, title, slug, summary, description, level, language, categoryId?, credits?, hours?, coverAssetId, status DRAFT|IN_REVIEW|PUBLISHED|ARCHIVED, authorUserId)`
-`Offering(id, tenantId, courseId, mode COHORT|SELF_PACED, termId?, groupId?, name, startsAt?, endsAt?, capacity?, completionRule, settings Json, priceCents?, currency?, visibility)`
-`OfferingStaff(offeringId, userId, role TEACHER|ASSISTANT)`
-`Enrollment(id, tenantId, offeringId, studentId, status ACTIVE|COMPLETED|WITHDRAWN|FAILED|WAITLISTED, source, progressPercent, finalGrade?, accessExpiresAt?, orderItemId?, @@unique([offeringId,studentId]))`
-`Section(courseId, title, order)` · `Lesson(sectionId, title, type, body, durationSec, isPreview, publishAt?, requiresLessonId?, status)` · `LessonProgress(enrollmentId, lessonId, completedAt, lastPositionSec, watchedSec)`
-`Asset(id, tenantId, kind, provider, providerRef, objectPath, mime, bytes, status, visibility, ownerRefs…)`
-`ScheduleSlot(offeringId, weekday, start, end, roomId)` · `LiveSession(offeringId, startsAt, joinUrl, recordingAssetId?)`
+- `Plan(id, code, name, limits Json, features Json)`.
+- `Institution(id, slug, name, type, status, planId, branding Json, terminology Json, settings Json)`.
+- `InstitutionDomain(id, institutionId, host, kind, verifiedAt)`.
+- `InstitutionSetting(institutionId, key, value Json, updatedById)`.
+- `InstitutionSecret(institutionId, key, ciphertext)`.
+- `PlatformUser(userId, role)`.
+- `UsageSnapshot(institutionId, date, students, storageBytes, videoMinutes, messages)`.
+- `ImpersonationSession(operatorId, institutionId, targetUserId, reason, expiresAt, endedAt)`.
+
+## Identidad aprobada
+
+- `User(id, email @unique, name, passwordHash?, emailVerifiedAt, sessionVersion, locale, status)`.
+- `Membership(id, institutionId, userId, role, status, scopeType?, scopeId?)`.
+- `Invitation(institutionId, email, role, tokenHash, expiresAt, acceptedAt)`.
+- `PasswordReset(userId, tokenHash, expiresAt, usedAt)`.
+- `LoginAttempt(emailHash, ipHash, occurredAt, success)`.
+- `PersonProfile(institutionId, userId, code, phone, customFields Json, sensitiveEncrypted Json)`.
+- `Guardianship` conserva relaciones institucionales y permisos por área.
+
+Migración: crear memberships desde usuarios actuales, cambiar autenticación a lectura dual y retirar `User.institutionId/role` solo al final.
+
+## Estructura académica
+
+- `Campus`, `Room`, `AcademicYear`, `Term`.
+- `Program`, `Curriculum`, `CurriculumCourse`.
+- `Cohort` y `StudentGroup`.
+
+## Curso y oferta aprobados
+
+- `Course(institutionId, title, code, summary, description, language, authorUserId, status)` conserva contenido reusable.
+- `Offering(institutionId, courseId, mode COHORT|SELF_PACED, termId?, cohortId?, groupId?, startsAt?, endsAt?, capacity?, priceCents?, currency?, status)` representa una ejecución.
+- `OfferingStaff(institutionId, offeringId, userId, role TEACHER|ASSISTANT|SUBSTITUTE)` permite varios docentes.
+- `Enrollment(institutionId, offeringId, studentId, status, progressPercent, finalGrade?, accessExpiresAt?)`.
+- Secciones y lecciones siguen ligadas a `Course`; tareas, exámenes, notas, asistencia y horario migran a `Offering`.
+
+## Semana híbrida aprobada
+
+- `MeetingPattern(institutionId, offeringId, groupId?, weekday, frequency, startMinutes, endMinutes, participationMode, synchronicity, pedagogicalType, roomId?, virtualRoomId?, startsOn, endsOn)`.
+- `ClassSession(institutionId, offeringId, patternId?, startsAt, endsAt, participationMode, synchronicity, pedagogicalType, roomId?, virtualRoomId?, status, title, objectives, summary)`.
+- `ClassSessionTeacher`, `ClassSessionResource` y `ClassSessionChange`.
+- `VirtualRoom(institutionId, offeringId, provider, providerRef, settingsEncrypted)`.
+- `ClassRecording(institutionId, classSessionId, assetId, publishedAt)`.
+- `HolidayCalendar` y `ScheduleException`.
+- Asistencia pertenece a `ClassSession`, con modo presencial, remoto o asincrónico.
+
+## Contenido y video
+
+- `Asset` conserva tenant, propietario, proveedor, referencia, MIME, bytes, estado y visibilidad.
+- Documentos/imágenes continúan en Storage privado.
+- Video migra mediante `VideoProvider`, con procesamiento, duración y playback seguro.
 
 ## Evaluación
-`Rubric` · `RubricCriterion` · `RubricLevel`
-`Assignment(offeringId, title, instructions, dueAt, maxScore, submissionTypes, maxAttempts, latePolicy Json, rubricId?, categoryId?, status)`
-`Submission(assignmentId, enrollmentId, attemptNumber, content, status, submittedAt, isLate, score?, feedback, gradedById, @@unique([assignmentId,enrollmentId,attemptNumber]))`
-`QuestionBankItem(courseId, type, prompt, options Json, answerKey Json, points, tags[])`
-`Exam(offeringId, title, opensAt, closesAt, durationMin, maxAttempts, gradingPolicy, shuffle, showResults, selection Json, categoryId?, status)`
-`ExamAttempt(examId, enrollmentId, attemptNumber, status, startedAt, expiresAt, submittedAt, questionOrder Json, score, maxScore)` · `ExamAnswer(attemptId, bankItemId, response Json, score, feedback)`
-`GradeCategory(offeringId, termId, name, weight, dropLowest)` · `GradeItem(offeringId, termId, categoryId, title, maxScore, sourceType, sourceId, publishedAt)` · `GradeEntry(gradeItemId, enrollmentId, score, excused, comment, gradedById)`
-`TermGrade(enrollmentId, termId, value, lockedAt)` · `ReportCard(studentId, termId, assetId, issuedAt)`
-`AttendanceSession(offeringId|groupId, date, takenById)` · `AttendanceRecord(sessionId, enrollmentId|studentId, status, note, justification Json)`
-`BehaviorRecord(studentId, type, severity, note, visibleToFamily, recordedById)` · `CounselingNote(studentId, authorId, bodyEncrypted)`
+
+- `Assignment(institutionId, offeringId, ..., maxAttempts, latePolicy, rubricId?, status)`.
+- `Submission(institutionId, assignmentId, enrollmentId, attemptNumber, ..., status)`.
+- `Rubric`, `RubricCriterion`, `RubricLevel`.
+- `QuestionBankItem` permanece en Course y añade categorías, tags y versiones.
+- `Exam(institutionId, offeringId, ..., durationMin, maxAttempts, status)`.
+- `ExamAttempt(..., startedAt, expiresAt, submittedAt)` aplica tiempo en servidor.
+- `GradeCategory`, `GradeItem`, `GradeEntry`, `TermGrade` y `ReportCard` llevan `institutionId`.
 
 ## Comunicación
-`Announcement(audience Json, title, body, publishAt, pinned, authorId)` · `Conversation` · `ConversationParticipant` · `Message`
-`ForumThread(offeringId, lessonId?, title, authorId, status)` · `ForumPost`
-`Notification(userId, type, payload, readAt)` · `NotificationPreference` · `OutboundMessage(channel, to, template, status, attempts, error)` · `MessageTemplate`
-`CalendarEvent(audience Json, title, startsAt, endsAt, kind)`
 
-## Admisiones
-`AdmissionForm(fields Json)` · `Application(stage, applicant Json, guardians Json, programId, documents, assignedToId, consentAt)` · `ApplicationEvent`
+- Mantener anuncios normalizados actuales.
+- `Notification`, `NotificationPreference`.
+- `Conversation`, `ConversationParticipant`, `Message`.
+- `OutboundMessage` y `MessageTemplate`.
+- Eventos pueden apuntar a sesión, tarea, examen o evento institucional.
 
-## Dinero
-`FeePlan` · `FeePlanItem(concept, amountCents, schedule)` · `Discount(kind, value, rules)` · `StudentDiscount`
-`Charge(studentId, concept, amountCents, currency, dueDate, status, feePlanItemId?, termId?)`
-`Payment(amountCents, currency, method, provider, providerRef @unique, status, paidAt, receiptNumber, fiscalNumber?, recordedById)` · `PaymentAllocation(paymentId, chargeId, amountCents)`
-`Category` · `Coupon(code, kind, value, maxUses, validFrom, validTo, courseIds)` · `Order(buyerUserId, status, subtotalCents, discountCents, totalCents, currency)` · `OrderItem(orderId, offeringId, priceCents, instructorSharePct)`
-`Review(enrollmentId @unique, rating, body, status)` · `InstructorEarning(orderItemId, instructorId, amountCents, status)` · `Payout(instructorId, period, amountCents, status, reference)`
-`Certificate(enrollmentId, code @unique, hmac, issuedAt, revokedAt, assetId)`
+## Admisiones y cobros
+
+- `AdmissionForm`, `Application`, `ApplicationDocument`, `ApplicationEvent` y responsable.
+- Conversión explícita a identidad, membresía, cohorte y matrícula.
+- `FeePlan`, `FeePlanItem` y `Charge` en centavos.
+- `PaymentRecord` representa pago externo y `PaymentCorrection` revierte sin borrar.
+- Pasarela, órdenes, cupones y liquidaciones entran con marketplace.
+
+## IA posterior
+
+- `AiSetting(institutionId, enabled, monthlyBudgetCents, provider)`.
+- `AiGeneration(institutionId, userId, feature, tokenUsage, costCents, status, createdAt)`.
+- Ninguna salida se publica o califica sin acción humana.
 
 ## Sistema
-`AuditLog(tenantId?, actorId, impersonatorId?, action, entityType, entityId, before Json, after Json, ip, at)` · `Job(type, payload, runAt, attempts, status, lastError)` · `WebhookEvent(provider, externalId @unique, payload, processedAt)` · `Consent(userId, tenantId, textVersion, acceptedAt, ip)`
+
+- `AuditLog` uniforme con actor y before/after.
+- `Job` idempotente y reintentable.
+- `WebhookEvent` deduplicado.
+- `Consent` versionado.
+
+## Reglas de migración
+
+1. Añadir columnas/modelos.
+2. Backfill verificable.
+3. Lectura dual temporal.
+4. Cambiar escrituras.
+5. Medir referencias legacy.
+6. Retirar solo con autorización y rollback documentado.

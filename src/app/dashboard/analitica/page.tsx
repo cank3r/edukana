@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth";
+import { getEffectiveCapabilities } from "@/lib/authorization";
 import { db } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { TrendingUp, Users, BookOpen, UserPlus } from "lucide-react";
@@ -7,11 +8,12 @@ export default async function AnaliticaPage() {
   const session = await auth();
   const user = session!.user;
 
-  if (!["ADMIN", "COORDINATOR", "SUPER_ADMIN"].includes(user?.role)) {
+  const capabilities = await getEffectiveCapabilities(user.institutionId, user.role);
+  if (!capabilities.has("analytics.view")) {
     redirect("/dashboard");
   }
 
-  const iid = user?.institutionId;
+  const iid = user.institutionId;
 
   const [
     totalStudents,
