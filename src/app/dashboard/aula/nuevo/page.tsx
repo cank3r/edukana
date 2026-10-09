@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { getEffectiveCapabilities } from "@/lib/authorization";
 import { resolveCourseWriteScope } from "@/lib/course-scope";
 import { db } from "@/lib/db";
-import { isIndependentInstitution } from "@/server/platform/independent";
+import { isIndependentInstitution } from "@/server/platform/independent-kind";
 import { CourseForm } from "./CourseForm";
 
 export const dynamic = "force-dynamic";

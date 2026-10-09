@@ -2,7 +2,7 @@ import type { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { courseWhereForScope, type CourseScope } from "@/lib/course-scope";
 import { db } from "@/lib/db";
-import { isIndependentInstitution } from "@/server/platform/independent";
+import { isIndependentInstitution } from "@/server/platform/independent-kind";
 import type { EdukanaRole } from "@/types/next-auth";
 
 type Actor = { id: string; institutionId: string; role: EdukanaRole };
