@@ -5,13 +5,15 @@ import { type Capability } from "@/lib/capabilities";
 import { getEffectiveCapabilities } from "@/lib/authorization";
 import { courseWhereForParticipation, courseWhereForScope, resolveCourseWriteScope } from "@/lib/course-scope";
 import { db } from "@/lib/db";
-import { autoScoreAnswer, createCertificateIdentity, findScheduleConflicts, progressPercentage, reviewedExamScore } from "@/lib/lms";
+import { autoScoreAnswer, createCertificateIdentity, findScheduleConflicts, progressPercentage } from "@/lib/lms";
 import type { EdukanaRole } from "@/types/next-auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { questionSnapshot } from "@/server/exams";
 import { writeGradeEntry } from "@/server/grade-history";
 import { gradeSubmissionAction, setAssignmentPublishedAction, submitAssignmentAction } from "@/server/actions/assignments";
+import type { ReviewInput } from "@/server/assessment/exam-admin";
+import { reviewLegacyExamAttempt } from "@/server/assessment/legacy-exam-review";
 
 class GradeReasonRequired extends Error {}
 import type { ActionState } from "@/app/dashboard/actions";
@@ -247,51 +249,30 @@ export async function submitExam(_state: ActionState, fd: FormData): Promise<Act
   } catch { return failed(); }
 }
 
+/** Compatibility for already-open forms; all authorization and scoring belong to M3. */
 export async function reviewExamAttempt(_state: ActionState, fd: FormData): Promise<ActionState> {
   try {
     const user = await requireUser("course.manage");
     const attemptId = text(fd, "attemptId");
-    const attempt = await db.examAttempt.findFirst({
-      where: { id: attemptId, institutionId: user.institutionId, status: "SUBMITTED", exam: { course: managementCourseWhere(user) } },
-      include: {
-        answers: { include: { bankItem: { select: { type: true } } } },
-        exam: { select: { courseId: true, gradeItem: { select: { id: true } }, questions: { select: { bankItemId: true, points: true } } } },
-      },
-    });
-    if (!attempt) return failed("Intento no encontrado o ya revisado.");
-    const points = new Map(attempt.exam.questions.map((question) => [question.bankItemId, question.points]));
-    const reviewed = attempt.answers.map((answer) => ({
-      answer,
-      points: points.get(answer.bankItemId) ?? 0,
-      automaticScore: answer.score,
-      manualScore: answer.bankItem.type === "SHORT_ANSWER" ? (text(fd, `score_${answer.id}`) ? Number(text(fd, `score_${answer.id}`)) : undefined) : undefined,
-      feedback: answer.bankItem.type === "SHORT_ANSWER" ? text(fd, `feedback_${answer.id}`) : answer.feedback ?? "",
-    }));
-    const score = reviewedExamScore(reviewed.map((answer) => ({ automaticScore: answer.automaticScore, manualScore: answer.manualScore, points: answer.points })));
-    if (score == null) return failed("Completa todas las puntuaciones dentro de su rango permitido.");
-    await db.$transaction(async (tx) => {
-      for (const answer of reviewed.filter((item) => item.answer.bankItem.type === "SHORT_ANSWER")) {
-        await tx.examAnswer.update({ where: { id: answer.answer.id }, data: { score: answer.manualScore, feedback: answer.feedback || null } });
-      }
-      await tx.examAttempt.update({ where: { id: attempt.id }, data: { status: "GRADED", score } });
-      if (attempt.exam.gradeItem) {
-        const written = await writeGradeEntry(tx, {
-          institutionId: user.institutionId,
-          gradeItemId: attempt.exam.gradeItem.id,
-          enrollmentId: attempt.enrollmentId,
-          score,
-          actorId: user.id,
-          reason: text(fd, "reason") || "Revisión de respuestas abiertas del examen",
-        });
-        if (!written.ok) throw new GradeReasonRequired(written.message);
-      }
-    });
-    revalidatePath(`/dashboard/aula/${attempt.exam.courseId}`);
-    return success(`Examen revisado: ${score}/${attempt.maxScore ?? score}.`);
-  } catch (error) {
-    if (error instanceof GradeReasonRequired) return failed(error.message);
-    return failed();
-  }
+    const answers: ReviewInput["answers"] = Object.create(null);
+    for (const [key, value] of fd.entries()) {
+      if (!key.startsWith("score_")) continue;
+      if (typeof value !== "string") return failed("No pudimos leer las puntuaciones. Abre Exámenes y vuelve a los resultados.");
+      const id = key.slice("score_".length);
+      answers[id] = {
+        score: value.trim() === "" ? null : Number(value.replace(",", ".")),
+        feedback: text(fd, `feedback_${id}`),
+      };
+    }
+    if (!attemptId || !Object.keys(answers).length) {
+      return failed("Faltan los datos de la revisión. Abre Exámenes en el curso y entra a los resultados para revisar el intento.");
+    }
+    const reason = fd.get("reason");
+    const result = await reviewLegacyExamAttempt(user, attemptId, { answers, reason: typeof reason === "string" ? reason : "" });
+    if (!result.ok) return failed(result.message);
+    revalidatePath(`/dashboard/aula/${result.courseId}`, "layout");
+    return success(result.message);
+  } catch { return failed(); }
 }
 
 

@@ -369,45 +369,61 @@ async function findManagedExam(actor: Manager, examId: string) {
  * las nuevas se copian del banco como está hoy.
  */
 export async function updateExam(actor: Manager, examId: string, input: ExamInput): Promise<ExamResult> {
-  const exam = await findManagedExam(actor, examId);
-  if (!exam) return { ok: false, message: NO_EXAM };
-  const parsed = parseExam(input, exam.timezone);
+  const managed = await findManagedExam(actor, examId);
+  if (!managed) return { ok: false, message: NO_EXAM };
+  const parsed = parseExam(input, managed.timezone);
   if (!parsed.ok) return parsed;
   const data = parsed.data;
-  const scope = { institutionId: actor.institutionId, courseId: exam.courseId };
+  const scope = { institutionId: actor.institutionId, courseId: managed.courseId };
   const basics = { title: data.title, instructions: data.instructions || null, opensAt: data.opensAt, closesAt: data.closesAt };
-  const sameQuestions =
-    data.questions.length === exam.questions.length &&
-    data.questions.every((question, index) => question.bankItemId === exam.questions[index].bankItemId && question.points === exam.questions[index].points);
 
-  if (exam._count.attempts > 0) {
-    const sameRules =
-      (data.durationMinutes ?? null) === exam.durationMinutes && data.maxAttempts === exam.maxAttempts && data.showReview === exam.showReview;
-    if (!sameQuestions || !sameRules) return { ok: false, message: LOCKED_MESSAGE };
-    await db.$transaction(async (tx) => {
+  return db.$transaction(async (tx) => {
+    // Mismo primer bloqueo que startExamAttempt: nunca decidir con preguntas o conteos anteriores a la espera.
+    const locked = await tx.$queryRaw<Array<{ id: string }>>`
+      SELECT "id" FROM "exams"
+      WHERE "id" = ${examId} AND "institutionId" = ${actor.institutionId} AND "courseId" = ${managed.courseId}
+      FOR UPDATE`;
+    if (!locked.length) return { ok: false, message: NO_EXAM };
+    const exam = await tx.exam.findFirst({
+      where: { id: examId, ...scope },
+      select: {
+        id: true,
+        courseId: true,
+        isPublished: true,
+        durationMinutes: true,
+        maxAttempts: true,
+        showReview: true,
+        gradeItem: { select: { id: true } },
+        questions: { orderBy: { order: "asc" }, select: { bankItemId: true, points: true, snapshot: true } },
+        _count: { select: { attempts: true } },
+      },
+    });
+    if (!exam) return { ok: false, message: NO_EXAM };
+    const sameQuestions = data.questions.length === exam.questions.length && data.questions.every((question, index) =>
+      question.bankItemId === exam.questions[index].bankItemId && question.points === exam.questions[index].points);
+
+    if (exam._count.attempts > 0) {
+      const sameRules = (data.durationMinutes ?? null) === exam.durationMinutes &&
+        data.maxAttempts === exam.maxAttempts && data.showReview === exam.showReview;
+      if (!sameQuestions || !sameRules) return { ok: false, message: LOCKED_MESSAGE };
       await tx.exam.update({ where: { id: exam.id }, data: basics });
       if (exam.gradeItem) await tx.gradeItem.update({ where: { id: exam.gradeItem.id }, data: { title: data.title } });
-    });
-    return { ok: true, id: exam.id, courseId: exam.courseId, message: "Cambios guardados." };
-  }
+      return { ok: true, id: exam.id, courseId: exam.courseId, message: "Cambios guardados." };
+    }
 
-  if (exam.isPublished) {
-    const blocker = publishBlocker(data.questions);
-    if (blocker) return { ok: false, message: `${blocker} Si quieres dejarlo sin terminar, primero ocúltalo.` };
-  }
-  const kept = new Map(exam.questions.map((question) => [question.bankItemId, question.snapshot]));
-  const added = data.questions.map((question) => question.bankItemId).filter((id) => !kept.has(id));
-  const bank = added.length
-    ? await db.questionBankItem.findMany({ where: { ...scope, id: { in: added } }, select: { id: true, ...bankFields } })
-    : [];
-  const byId = new Map(bank.map((item) => [item.id, item]));
-  if (byId.size !== added.length) {
-    return { ok: false, message: "Alguna pregunta no pertenece al banco de este curso. Vuelve a elegir las preguntas." };
-  }
-
-  const locked = await db.$transaction(async (tx) => {
-    // Un estudiante pudo iniciar el examen mientras se editaba: en ese caso no se toca nada.
-    if (await tx.examAttempt.count({ where: { examId: exam.id } })) return true;
+    if (exam.isPublished) {
+      const blocker = publishBlocker(data.questions);
+      if (blocker) return { ok: false, message: `${blocker} Si quieres dejarlo sin terminar, primero ocúltalo.` };
+    }
+    const kept = new Map(exam.questions.map((question) => [question.bankItemId, question.snapshot]));
+    const added = data.questions.map((question) => question.bankItemId).filter((id) => !kept.has(id));
+    const bank = added.length
+      ? await tx.questionBankItem.findMany({ where: { ...scope, id: { in: added } }, select: { id: true, ...bankFields } })
+      : [];
+    const byId = new Map(bank.map((item) => [item.id, item]));
+    if (byId.size !== added.length) {
+      return { ok: false, message: "Alguna pregunta no pertenece al banco de este curso. Vuelve a elegir las preguntas." };
+    }
     await tx.exam.update({
       where: { id: exam.id },
       data: { ...basics, durationMinutes: data.durationMinutes ?? null, maxAttempts: data.maxAttempts, showReview: data.showReview },
@@ -428,10 +444,8 @@ export async function updateExam(actor: Manager, examId: string, input: ExamInpu
     if (exam.gradeItem) {
       await tx.gradeItem.update({ where: { id: exam.gradeItem.id }, data: { title: data.title, maxScore: total(data.questions) } });
     }
-    return false;
-  });
-  if (locked) return { ok: false, message: LOCKED_MESSAGE };
-  return { ok: true, id: exam.id, courseId: exam.courseId, message: "Cambios guardados." };
+    return { ok: true, id: exam.id, courseId: exam.courseId, message: "Cambios guardados." };
+  }, { isolationLevel: "ReadCommitted" });
 }
 
 /** Publica (los estudiantes lo ven y pueden presentarlo) u oculta el examen. */

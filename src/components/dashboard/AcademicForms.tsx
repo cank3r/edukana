@@ -1,9 +1,10 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import Link from "next/link";
 import type { ReactNode } from "react";
 import type { ActionState } from "@/app/dashboard/actions";
-import { createCourse, createExam, createGradebook, createLesson, createQuestion, createSection, enrollStudent, issueCertificate, markLessonComplete, reviewExamAttempt, saveAttendance, saveScheduleSlot, setEnrollmentCompletion, submitExam, togglePublication } from "@/app/dashboard/academico/actions";
+import { createCourse, createExam, createGradebook, createLesson, createQuestion, createSection, enrollStudent, issueCertificate, markLessonComplete, saveAttendance, saveScheduleSlot, setEnrollmentCompletion, submitExam, togglePublication } from "@/app/dashboard/academico/actions";
 
 const initial: ActionState = { ok: false, message: "" };
 const input = "w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-blue-500";
@@ -57,9 +58,12 @@ export function ExamAttemptForm({ examId, questions }: { examId: string; questio
 }
 
 
-type ExamReviewAnswer = { id: string; prompt: string; response: string | null; points: number; score: number | null; feedback: string | null };
-export function ExamReviewForm({ attemptId, answers }: { attemptId: string; answers: ExamReviewAnswer[] }) {
-  return <Form action={reviewExamAttempt} submitLabel="Calificar examen"><Hidden name="attemptId" value={attemptId} />{answers.map((answer) => <fieldset className="rounded-xl border p-3" key={answer.id}><legend className="px-2 font-semibold">{answer.prompt}</legend><p className="mb-2 whitespace-pre-wrap text-sm text-slate-700">{answer.response || "Sin respuesta"}</p><div className="grid gap-2 sm:grid-cols-2"><Field label={`Puntuación / ${answer.points}`} name={`score_${answer.id}`} type="number" min="0" max={String(answer.points)} step="0.01" defaultValue={answer.score ?? undefined} required /><Field label="Retroalimentación" name={`feedback_${answer.id}`} defaultValue={answer.feedback ?? ""} /></div></fieldset>)}</Form>;
+/** Review lives on the results screen, which reads the frozen exam questions. */
+export function ExamReviewForm({ courseId, examId }: { courseId: string; examId: string }) {
+  return <Link
+    href={`/dashboard/aula/${courseId}/examenes/${examId}/resultados`}
+    className="inline-flex min-h-11 items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white"
+  >Ver resultados y revisar</Link>;
 }
 
 export function ScheduleForm({ courseId }: { courseId: string }) {
