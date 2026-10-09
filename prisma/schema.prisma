@@ -95,6 +95,8 @@ model User {
   role               Role                @default(STUDENT)
   status             UserStatus          @default(ACTIVE)
   sessionVersion     Int                 @default(0)
+  identityId         String?
+  identity           Identity?           @relation(fields: [identityId], references: [id])
   accounts           Account[]
   sessions           Session[]
   createdAt          DateTime            @default(now())
@@ -122,7 +124,9 @@ model User {
   gradeEntryRevisions     GradeEntryRevision[] @relation("GradeRevisionActor")
 
   @@unique([institutionId, email])
+  @@unique([institutionId, identityId])
   @@index([institutionId, role])
+  @@index([identityId])
   @@map("users")
 }
 
@@ -1108,4 +1112,19 @@ model GradeEntryRevision {
 
   @@index([institutionId, gradeEntryId])
   @@map("grade_entry_revisions")
+}
+
+// --- S2: identidad global. `User` es la pertenencia de una identidad a una institución. ---
+
+model Identity {
+  id             String     @id @default(cuid())
+  email          String     @unique
+  passwordHash   String?
+  sessionVersion Int        @default(0)
+  status         UserStatus @default(ACTIVE)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  users          User[]
+
+  @@map("identities")
 }

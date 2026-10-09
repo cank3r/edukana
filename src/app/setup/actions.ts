@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { ensureIdentity } from "@/server/identity";
 import { checkSetupToken } from "@/server/setup-token";
 
 export type SetupState = { ok: boolean; message: string };
@@ -31,8 +32,10 @@ export async function createFirstInstitution(_state: SetupState, formData: FormD
         data: { name: parsed.data.institutionName, slug: parsed.data.slug, type: "SCHOOL" },
         select: { id: true },
       });
+      const identityId = await ensureIdentity(tx, { email: parsed.data.adminEmail, passwordHash: password });
       const admin = await tx.user.create({
         data: {
+          identityId,
           institutionId: institution.id,
           name: parsed.data.adminName,
           email: parsed.data.adminEmail,

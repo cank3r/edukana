@@ -99,9 +99,3 @@ test("avisos: el tutor lo recibe por su vínculo activo y deja de recibirlo al r
     await db.guardianship.update({ where: { id: A.guardianshipId }, data: { status: "ACTIVE", revokedAt: null } });
   }
 });
-
-test("estado actual documentado: el mismo correo activo en dos instituciones es ambiguo para el login", async () => {
-  // Reproduce la consulta de `authorize` en src/lib/auth.ts. S2 (identidad global) debe cambiar esta expectativa.
-  const matches = await db.user.findMany({ where: { email: "compartido@prueba.test", status: "ACTIVE" }, take: 2 });
-  assert.equal(matches.length, 2);
-});

@@ -3,6 +3,7 @@ import { after, before, beforeEach, test } from "node:test";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { MemoryEmailProvider, setEmailProviderForTests } from "@/server/integrations/email";
+import { authenticateCredentials } from "@/server/login";
 import { requestPasswordReset, resetPasswordWithToken } from "@/server/password-reset";
 import { resolveLiveIdentity } from "@/server/session";
 import { A, B, ensureSeed } from "./setup";
@@ -27,7 +28,10 @@ after(async () => {
   await db.passwordResetToken.deleteMany();
   await db.loginAttempt.deleteMany();
   await db.auditLog.deleteMany({ where: { action: "PASSWORD_RESET_COMPLETED" } });
-  await db.user.updateMany({ where: { id: { in: [A.student.id, A.teacher.id] } }, data: { password: null, sessionVersion: 0 } });
+  await db.identity.updateMany({
+    where: { email: { in: ["estudiante@a.test", "docente@a.test", "compartido@prueba.test"] } },
+    data: { passwordHash: null, sessionVersion: 0 },
+  });
   await db.$disconnect();
 });
 
@@ -53,8 +57,8 @@ test("recuperación: el enlace cambia la contraseña, sirve una sola vez e inval
   assert.notEqual(stored.tokenHash, token, "el enlace no se guarda en claro");
 
   assert.deepEqual(await resetPasswordWithToken({ token, password: NEW_PASSWORD }), { ok: true });
-  const user = await db.user.findUniqueOrThrow({ where: { id: A.student.id } });
-  assert.equal(await bcrypt.compare(NEW_PASSWORD, user.password ?? ""), true);
+  const identity = await db.identity.findUniqueOrThrow({ where: { email: "estudiante@a.test" } });
+  assert.equal(await bcrypt.compare(NEW_PASSWORD, identity.passwordHash ?? ""), true);
   assert.equal(await resolveLiveIdentity({ userId: A.student.id, sessionVersion: 0 }), null);
   assert.ok(await resolveLiveIdentity({ userId: A.student.id, sessionVersion: 1 }));
 
@@ -91,22 +95,29 @@ test("recuperación: una contraseña débil se rechaza sin consumir el enlace", 
   assert.equal((await resetPasswordWithToken({ token, password: NEW_PASSWORD })).ok, true);
 });
 
-test("recuperación: el mismo correo en dos instituciones recibe un enlace por cuenta y no se fusionan", async () => {
+test("recuperación: el mismo correo en dos instituciones recibe un solo enlace y la contraseña vale en ambas", async () => {
   await requestPasswordReset({ email: "compartido@prueba.test", ip: nextIp() });
-  assert.equal(mail.sent.length, 2);
-  assert.deepEqual(mail.sent.map((message) => message.subject).sort(), [
-    "Restablece tu contraseña de Instituto A",
-    "Restablece tu contraseña de Instituto B",
-  ]);
-  const token = tokenFrom(mail.sent.find((message) => message.subject.endsWith("Instituto A"))?.text ?? "");
-  assert.equal((await resetPasswordWithToken({ token, password: NEW_PASSWORD })).ok, true);
-  const [inA, inB] = await Promise.all([
-    db.user.findUniqueOrThrow({ where: { id: A.teacher2.id } }),
-    db.user.findUniqueOrThrow({ where: { id: B.teacher2.id } }),
-  ]);
-  assert.ok(inA.password);
-  assert.equal(inB.password, null);
-  await db.user.update({ where: { id: A.teacher2.id }, data: { password: null, sessionVersion: 0 } });
+  assert.equal(mail.sent.length, 1);
+  assert.match(mail.sent[0].text, /Instituto A, Instituto B/);
+  assert.equal((await resetPasswordWithToken({ token: tokenFrom(mail.sent[0].text), password: NEW_PASSWORD })).ok, true);
+  const inA = await authenticateCredentials({ email: "compartido@prueba.test", password: NEW_PASSWORD, ip: nextIp() });
+  const inB = await authenticateCredentials({
+    email: "compartido@prueba.test",
+    password: NEW_PASSWORD,
+    ip: nextIp(),
+    institutionSlug: "instituto-b",
+  });
+  assert.equal(inA?.institutionId, A.institutionId);
+  assert.equal(inB?.institutionId, B.institutionId);
+});
+
+test("recuperación: cuenta importada sin contraseña la define con el enlace y luego entra", async () => {
+  assert.equal(await authenticateCredentials({ email: "estudiante2@a.test", password: NEW_PASSWORD, ip: nextIp() }), null);
+  await requestPasswordReset({ email: "estudiante2@a.test", ip: nextIp() });
+  assert.equal((await resetPasswordWithToken({ token: tokenFrom(mail.sent[0].text), password: NEW_PASSWORD })).ok, true);
+  const login = await authenticateCredentials({ email: "estudiante2@a.test", password: NEW_PASSWORD, ip: nextIp() });
+  assert.equal(login?.id, A.student2.id);
+  await db.identity.update({ where: { email: "estudiante2@a.test" }, data: { passwordHash: null, sessionVersion: 0 } });
 });
 
 test("recuperación: las solicitudes repetidas para un correo dejan de enviar correos al llegar al límite", async () => {
