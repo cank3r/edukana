@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useRef, useState, useTransition } from "react";
 import { importPeopleAction, type PeopleImportState } from "@/server/actions/people-import";
@@ -131,7 +132,7 @@ export function InvitePending({ pending }: { pending: number }) {
   );
 }
 
-type Person = { id: string; name: string; email: string; phone: string; role: string; roleLabel: string; suspended: boolean; hasPassword: boolean; isSelf: boolean };
+type Person = { id: string; name: string; email: string; phone: string; role: string; roleLabel: string; suspended: boolean; hasPassword: boolean; isSelf: boolean; detailHref?: string };
 
 const ROLE_OPTIONS = [
   { value: "STUDENT", label: "Estudiante" },
@@ -156,7 +157,7 @@ export function PersonAccess({ person }: { person: Person }) {
     <li className="py-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0">
-          <p className="truncate font-semibold text-slate-950">{person.name}</p>
+          <p className="truncate font-semibold text-slate-950">{person.detailHref ? <Link className="text-blue-700 underline" href={person.detailHref}>{person.name}</Link> : person.name}</p>
           <p className="truncate text-sm text-slate-600">{person.email} · {person.roleLabel}</p>
           <p className="mt-1 text-xs font-semibold">
             {person.suspended ? <span className="rounded-full bg-red-50 px-2 py-1 text-red-700">Suspendido</span> : person.hasPassword ? <span className="rounded-full bg-emerald-50 px-2 py-1 text-emerald-700">Puede entrar</span> : <span className="rounded-full bg-amber-50 px-2 py-1 text-amber-800">Aún no crea su contraseña</span>}

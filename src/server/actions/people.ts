@@ -106,3 +106,39 @@ export async function updatePersonAction(_state: PeopleActionState, formData: Fo
     return failure("updatePersonAction", error);
   }
 }
+
+/**
+ * Agrega una persona. Campos: `name`, `email`, `role`, `phone` (opcional) e `invite`
+ * (casilla: si viene marcada se le envía la invitación en el mismo paso).
+ */
+export async function createPersonAction(_state: PeopleActionState, formData: FormData): Promise<PeopleActionState> {
+  const guard = await requirePeopleManager();
+  if (guard.error !== null) return { ok: false, message: guard.error };
+  let userId: string;
+  try {
+    const { createPerson } = await import("@/server/people/create");
+    const result = await createPerson(guard.actor, {
+      name: String(formData.get("name") ?? ""),
+      email: String(formData.get("email") ?? ""),
+      role: String(formData.get("role") ?? ""),
+      phone: String(formData.get("phone") ?? ""),
+    });
+    if (!result.ok) return result;
+    userId = result.userId;
+    revalidatePath("/dashboard/gestion");
+    revalidatePath("/dashboard/gestion/accesos");
+  } catch (error) {
+    return failure("createPersonAction", error);
+  }
+  if (!formData.get("invite")) {
+    return { ok: true, message: "Persona agregada. Todavía no recibió su invitación: envíasela desde su fila cuando quieras." };
+  }
+  const notSent = "Persona agregada, pero no se pudo enviar el correo de invitación. Búscala en la lista y usa «Enviar invitación» en unos minutos.";
+  try {
+    const invitation = await sendInvitations(guard.actor, [userId]);
+    return { ok: true, message: invitation.sent === 1 ? "Persona agregada. Le enviamos la invitación a su correo." : notSent };
+  } catch (error) {
+    console.error("createPersonAction: invitación no enviada", { correlationId: crypto.randomUUID(), error });
+    return { ok: true, message: notSent };
+  }
+}
