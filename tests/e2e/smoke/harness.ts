@@ -41,6 +41,7 @@ export class Tour {
   private readonly records: ScreenRecord[] = [];
   private consoleErrors: string[] = [];
   private serverErrors: string[] = [];
+  private missing: string[] = [];
   private order: number;
   private readonly project: string;
   private readonly isMobile: boolean;
@@ -68,9 +69,11 @@ export class Tour {
       this.consoleErrors.push(`error de página: ${error.message.slice(0, 300)}`);
     });
     page.on("response", (response: Response) => {
-      if (response.status() >= 500 && response.url().startsWith(this.origin)) {
-        this.serverErrors.push(`${response.status()} en ${response.request().method()} ${new URL(response.url()).pathname}`);
-      }
+      if (!response.url().startsWith(this.origin)) return;
+      const where = `${response.request().method()} ${new URL(response.url()).pathname}`;
+      if (response.status() >= 500) this.serverErrors.push(`${response.status()} en ${where}`);
+      // Los 4xx solo se anotan para explicar un «Failed to load resource» de la consola (dice el estado, no la dirección).
+      else if (response.status() >= 400) this.missing.push(`${response.status()} en ${where}`);
     });
   }
 
@@ -96,6 +99,7 @@ export class Tour {
   async step(screen: string, action: () => Promise<void>) {
     this.consoleErrors = [];
     this.serverErrors = [];
+    this.missing = [];
     const problems: string[] = [];
     const warnings: string[] = [];
     try {
@@ -115,6 +119,9 @@ export class Tour {
       problems.push(`No se pudo leer la pantalla: ${error instanceof Error ? error.message.slice(0, 200) : String(error)}`);
     }
     problems.push(...new Set(this.serverErrors), ...new Set(this.consoleErrors));
+    if (this.consoleErrors.some((text) => /Failed to load resource/.test(text)) && this.missing.length) {
+      problems.push(`Respuestas con error: ${[...new Set(this.missing)].join(", ")}`);
+    }
 
     if (this.isMobile) {
       const overflow = await this.page
@@ -142,6 +149,12 @@ export class Tour {
     await this.capture(join(directory, file)).catch((error) => {
       warnings.push(`No se pudo guardar la captura: ${String(error).slice(0, 150)}`);
     });
+
+    // El texto visible de la pantalla también se guarda: sirve para revisar redacción y términos internos.
+    const textDirectory = join(process.cwd(), SMOKE_DIR, "texts", this.project);
+    mkdirSync(textDirectory, { recursive: true });
+    const text = await this.page.locator("body").innerText({ timeout: 5_000 }).catch(() => "(no se pudo leer el texto)");
+    writeFileSync(join(textDirectory, file.replace(/\.png$/, ".txt")), `${this.page.url()}\n\n${text.replace(/\n{3,}/g, "\n\n")}\n`);
 
     const url = new URL(this.page.url());
     this.records.push({

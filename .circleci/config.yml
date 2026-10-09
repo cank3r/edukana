@@ -105,6 +105,18 @@ jobs:
           name: Mostrar el informe del recorrido
           when: always
           command: cat smoke-artifacts/smoke-report.md || echo "No se generó el informe."
+      - run:
+          name: Texto de las pantallas en móvil (administrador)
+          when: always
+          command: tail -n +1 smoke-artifacts/texts/movil/*-administrador-*.txt || true
+      - run:
+          name: Texto de las pantallas en móvil (docente)
+          when: always
+          command: tail -n +1 smoke-artifacts/texts/movil/*-docente-*.txt || true
+      - run:
+          name: Texto de las pantallas en móvil (estudiante)
+          when: always
+          command: tail -n +1 smoke-artifacts/texts/movil/*-estudiante-*.txt || true
       - store_test_results:
           when: always
           path: smoke-artifacts/junit

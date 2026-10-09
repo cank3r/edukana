@@ -14,7 +14,8 @@ import { demoDayKey, loadSeed, SMOKE_ACCOUNTS } from "./shared";
 const seed = loadSeed();
 const course = `/dashboard/aula/${seed.courseId}`;
 
-const visible = (page: Page, text: string | RegExp) => expect(page.getByText(text).first()).toBeVisible();
+/** Hay texto repetido en partes ocultas (menú móvil cerrado, tabla o tarjetas según el ancho): solo cuenta lo visible. */
+const visible = (page: Page, text: string | RegExp) => expect(page.getByText(text).filter({ visible: true }).first()).toBeVisible();
 const heading = (page: Page, name: string | RegExp) => expect(page.getByRole("heading", { name }).first()).toBeVisible();
 /** Mensaje de éxito de una acción (los formularios lo muestran con role="status"). */
 const done = (page: Page, text: RegExp) => expect(page.getByRole("status").filter({ hasText: text }).first()).toBeVisible();
@@ -30,9 +31,7 @@ test("administrador", async ({ page }, info) => {
     return;
   }
 
-  await tour.open("inicio", "/dashboard", async () => {
-    await expect(page.getByText(/Primeros pasos|estudiantes|personas/i).first()).toBeVisible();
-  });
+  await tour.open("inicio", "/dashboard", () => heading(page, /Primeros pasos|Tu institución en números/));
   await tour.open("personas", "/dashboard/gestion", () => visible(page, "Ana Rodríguez"));
   await tour.step("personas agregar formulario", async () => {
     await page.getByRole("button", { name: "Agregar persona" }).click();
@@ -47,7 +46,7 @@ test("administrador", async ({ page }, info) => {
     await done(page, /Persona agregada/);
     await visible(page, `Marta Prueba ${tag}`);
   });
-  await tour.open("importar e invitar", "/dashboard/gestion/accesos", () => heading(page, /Importar|invitar/i));
+  await tour.open("importar e invitar", "/dashboard/gestion/accesos", () => heading(page, "Personas y acceso"));
   await tour.open("programas", "/dashboard/gestion/programas", () => visible(page, "Bachillerato Técnico"));
   await tour.step("programa detalle", async () => {
     await page.getByRole("link", { name: /Bachillerato Técnico/ }).first().click();
@@ -88,8 +87,11 @@ test("administrador", async ({ page }, info) => {
     await card.getByRole("button", { name: "Sí, borrar aviso" }).click();
     await expect(page.getByRole("article").filter({ hasText: corrected })).toHaveCount(0);
   });
-  await tour.open("mi perfil", "/dashboard/perfil", () => visible(page, "Carla Méndez"));
-  await tour.open("calendario", "/dashboard/calendario", () => heading(page, /Calendario|Agenda/i));
+  await tour.open("mi perfil", "/dashboard/perfil", async () => {
+    await heading(page, "Mi perfil");
+    await visible(page, SMOKE_ACCOUNTS.admin);
+  });
+  await tour.open("calendario", "/dashboard/calendario", () => heading(page, "Calendario"));
   await tour.open("configuracion", "/dashboard/configuracion", () => heading(page, /Configuración/i));
   await tour.open("cursos", "/dashboard/aula", () => visible(page, "Matemática Básica"));
   tour.finish();
@@ -106,7 +108,10 @@ test("docente", async ({ page }, info) => {
     return;
   }
 
-  await tour.open("inicio", "/dashboard", () => visible(page, /Matemática Básica|curso/i));
+  await tour.open("inicio", "/dashboard", async () => {
+    await heading(page, "¿Qué tengo hoy?");
+    await visible(page, "Matemática Básica");
+  });
   await tour.open("mis cursos", "/dashboard/aula", () => visible(page, "Matemática Básica"));
   await tour.step("curso portada", async () => {
     await page.getByRole("link", { name: /Matemática Básica/ }).first().click();
@@ -173,7 +178,8 @@ test("docente", async ({ page }, info) => {
       await simple.click();
       await done(page, /Listo/);
     }
-    await visible(page, /Ana Rodríguez|Pedro Jiménez/);
+    await heading(page, "Notas de 2 estudiantes");
+    await visible(page, "Ana Rodríguez");
   });
 
   const liveClass = `Clase de dudas (${tag})`;
@@ -189,25 +195,31 @@ test("docente", async ({ page }, info) => {
   });
   await tour.open("editar curso", `${course}/editar`);
   await tour.open("avisos", "/dashboard/comunidad", () => visible(page, "Bienvenidos al nuevo período"));
-  await tour.open("calendario", "/dashboard/calendario");
-  await tour.open("mi perfil", "/dashboard/perfil", () => visible(page, "Luis Peralta"));
+  await tour.open("calendario", "/dashboard/calendario", () => heading(page, "Calendario"));
+  await tour.open("mi perfil", "/dashboard/perfil", async () => {
+    await heading(page, "Mi perfil");
+    await visible(page, SMOKE_ACCOUNTS.teacher);
+  });
   tour.finish();
 });
 
 test("estudiante", async ({ page }, info) => {
   const mobile = info.project.name === "movil";
-  const name = mobile ? "Ana Rodríguez" : "Pedro Jiménez";
+  const email = mobile ? SMOKE_ACCOUNTS.student1 : SMOKE_ACCOUNTS.student2;
   const tour = new Tour(page, info, "estudiante", 60);
   try {
-    await tour.login(mobile ? SMOKE_ACCOUNTS.student1 : SMOKE_ACCOUNTS.student2);
+    await tour.login(email);
   } catch (error) {
     await tour.aborted(`No se pudo iniciar sesión: ${String(error).slice(0, 200)}`);
     tour.finish();
     return;
   }
 
-  await tour.open("inicio", "/dashboard", () => visible(page, /Matemática Básica/));
-  await tour.open("mi aprendizaje", "/dashboard/portal");
+  await tour.open("inicio", "/dashboard", async () => {
+    await heading(page, "¿Qué tengo hoy?");
+    await visible(page, "Matemática Básica");
+  });
+  await tour.open("mi aprendizaje", "/dashboard/portal", () => heading(page, "Mis cursos"));
   await tour.open("mis cursos", "/dashboard/aula", () => visible(page, "Matemática Básica"));
   await tour.step("curso portada", async () => {
     await page.getByRole("link", { name: /Matemática Básica/ }).first().click();
@@ -260,10 +272,13 @@ test("estudiante", async ({ page }, info) => {
     await heading(page, /Resultado: Prueba corta/);
   });
 
-  await tour.open("mis notas", `${course}/mis-notas`);
+  await tour.open("mis notas", `${course}/mis-notas`, () => heading(page, "Mis notas"));
   await tour.open("clases en vivo", `${course}/clases`, () => visible(page, "Repaso de la unidad 1"));
   await tour.open("avisos", "/dashboard/comunidad", () => visible(page, "Bienvenidos al nuevo período"));
-  await tour.open("calendario", "/dashboard/calendario");
-  await tour.open("mi perfil", "/dashboard/perfil", () => visible(page, name));
+  await tour.open("calendario", "/dashboard/calendario", () => heading(page, "Calendario"));
+  await tour.open("mi perfil", "/dashboard/perfil", async () => {
+    await heading(page, "Mi perfil");
+    await visible(page, email);
+  });
   tour.finish();
 });
