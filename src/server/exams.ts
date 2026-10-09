@@ -71,16 +71,23 @@ function expiry(now: Date, durationMinutes: number | null, closesAt: Date | null
   return byDuration ?? closesAt ?? new Date(now.getTime() + 24 * 60 * 60_000);
 }
 
-// El bloqueo de fila (FOR UPDATE) serializa por estudiante; READ COMMITTED basta y evita reintentos.
+// Los bloqueos de fila (FOR UPDATE) serializan las operaciones; READ COMMITTED relee el estado tras esperar.
 const rowLocked = { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted } as const;
 
 /**
  * Inicia un intento o devuelve el que ya está en curso. Las preguntas solo se entregan aquí.
- * La fila de matrícula se bloquea para que dos inicios simultáneos del mismo estudiante no
- * consuman dos intentos.
+ * Primero bloquea el examen, igual que su edición, antes de leer las preguntas y las reglas.
+ * Después bloquea la matrícula para que dos inicios del mismo estudiante no consuman dos intentos.
  */
 export async function startExamAttempt(actor: Actor, examId: string, now = new Date()): Promise<StartExamResult> {
   return db.$transaction(async (tx) => {
+    const unavailable = { ok: false, reason: "unavailable", message: "El examen no está disponible." } as const;
+    const lockedExam = await tx.$queryRaw<Array<{ id: string }>>`
+      SELECT "id" FROM "exams"
+      WHERE "id" = ${examId} AND "institutionId" = ${actor.institutionId} AND "isPublished" = true
+      FOR UPDATE`;
+    if (!lockedExam.length) return unavailable;
+
     const exam = await tx.exam.findFirst({
       where: { id: examId, institutionId: actor.institutionId, isPublished: true },
       select: {
@@ -93,7 +100,6 @@ export async function startExamAttempt(actor: Actor, examId: string, now = new D
         questions: { select: questionSelect, orderBy: { order: "asc" } },
       },
     });
-    const unavailable = { ok: false, reason: "unavailable", message: "El examen no está disponible." } as const;
     if (!exam || !exam.questions.length) return unavailable;
 
     const locked = await tx.$queryRaw<Array<{ id: string }>>`
