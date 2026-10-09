@@ -3,7 +3,6 @@ import { createRequire } from "node:module";
 import { after, before, beforeEach, test } from "node:test";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { PrismaClient } from "@prisma/client";
-import { PortalTasks } from "../src/app/dashboard/portal/PortalTasks";
 
 const student = { id: "student", institutionId: "institution", role: "STUDENT" as const };
 const now = new Date("2026-10-09T15:00:00Z");
@@ -55,12 +54,19 @@ const fake = {
         where.course.institutionId === course.institutionId && course.isPublished && where.status.in.includes(enrollment.status)
         ? { ...enrollment, course: structuredClone(course) } : null;
     },
-    findMany: async (query: { where: { studentId: string; course: { institutionId: string } }; include: object }) => {
+    findMany: async (query: { where: object; select: { course: { select: Record<string, unknown> } } & Record<string, unknown> }) => {
       reads.push("portal-courses");
-      assert.deepEqual(query.where, { studentId: student.id, course: { institutionId: student.institutionId } });
-      // The actual page may not request raw assignment/submission data alongside its M2 cards.
-      assert.deepEqual(query.include, { course: { include: { teacher: { select: { name: true } } } } });
-      return [{ ...enrollment, course: structuredClone(course) }];
+      // «Mis cursos» lists only the student's visible enrollments in published, non-archived courses of their institution.
+      assert.deepEqual(query.where, {
+        studentId: student.id,
+        status: { in: ["ACTIVE", "COMPLETED"] },
+        course: { institutionId: student.institutionId, isPublished: true, archivedAt: null },
+      });
+      // The page may not request raw assignment, submission or grade-entry data alongside its course cards.
+      for (const key of ["assignments", "submissions", "gradeEntries"]) {
+        assert.equal(Object.hasOwn(query.select, key) || Object.hasOwn(query.select.course.select, key), false, key);
+      }
+      return [{ ...enrollment, progressPercent: 40, course: structuredClone(course) }];
     },
   },
   assignment: { findMany: async ({ where, select, take }: TaskQuery) => {
@@ -115,46 +121,39 @@ beforeEach(() => {
   role = "STUDENT"; permission = true; reads = [];
 });
 const read = () => listPortalTasks(student, course.id);
-const renderTasks = async () => renderToStaticMarkup(<PortalTasks data={await read()} />);
 
-test("actual portal page redacts a hidden linked grade instead of showing stale Submission.score", async () => {
-  item!.isPublished = false;
-  const html = renderToStaticMarkup(await PortalPage());
-  assert.ok(html.includes("Tarea de prueba"));
-  assert.ok(html.includes("Entregada"));
-  for (const value of ["Nota:", "37 de", "86 de", "Comentario confidencial", "Exonerada"]) assert.ok(!html.includes(value));
-  assert.ok(html.includes("Calificación final:"));
-  assert.ok(html.includes("78"));
-  assert.ok(html.includes("Estado de cuenta"));
-  assert.deepEqual(reads.sort(), ["course-access", "payments", "portal-courses", "tasks"].sort());
+test("actual portal page shows course cards without any task grade, submission or feedback", async () => {
+  for (const published of [false, true]) {
+    item!.isPublished = published; reads = [];
+    const html = renderToStaticMarkup(await PortalPage());
+    assert.ok(html.includes("Mi curso"));
+    assert.ok(html.includes("Nota final:"));
+    assert.ok(html.includes("78"));
+    assert.ok(html.includes("Estado de cuenta"));
+    for (const value of ["Tarea de prueba", "Nota: ", "37 de", "86", "Comentario confidencial", "Exonerada"]) assert.ok(!html.includes(value), value);
+    assert.deepEqual(reads.sort(), ["payments", "portal-courses"]);
+  }
 });
 
-test("portal reader and rendered page use corrected linked grades, including zero", async () => {
+test("portal reader uses corrected linked grades, including zero", async () => {
   for (const score of [86, 0]) {
     entries[0].score = score;
     const result = await read();
     assert.equal(result?.assignments[0].score, score);
     assert.ok(!JSON.stringify(result).includes("Comentario confidencial"));
-    const html = renderToStaticMarkup(await PortalPage());
-    assert.ok(html.includes(`Nota: ${score} de 100`));
-    assert.ok(!html.includes("37 de"));
   }
 });
 
 test("published manual grades and exemptions appear without a Submission and contain no exempt score", async () => {
   submissions = [];
   assert.equal((await read())?.assignments[0].score, 86);
-  assert.ok((await renderTasks()).includes("Nota: 86 de 100"));
   entries[0].isExcused = true;
   const result = await read();
   assert.equal(result?.assignments[0].score, null);
   assert.equal(result?.assignments[0].isExcused, true);
-  const html = await renderTasks();
-  assert.ok(html.includes("Exonerada"));
-  for (const value of ["Nota:", "86", "Comentario confidencial"]) assert.ok(!html.includes(value));
+  assert.ok(!JSON.stringify(result).includes("Comentario confidencial"));
   item!.isPublished = false;
   assert.equal((await read())?.assignments[0].isExcused, false);
-  assert.ok(!(await renderTasks()).includes("Exonerada"));
 });
 
 test("a missing, cleared, other-student or other-institution entry never falls back to a Submission grade", async () => {
@@ -164,7 +163,6 @@ test("a missing, cleared, other-student or other-institution entry never falls b
   for (const candidate of entryCases) {
     entries = candidate;
     assert.equal((await read())?.assignments[0].score, null);
-    assert.ok(!(await renderTasks()).includes("Nota:"));
   }
 });
 
@@ -218,17 +216,4 @@ test("the actual portal retains both STUDENT role and capability checks before r
   role = "STUDENT"; permission = false;
   await assert.rejects(PortalPage(), /NEXT_REDIRECT/);
   assert.deepEqual(reads, []);
-});
-
-test("rendered task links use existing routes and remain keyboard/touch reachable with long titles", async () => {
-  task.title = "UnaTareaConUnTítuloMuyLargo".repeat(10);
-  const html = await renderTasks();
-  assert.ok(html.includes('href="/dashboard/aula/course/tareas/task"'));
-  assert.ok(html.includes('href="/dashboard/aula/course/tareas"'));
-  assert.ok(html.includes("Ver tareas"));
-  assert.ok(html.includes("min-h-11"));
-  assert.ok(html.includes("wrap-anywhere"));
-  assert.ok(html.includes("focus-visible:outline"));
-  assert.ok(!html.includes('tabindex="-1"'));
-  assert.ok(!html.includes("overflow-x-auto"));
 });

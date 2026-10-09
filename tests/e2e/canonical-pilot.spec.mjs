@@ -1,3 +1,9 @@
+// OBSOLETO (2026-10): este recorrido de Kiro usa pantallas que ya no existen (puesta en marcha,
+// formularios en línea de la portada del curso para secciones, lecciones, tareas, notas, matrícula,
+// asistencia y finalización). No se ejecuta en CI y se quitó el script `test:pilot:preview`.
+// Lo que sigue vigente lo cubre el recorrido en navegador `tests/e2e/smoke/recorrido.smoke.ts`
+// (administración, docente y estudiante sobre las pantallas nuevas). Se conserva solo como
+// referencia del modo aditivo contra un Preview desplegado; no lo actualices: reescríbelo si vuelve a hacer falta.
 import { test, expect } from "@playwright/test";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";

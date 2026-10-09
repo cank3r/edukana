@@ -69,17 +69,3 @@ const BREADCRUMB_LABELS: Record<string, string> = {
 export function breadcrumbLabel(segment: string): string {
   return BREADCRUMB_LABELS[segment] ?? "Detalle";
 }
-
-export const COURSE_TABS = [
-  { href: "#resumen", label: "Resumen" },
-  { href: "#contenido", label: "Contenido" },
-  { href: "#estudiantes", label: "Estudiantes" },
-  { href: "#asistencia", label: "Asistencia" },
-  { href: "#tareas-examenes", label: "Tareas y exámenes" },
-  { href: "#calificaciones", label: "Calificaciones" },
-] as const;
-
-export const COURSE_MORE_AREAS = [
-  { href: "#horario", label: "Horario" },
-  { href: "#certificados", label: "Certificados" },
-] as const;
