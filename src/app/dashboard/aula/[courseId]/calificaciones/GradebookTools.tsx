@@ -115,10 +115,17 @@ export function PublishToggle({ courseId, itemId, published, gradedCount }: { co
   );
 }
 
-/** Borrar una actividad manual, avisando cuántas notas se pierden. */
+/** Solo se ofrece borrar una actividad manual sin notas ni exoneraciones registradas. */
 export function DeleteItem({ courseId, itemId, title, gradedCount }: { courseId: string; itemId: string; title: string; gradedCount: number }) {
   const [state, action, pending] = useActionState(deleteManualItemAction, empty);
   const [confirming, setConfirming] = useState(false);
+  if (gradedCount > 0) {
+    return (
+      <p className="text-sm text-slate-600">
+        No se puede borrar porque tiene notas, exoneraciones o historial. Puedes editar la actividad.
+      </p>
+    );
+  }
   return (
     <form action={action}>
       <input type="hidden" name="courseId" value={courseId} />
@@ -126,7 +133,7 @@ export function DeleteItem({ courseId, itemId, title, gradedCount }: { courseId:
       {confirming ? (
         <div className="rounded-lg bg-red-50 p-3 text-sm text-red-900">
           <p>
-            Se borrará «{title}»{gradedCount > 0 ? ` junto con ${gradedCount} ${gradedCount === 1 ? "nota ya puesta" : "notas ya puestas"}` : ""}. No se puede deshacer.
+            Se borrará «{title}» solo si sigue sin notas, exoneraciones ni historial. No se puede deshacer.
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
             <button className={danger} disabled={pending}>{pending ? "Borrando…" : "Sí, borrar"}</button>
@@ -134,7 +141,7 @@ export function DeleteItem({ courseId, itemId, title, gradedCount }: { courseId:
           </div>
         </div>
       ) : (
-        <button type="button" className={danger} onClick={() => setConfirming(true)}>Borrar</button>
+        <button type="button" className={danger} disabled={pending} onClick={() => setConfirming(true)}>Borrar</button>
       )}
       <Notice state={state} />
     </form>
