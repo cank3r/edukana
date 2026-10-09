@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { getEmailProvider, type EmailProvider } from "@/server/integrations/email";
+import { isEmailKind, shouldSendEmail } from "./email-policy";
 
 /**
  * Notificaciones en la aplicación y por correo.
@@ -9,6 +10,8 @@ import { getEmailProvider, type EmailProvider } from "@/server/integrations/emai
  *   un id suspendido o de otra institución se descarta en silencio.
  * - `deliverEmails` envía el correo FUERA de cualquier transacción y nunca lanza: un correo que
  *   falla queda en el registro y la notificación sigue en la aplicación.
+ * - El correo solo sale si la preferencia de la persona para ese tipo lo permite
+ *   (ver `email-policy.ts`; sin preferencia guardada vale el valor por omisión del tipo).
  * - Máximo `EMAIL_BATCH` correos por llamada, para no alargar la respuesta de quien hizo la
  *   acción. Los destinatarios que pasen de ese tope reciben la notificación SOLO en la aplicación.
  */
@@ -38,11 +41,14 @@ export type NotifyInput = {
   body?: string | null;
   /** Ruta interna, por ejemplo `/dashboard/aula/abc/tareas/xyz`. Una dirección externa se descarta. */
   href?: string | null;
-  /** También por correo (solo a los primeros `EMAIL_BATCH`). */
+  /**
+   * `false`: nunca por correo (por ejemplo, un aviso para demasiadas personas).
+   * Si no se indica, va por correo a quien lo tenga activado en sus preferencias (solo a los primeros `EMAIL_BATCH`).
+   */
   email?: boolean;
 };
 
-export type EmailRequest = { institutionId: string; userIds: string[]; title: string; body: string | null; href: string | null };
+export type EmailRequest = { institutionId: string; userIds: string[]; kind: NotificationKind; title: string; body: string | null; href: string | null };
 export type NotifyOutcome = { created: number; userIds: string[]; email: EmailRequest | null };
 export type EmailOutcome = { sent: number; failed: number; skipped: number };
 
@@ -66,8 +72,9 @@ const empty: NotifyOutcome = { created: 0, userIds: [], email: null };
 
 /**
  * Crea las notificaciones en un solo `createMany`. Con `client = tx` queda dentro de la
- * transacción de quien llama; con `db`, va sola. Devuelve a quién llegó y, si se pidió correo,
- * lo necesario para `deliverEmails` (que se llama después de confirmar la transacción).
+ * transacción de quien llama; con `db`, va sola. Devuelve a quién llegó y, salvo `email: false`,
+ * lo necesario para `deliverEmails` (que se llama después de confirmar la transacción y aplica
+ * las preferencias de cada persona).
  */
 export async function notify(client: NotifyClient, input: NotifyInput): Promise<NotifyOutcome> {
   const ids = [...new Set(input.userIds.filter((id) => typeof id === "string" && id))];
@@ -87,8 +94,25 @@ export async function notify(client: NotifyClient, input: NotifyInput): Promise<
   return {
     created: created.count,
     userIds,
-    email: input.email ? { institutionId: input.institutionId, userIds, title, body, href } : null,
+    email: input.email === false ? null : { institutionId: input.institutionId, userIds, kind: input.kind, title, body, href },
   };
+}
+
+export const PREFERENCES_PATH = "/dashboard/notificaciones/preferencias";
+
+/**
+ * De `userIds`, quienes quieren este tipo por correo según su preferencia guardada
+ * (o el valor por omisión del tipo si no han elegido). Solo mira filas de la institución.
+ */
+export async function emailRecipients(institutionId: string, kind: string, userIds: readonly string[]): Promise<string[]> {
+  // Un tipo que nunca va por correo no necesita consultar preferencias.
+  if (!userIds.length || !isEmailKind(kind)) return [];
+  const saved = await db.notificationPreference.findMany({
+    where: { institutionId, kind, userId: { in: [...userIds] } },
+    select: { userId: true, email: true },
+  });
+  const choice = new Map(saved.map((row) => [row.userId, row.email]));
+  return userIds.filter((userId) => shouldSendEmail({ kind, preference: choice.get(userId) }));
 }
 
 function appBaseUrl(): string | null {
@@ -103,19 +127,23 @@ function emailText(person: { name: string; institution: string }, request: Email
   if (base && request.href) lines.push("", "Ábrelo en Edukana:", `${base}${request.href}`);
   else lines.push("", "Entra a Edukana para verlo.");
   lines.push("", `Recibes este correo porque eres parte de ${person.institution} en Edukana.`);
+  lines.push(base ? `Para elegir qué correos recibes: ${base}${PREFERENCES_PATH}` : "Puedes elegir qué correos recibes en Notificaciones › Elegir qué me llega por correo.");
   return lines.join("\n");
 }
 
 /**
  * Envía por correo lo que `notify` guardó. Va FUERA de la transacción y nunca lanza.
- * Solo a personas activas de la institución, con cuenta activa, y a lo sumo `EMAIL_BATCH`
- * por llamada: el resto (`skipped`) ya tiene la notificación en la aplicación.
+ * Solo a quien lo tiene activado en sus preferencias, a personas activas de la institución,
+ * con cuenta activa, y a lo sumo `EMAIL_BATCH` por llamada: el resto (`skipped`) ya tiene
+ * la notificación en la aplicación.
  * Si el correo no está configurado, se registra y no se envía nada.
  */
 export async function deliverEmails(request: EmailRequest | null | undefined): Promise<EmailOutcome> {
   if (!request?.userIds.length) return { sent: 0, failed: 0, skipped: 0 };
   try {
-    const ids = [...new Set(request.userIds)].slice(0, EMAIL_BATCH);
+    const wanted = await emailRecipients(request.institutionId, request.kind, [...new Set(request.userIds)]);
+    const ids = wanted.slice(0, EMAIL_BATCH);
+    if (!ids.length) return { sent: 0, failed: 0, skipped: request.userIds.length };
     const people = await db.user.findMany({
       where: {
         id: { in: ids },
@@ -131,7 +159,8 @@ export async function deliverEmails(request: EmailRequest | null | undefined): P
     try {
       provider = getEmailProvider();
     } catch (error) {
-      console.warn("deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación", { count: people.length, error: String(error) });
+      // Sin datos personales en el registro: solo cuántos correos no salieron y de qué tipo.
+      console.warn("deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación", { kind: request.kind, count: people.length, error: String(error) });
       return { ...outcome, failed: people.length };
     }
     for (let start = 0; start < people.length; start += EMAIL_PARALLEL) {
@@ -149,7 +178,7 @@ export async function deliverEmails(request: EmailRequest | null | undefined): P
         if (result.status === "fulfilled") outcome.sent += 1;
         else {
           outcome.failed += 1;
-          console.error("deliverEmails: no se pudo enviar", { correlationId: crypto.randomUUID(), userId: chunk[index].id, error: result.reason });
+          console.error("deliverEmails: no se pudo enviar", { correlationId: crypto.randomUUID(), kind: request.kind, userId: chunk[index].id, error: String(result.reason) });
         }
       });
     }
@@ -178,10 +207,11 @@ export async function notifySafely(input: NotifyInput): Promise<NotifyOutcome> {
 /**
  * `notify` dentro de una transacción abierta, protegido con un punto de guardado de PostgreSQL:
  * si guardar las notificaciones falla, se deshace solo esa parte y la transacción de quien
- * llama sigue viva. Solo para avisos en la aplicación (el correo no sale desde una transacción).
+ * llama sigue viva. El correo NO sale desde la transacción: `outcome.email` se entrega a
+ * `deliverEmails` después de confirmarla (si la transacción se deshace, no se envía nada).
  */
-export async function notifyWithinTransaction(tx: SavepointClient, input: Omit<NotifyInput, "email">): Promise<NotifyOutcome> {
-  return (await withSavepoint(tx, input.kind, () => notify(tx, { ...input, email: false }))) ?? empty;
+export async function notifyWithinTransaction(tx: SavepointClient, input: NotifyInput): Promise<NotifyOutcome> {
+  return (await withSavepoint(tx, input.kind, () => notify(tx, input))) ?? empty;
 }
 
 /**
