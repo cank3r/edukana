@@ -63,6 +63,9 @@ model Institution {
   examAnswers             ExamAnswer[]
   submissionRevisions     SubmissionRevision[]
   gradeEntryRevisions     GradeEntryRevision[]
+  programs                Program[]
+  studentGroups           StudentGroup[]
+  liveClasses             LiveClass[]
 
   @@map("institutions")
 }
@@ -122,6 +125,8 @@ model User {
   passwordResetTokens     PasswordResetToken[]
   paymentConcepts         PaymentConcept[] @relation("PaymentStudent")
   gradeEntryRevisions     GradeEntryRevision[] @relation("GradeRevisionActor")
+  groupMemberships        StudentGroupMember[]
+  createdLiveClasses      LiveClass[] @relation("LiveClassCreator")
 
   @@unique([institutionId, email])
   @@unique([institutionId, identityId])
@@ -215,6 +220,8 @@ model Course {
   room                String?
   maxStudents         Int?
   completionThreshold Int                 @default(100)
+  isPublished         Boolean             @default(true)
+  archivedAt          DateTime?
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
   enrollments         Enrollment[]
@@ -233,6 +240,9 @@ model Course {
   assets              StorageAsset[]
   certificates        Certificate[]
   announcementTargets AnnouncementCourseTarget[]
+  programCourses      ProgramCourse[]
+  groupCourses        StudentGroupCourse[]
+  liveClasses         LiveClass[]
   relatedAnnouncements AnnouncementRelatedCourse[]
 
   @@unique([institutionId, code])
@@ -321,6 +331,8 @@ model Enrollment {
   progressPercent Float            @default(0)
   enrolledAt      DateTime         @default(now())
   completedAt     DateTime?
+  withdrawnAt     DateTime?
+  withdrawReason  String?
   attendances     Attendance[]
   submissions     Submission[]
   gradeEntries    GradeEntry[]
@@ -1127,4 +1139,101 @@ model Identity {
   users          User[]
 
   @@map("identities")
+}
+
+// --- Curso completo: programas, grupos y clases en vivo ---
+
+model Program {
+  id            String          @id @default(cuid())
+  institutionId String
+  institution   Institution     @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  name          String
+  description   String?
+  isPublished   Boolean         @default(true)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  courses       ProgramCourse[]
+  groups        StudentGroup[]
+
+  @@unique([institutionId, name])
+  @@map("programs")
+}
+
+model ProgramCourse {
+  institutionId String
+  programId     String
+  program       Program @relation(fields: [programId], references: [id], onDelete: Cascade)
+  courseId      String
+  course        Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  order         Int     @default(0)
+
+  @@id([programId, courseId])
+  @@index([institutionId])
+  @@map("program_courses")
+}
+
+model StudentGroup {
+  id            String               @id @default(cuid())
+  institutionId String
+  institution   Institution          @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  programId     String?
+  program       Program?             @relation(fields: [programId], references: [id], onDelete: SetNull)
+  name          String
+  description   String?
+  startsOn      DateTime             @db.Date
+  endsOn        DateTime?            @db.Date
+  capacity      Int?
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  members       StudentGroupMember[]
+  courses       StudentGroupCourse[]
+
+  @@unique([institutionId, name])
+  @@map("student_groups")
+}
+
+model StudentGroupMember {
+  institutionId String
+  groupId       String
+  group         StudentGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  joinedAt      DateTime     @default(now())
+
+  @@id([groupId, userId])
+  @@index([institutionId, userId])
+  @@map("student_group_members")
+}
+
+model StudentGroupCourse {
+  institutionId String
+  groupId       String
+  group         StudentGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  courseId      String
+  course        Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@id([groupId, courseId])
+  @@index([institutionId])
+  @@map("student_group_courses")
+}
+
+model LiveClass {
+  id              String      @id @default(cuid())
+  institutionId   String
+  institution     Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  courseId        String
+  course          Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  title           String
+  description     String?
+  startsAt        DateTime
+  durationMinutes Int         @default(60)
+  joinUrl         String
+  createdById     String
+  createdBy       User        @relation("LiveClassCreator", fields: [createdById], references: [id])
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([institutionId, startsAt])
+  @@index([courseId, startsAt])
+  @@map("live_classes")
 }

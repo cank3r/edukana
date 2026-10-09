@@ -200,3 +200,27 @@ test("alta de institución: un administrador que ya existe en otra conserva su c
   assert.equal(await db.user.count({ where: { identity: { email: "admin@b.test" } } }), 2);
   assert.equal((await db.user.findUniqueOrThrow({ where: { id: B.admin.id } })).institutionId, B.institutionId);
 });
+
+test("editar persona: corrige nombre, teléfono y rol dentro de la institución, con las reglas de administrador", async () => {
+  const { updatePerson } = await import("@/server/people/profile");
+  assert.deepEqual(await updatePerson(A.admin, { userId: A.student2.id, name: "Estudiante Corregido", phone: "8095550100", role: "STUDENT" }), { ok: true });
+  const saved = await db.user.findUniqueOrThrow({ where: { id: A.student2.id } });
+  assert.equal(saved.name, "Estudiante Corregido");
+  assert.equal(saved.phone, "8095550100");
+  assert.equal(saved.email, "estudiante2@a.test", "el correo no cambia");
+
+  assert.equal((await updatePerson(A.admin, { userId: A.student2.id, name: "ab", role: "STUDENT" })).ok, false);
+  assert.equal((await updatePerson(A.admin, { userId: B.student.id, name: "Desde otra institución", role: "STUDENT" })).ok, false);
+  assert.equal((await db.user.findUniqueOrThrow({ where: { id: B.student.id } })).name, "student B");
+
+  // Rol: nadie cambia el suyo; un coordinador no nombra administradores; el único administrador no se degrada.
+  assert.equal((await updatePerson(A.admin, { userId: A.admin.id, name: "admin A", role: "TEACHER" })).ok, false);
+  assert.equal((await updatePerson(A.coordinator, { userId: A.student2.id, name: "Estudiante Corregido", role: "ADMIN" })).ok, false);
+  assert.equal((await updatePerson(A.coordinator, { userId: A.admin.id, name: "admin A", role: "TEACHER" })).ok, false);
+  assert.deepEqual(await updatePerson(A.admin, { userId: A.admin.id, name: "Admin Renombrado", role: "ADMIN" }), { ok: true });
+  assert.deepEqual(await updatePerson(A.admin, { userId: A.student2.id, name: "Estudiante Corregido", role: "TEACHER" }), { ok: true });
+
+  await db.user.update({ where: { id: A.student2.id }, data: { name: "student2 A", phone: null, role: "STUDENT" } });
+  await db.user.update({ where: { id: A.admin.id }, data: { name: "admin A" } });
+  await db.auditLog.deleteMany({ where: { action: "PERSON_UPDATED" } });
+});
