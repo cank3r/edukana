@@ -510,6 +510,13 @@ test("estudiante", async ({ page }, info) => {
     await heading(page, "Recibo de pago");
   });
   // --- fin M5 ---
+  // --- M9 · video en lecciones ---
+  await tour.open("leccion con video", `${course}/leccion/${seed.lessonIds[1]}`, async () => {
+    await heading(page, "Video: contar de diez en diez");
+    await expect(page.locator('iframe[title^="Video:"][src^="https://www.youtube-nocookie.com/embed/"]')).toBeVisible();
+    await expect(page.getByRole("button", { name: /Marcar como (no )?completada|Terminar/ }).first()).toBeVisible();
+  });
+  // --- fin M9 ---
   tour.finish();
 });
 

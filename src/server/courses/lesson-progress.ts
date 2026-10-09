@@ -60,6 +60,8 @@ export type LessonView = {
     title: string;
     summary: string | null;
     content: string | null;
+    /** Video además del texto, ya normalizado (ver `src/lib/lesson-video.ts`). */
+    videoUrl: string | null;
     type: "TEXT" | "VIDEO" | "DOCUMENT" | "ACTIVITY";
     estimatedMinutes: number;
     sectionTitle: string;
@@ -178,6 +180,7 @@ export async function getLessonView(actor: Actor, ref: LessonRef): Promise<Lesso
       title: true,
       summary: true,
       content: true,
+      videoUrl: true,
       type: true,
       estimatedMinutes: true,
       isPublished: true,
@@ -211,6 +214,7 @@ export async function getLessonView(actor: Actor, ref: LessonRef): Promise<Lesso
       title: lesson.title,
       summary: lesson.summary,
       content: lesson.content,
+      videoUrl: lesson.videoUrl,
       type: lesson.type,
       estimatedMinutes: lesson.estimatedMinutes,
       sectionTitle: lesson.section.title,

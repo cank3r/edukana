@@ -69,6 +69,7 @@ export default async function CourseContentPage({ params }: { params: Promise<{ 
                     title: lesson.title,
                     summary: lesson.summary ?? "",
                     content: lesson.content ?? "",
+                    videoUrl: lesson.videoUrl ?? "",
                     type: lesson.type,
                     estimatedMinutes: lesson.estimatedMinutes,
                     isPublished: lesson.isPublished,

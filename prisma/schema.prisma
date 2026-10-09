@@ -313,6 +313,8 @@ model Lesson {
   title            String
   summary          String?
   content          String?          @db.Text
+  /// Video de la lección además del texto: dirección ya normalizada por `src/lib/lesson-video.ts`.
+  videoUrl         String?
   type             LessonType       @default(TEXT)
   order            Int              @default(0)
   estimatedMinutes Int              @default(10)
