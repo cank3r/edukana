@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getEffectiveCapabilities } from "@/lib/authorization";
 import { courseWhereForScope, resolveCourseWriteScope } from "@/lib/course-scope";
 import { db } from "@/lib/db";
+import { lessonVideoUrlSchema } from "@/lib/lesson-video";
 import { recalculateCourseProgress } from "@/server/courses/lesson-progress";
 import type { EdukanaRole } from "@/types/next-auth";
 
@@ -14,9 +15,12 @@ import type { EdukanaRole } from "@/types/next-auth";
  *
  * Formato de `Lesson.content` según el tipo:
  * - TEXT, DOCUMENT, ACTIVITY: texto libre (se muestra respetando los saltos de línea).
- * - VIDEO: únicamente el enlace del video, una sola línea que empieza por `http://` o `https://`
- *   (por ejemplo un enlace de YouTube o Vimeo). La explicación del video va en `summary`.
- *   `videoLinkFromContent` devuelve ese enlace o null si el contenido no lo es.
+ * - VIDEO: el video va en `videoUrl` y `content` es el texto opcional debajo del video.
+ *   Formato anterior (se sigue aceptando): `content` era solo el enlace, una sola línea que empieza
+ *   por `http://` o `https://`; `videoLinkFromContent` devuelve ese enlace o null si no lo es.
+ *
+ * Cualquier tipo de lección puede llevar `videoUrl` (además del texto). Se guarda ya normalizado por
+ * `src/lib/lesson-video.ts` (YouTube, Vimeo, Google Drive o archivo .mp4); otro enlace se rechaza.
  *
  * Un estudiante ve una lección solo si la lección y su capítulo están publicados.
  * El `order` de capítulos (por curso) y de lecciones (por capítulo) queda siempre 0,1,2… sin huecos.
@@ -44,19 +48,20 @@ export const lessonSchema = z
     summary: z.string().trim().max(500, "El resumen es demasiado largo.").optional(),
     type: z.enum(LESSON_TYPES, { error: "Elige el tipo de lección." }),
     content: z.string().trim().max(50000, "El contenido es demasiado largo.").optional(),
+    videoUrl: lessonVideoUrlSchema,
     estimatedMinutes: z.coerce
       .number({ error: "Escribe los minutos con números." })
       .int("Escribe los minutos sin decimales.")
       .min(1, "La duración mínima es 1 minuto.")
       .max(600, "La duración máxima es 600 minutos."),
   })
-  .refine((lesson) => lesson.type !== "VIDEO" || videoLinkFromContent(lesson.content) !== null, {
+  .refine((lesson) => lesson.type !== "VIDEO" || lesson.videoUrl !== null || videoLinkFromContent(lesson.content) !== null, {
     message: "Pega el enlace completo del video. Debe empezar por https://",
-    path: ["content"],
+    path: ["videoUrl"],
   });
 
 export type ChapterInput = { title: string; description?: string };
-export type LessonInput = { title: string; summary?: string; type: string; content?: string; estimatedMinutes: number | string };
+export type LessonInput = { title: string; summary?: string; type: string; content?: string; videoUrl?: string; estimatedMinutes: number | string };
 
 /** Enlace de una lección de video, o null si `content` no es un enlace válido de una sola línea. */
 export function videoLinkFromContent(content: string | null | undefined): string | null {
@@ -122,6 +127,7 @@ export async function getCourseContent(actor: Actor, courseId: string) {
               title: true,
               summary: true,
               content: true,
+              videoUrl: true,
               type: true,
               estimatedMinutes: true,
               isPublished: true,
@@ -226,7 +232,7 @@ export async function deleteChapter(actor: Actor, chapterId: string): Promise<Co
 }
 
 function lessonData(data: z.infer<typeof lessonSchema>) {
-  return { title: data.title, summary: data.summary || null, type: data.type, content: data.content || null, estimatedMinutes: data.estimatedMinutes };
+  return { title: data.title, summary: data.summary || null, type: data.type, content: data.content || null, videoUrl: data.videoUrl, estimatedMinutes: data.estimatedMinutes };
 }
 
 export async function createLesson(actor: Actor, chapterId: string, input: LessonInput): Promise<ContentResult> {
@@ -254,10 +260,16 @@ export async function updateLesson(actor: Actor, lessonId: string, input: Lesson
   const where = await manageWhere(actor);
   if (!where) return { ok: false, message: NOT_FOUND_LESSON };
   return db.$transaction(async (tx) => {
-    const lesson = await tx.lesson.findFirst({ where: { id: lessonId, institutionId: actor.institutionId, course: where }, select: { id: true, courseId: true, title: true, type: true } });
+    const lesson = await tx.lesson.findFirst({ where: { id: lessonId, institutionId: actor.institutionId, course: where }, select: { id: true, courseId: true, title: true, type: true, videoUrl: true } });
     if (!lesson) return { ok: false, message: NOT_FOUND_LESSON } as const;
     await tx.lesson.update({ where: { id: lesson.id }, data: lessonData(parsed.data) });
-    await audit(tx, actor, "COURSE_LESSON_UPDATED", "Lesson", lesson.id, { courseId: lesson.courseId, titleChanged: lesson.title !== parsed.data.title, typeFrom: lesson.type, typeTo: parsed.data.type });
+    await audit(tx, actor, "COURSE_LESSON_UPDATED", "Lesson", lesson.id, {
+      courseId: lesson.courseId,
+      titleChanged: lesson.title !== parsed.data.title,
+      typeFrom: lesson.type,
+      typeTo: parsed.data.type,
+      videoChanged: lesson.videoUrl !== parsed.data.videoUrl,
+    });
     return { ok: true, courseId: lesson.courseId, id: lesson.id } as const;
   });
 }
