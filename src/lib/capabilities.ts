@@ -26,6 +26,7 @@ export const CAPABILITY_CATALOG = {
   "child.schedule.view": { group: "Tutores", label: "Ver horario del hijo", description: "Consulta el horario derivado de los cursos del hijo si el vínculo lo permite." },
   "child.announcements.view": { group: "Tutores", label: "Ver avisos del hijo", description: "Consulta avisos generales y de cursos del hijo si el vínculo lo permite." },
   "child.finance.view": { group: "Tutores", label: "Ver finanzas del hijo", description: "Consulta el estado de cuenta del hijo solo con autorización institucional y del vínculo.", critical: true },
+  "ai.use": { group: "Asistente de IA", label: "Usar el asistente de IA", description: "Genera preguntas para revisar (docentes) y pregunta dudas sobre el contenido del curso (estudiantes)." },
 } as const;
 
 export type Capability = keyof typeof CAPABILITY_CATALOG;
@@ -41,8 +42,8 @@ export const SYSTEM_ROLE_CAPABILITIES: Record<EdukanaRole, ReadonlySet<Capabilit
   SUPER_ADMIN: capabilities(...CAPABILITIES),
   ADMIN: capabilities(...CAPABILITIES),
   COORDINATOR: capabilities("course.view", "course.view.all", "course.manage", "course.roster.view", "schedule.view", "people.view", "admissions.manage", "announcement.publish", "announcement.manage"),
-  TEACHER: capabilities("course.view", "course.manage", "course.roster.view", "schedule.view"),
-  STUDENT: capabilities("student.portal.view", "course.view", "course.participate", "schedule.view"),
+  TEACHER: capabilities("course.view", "course.manage", "course.roster.view", "schedule.view", "ai.use"),
+  STUDENT: capabilities("student.portal.view", "course.view", "course.participate", "schedule.view", "ai.use"),
   // Every child capability still requires an ACTIVE Guardianship and its matching per-link flag.
   PARENT: capabilities("child.portal.view", "child.academics.view", "child.attendance.view", "child.schedule.view", "child.announcements.view", "child.finance.view"),
 };
@@ -50,9 +51,9 @@ export const SYSTEM_ROLE_CAPABILITIES: Record<EdukanaRole, ReadonlySet<Capabilit
 export const ROLE_ALLOWED_CAPABILITIES: Record<EdukanaRole, ReadonlySet<Capability>> = {
   SUPER_ADMIN: capabilities(...CAPABILITIES),
   ADMIN: capabilities(...CAPABILITIES),
-  COORDINATOR: capabilities("course.view", "course.view.all", "course.manage", "course.roster.view", "schedule.view", "people.view", "admissions.manage", "announcement.publish", "announcement.manage", "analytics.view"),
-  TEACHER: capabilities("course.view", "course.manage", "course.roster.view", "schedule.view", "people.view", "announcement.publish", "announcement.manage"),
-  STUDENT: capabilities("student.portal.view", "course.view", "course.participate", "schedule.view"),
+  COORDINATOR: capabilities("course.view", "course.view.all", "course.manage", "course.roster.view", "schedule.view", "people.view", "admissions.manage", "announcement.publish", "announcement.manage", "analytics.view", "ai.use"),
+  TEACHER: capabilities("course.view", "course.manage", "course.roster.view", "schedule.view", "people.view", "announcement.publish", "announcement.manage", "ai.use"),
+  STUDENT: capabilities("student.portal.view", "course.view", "course.participate", "schedule.view", "ai.use"),
   PARENT: capabilities("child.portal.view", "child.academics.view", "child.attendance.view", "child.schedule.view", "child.announcements.view", "child.finance.view"),
 };
 

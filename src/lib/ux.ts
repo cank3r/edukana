@@ -107,7 +107,7 @@ export function spanishLabel(value: string | null | undefined): string {
 const BREADCRUMB_LABELS: Record<string, string> = {
   dashboard: "Inicio", aula: "Cursos", gestion: "Personas", estudiantes: "Estudiantes", portal: "Mi aprendizaje",
   comunidad: "Avisos", admisiones: "Admisiones", pagos: "Cobros", calendario: "Calendario", analitica: "Reportes", configuracion: "Configuración", roles: "Roles y permisos", tutores: "Tutores", hijos: "Mis hijos", "puesta-en-marcha": "Puesta en marcha", periodos: "Períodos", institucion: "Datos de la institución", asistencia: "Asistencia", certificados: "Certificados", "mis-certificados": "Mis certificados", "mi-cuenta": "Mi estado de cuenta", perfil: "Mi perfil", contenido: "Contenido", leccion: "Lección", clases: "Clases en vivo", tareas: "Tareas", preguntas: "Banco de preguntas", examenes: "Exámenes", presentar: "Exámenes", calificaciones: "Calificaciones", "mis-notas": "Mis notas", editar: "Editar", nuevo: "Nuevo", nueva: "Nueva", resultados: "Resultados", resultado: "Resultado", accesos: "Importar e invitar", programas: "Programas", grupos: "Grupos", horario: "Horario", ventas: "Ventas", recibo: "Recibo",
-  notificaciones: "Notificaciones", personas: "Personas", preferencias: "Qué me llega por correo",
+  notificaciones: "Notificaciones", personas: "Personas", preferencias: "Qué me llega por correo", "generar-preguntas": "Generar preguntas",
 };
 
 export function breadcrumbLabel(segment: string): string {

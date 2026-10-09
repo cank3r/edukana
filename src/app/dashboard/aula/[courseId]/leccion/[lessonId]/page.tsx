@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { normalizeLessonVideo, type LessonVideo } from "@/lib/lesson-video";
 import { getLessonView, parseVideoLink, type LessonView } from "@/server/courses/lesson-progress";
 import { LessonActions } from "./LessonActions";
+import { AskCourse } from "@/components/ai/AskCourse";
 
 export const dynamic = "force-dynamic";
 
@@ -152,6 +153,7 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
       {view.mode === "preview" && (
         <p role="note" className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm font-medium text-amber-900">
           Vista previa: así la ve el estudiante.{!lesson.isPublished && " Esta lección todavía no está publicada, así que los estudiantes aún no la ven."}
+          {" "}<Link href={`/dashboard/aula/${view.course.id}/generar-preguntas?leccion=${lesson.id}`} className="inline-flex min-h-11 items-center font-semibold underline">Generar preguntas con IA</Link>
         </p>
       )}
       {allDone && (
@@ -205,6 +207,7 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
               {view.nextLessonId && <Link href={`${base}/${view.nextLessonId}`} className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 font-semibold text-slate-800">Siguiente</Link>}
             </div>
           )}
+          {view.mode === "student" && <AskCourse actor={{ id: user.id, institutionId: user.institutionId, role: user.role }} courseId={view.course.id} lessonId={lesson.id} />}
         </article>
       </div>
     </div>
