@@ -46,6 +46,12 @@ test("administrador", async ({ page }, info) => {
     await done(page, /Persona agregada/);
     await visible(page, `Marta Prueba ${tag}`);
   });
+  await tour.step("persona detalle", async () => {
+    await page.goto("/dashboard/gestion");
+    await page.getByRole("link", { name: "Ana Rodríguez" }).click();
+    await page.waitForURL(new RegExp(`/gestion/estudiantes/${seed.studentIds[0]}`));
+    await visible(page, "Ana Rodríguez");
+  });
   await tour.open("importar e invitar", "/dashboard/gestion/accesos", () => heading(page, "Personas y acceso"));
   await tour.open("programas", "/dashboard/gestion/programas", () => visible(page, "Bachillerato Técnico"));
   await tour.step("programa detalle", async () => {
@@ -142,6 +148,13 @@ test("docente", async ({ page }, info) => {
   });
 
   await tour.open("estudiantes", `${course}/estudiantes`, () => visible(page, "Ana Rodríguez"));
+
+  await tour.step("estudiante avance", async () => {
+    await page.getByRole("link", { name: "Ana Rodríguez" }).first().click();
+    await page.waitForURL(/\/estudiantes\/[a-z0-9]+$/);
+    await heading(page, "Ana Rodríguez");
+  });
+  await tour.open("leccion vista previa", `${course}/leccion/${seed.lessonIds[1]}`, () => heading(page, "Video: contar de diez en diez"));
 
   const homework = `Ejercicios de repaso (${tag})`;
   await tour.open("tareas", `${course}/tareas`, () => visible(page, "Problemas de suma y resta"));
