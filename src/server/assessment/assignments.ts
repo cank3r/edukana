@@ -5,6 +5,7 @@ import { courseWhereForScope, resolveCourseWriteScope } from "@/lib/course-scope
 import { db } from "@/lib/db";
 import { archiveSubmissionVersion, writeGradeEntry } from "@/server/grade-history";
 import type { EdukanaRole } from "@/types/next-auth";
+import { lockAssignmentSubmission } from "./submission-lock";
 import {
   ASSIGNMENT_RETENTION_MESSAGE,
   assignmentDeletionBlocked,
@@ -456,6 +457,8 @@ class GradeRejected extends Error {}
  * Pone o corrige la nota de una entrega. La nota va de 0 al puntaje máximo. Cambiar una nota
  * ya puesta exige motivo; queda en el historial del libro de calificaciones cuando la tarea
  * cuenta para la nota, y siempre en la bitácora.
+ * Detecta reenvíos durante esta llamada; una página antigua requiere un futuro token de
+ * versión en el formulario para comprobar qué contenido había visto el docente.
  */
 export async function gradeSubmission(
   actor: AssignmentManager,
@@ -464,29 +467,46 @@ export async function gradeSubmission(
 ): Promise<AssignmentResult<{ assignmentId: string; corrected: boolean }>> {
   const where = managedCourseWhere(actor);
   if (!where || !input.submissionId) return fail("No encontramos esa entrega o no tienes acceso a ella.");
-  const submission = await db.submission.findFirst({
+  // Only routing and a version witness are read before locking. Decisions use the
+  // fresh row below; a resubmission during this request requires reviewing it first.
+  const observed = await db.submission.findFirst({
     where: { id: input.submissionId, status: { not: "DRAFT" }, assignment: { course: where } },
     select: {
-      id: true,
-      score: true,
-      status: true,
-      enrollmentId: true,
-      assignment: { select: { id: true, courseId: true, maxScore: true, gradeItem: { select: { id: true } } } },
+      assignmentId: true, studentId: true, submittedAt: true, _count: { select: { revisions: true } },
     },
   });
-  if (!submission) return fail("No encontramos esa entrega o no tienes acceso a ella.");
+  if (!observed) return fail("No encontramos esa entrega o no tienes acceso a ella.");
 
   const raw = typeof input.score === "number" ? input.score : input.score.trim() === "" ? NaN : Number(input.score.trim().replace(",", "."));
-  const max = submission.assignment.maxScore;
-  if (!Number.isFinite(raw) || raw < 0 || raw > max) return fail(`La nota debe ser un número entre 0 y ${max}.`);
   const score = raw;
   const feedback = input.feedback?.trim().slice(0, 5000) || null;
   const reason = input.reason?.trim().slice(0, 500) || null;
-  const corrected = submission.status === "GRADED" && submission.score !== null && submission.score !== score;
-  if (corrected && !reason) return fail("Esta entrega ya tenía nota. Escribe el motivo del cambio.");
 
   try {
-    await db.$transaction(async (tx) => {
+    return await db.$transaction(async (tx) => {
+      const locked = await lockAssignmentSubmission(tx, {
+        assignmentId: observed.assignmentId, studentId: observed.studentId, institutionId: actor.institutionId,
+      });
+      if (!locked) return fail("No encontramos esa entrega o no tienes acceso a ella.");
+      const submission = await tx.submission.findFirst({
+        where: {
+          id: input.submissionId, assignmentId: observed.assignmentId, studentId: observed.studentId,
+          status: { not: "DRAFT" }, assignment: { course: where },
+        },
+        select: {
+          id: true, score: true, status: true, enrollmentId: true, submittedAt: true, _count: { select: { revisions: true } },
+          assignment: { select: { id: true, courseId: true, maxScore: true, gradeItem: { select: { id: true } } } },
+        },
+      });
+      if (!submission) return fail("No encontramos esa entrega o no tienes acceso a ella.");
+      if (submission.submittedAt.getTime() !== observed.submittedAt.getTime() ||
+        submission._count.revisions !== observed._count.revisions) {
+        return fail("La entrega cambió mientras intentabas calificarla. Recarga la página para revisar la nueva versión.");
+      }
+      const max = submission.assignment.maxScore;
+      if (!Number.isFinite(raw) || raw < 0 || raw > max) return fail(`La nota debe ser un número entre 0 y ${max}.`);
+      const corrected = submission.status === "GRADED" && submission.score !== null && submission.score !== score;
+      if (corrected && !reason) return fail("Esta entrega ya tenía nota. Escribe el motivo del cambio.");
       await tx.submission.update({ where: { id: submission.id }, data: { score, feedback, status: "GRADED", gradedAt: now } });
       if (submission.assignment.gradeItem) {
         const written = await writeGradeEntry(
@@ -508,12 +528,15 @@ export async function gradeSubmission(
           },
         });
       }
-    });
+      return { ok: true as const, courseId: submission.assignment.courseId, assignmentId: submission.assignment.id, corrected };
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted });
   } catch (error) {
     if (error instanceof GradeRejected) return fail(error.message);
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2034") {
+      return fail("La entrega cambió mientras intentabas calificarla. Recarga la página antes de volver a calificar.");
+    }
     throw error;
   }
-  return { ok: true, courseId: submission.assignment.courseId, assignmentId: submission.assignment.id, corrected };
 }
 
 // ---------------------------------------------------------------------------
@@ -667,10 +690,21 @@ export async function submitAssignment(
   try {
     return await db.$transaction(async (tx) => {
       const key = { assignmentId: assignment.id, studentId: student.id };
+      if (!await lockAssignmentSubmission(tx, { ...key, institutionId: student.institutionId })) return unavailable;
+      const currentAssignment = await tx.assignment.findFirst({
+        where: { id: assignment.id, isPublished: true, course: { institutionId: student.institutionId, isPublished: true } },
+        select: { id: true, courseId: true, dueDate: true, allowLate: true },
+      });
+      if (!currentAssignment) return unavailable;
+      const currentEnrollment = await tx.enrollment.findFirst({
+        where: { studentId: student.id, courseId: currentAssignment.courseId, status: "ACTIVE" },
+        select: { id: true },
+      });
+      if (!currentEnrollment) return unavailable;
       const current = await tx.submission.findUnique({
         where: { assignmentId_studentId: key }, select: { status: true, fileUrls: true },
       });
-      const allowed = assignmentSubmissionAccess(assignment, current, true, now);
+      const allowed = assignmentSubmissionAccess(currentAssignment, current, true, now);
       if (!allowed.allowed) return fail(allowed.why);
       const resubmitted = Boolean(current && current.status !== "DRAFT");
       if (resubmitted) await archiveSubmissionVersion(tx, { ...key, institutionId: student.institutionId });
@@ -680,14 +714,14 @@ export async function submitAssignment(
       };
       await tx.submission.upsert({
         where: { assignmentId_studentId: key },
-        create: { institutionId: student.institutionId, ...key, enrollmentId: enrollment.id, ...fields },
+        create: { institutionId: student.institutionId, ...key, enrollmentId: currentEnrollment.id, ...fields },
         update: { ...fields, score: null, feedback: null, gradedAt: null },
       });
       return {
-        ok: true as const, courseId: assignment.courseId, assignmentId: assignment.id,
-        resubmitted, late: Boolean(assignment.dueDate && assignment.dueDate < now),
+        ok: true as const, courseId: currentAssignment.courseId, assignmentId: currentAssignment.id,
+        resubmitted, late: Boolean(currentAssignment.dueDate && currentAssignment.dueDate < now),
       };
-    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted });
   } catch (error) {
     if (error instanceof SubmissionRevisionUnavailable) return fail(error.message);
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2034") {
