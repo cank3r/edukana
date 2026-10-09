@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
-  BarChart2, BookOpen, Building2, Calendar, ChevronRight, CreditCard, GraduationCap,
+  BarChart2, Bell, BookOpen, Building2, Calendar, ChevronRight, CreditCard, GraduationCap,
   LayoutDashboard, LogOut, Megaphone, Menu, Settings, UserCircle, UserPlus, Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -34,9 +34,24 @@ const ICONS = {
   settings: Settings,
 };
 
-export default function Sidebar({ user, capabilities }: { user: SidebarUser; capabilities: Capability[] }) {
+/** Campana de notificaciones: «Notificaciones, 3 sin leer». Más de 99 se muestra como 99+. */
+function NotificationBell({ count, active, className, children }: { count: number; active: boolean; className: string; children?: React.ReactNode }) {
+  const label = count > 0 ? `Notificaciones, ${count} sin leer` : "Notificaciones";
+  return (
+    <Link href="/dashboard/notificaciones" aria-label={label} title={label} aria-current={active ? "page" : undefined} className={className}>
+      <span className="relative inline-flex">
+        <Bell size={20} aria-hidden="true" />
+        {count > 0 && <span aria-hidden="true" className="absolute -right-2 -top-2 min-w-5 rounded-full bg-red-600 px-1 text-center text-[11px] font-bold leading-5 text-white">{count > 99 ? "99+" : count}</span>}
+      </span>
+      {children}
+    </Link>
+  );
+}
+
+export default function Sidebar({ user, capabilities, unreadNotifications = 0 }: { user: SidebarUser; capabilities: Capability[]; unreadNotifications?: number }) {
   const pathname = usePathname();
   const visibleItems = navigationForRole(user.role, capabilities);
+  const notificationsActive = pathname.startsWith("/dashboard/notificaciones");
 
   return (
     <>
@@ -44,6 +59,8 @@ export default function Sidebar({ user, capabilities }: { user: SidebarUser; cap
         <Link href="/dashboard" aria-label="Ir al inicio de Edukana">
           <Image src="/logos/edukana_horizontal_color_fondo_oscuro.svg" alt="Edukana" width={128} height={34} priority />
         </Link>
+        <div className="flex items-center gap-2">
+        <NotificationBell count={unreadNotifications} active={notificationsActive} className="flex min-h-11 min-w-11 items-center justify-center rounded-lg border border-white/20 text-white hover:bg-white/10" />
         <details className="group">
           <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-lg border border-white/20 px-3 py-2 text-sm font-semibold text-white hover:bg-white/10">
             <Menu size={20} aria-hidden="true" /> Menú
@@ -63,6 +80,7 @@ export default function Sidebar({ user, capabilities }: { user: SidebarUser; cap
             </button>
           </div>
         </details>
+        </div>
       </header>
 
       <aside className="hidden h-full w-60 shrink-0 flex-col border-r md:flex" style={{ background: "var(--navy)", borderColor: "rgba(255,255,255,0.06)" }}>
@@ -88,6 +106,10 @@ export default function Sidebar({ user, capabilities }: { user: SidebarUser; cap
       </nav>
 
       <div className="space-y-2 border-t px-2 pb-4 pt-3 md:px-3" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+        <NotificationBell count={unreadNotifications} active={notificationsActive}
+          className={cn("flex min-h-11 w-full items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all md:justify-start", notificationsActive ? "bg-blue-600 text-white" : "text-gray-400 hover:bg-white/5 hover:text-white")}>
+          <span className="hidden flex-1 md:block">Notificaciones</span>
+        </NotificationBell>
         {(user.institutionCount ?? 1) > 1 && <Link href="/elegir-institucion" title="Cambiar de institución" aria-label="Cambiar de institución"
           className="flex w-full items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-400 transition-all hover:bg-white/5 hover:text-white md:justify-start">
           <Building2 size={18} aria-hidden="true" /><span className="hidden md:block">Cambiar de institución</span>

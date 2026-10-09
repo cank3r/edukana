@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 import { getEffectiveCapabilities } from "@/lib/authorization";
 import { courseWhereForScope, resolveCourseWriteScope } from "@/lib/course-scope";
 import { db } from "@/lib/db";
+import { notifyEnrolledWithinTransaction } from "@/server/notifications/events";
 import type { EdukanaRole } from "@/types/next-auth";
 
 type Actor = { id: string; institutionId: string; role: EdukanaRole };
@@ -272,6 +273,7 @@ async function enrollLocked(
       changes: { ...audit.extra, enrolled: toCreate.length, reinstated: toReinstate.length, already, studentIds: [...toCreate, ...toReinstate.map((enrollment) => enrollment.studentId)] },
     },
   });
+  await notifyEnrolledWithinTransaction(tx, actor.institutionId, { courseId, studentIds: [...toCreate, ...toReinstate.map((enrollment) => enrollment.studentId)] });
   return { ok: true, enrolled: toCreate.length, reinstated: toReinstate.length, already, skipped };
 }
 
