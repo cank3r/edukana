@@ -26,7 +26,7 @@ cuenta, salga bien o no. Máximo 5 por correo y 20 por IP cada 15 minutos (misma
 ## Variable `INDEPENDENT_SIGNUP_ENABLED`
 
 - `true`/`1`: activo. `false`/`0`: apagado (`/ensenar` responde 404 y la acción se niega).
-- Sin valor: activo en desarrollo, pruebas y vistas previas de Vercel (`VERCEL_ENV=preview`); apagado en producción.
+- Sin valor: activo en todos los entornos, también en producción (decisión de Carlos, 2026-10-09).
 
 ## Qué ve el docente
 

@@ -20,13 +20,11 @@ export async function isIndependentInstitution(institutionId: string): Promise<b
 }
 
 /**
- * `INDEPENDENT_SIGNUP_ENABLED`: "true"/"1" lo activa y "false"/"0" lo apaga. Sin valor, queda
- * activo en desarrollo, pruebas y vistas previas, y apagado en producción.
+ * `INDEPENDENT_SIGNUP_ENABLED`: "false"/"0" lo apaga. Sin valor (o "true"/"1") queda activo en
+ * todos los entornos, también en producción.
  */
 export function isIndependentSignupEnabled(env: Record<string, string | undefined> = process.env): boolean {
   const value = env.INDEPENDENT_SIGNUP_ENABLED?.trim().toLowerCase();
-  if (value === "true" || value === "1") return true;
   if (value === "false" || value === "0") return false;
-  if (env.VERCEL_ENV) return env.VERCEL_ENV !== "production";
-  return env.NODE_ENV !== "production";
+  return true;
 }

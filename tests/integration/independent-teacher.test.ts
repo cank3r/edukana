@@ -175,11 +175,12 @@ test("variable apagada: el alta se niega y la página /ensenar responde 404", as
   assert.doesNotThrow(() => TeachPage());
 });
 
-test("variable: activa por omisión fuera de producción y en vistas previas; apagada en producción", () => {
+test("variable: activa por omisión en todos los entornos; solo false/0 la apaga", () => {
   assert.equal(isIndependentSignupEnabled({ NODE_ENV: "development" }), true);
-  assert.equal(isIndependentSignupEnabled({ NODE_ENV: "production" }), false);
+  assert.equal(isIndependentSignupEnabled({ NODE_ENV: "production" }), true);
   assert.equal(isIndependentSignupEnabled({ NODE_ENV: "production", VERCEL_ENV: "preview" }), true);
-  assert.equal(isIndependentSignupEnabled({ NODE_ENV: "production", VERCEL_ENV: "production" }), false);
+  assert.equal(isIndependentSignupEnabled({ NODE_ENV: "production", VERCEL_ENV: "production" }), true);
+  assert.equal(isIndependentSignupEnabled({ NODE_ENV: "production", INDEPENDENT_SIGNUP_ENABLED: "false" }), false);
   assert.equal(isIndependentSignupEnabled({ NODE_ENV: "production", INDEPENDENT_SIGNUP_ENABLED: "true" }), true);
   assert.equal(isIndependentSignupEnabled({ NODE_ENV: "development", INDEPENDENT_SIGNUP_ENABLED: "0" }), false);
   assert.equal(slugFromName("Cursos de Ñandú Pérez"), "cursos-de-nandu-perez");
