@@ -1,9 +1,11 @@
 /**
  * Semilla de demostración para el recorrido en navegador (`npm run test:smoke`).
  *
- * Crea «Instituto Demo» con un administrador, un docente y dos estudiantes, un curso publicado
- * con contenido, tarea, examen, clase en vivo, programa, grupo y un aviso. Deja los ids en
- * `smoke-artifacts/seed.json` para que el recorrido sepa a qué pantallas ir.
+ * Crea «Instituto Demo» con un administrador, un docente, una coordinadora, una tutora y cuatro
+ * estudiantes; un curso publicado con contenido, tarea, examen, clase en vivo, programa, grupo y un
+ * aviso; entregas y exámenes por revisar, asistencia de ayer, cobros, solicitudes de admisión y un
+ * curso terminado con certificados. Además crea una segunda institución vacía con su administrador.
+ * Deja los ids en `smoke-artifacts/seed.json` para que el recorrido sepa a qué pantallas ir.
  *
  * Solo corre sobre una base local de pruebas recién migrada:
  *   EDUKANA_INTEGRATION_DB=1 node --require ./tests/integration/stub-server-only.cjs --import tsx tests/e2e/smoke/seed.ts
@@ -16,9 +18,15 @@ import { db } from "@/lib/db";
 import { addGroupCourses, addGroupMembers, createGroup } from "@/server/academic/groups";
 import { addProgramCourses, createProgram } from "@/server/academic/programs";
 import { saveAssignment } from "@/server/assessment/assignments";
+import { submitAssignment } from "@/server/assessment/assignments";
 import { createExam, setExamPublished } from "@/server/assessment/exam-admin";
 import { setupSimpleGrading } from "@/server/assessment/gradebook";
 import { createQuestion } from "@/server/assessment/question-bank";
+import { createLead, moveLeadStage } from "@/server/admissions/leads";
+import { saveAttendance } from "@/server/courses/attendance";
+import { issueCertificate, markCourseCompleted } from "@/server/courses/certificates";
+import { startExamAttempt, submitExamAttempt } from "@/server/exams";
+import { createCharge, recordPayment } from "@/server/finance/charges";
 import { createChapter, createLesson, setChapterPublished, setLessonPublished } from "@/server/courses/content";
 import { createCourse, setCoursePublished } from "@/server/courses/course";
 import { enrollStudents } from "@/server/courses/enrollment";
@@ -54,18 +62,20 @@ async function main() {
   });
   const institutionId = institution.id;
 
-  async function person(name: string, email: string, role: "ADMIN" | "TEACHER" | "STUDENT") {
+  async function person<R extends "ADMIN" | "COORDINATOR" | "TEACHER" | "STUDENT" | "PARENT">(name: string, email: string, role: R, inInstitution = institutionId) {
     const identity = await db.identity.create({ data: { email, passwordHash }, select: { id: true } });
     const user = await db.user.create({
-      data: { institutionId, identityId: identity.id, name, email, role, status: "ACTIVE", emailVerified: new Date() },
+      data: { institutionId: inInstitution, identityId: identity.id, name, email, role, status: "ACTIVE", emailVerified: new Date() },
       select: { id: true },
     });
-    return { id: user.id, institutionId, role };
+    return { id: user.id, institutionId: inInstitution, role };
   }
   const admin = await person("Carla Méndez", SMOKE_ACCOUNTS.admin, "ADMIN");
   const teacher = await person("Luis Peralta", SMOKE_ACCOUNTS.teacher, "TEACHER");
   const student1 = await person("Ana Rodríguez", SMOKE_ACCOUNTS.student1, "STUDENT");
   const student2 = await person("Pedro Jiménez", SMOKE_ACCOUNTS.student2, "STUDENT");
+  const student3 = await person("Rosa Almonte", SMOKE_ACCOUNTS.student3, "STUDENT");
+  const student4 = await person("Juan Castillo", SMOKE_ACCOUNTS.student4, "STUDENT");
 
   const year = Number(dayKey(0).slice(0, 4));
   const period = await db.academicPeriod.create({
@@ -117,7 +127,7 @@ async function main() {
     }
   }
 
-  must("inscribir estudiantes", await enrollStudents(teacher, courseId, [student1.id, student2.id]));
+  must("inscribir estudiantes", await enrollStudents(teacher, courseId, [student1.id, student2.id, student3.id, student4.id]));
 
   // Calificación sencilla: un período y la categoría «General».
   must("configuración de notas", await setupSimpleGrading(teacher, courseId));
@@ -194,7 +204,116 @@ async function main() {
     groupId: group.groupId,
     announcementId: announcement.id,
     studentIds: [student1.id, student2.id],
+    gradedStudentIds: [student3.id, student4.id],
+    finishedCourseId: "",
+    certificateCode: "",
   };
+
+  // --- qa: recorrido completo ---
+  // Rosa y Juan ya entregaron la tarea y presentaron el examen (con una respuesta corta por revisar):
+  // el docente los califica en el recorrido, Rosa en móvil y Juan en escritorio.
+  for (const [index, student] of [student3, student4].entries()) {
+    must(`entrega ${index + 1}`, await submitAssignment(student, {
+      assignmentId: assignment.assignmentId,
+      content: index === 0 ? "1) 42  2) 18  3) 105  4) 7  5) 60. Sumé primero las unidades y luego las decenas." : "Hice los cinco problemas en el cuaderno: 42, 18, 105, 7 y 60.",
+    }));
+    const attempt = await startExamAttempt(student, exam.id);
+    if (!attempt.ok) throw new Error(`Semilla: no se pudo iniciar el examen: ${attempt.message}`);
+    const submitted = await submitExamAttempt(student, attempt.attemptId, {
+      [questionIds[0]]: "42",
+      [questionIds[1]]: "Verdadero",
+      [questionIds[2]]: index === 0 ? "Cuando una columna suma más de nueve, se pasa una decena a la columna de al lado." : "Es llevar un número a la otra columna.",
+    });
+    if (!submitted.ok) throw new Error(`Semilla: no se pudo enviar el examen: ${JSON.stringify(submitted)}`);
+  }
+
+  // Asistencia de ayer: así «Mi asistencia» y el historial no salen vacíos.
+  must("asistencia de ayer", await saveAttendance(teacher, courseId, {
+    date: dayKey(-1),
+    title: "Clase de números naturales",
+    entries: [
+      { studentId: student1.id, status: "PRESENT" },
+      { studentId: student2.id, status: "LATE", note: "Llegó 15 minutos tarde." },
+      { studentId: student3.id, status: "PRESENT" },
+      { studentId: student4.id, status: "ABSENT", note: "Avisó que estaba enfermo." },
+    ],
+  }));
+
+  // Curso ya terminado con certificados emitidos a Ana y Pedro («Mis certificados» y la página pública).
+  const finished = must("curso terminado", await createCourse(teacher, teacherScope, {
+    name: "Taller de Lectura",
+    description: "Lectura comprensiva en ocho semanas.",
+    teacherId: teacher.id,
+    periodId: period.id,
+    code: "LEC-100",
+  }));
+  must("publicar curso terminado", await setCoursePublished(teacher, teacherScope, finished.courseId, true));
+  const readingChapter = must("capítulo del taller", await createChapter(teacher, finished.courseId, { title: "Leer con atención", description: "Ideas principales." }));
+  if (!readingChapter.id) throw new Error("Semilla: el capítulo del taller no devolvió su id.");
+  must("publicar capítulo del taller", await setChapterPublished(teacher, readingChapter.id, true));
+  const readingLesson = must("lección del taller", await createLesson(teacher, readingChapter.id, { title: "La idea principal", summary: "Cómo encontrarla.", type: "TEXT", content: "Lee el texto y subraya la idea más importante.", estimatedMinutes: 10 }));
+  if (!readingLesson.id) throw new Error("Semilla: la lección del taller no devolvió su id.");
+  must("publicar lección del taller", await setLessonPublished(teacher, readingLesson.id, true));
+  must("inscribir en el taller", await enrollStudents(teacher, finished.courseId, [student1.id, student2.id]));
+  for (const student of [student1, student2]) {
+    const enrollment = await db.enrollment.findFirstOrThrow({ where: { courseId: finished.courseId, studentId: student.id }, select: { id: true } });
+    must("taller completado", await markCourseCompleted(teacher, finished.courseId, enrollment.id));
+    const issued = must("certificado del taller", await issueCertificate(teacher, finished.courseId, enrollment.id));
+    if (student === student1) seed.certificateCode = issued.code ?? "";
+  }
+  if (!seed.certificateCode) throw new Error("Semilla: el certificado de Ana no devolvió su código.");
+  seed.finishedCourseId = finished.courseId;
+
+  // Cobros: Ana debe una inscripción vencida con un abono; Pedro pagó su mensualidad completa.
+  const anaCharge = must("cargo de Ana", await createCharge(admin, { studentId: student1.id, concept: "Inscripción del período", amountCents: 500_000, dueDate: dayKey(-10), periodId: period.id }));
+  if (!anaCharge.chargeId) throw new Error("Semilla: el cargo de Ana no devolvió su id.");
+  must("abono de Ana", await recordPayment(admin, { chargeId: anaCharge.chargeId, amountCents: 200_000, paidOn: dayKey(-5), method: "TRANSFER", note: "Transferencia 4521" }));
+  const pedroCharge = must("cargo de Pedro", await createCharge(admin, { studentId: student2.id, concept: "Mensualidad", amountCents: 350_000, dueDate: dayKey(10), periodId: period.id }));
+  if (!pedroCharge.chargeId) throw new Error("Semilla: el cargo de Pedro no devolvió su id.");
+  must("pago de Pedro", await recordPayment(admin, { chargeId: pedroCharge.chargeId, amountCents: 350_000, paidOn: dayKey(0), method: "CASH" }));
+
+  // Admisiones: tres solicitudes en etapas distintas para que el tablero tenga contenido.
+  const leads = [
+    { name: "Carmen Báez", email: "carmen.baez@correo.test", programInterest: "Bachillerato Técnico", source: "Redes sociales", steps: [] as string[] },
+    { name: "Miguel Ortiz", email: "miguel.ortiz@correo.test", programInterest: "Bachillerato Técnico", source: "Recomendación", steps: ["DOCUMENTS"] },
+    { name: "Laura Peña", email: "laura.pena@correo.test", programInterest: "", source: "Visita a la institución", steps: ["DOCUMENTS", "REVIEW"] },
+  ];
+  for (const lead of leads) {
+    const created = must(`solicitud de ${lead.name}`, await createLead(admin, { name: lead.name, email: lead.email, programInterest: lead.programInterest, source: lead.source }));
+    for (const stage of lead.steps) must(`etapa ${stage}`, await moveLeadStage(admin, created.leadId, stage));
+  }
+
+  // Coordinadora y tutora. La tutora está vinculada a Ana y a Pedro con permiso académico y de cobros;
+  // el permiso de cobros de los tutores viene apagado por omisión y aquí se enciende para la institución.
+  await person("Sofía Batista", SMOKE_ACCOUNTS.coordinator, "COORDINATOR");
+  const parent = await person("Marisol Rodríguez", SMOKE_ACCOUNTS.parent, "PARENT");
+  for (const [child, relationship] of [[student1, "MOTHER"], [student2, "LEGAL_GUARDIAN"]] as const) {
+    await db.guardianship.create({
+      data: {
+        institutionId,
+        parentId: parent.id,
+        studentId: child.id,
+        relationship,
+        status: "ACTIVE",
+        canViewAcademics: true,
+        canViewAttendance: true,
+        canViewSchedule: true,
+        canViewAnnouncements: true,
+        canViewFinance: true,
+        createdById: admin.id,
+        updatedById: admin.id,
+      },
+    });
+  }
+  await db.roleCapabilityOverride.create({ data: { institutionId, role: "PARENT", capability: "child.finance.view", enabled: true, updatedById: admin.id } });
+
+  // Segunda institución, vacía, con su administrador: su inicio debe mostrar «Primeros pasos».
+  const fresh = await db.institution.create({
+    data: { name: "Colegio Nuevo Amanecer", slug: "colegio-nuevo", type: "SCHOOL", timezone: TIME_ZONE },
+    select: { id: true },
+  });
+  await person("Rafael Núñez", SMOKE_ACCOUNTS.newAdmin, "ADMIN", fresh.id);
+  // --- fin qa: recorrido completo ---
   mkdirSync(join(process.cwd(), "smoke-artifacts"), { recursive: true });
   writeFileSync(join(process.cwd(), SMOKE_SEED_FILE), JSON.stringify(seed, null, 2));
   console.log("Semilla del recorrido lista:", seed);

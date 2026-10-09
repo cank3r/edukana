@@ -143,7 +143,7 @@ export class Tour {
       if (overflow.length) warnings.push(`Desbordamiento horizontal: ${overflow.join("; ")}.`);
     }
 
-    const file = `${String(this.order).padStart(2, "0")}-${slug(this.role)}-${slug(screen)}.jpg`;
+    const file = `${String(this.order).padStart(3, "0")}-${slug(this.role)}-${slug(screen)}.jpg`;
     const directory = join(process.cwd(), SMOKE_DIR, "screenshots", this.project);
     mkdirSync(directory, { recursive: true });
     await this.capture(join(directory, file)).catch((error) => {
