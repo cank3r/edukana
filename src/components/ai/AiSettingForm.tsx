@@ -23,10 +23,10 @@ export function AiSettingForm({ enabled, platformReady }: { enabled: boolean; pl
         </p>
       </div>
       <p className="text-sm font-semibold text-slate-900">
-        Estado: <span className={enabled ? "text-emerald-700" : "text-slate-700"}>{enabled ? "Encendido" : "Apagado"}</span>
+        Estado: <span className={enabled && platformReady ? "text-emerald-700" : "text-slate-700"}>{!enabled ? "Apagado" : platformReady ? "Encendido" : "Encendido en tu institución, pero todavía no disponible"}</span>
       </p>
       {!platformReady && (
-        <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">La plataforma todavía no tiene el asistente activado. Hasta que se active, nadie lo verá aunque esté encendido aquí.</p>
+        <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">La plataforma todavía no tiene el asistente activado. Hasta que se active, nadie lo verá en los cursos.</p>
       )}
 
       {confirming ? (

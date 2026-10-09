@@ -96,7 +96,7 @@ export default async function PersonPage({ params }: { params: Promise<{ userId:
                 <li key={course.id} className="py-2">
                   <Link className={link} href={`/dashboard/aula/${course.id}`}>{course.name}</Link>
                   <p className="text-sm text-slate-600">
-                    {plural(course.activeStudents, "estudiante inscrito", "estudiantes inscritos")}
+                    {plural(course.activeStudents, "estudiante cursándolo ahora", "estudiantes cursándolo ahora")}
                     {course.archived ? " · Archivado" : ""}
                   </p>
                 </li>
