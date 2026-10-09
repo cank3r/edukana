@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import { db } from "@/lib/db";
-import { admissionSummary, convertLead, convertedUserId, createLead, deleteLead, getLead, listLeads, moveLeadStage, updateLead } from "@/server/admissions/leads";
+import { admissionSummary, convertLead, createLead, deleteLead, getLead, listLeads, moveLeadStage, updateLead } from "@/server/admissions/leads";
 import { A, B, ensureSeed } from "./setup";
 
 const NEW_EMAILS = ["aspirante@admisiones.test", "con.grupo@admisiones.test", "sin.cupo@admisiones.test", "grupo.ajeno@admisiones.test"];
@@ -94,8 +94,13 @@ test("convertir crea a la persona en A como estudiante y repetirlo no duplica", 
   assert.equal(person.name, "Ana Aspirante");
   const lead = await db.admissionLead.findUniqueOrThrow({ where: { id: leadId } });
   assert.equal(lead.stage, "ENROLLED");
-  assert.equal(convertedUserId(lead.documents), first.userId);
-  assert.match(lead.notes ?? "", /Convertida en estudiante/);
+  assert.equal(lead.convertedUserId, first.userId);
+  assert.ok(lead.convertedAt, "guarda cuándo se convirtió");
+  assert.doesNotMatch(lead.notes ?? "", /Convertida en estudiante/, "las notas son de quien gestiona: el hecho queda en el historial");
+  assert.equal((lead.documents as Record<string, unknown> | null)?.convertedUserId, undefined, "el vínculo ya no va en documents");
+  const detail = await getLead(A.institutionId, leadId);
+  assert.equal(detail?.person?.id, first.userId);
+  assert.equal(detail?.person?.access, "pending", "aún no se le envió invitación");
 
   const [again, twice] = await Promise.all([convertLead(A.admin, { leadId }), convertLead(A.admin, { leadId })]);
   for (const repeat of [again, twice]) {
@@ -214,4 +219,16 @@ test("borrar: una solicitud convertida se rechaza; una abierta se borra y queda 
   assert.equal(await db.admissionLead.count({ where: { id: leadId } }), 0);
   assert.equal((await audits(leadId, "ADMISSION_DELETED")).length, 1);
   assert.equal((await deleteLead(A.admin, leadId)).ok, false);
+});
+
+test("una solicitud convertida antes del campo propio se sigue reconociendo por documents", async () => {
+  const legacy = await db.admissionLead.create({
+    data: { institutionId: A.institutionId, name: "Solicitud Antigua", email: "antigua@admisiones.test", stage: "ENROLLED", documents: { convertedUserId: A.student.id } },
+  });
+  const detail = await getLead(A.institutionId, legacy.id);
+  assert.equal(detail?.convertedUserId, A.student.id);
+  assert.equal(detail?.person?.id, A.student.id);
+  const again = await convertLead(A.admin, { leadId: legacy.id });
+  assert.ok(again.ok && again.alreadyConverted && again.userId === A.student.id, "no la convierte dos veces");
+  assert.equal((await deleteLead(A.admin, legacy.id)).ok, false, "tampoco se borra");
 });

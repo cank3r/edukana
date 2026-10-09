@@ -21,7 +21,10 @@ export type AdminHomeAlert = {
   action: string;
 };
 
-export type AdminHome = { institutionName: string; numbers: AdminHomeNumbers; alerts: AdminHomeAlert[] };
+export type AdminHome = { institutionName: string; hasPeriod: boolean; numbers: AdminHomeNumbers; alerts: AdminHomeAlert[] };
+
+/** Avisos que repiten un paso de «Primeros pasos»: mientras la guía se vea, no se muestran dos veces. */
+export const ALERTS_IN_FIRST_STEPS: AdminHomeAlert["id"][] = ["period-missing", "invitations", "empty-courses"];
 
 const plural = (count: number, one: string, many: string) => (count === 1 ? `1 ${one}` : `${count} ${many}`);
 
@@ -42,6 +45,7 @@ export async function getAdminHome(institutionId: string, now = new Date()): Pro
     activePeriod,
     emptyCourses,
     staleSubmissions,
+    periods,
   ] = await Promise.all([
     db.institution.findUnique({ where: { id: institutionId }, select: { name: true } }),
     db.user.count({ where: { institutionId, role: "STUDENT", status: "ACTIVE" } }),
@@ -56,10 +60,12 @@ export async function getAdminHome(institutionId: string, now = new Date()): Pro
       orderBy: { endDate: "desc" },
       select: { name: true, endDate: true },
     }),
-    db.course.count({ where: { institutionId, enrollments: { none: { status: "ACTIVE" } } } }),
+    // Un curso cuyos estudiantes ya lo completaron no está «sin estudiantes».
+    db.course.count({ where: { institutionId, enrollments: { none: { status: { in: ["ACTIVE", "COMPLETED"] } } } } }),
     db.submission.count({
       where: { status: "SUBMITTED", submittedAt: { lt: staleBefore }, assignment: { course: { institutionId } } },
     }),
+    db.academicPeriod.count({ where: { institutionId } }),
   ]);
 
   const alerts: AdminHomeAlert[] = [];
@@ -110,6 +116,7 @@ export async function getAdminHome(institutionId: string, now = new Date()): Pro
 
   return {
     institutionName: institution?.name ?? "",
+    hasPeriod: periods > 0,
     numbers: { activeStudents, activeTeachers, courses, activeEnrollments, pendingInvitations, suspendedPeople },
     alerts,
   };

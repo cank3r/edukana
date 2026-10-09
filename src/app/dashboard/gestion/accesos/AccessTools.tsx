@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useRef, useState, useTransition } from "react";
+import { countLabel } from "@/lib/plural";
 import { importPeopleAction, type PeopleImportState } from "@/server/actions/people-import";
 import { invitePendingPeopleAction, invitePersonAction, setPersonStatusAction, updatePersonAction, type PeopleActionState } from "@/server/actions/people";
 
@@ -70,7 +71,7 @@ export function ImportPeople() {
           )}
           {preview && (
             <div className="mt-4 flex flex-wrap gap-2">
-              <button type="button" className={primary} disabled={pending || preview.toCreate === 0} onClick={() => run(true)}>{pending ? "Creando…" : `Crear ${preview.toCreate} personas`}</button>
+              <button type="button" className={primary} disabled={pending || preview.toCreate === 0} onClick={() => run(true)}>{pending ? "Creando…" : `Crear ${countLabel(preview.toCreate, "persona", "personas")}`}</button>
               <button type="button" className={secondary} disabled={pending} onClick={() => setState(null)}>Cancelar</button>
             </div>
           )}
@@ -143,7 +144,8 @@ const ROLE_OPTIONS = [
 ];
 const fieldClass = "mt-1 min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-base outline-none focus:border-blue-500";
 
-export function PersonAccess({ person }: { person: Person }) {
+/** Una persona con sus acciones. `actionsOnly` la muestra sin nombre ni estado (en su ficha ya están arriba). */
+export function PersonAccess({ person, actionsOnly = false }: { person: Person; actionsOnly?: boolean }) {
   const [statusState, statusAction, statusPending] = useActionState(setPersonStatusAction, empty);
   const [inviteState, inviteAction, invitePending] = useActionState(invitePersonAction, empty);
   const [asking, setAsking] = useState(false);
@@ -156,13 +158,13 @@ export function PersonAccess({ person }: { person: Person }) {
   return (
     <li className="py-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="min-w-0">
+        {!actionsOnly && <div className="min-w-0">
           <p className="truncate font-semibold text-slate-950">{person.detailHref ? <Link className="text-blue-700 underline" href={person.detailHref}>{person.name}</Link> : person.name}</p>
           <p className="truncate text-sm text-slate-600">{person.email} · {person.roleLabel}</p>
           <p className="mt-1 text-xs font-semibold">
             {person.suspended ? <span className="rounded-full bg-red-50 px-2 py-1 text-red-700">Suspendido</span> : person.hasPassword ? <span className="rounded-full bg-emerald-50 px-2 py-1 text-emerald-700">Puede entrar</span> : <span className="rounded-full bg-amber-50 px-2 py-1 text-amber-800">Aún no crea su contraseña</span>}
           </p>
-        </div>
+        </div>}
         <div className="flex flex-wrap gap-2">
           {!editing && <button className={secondary} type="button" onClick={() => setEditing(true)}>Editar</button>}
         {!person.isSelf && (

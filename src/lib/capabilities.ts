@@ -44,7 +44,7 @@ export const SYSTEM_ROLE_CAPABILITIES: Record<EdukanaRole, ReadonlySet<Capabilit
   TEACHER: capabilities("course.view", "course.manage", "course.roster.view", "schedule.view"),
   STUDENT: capabilities("student.portal.view", "course.view", "course.participate", "schedule.view"),
   // Every child capability still requires an ACTIVE Guardianship and its matching per-link flag.
-  PARENT: capabilities("child.portal.view", "child.academics.view", "child.attendance.view", "child.schedule.view", "child.announcements.view"),
+  PARENT: capabilities("child.portal.view", "child.academics.view", "child.attendance.view", "child.schedule.view", "child.announcements.view", "child.finance.view"),
 };
 
 export const ROLE_ALLOWED_CAPABILITIES: Record<EdukanaRole, ReadonlySet<Capability>> = {

@@ -1,18 +1,28 @@
 import Link from "next/link";
-import { AlertCircle, BookOpen, Building2, ChevronRight, Megaphone, UserPlus, Users } from "lucide-react";
-import { getAdminHome } from "@/server/admin-home";
+import { AlertCircle, BookOpen, Building2, CalendarPlus, ChevronRight, Megaphone, UserPlus, Users } from "lucide-react";
+import { ALERTS_IN_FIRST_STEPS, getAdminHome } from "@/server/admin-home";
+import { getFirstStepsGuide } from "@/server/first-steps";
 import { FirstSteps } from "./FirstSteps";
 
 type Props = { institutionId: string; userName?: string | null; canManagePeople: boolean; canPublish: boolean };
 
 /** Inicio de quien administra: qué hacer ahora, accesos directos y la institución en números. */
 export async function AdminHome({ institutionId, userName, canManagePeople, canPublish }: Props) {
-  const { institutionName, numbers, alerts } = await getAdminHome(institutionId);
+  const [{ institutionName, hasPeriod, numbers, alerts: allAlerts }, guide] = await Promise.all([
+    getAdminHome(institutionId),
+    canManagePeople ? getFirstStepsGuide(institutionId) : null,
+  ]);
   const firstName = userName?.split(" ")[0];
+  const showGuide = Boolean(guide?.visible);
+  // Lo que ya pide «Primeros pasos» no se repite en «Requiere tu atención».
+  const alerts = showGuide ? allAlerts.filter((alert) => !ALERTS_IN_FIRST_STEPS.includes(alert.id)) : allAlerts;
+  const isEmpty = Object.values(numbers).every((value) => value === 0);
 
   const actions = [
     ...(canManagePeople ? [{ href: "/dashboard/gestion/accesos", label: "Agregar personas", icon: <UserPlus size={20} aria-hidden="true" /> }] : []),
-    { href: "/dashboard/aula", label: "Crear un curso", icon: <BookOpen size={20} aria-hidden="true" /> },
+    hasPeriod
+      ? { href: "/dashboard/aula", label: "Crear un curso", icon: <BookOpen size={20} aria-hidden="true" /> }
+      : { href: "/dashboard/configuracion/periodos", label: "Crear un período", icon: <CalendarPlus size={20} aria-hidden="true" /> },
     ...(canPublish ? [{ href: "/dashboard/comunidad", label: "Publicar un aviso", icon: <Megaphone size={20} aria-hidden="true" /> }] : []),
     { href: "/dashboard/gestion", label: "Ver personas", icon: <Users size={20} aria-hidden="true" /> },
     { href: "/dashboard/configuracion", label: "Datos de la institución", icon: <Building2 size={20} aria-hidden="true" /> },
@@ -34,7 +44,16 @@ export async function AdminHome({ institutionId, userName, canManagePeople, canP
         <h1 className="break-words text-2xl font-bold" style={{ color: "var(--navy)" }}>{institutionName || "Tu institución"}</h1>
       </header>
 
-      {canManagePeople && <FirstSteps institutionId={institutionId} />}
+      {showGuide && guide && <FirstSteps steps={guide.steps} />}
+
+      {isEmpty ? (
+        // Institución recién creada: sin cifras en cero ni avisos; solo la guía.
+        <p className="text-slate-700">
+          Aquí verás los números de tu institución y lo que requiera tu atención cuando empiece a funcionar.
+          {showGuide ? " Empieza por los primeros pasos." : ""}
+        </p>
+      ) : (
+      <>
 
       <section className="mb-8" aria-labelledby="acciones-frecuentes">
         <h2 id="acciones-frecuentes" className="mb-3 text-lg font-bold text-slate-900">Acciones frecuentes</h2>
@@ -87,6 +106,8 @@ export async function AdminHome({ institutionId, userName, canManagePeople, canP
           </ul>
         )}
       </section>
+      </>
+      )}
     </div>
   );
 }
