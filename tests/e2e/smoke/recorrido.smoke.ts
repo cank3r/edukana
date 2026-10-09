@@ -539,7 +539,12 @@ test("coordinador", async ({ page }, info) => {
   const tour = new Tour(page, info, "coordinador", 350);
   if (!(await start(tour, SMOKE_ACCOUNTS.coordinator))) return;
 
-  await tour.open("inicio", "/dashboard", () => heading(page, "¿Qué necesitas hacer hoy?"));
+  // Inicio propio de coordinación (CoordinatorHome): nombre de la institución, pendientes y docentes.
+  await tour.open("inicio", "/dashboard", async () => {
+    await heading(page, "Instituto Demo");
+    await heading(page, "Requiere tu atención");
+    await heading(page, "Docentes con más pendientes");
+  });
   await tour.open("personas", "/dashboard/gestion", async () => {
     await heading(page, "Personas");
     await visible(page, "Ana Rodríguez");
