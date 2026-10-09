@@ -9,6 +9,7 @@ import { courseWhereForScope, resolveCourseReadScope, resolveCourseWriteScope } 
 import { db } from "@/lib/db";
 import { roleLabel } from "@/lib/ux";
 import { AnnouncementComposer } from "@/components/dashboard/AnnouncementComposer";
+import { AnnouncementOwnerTools } from "./AnnouncementOwnerTools";
 import { AnnouncementContent } from "@/components/dashboard/AnnouncementContent";
 import { Calendar, ExternalLink, Megaphone, Pin } from "lucide-react";
 
@@ -86,11 +87,11 @@ export default async function ComunidadPage() {
   return <div className="mx-auto max-w-5xl p-4 sm:p-8">
     <header className="mb-8"><h1 className="text-2xl font-bold" style={{ color: "var(--navy)" }}>Comunidad</h1><p className="mt-1 text-sm text-slate-500">Anuncios y comunicados institucionales</p></header>
     {canPublish && <details className="mb-6"><summary className="cursor-pointer rounded-lg bg-blue-600 px-4 py-2 text-center text-sm font-semibold text-white">Crear anuncio</summary><div className="mt-3"><AnnouncementComposer canTargetPeople={canTargetPeople} courses={courses.map((course) => ({ id: course.id, name: course.name, detail: course.code ?? undefined }))} people={people.map((person) => ({ id: person.id, name: person.name, detail: roleLabel(person.role) }))} units={units} /></div></details>}
-    <div className="space-y-4">{announcements.map((announcement) => <AnnouncementCard announcement={announcement} key={announcement.id} readableCourseIds={readableCourseIds} viewerRole={user.role} />)}{announcements.length === 0 && <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center"><Megaphone className="mx-auto mb-3 text-slate-300" size={40} /><p className="font-semibold">Sin anuncios disponibles</p><p className="mt-1 text-sm text-slate-500">Los comunicados para tu audiencia aparecerán aquí.</p></div>}</div>
+    <div className="space-y-4">{announcements.map((announcement) => <AnnouncementCard announcement={announcement} key={announcement.id} readableCourseIds={readableCourseIds} viewerRole={user.role} canEdit={canManage || announcement.authorId === user.id} />)}{announcements.length === 0 && <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center"><Megaphone className="mx-auto mb-3 text-slate-300" size={40} /><p className="font-semibold">Sin anuncios disponibles</p><p className="mt-1 text-sm text-slate-500">Los comunicados para tu audiencia aparecerán aquí.</p></div>}</div>
   </div>;
 }
 
-export function AnnouncementCard({ announcement, readableCourseIds, viewerRole }: { announcement: AnnouncementCardData; readableCourseIds: ReadonlySet<string>; viewerRole: "SUPER_ADMIN" | "ADMIN" | "COORDINATOR" | "TEACHER" | "STUDENT" | "PARENT" }) {
+export function AnnouncementCard({ announcement, readableCourseIds, viewerRole, canEdit = false }: { announcement: AnnouncementCardData; readableCourseIds: ReadonlySet<string>; canEdit?: boolean; viewerRole: "SUPER_ADMIN" | "ADMIN" | "COORDINATOR" | "TEACHER" | "STUDENT" | "PARENT" }) {
   const safeUrl = announcement.externalUrl ? safeAnnouncementHref(announcement.externalUrl) : null;
   const details = announcement.audienceDetails;
   const detailedLabels = details ? [
@@ -109,6 +110,7 @@ export function AnnouncementCard({ announcement, readableCourseIds, viewerRole }
     {announcement.relatedCourses.length > 0 && <section aria-label="Cursos relacionados" className="mt-4 grid gap-3 sm:grid-cols-2">{announcement.relatedCourses.map(({ course }) => canOpenRelatedCourse(viewerRole, readableCourseIds, course.id) ? <Link className="rounded-xl border border-slate-200 bg-white p-4 hover:border-blue-300" href={`/dashboard/aula/${course.id}`} key={course.id}><RelatedCourseCard course={course} /></Link> : <div className="rounded-xl border border-slate-200 bg-slate-50 p-4" key={course.id}><RelatedCourseCard course={course} /><p className="mt-2 text-xs text-slate-500">Vista informativa; no tienes acceso directo a este curso.</p></div>)}</section>}
     {safeUrl && <a className="mt-4 inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm font-semibold text-blue-700" href={safeUrl} rel="noopener noreferrer" target={safeUrl.startsWith("https:") ? "_blank" : undefined}>Abrir enlace <ExternalLink aria-hidden="true" size={15} /></a>}
     <footer className="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-200/70 pt-3 text-xs text-slate-500"><Calendar aria-hidden="true" size={12} /><span>{new Intl.DateTimeFormat("es", { dateStyle: "long" }).format(announcement.publishedAt)}</span><span>·</span><span>{announcement.author.name}</span><span>·</span><span className="break-words">{audience}</span></footer>
+    {canEdit && <AnnouncementOwnerTools announcement={{ id: announcement.id, title: announcement.title, content: announcement.content, isPinned: announcement.isPinned }} />}
   </article>;
 }
 
