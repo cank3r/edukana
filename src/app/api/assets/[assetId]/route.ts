@@ -1,10 +1,9 @@
 import { auth } from "@/lib/auth";
 import { getEffectiveCapabilities } from "@/lib/authorization";
-import { courseWhereForScope, resolveCourseReadScope, resolveCourseWriteScope } from "@/lib/course-scope";
 import { db } from "@/lib/db";
-import { getCommunityAnnouncementWhere } from "@/lib/announcement-data";
 import { validateAnnouncementUpload } from "@/lib/announcements";
 import { createPrivateAssetUrl, inspectPrivateAsset, removePrivateAsset } from "@/lib/storage";
+import { assetReadAccess, uploadPurposeOfPath } from "@/server/courses/uploads";
 import { signedUrlSeconds } from "@/server/signed-urls";
 
 export async function GET(_request: Request, context: { params: Promise<{ assetId: string }> }) {
@@ -13,25 +12,9 @@ export async function GET(_request: Request, context: { params: Promise<{ assetI
   if (!user?.id || !user.institutionId) return Response.json({ error: "No autorizado" }, { status: 401 });
   const capabilities = await getEffectiveCapabilities(user.institutionId, user.role);
   const { assetId } = await context.params;
-  const asset = await db.storageAsset.findFirst({
-    where: { id: assetId, institutionId: user.institutionId, confirmedAt: { not: null } },
-    select: { bucket: true, kind: true, objectPath: true, courseId: true, announcementId: true, uploaderId: true, visibility: true, submission: { select: { studentId: true } } },
-  });
-  if (!asset || !asset.objectPath.startsWith(`${user.institutionId}/`)) return Response.json({ error: "Archivo no encontrado" }, { status: 404 });
-
-  const owner = asset.uploaderId === user.id || asset.submission?.studentId === user.id;
-  let allowed = owner;
-  if (asset.announcementId && !owner) {
-    const recipientWhere = await getCommunityAnnouncementWhere(user, { canManage: capabilities.has("announcement.manage"), canPublish: capabilities.has("announcement.publish") });
-    allowed = Boolean(await db.announcement.findFirst({ where: { AND: [{ id: asset.announcementId }, recipientWhere] }, select: { id: true } }));
-  } else if (asset.courseId && !owner) {
-    const readWhere = courseWhereForScope(user.institutionId, resolveCourseReadScope(user, capabilities));
-    const writeWhere = courseWhereForScope(user.institutionId, resolveCourseWriteScope(user, capabilities));
-    const readableCourse = readWhere ? Boolean(await db.course.findFirst({ where: { id: asset.courseId, ...readWhere }, select: { id: true } })) : false;
-    const manageableCourse = writeWhere ? Boolean(await db.course.findFirst({ where: { id: asset.courseId, ...writeWhere }, select: { id: true } })) : false;
-    allowed = manageableCourse || (asset.visibility !== "PRIVATE" && readableCourse);
-  }
-  if (!allowed) return Response.json({ error: "Permisos insuficientes" }, { status: 403 });
+  const access = await assetReadAccess({ id: user.id, institutionId: user.institutionId, role: user.role, capabilities }, assetId);
+  if (access.status !== 200) return Response.json({ error: access.status === 404 ? "Archivo no encontrado" : "Permisos insuficientes" }, { status: access.status });
+  const { asset } = access;
   try {
     return Response.redirect(await createPrivateAssetUrl(asset.bucket, asset.objectPath, signedUrlSeconds(asset.kind)), 302);
   } catch (error) {
@@ -77,6 +60,9 @@ export async function DELETE(_request: Request, context: { params: Promise<{ ass
   const { assetId } = await context.params;
   const asset = await db.storageAsset.findFirst({ where: { id: assetId, institutionId: user.institutionId, uploaderId: user.id, announcementId: null }, select: { id: true, bucket: true, objectPath: true } });
   if (!asset || !asset.objectPath.startsWith(`${user.institutionId}/`)) return Response.json({ error: "Carga no encontrada" }, { status: 404 });
+  // Entregas, imágenes de curso, fotos y logos se quitan desde su pantalla (`/api/uploads`), que
+  // conserva lo ya entregado y limpia el campo que usa la imagen.
+  if (uploadPurposeOfPath(user.institutionId, asset.objectPath)) return Response.json({ error: "Este archivo se quita desde su pantalla." }, { status: 409 });
   await removePrivateAsset(asset.bucket, asset.objectPath).catch(() => undefined);
   await db.storageAsset.delete({ where: { id: asset.id } });
   return new Response(null, { status: 204 });

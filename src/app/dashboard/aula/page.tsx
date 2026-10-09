@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { BookOpen, ChevronRight, Plus, Users } from "lucide-react";
@@ -38,6 +39,7 @@ export default async function AulaPage({ searchParams }: { searchParams: Promise
           code: true,
           isPublished: true,
           archivedAt: true,
+          imageUrl: true,
           teacher: { select: { name: true } },
           period: { select: { name: true } },
           _count: { select: { enrollments: { where: { status: { in: ["ACTIVE", "COMPLETED"] } } } } },
@@ -109,7 +111,8 @@ export default async function AulaPage({ searchParams }: { searchParams: Promise
             const progress = Math.round(course.enrollments[0]?.progressPercent ?? 0);
             return (
               <li key={course.id}>
-                <Link href={`/dashboard/aula/${course.id}`} className="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 transition-shadow hover:shadow-md">
+                <Link href={`/dashboard/aula/${course.id}`} className="flex h-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 transition-shadow hover:shadow-md">
+                  {course.imageUrl && <Image src={course.imageUrl} alt="" width={640} height={360} unoptimized className="-mx-5 -mt-5 mb-4 aspect-video w-[calc(100%+2.5rem)] max-w-none bg-slate-100 object-cover" />}
                   <div className="flex flex-wrap items-center gap-2">
                     {!isStudent && <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusStyle[status]}`}>{status}</span>}
                     {course.code && <span className="rounded bg-slate-100 px-2 py-1 font-mono text-xs text-slate-700">{course.code}</span>}

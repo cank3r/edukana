@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getEffectiveCapabilities } from "@/lib/authorization";
 import { getInstitutionSettings, INSTITUTION_TYPE_OPTIONS, LANGUAGE_OPTIONS, timeZoneOptions } from "@/server/platform/institution-settings";
+import { ImageUploader } from "@/components/dashboard/ImageUploader";
+import { db } from "@/lib/db";
 import { InstitutionSettingsForm } from "./InstitutionSettingsForm";
 
 export const dynamic = "force-dynamic";
@@ -15,6 +17,7 @@ export default async function InstitutionSettingsPage() {
   const institution = await getInstitutionSettings(user.institutionId);
   if (!institution) redirect("/dashboard");
   const zones = timeZoneOptions(institution.timezone);
+  const logo = await db.institution.findFirst({ where: { id: user.institutionId }, select: { logoUrl: true } });
 
   return (
     <div className="mx-auto max-w-2xl space-y-5 p-4 sm:p-8">
@@ -30,7 +33,10 @@ export default async function InstitutionSettingsPage() {
         latinAmerica={zones.latinAmerica}
         otherZones={zones.rest}
       />
-      <p className="text-sm text-slate-600">El logo todavía no se puede cambiar desde aquí.</p>
+      <section className="rounded-xl border border-slate-200 bg-white p-5" aria-labelledby="logo-institucion">
+        <h2 id="logo-institucion" className="mb-3 text-lg font-bold text-slate-950">Logo</h2>
+        <ImageUploader purpose="logo" imageUrl={logo?.logoUrl ?? null} alt={`Logo de ${institution.name}`} />
+      </section>
     </div>
   );
 }

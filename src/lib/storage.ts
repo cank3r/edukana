@@ -1,6 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { mkdir, readFile, rm, stat } from "node:fs/promises";
+import { mkdir, open, readFile, rm, stat } from "node:fs/promises";
 import { dirname } from "node:path";
 import { createClient } from "@supabase/supabase-js";
 import { safeObjectName } from "@/lib/lms";
@@ -56,6 +56,54 @@ export async function createPrivateAssetUpload(input: { institutionId: string; c
 export async function createPrivateAnnouncementAssetUpload(input: { institutionId: string; uploaderId: string; fileName: string }) {
   const objectPath = `${input.institutionId}/announcements/drafts/${input.uploaderId}/${randomUUID()}-${safeObjectName(input.fileName)}`;
   return createUpload(objectPath);
+}
+
+/** Archivos de una entrega. Fuera de `<institución>/<curso>/` para que solo los confirme `/api/uploads`. */
+export async function createSubmissionFileUpload(input: { institutionId: string; courseId: string; assignmentId: string; userId: string; fileName: string }) {
+  return createUpload(`${input.institutionId}/submissions/${input.courseId}/${input.assignmentId}/${input.userId}/${randomUUID()}-${safeObjectName(input.fileName)}`);
+}
+
+/** Imagen del curso o logo: se sirven sin sesión por `/api/public-images/[assetId]`. */
+export async function createPublicImageUpload(input: { institutionId: string; scope: "course" | "logo"; ownerId: string; fileName: string }) {
+  return createUpload(`${input.institutionId}/public/${input.scope}/${input.ownerId}/${randomUUID()}-${safeObjectName(input.fileName)}`);
+}
+
+/** Foto de perfil: privada de la persona. */
+export async function createAvatarUpload(input: { institutionId: string; userId: string; fileName: string }) {
+  return createUpload(`${input.institutionId}/avatars/${input.userId}/${randomUUID()}-${safeObjectName(input.fileName)}`);
+}
+
+/** Primeros bytes de un archivo guardado, para comprobar su formato real. */
+export async function readPrivateAssetHead(bucket: string, objectPath: string, length: number): Promise<Uint8Array> {
+  const value = config();
+  if (value.mode === "local") {
+    if (bucket !== value.bucket) throw new Error("Bucket local no autorizado.");
+    const handle = await open(resolveLocalStorageObject(value.root, objectPath), "r");
+    try {
+      const buffer = Buffer.alloc(length);
+      const { bytesRead } = await handle.read(buffer, 0, length, 0);
+      return new Uint8Array(buffer.subarray(0, bytesRead));
+    } finally {
+      await handle.close();
+    }
+  }
+  const { data, error } = await storageAdmin(value).from(bucket).createSignedUrl(objectPath, 60);
+  if (error) throw new Error(`No se pudo leer la carga (${error.message}).`);
+  const response = await fetch(data.signedUrl, { headers: { range: `bytes=0-${length - 1}` }, cache: "no-store" });
+  if (!response.ok) throw new Error(`No se pudo leer la carga (${response.status}).`);
+  return new Uint8Array(await response.arrayBuffer()).subarray(0, length);
+}
+
+/** Contenido completo de un archivo guardado (solo para imágenes pequeñas que se sirven públicamente). */
+export async function readPrivateAsset(bucket: string, objectPath: string): Promise<Uint8Array> {
+  const value = config();
+  if (value.mode === "local") {
+    if (bucket !== value.bucket) throw new Error("Bucket local no autorizado.");
+    return new Uint8Array(await readFile(resolveLocalStorageObject(value.root, objectPath)));
+  }
+  const { data, error } = await storageAdmin(value).from(bucket).download(objectPath);
+  if (error) throw new Error(`No se pudo leer el archivo (${error.message}).`);
+  return new Uint8Array(await data.arrayBuffer());
 }
 
 export async function inspectPrivateAsset(bucket: string, objectPath: string) {
