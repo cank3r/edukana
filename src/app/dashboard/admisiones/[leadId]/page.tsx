@@ -11,6 +11,12 @@ import { NEXT_STAGE, STAGE_HELP, STAGE_LABEL, STAGES, timeAgo, type Stage } from
 export const dynamic = "force-dynamic";
 
 const ROLE_WORDS: Record<string, string> = { STUDENT: "estudiante", TEACHER: "docente", COORDINATOR: "coordinador", PARENT: "tutor", ADMIN: "administrador", SUPER_ADMIN: "administrador" };
+const ACCESS_TEXT = {
+  HAS_PASSWORD: "Ya creó su contraseña y puede entrar.",
+  INVITED: "Tiene la invitación en su correo y aún no crea su contraseña.",
+  NOT_INVITED: "Todavía no tiene una invitación vigente: envíasela desde su ficha.",
+  SUSPENDED: "Tiene el acceso suspendido. Reactívalo desde su ficha.",
+} as const;
 const stageName = (value: unknown) => (STAGES.includes(value as Stage) ? STAGE_LABEL[value as Stage] : "otra etapa");
 
 /** Una línea del historial en palabras llanas. */
@@ -51,18 +57,10 @@ export default async function LeadPage({ params }: { params: Promise<{ leadId: s
     db.program.findMany({ where: { institutionId: user.institutionId, isPublished: true }, orderBy: { name: "asc" }, select: { name: true } }),
     stage === "ACCEPTED" && canConvert ? listGroups(user.institutionId) : [],
   ]);
-  const dateOnly = new Intl.DateTimeFormat("es", { timeZone: institution?.timezone ?? "America/Santo_Domingo", dateStyle: "long" });
+  const day = new Intl.DateTimeFormat("es", { timeZone: institution?.timezone ?? "America/Santo_Domingo", dateStyle: "long" });
   const when = new Intl.DateTimeFormat("es", { timeZone: institution?.timezone ?? "America/Santo_Domingo", dateStyle: "medium", timeStyle: "short" });
   const lastReason = history.find((row) => row.action === "ADMISSION_STAGE_CHANGED" && (row.changes as { to?: unknown } | null)?.to === "REJECTED");
   const reasonText = (lastReason?.changes as { reason?: unknown } | null | undefined)?.reason;
-  // Lo que pasó al convertir, para que se siga viendo después de recargar.
-  const conversion = history.find((row) => row.action === "ADMISSION_CONVERTED");
-  const conversionData = (conversion?.changes ?? {}) as { created?: unknown; groupId?: unknown };
-  const convertedOn = lead.convertedAt ?? conversion?.createdAt ?? null;
-  const conversionGroup =
-    converted && typeof conversionData.groupId === "string"
-      ? await db.studentGroup.findFirst({ where: { id: conversionData.groupId, institutionId: user.institutionId }, select: { name: true } })
-      : null;
   const linkable = sameEmail ? sameEmail.role === "STUDENT" && sameEmail.status === "ACTIVE" : true;
 
   return (
@@ -74,6 +72,30 @@ export default async function LeadPage({ params }: { params: Promise<{ leadId: s
         </p>
       </header>
 
+      {converted && (
+        <section aria-labelledby="ya-estudiante" className="space-y-2 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
+          <h2 id="ya-estudiante" className="text-base font-semibold">Ya es estudiante</h2>
+          {person ? (
+            <>
+              <p>
+                {found.createdPerson ? `Se creó a ${person.name} como estudiante` : `Se vinculó con ${person.name}, que ya estaba en la institución`}
+                {found.convertedAt ? ` el ${day.format(found.convertedAt)}` : ""}.
+                {person.groups.length ? ` ${person.groups.length === 1 ? "Grupo" : "Grupos"}: ${person.groups.join(", ")}.` : " Todavía no está en ningún grupo."}
+              </p>
+              <p>{ACCESS_TEXT[person.access]}</p>
+              {capabilities.has("people.view") ? (
+                <Link href={`/dashboard/gestion/personas/${person.id}`} className="inline-flex min-h-11 items-center font-semibold text-emerald-900 underline">Ver la ficha de {person.name}</Link>
+              ) : (
+                <p>Su ficha está en Personas como {person.name}.</p>
+              )}
+            </>
+          ) : (
+            <p>No encontramos a la persona vinculada; búscala en Personas por su correo ({lead.email}).</p>
+          )}
+        </section>
+      )}
+
+      {!converted && (
       <section aria-label="Siguiente paso" className="space-y-3 rounded-xl border border-slate-200 bg-white p-4">
         <h2 className="font-semibold text-slate-950">Siguiente paso</h2>
         {next && <AdvanceLead leadId={lead.id} to={next} label={`Pasar a «${STAGE_LABEL[next]}»`} />}
@@ -96,49 +118,19 @@ export default async function LeadPage({ params }: { params: Promise<{ leadId: s
             />
           )
         )}
-        {converted && (
-          <div className="space-y-1 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-900">
-            <p className="font-semibold">
-              Ya es estudiante de la institución{convertedOn ? ` desde el ${dateOnly.format(convertedOn)}` : ""}.
-            </p>
-            {conversion && (
-              <p>
-                {conversionData.created === false ? "Se vinculó con una persona que ya existía." : "Se creó como persona nueva."}
-                {conversionGroup ? ` Quedó en el grupo «${conversionGroup.name}».` : ""}
-              </p>
-            )}
-            {person && (
-              <p>
-                {person.access === "ready"
-                  ? "Ya creó su contraseña y puede entrar."
-                  : person.access === "invited"
-                    ? "Ya recibió su invitación; falta que cree su contraseña."
-                    : "Todavía no recibió su invitación: envíasela desde su ficha."}
-              </p>
-            )}
-            <p>
-              {person && capabilities.has("people.view") ? (
-                <Link href={`/dashboard/gestion/personas/${person.id}`} className="inline-flex min-h-11 items-center font-semibold underline">Ver la ficha de {person.name}</Link>
-              ) : person ? (
-                <>Su ficha está en Personas como {person.name}.</>
-              ) : (
-                <>No encontramos a la persona vinculada; búscala en Personas por su correo.</>
-              )}
-            </p>
-          </div>
-        )}
         {stage === "REJECTED" && (
           <>
             {typeof reasonText === "string" && reasonText && <p className="text-sm text-slate-700">Motivo: {reasonText}</p>}
             <AdvanceLead leadId={lead.id} to="INTERESTED" label="Reabrir como «Interesado»" />
           </>
         )}
-        {!converted && stage !== "REJECTED" && (
+        {stage !== "REJECTED" && (
           <div className="flex flex-wrap gap-2">
             <RejectLead leadId={lead.id} name={lead.name} />
           </div>
         )}
       </section>
+      )}
 
       <section aria-label="Datos" className="space-y-3 rounded-xl border border-slate-200 bg-white p-4">
         <h2 className="font-semibold text-slate-950">Datos</h2>

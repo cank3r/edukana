@@ -34,7 +34,7 @@ export default async function OwnProfilePage() {
       </header>
 
       <section className="rounded-xl border border-slate-200 bg-white p-5" aria-labelledby="perfil-cuenta">
-        <h2 id="perfil-cuenta" className="text-lg font-bold text-slate-950">Datos de acceso</h2>
+        <h2 id="perfil-cuenta" className="text-lg font-bold text-slate-950">Mi acceso</h2>
         <dl className="mt-3 space-y-3 text-sm">
           <div>
             <dt className="font-medium text-slate-600">Correo</dt>

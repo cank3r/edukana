@@ -205,7 +205,7 @@ test("administrador", async ({ page }, info) => {
   });
   await tour.step("admisiones convertida", async () => {
     await page.getByRole("button", { name: "Sí, convertir en estudiante" }).click();
-    await visible(page, /Ya es estudiante de la institución/);
+    await heading(page, "Ya es estudiante");
   });
 
   await tour.open("reportes", "/dashboard/analitica", () => heading(page, "Reportes"));

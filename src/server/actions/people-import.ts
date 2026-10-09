@@ -3,9 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { getEffectiveCapabilities } from "@/lib/authorization";
+import { plural } from "@/lib/ux";
 import { errorsToCsv, parsePeopleCsv } from "@/server/imports/people";
 import { applyPeopleImport, planPeopleImport } from "@/server/imports/people-apply";
-import { countLabel } from "@/lib/plural";
 
 const MAX_FILE_BYTES = 2 * 1024 * 1024;
 
@@ -52,14 +52,14 @@ export async function importPeopleAction(_state: PeopleImportState, formData: Fo
       errorsCsv: parsed.errors.length ? errorsToCsv(parsed) : "",
     };
     if (formData.get("confirm") !== "true") {
-      return { ok: true, step: "preview", message: `Se ${summary.toCreate === 1 ? "creará" : "crearán"} ${countLabel(summary.toCreate, "persona", "personas")}.`, ...summary };
+      return { ok: true, step: "preview", message: `Se ${summary.toCreate === 1 ? "creará" : "crearán"} ${plural(summary.toCreate, "persona", "personas")}.`, ...summary };
     }
     const result = await applyPeopleImport({ id: user.id, institutionId: user.institutionId }, plan.toCreate);
     revalidatePath("/dashboard/gestion");
     return {
       ok: true,
       step: "done",
-      message: `Listo: ${countLabel(result.created, "persona creada", "personas creadas")}.`,
+      message: `Listo: ${plural(result.created, "persona creada", "personas creadas")}.`,
       ...summary,
       toCreate: result.created,
       alreadyExisted: summary.alreadyExisted + result.alreadyExisted,

@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useRef, useState, useTransition } from "react";
-import { countLabel } from "@/lib/plural";
 import { importPeopleAction, type PeopleImportState } from "@/server/actions/people-import";
 import { invitePendingPeopleAction, invitePersonAction, setPersonStatusAction, updatePersonAction, type PeopleActionState } from "@/server/actions/people";
+import { plural } from "@/lib/ux";
 
 const primary = "min-h-11 rounded-lg bg-blue-600 px-4 py-2.5 font-semibold text-white disabled:opacity-60";
 const secondary = "min-h-11 rounded-lg border border-slate-300 bg-white px-4 py-2.5 font-semibold text-slate-800 disabled:opacity-60";
@@ -71,7 +71,7 @@ export function ImportPeople() {
           )}
           {preview && (
             <div className="mt-4 flex flex-wrap gap-2">
-              <button type="button" className={primary} disabled={pending || preview.toCreate === 0} onClick={() => run(true)}>{pending ? "Creando…" : `Crear ${countLabel(preview.toCreate, "persona", "personas")}`}</button>
+              <button type="button" className={primary} disabled={pending || preview.toCreate === 0} onClick={() => run(true)}>{pending ? "Creando…" : `Crear ${plural(preview.toCreate, "persona", "personas")}`}</button>
               <button type="button" className={secondary} disabled={pending} onClick={() => setState(null)}>Cancelar</button>
             </div>
           )}
@@ -144,8 +144,8 @@ const ROLE_OPTIONS = [
 ];
 const fieldClass = "mt-1 min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-base outline-none focus:border-blue-500";
 
-/** Una persona con sus acciones. `actionsOnly` la muestra sin nombre ni estado (en su ficha ya están arriba). */
-export function PersonAccess({ person, actionsOnly = false }: { person: Person; actionsOnly?: boolean }) {
+/** Fila con las acciones sobre una persona. En su ficha `showSummary={false}`: el nombre y el estado ya están arriba. */
+export function PersonAccess({ person, showSummary = true }: { person: Person; showSummary?: boolean }) {
   const [statusState, statusAction, statusPending] = useActionState(setPersonStatusAction, empty);
   const [inviteState, inviteAction, invitePending] = useActionState(invitePersonAction, empty);
   const [asking, setAsking] = useState(false);
@@ -158,7 +158,7 @@ export function PersonAccess({ person, actionsOnly = false }: { person: Person; 
   return (
     <li className="py-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        {!actionsOnly && <div className="min-w-0">
+        {showSummary && <div className="min-w-0">
           <p className="truncate font-semibold text-slate-950">{person.detailHref ? <Link className="text-blue-700 underline" href={person.detailHref}>{person.name}</Link> : person.name}</p>
           <p className="truncate text-sm text-slate-600">{person.email} · {person.roleLabel}</p>
           <p className="mt-1 text-xs font-semibold">

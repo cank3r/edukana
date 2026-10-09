@@ -63,7 +63,7 @@ export default async function OperatorInstitutionPage({ params }: { params: Prom
             ? "Todas las personas activas ya crearon su contraseña."
             : `${institution.withoutPassword} ${institution.withoutPassword === 1 ? "persona no ha" : "personas no han"} creado su contraseña. ${institution.pendingInvitations} de ellas no tiene${institution.pendingInvitations === 1 ? "" : "n"} un enlace vigente.`}
         </p>
-        {institution.pendingInvitations > 0 && <p className="text-sm text-slate-600">La administración de la institución puede invitarlas desde Personas → Importar desde archivo e invitar.</p>}
+        {institution.pendingInvitations > 0 && <p className="text-sm text-slate-600">La administración de la institución puede invitarlas desde Personas → Importar e invitar.</p>}
       </section>
 
       <section className="space-y-1 rounded-xl border border-slate-200 bg-white p-4">

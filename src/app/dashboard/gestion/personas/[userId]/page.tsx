@@ -1,64 +1,74 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { Mail, Phone } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { getEffectiveCapabilities } from "@/lib/authorization";
-import { roleLabel } from "@/lib/ux";
-import { getPersonDetail } from "@/server/people/detail";
+import { db } from "@/lib/db";
+import { plural, roleLabel, spanishLabel } from "@/lib/ux";
+import { getPersonDetail, type PersonAccessState } from "@/server/people/detail";
 import { PersonAccess } from "../../accesos/AccessTools";
 
 export const dynamic = "force-dynamic";
 
 const RELATIONSHIP: Record<string, string> = { MOTHER: "Madre", FATHER: "Padre", LEGAL_GUARDIAN: "Tutor legal", OTHER: "Otro vínculo" };
-const ENROLLMENT: Record<string, string> = { ACTIVE: "Inscrito", COMPLETED: "Completó el curso", DROPPED: "Retirado", FAILED: "No aprobó" };
-const ACCESS = {
-  ready: { label: "Ya creó su contraseña", detail: "Puede entrar cuando quiera.", className: "bg-emerald-50 text-emerald-800" },
-  invited: { label: "Invitación pendiente", detail: "Ya recibió el correo; falta que cree su contraseña.", className: "bg-amber-50 text-amber-900" },
-  pending: { label: "Aún no recibe invitación", detail: "No puede entrar hasta que le envíes la invitación.", className: "bg-amber-50 text-amber-900" },
-} as const;
+const ACCESS: Record<PersonAccessState, { label: string; detail: string; tone: string }> = {
+  HAS_PASSWORD: { label: "Puede entrar", detail: "Ya creó su contraseña.", tone: "bg-emerald-50 text-emerald-700" },
+  INVITED: { label: "Invitación pendiente", detail: "Le enviamos la invitación y aún no crea su contraseña.", tone: "bg-amber-50 text-amber-800" },
+  EXPIRED: { label: "La invitación venció", detail: "Se le invitó, pero el enlace venció sin usarse. Envíale otra invitación.", tone: "bg-amber-50 text-amber-800" },
+  NOT_INVITED: { label: "Sin invitar", detail: "Todavía no recibió la invitación para crear su contraseña.", tone: "bg-slate-100 text-slate-700" },
+  SUSPENDED: { label: "Suspendido", detail: "No puede entrar. Sus cursos y notas se conservan; vuelven al reactivarlo.", tone: "bg-red-50 text-red-700" },
+};
+const card = "rounded-xl border border-slate-200 bg-white p-4 sm:p-5";
+const link = "inline-flex min-h-11 items-center font-semibold text-blue-700 underline";
 
-/** Ficha de cualquier persona de la institución, con sus acciones de siempre: corregir, invitar y suspender. */
 export default async function PersonPage({ params }: { params: Promise<{ userId: string }> }) {
   const user = (await auth())?.user;
   if (!user) redirect("/login");
   const capabilities = await getEffectiveCapabilities(user.institutionId, user.role);
   if (!capabilities.has("people.view")) redirect("/dashboard");
-  const { userId } = await params;
-  // Un docente solo ve a sus estudiantes, en la ficha de estudiante que ya filtra por sus cursos.
-  if (user.role === "TEACHER") redirect(`/dashboard/gestion/estudiantes/${encodeURIComponent(userId)}`);
 
-  const person = await getPersonDetail(user.institutionId, userId);
-  if (!person) notFound();
+  const { userId } = await params;
+  const detail = await getPersonDetail({ id: user.id, institutionId: user.institutionId, role: user.role }, userId);
+  if (!detail) notFound();
+  const { person, access } = detail;
   const canManage = capabilities.has("people.manage");
-  const suspended = person.status !== "ACTIVE";
-  const access = ACCESS[person.access];
+  const institution = await db.institution.findUnique({ where: { id: user.institutionId }, select: { timezone: true } });
+  const date = new Intl.DateTimeFormat("es", { timeZone: institution?.timezone ?? "America/Santo_Domingo", dateStyle: "medium" });
+  const state = ACCESS[access];
   const isStudent = person.role === "STUDENT";
+  const isParent = person.role === "PARENT";
+  const showTeaching = detail.teaches.length > 0 || person.role === "TEACHER";
+  const showLearning = detail.enrollments.length > 0 || isStudent;
 
   return (
     <div className="mx-auto max-w-3xl space-y-5 p-4 sm:p-8">
-      <nav className="text-sm">
-        <Link href="/dashboard/gestion" className="inline-flex min-h-11 items-center font-semibold text-blue-700 underline">Volver a Personas</Link>
-      </nav>
-
-      <header className="rounded-xl border border-slate-200 bg-white p-5">
+      <header>
         <h1 className="break-words text-2xl font-bold" style={{ color: "var(--navy)" }}>{person.name}</h1>
-        <p className="mt-1 text-sm font-semibold text-slate-700">{roleLabel(person.role)}</p>
-        <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-slate-700">
-          <span className="flex min-w-0 items-center gap-1 break-all"><Mail size={14} aria-hidden="true" />{person.email}</span>
-          {person.phone && <span className="flex items-center gap-1"><Phone size={14} aria-hidden="true" />{person.phone}</span>}
-        </div>
-        <p className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
-          {suspended ? (
-            <span className="rounded-full bg-red-50 px-2 py-1 text-red-700">Suspendido: no puede entrar</span>
-          ) : (
-            <span className={`rounded-full px-2 py-1 ${access.className}`}>{access.label}</span>
-          )}
+        <p className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+          <span className="rounded-full bg-blue-50 px-2 py-1 font-semibold text-blue-800">{roleLabel(person.role)}</span>
+          <span className={`rounded-full px-2 py-1 font-semibold ${state.tone}`}>{state.label}</span>
         </p>
-        {!suspended && person.access !== "ready" && <p className="mt-2 text-sm text-slate-600">{access.detail}</p>}
+      </header>
+
+      <section aria-labelledby="ficha-datos" className={card}>
+        <h2 id="ficha-datos" className="font-semibold text-slate-950">Datos</h2>
+        <dl className="mt-3 grid gap-3 text-sm sm:grid-cols-2">
+          <Item label="Correo" value={person.email} />
+          <Item label="Teléfono" value={person.phone ?? "No indicado"} />
+          <Item label="Rol" value={roleLabel(person.role)} />
+          <Item label="En la institución desde" value={date.format(person.createdAt)} />
+        </dl>
+      </section>
+
+      <section aria-labelledby="ficha-acceso" className={card}>
+        <h2 id="ficha-acceso" className="font-semibold text-slate-950">Acceso</h2>
+        <p className="mt-1 text-sm text-slate-700">
+          {state.detail}
+          {access === "INVITED" && detail.invitedAt ? ` Invitación enviada el ${date.format(detail.invitedAt)}.` : ""}
+        </p>
         {canManage && (
-          <ul aria-label="Acciones">
+          <ul className="mt-1">
             <PersonAccess
-              actionsOnly
+              showSummary={false}
               person={{
                 id: person.id,
                 name: person.name,
@@ -66,28 +76,29 @@ export default async function PersonPage({ params }: { params: Promise<{ userId:
                 phone: person.phone ?? "",
                 role: person.role,
                 roleLabel: roleLabel(person.role),
-                suspended,
-                hasPassword: person.access === "ready",
+                suspended: person.status !== "ACTIVE",
+                hasPassword: detail.hasPassword,
                 isSelf: person.id === user.id,
               }}
             />
           </ul>
         )}
-      </header>
+      </section>
 
-      {(person.taughtCourses.length > 0 || person.role === "TEACHER") && (
-        <section aria-labelledby="cursos-que-ensena" className="rounded-xl border border-slate-200 bg-white p-5">
-          <h2 id="cursos-que-ensena" className="text-lg font-bold text-slate-950">Cursos que enseña</h2>
-          {person.taughtCourses.length === 0 ? (
-            <p className="mt-2 text-sm text-slate-600">Todavía no tiene cursos a su cargo. Se le asigna un curso al crearlo o editarlo en Cursos.</p>
+      {showTeaching && (
+        <section aria-labelledby="ficha-ensena" className={card}>
+          <h2 id="ficha-ensena" className="font-semibold text-slate-950">Cursos que enseña</h2>
+          {detail.teaches.length === 0 ? (
+            <p className="mt-1 text-sm text-slate-600">Todavía no tiene cursos a su cargo. Se le asigna un curso al crearlo o editarlo en «Cursos».</p>
           ) : (
             <ul className="mt-2 divide-y divide-slate-100">
-              {person.taughtCourses.map((course) => (
-                <li key={course.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-                  <Link href={`/dashboard/aula/${course.id}`} className="inline-flex min-h-11 min-w-0 items-center font-semibold text-blue-700 underline">{course.name}</Link>
-                  <span className="text-sm text-slate-600">
-                    {course.students === 1 ? "1 estudiante" : `${course.students} estudiantes`}{course.archivedAt ? " · Archivado" : ""}
-                  </span>
+              {detail.teaches.map((course) => (
+                <li key={course.id} className="py-2">
+                  <Link className={link} href={`/dashboard/aula/${course.id}`}>{course.name}</Link>
+                  <p className="text-sm text-slate-600">
+                    {plural(course.activeStudents, "estudiante inscrito", "estudiantes inscritos")}
+                    {course.archived ? " · Archivado" : ""}
+                  </p>
                 </li>
               ))}
             </ul>
@@ -95,51 +106,73 @@ export default async function PersonPage({ params }: { params: Promise<{ userId:
         </section>
       )}
 
-      {(person.enrollments.length > 0 || isStudent) && (
-        <section aria-labelledby="cursos-inscrito" className="rounded-xl border border-slate-200 bg-white p-5">
-          <h2 id="cursos-inscrito" className="text-lg font-bold text-slate-950">Cursos en los que está inscrito</h2>
-          {person.enrollments.length === 0 ? (
-            <p className="mt-2 text-sm text-slate-600">No está inscrito en ningún curso. Se inscribe desde la pestaña Estudiantes de cada curso.</p>
+      {showLearning && (
+        <section aria-labelledby="ficha-cursos" className={card}>
+          <h2 id="ficha-cursos" className="font-semibold text-slate-950">Cursos en los que está inscrito</h2>
+          {detail.enrollments.length === 0 ? (
+            <p className="mt-1 text-sm text-slate-600">No está inscrito en ningún curso. Se inscribe desde la pantalla de estudiantes de cada curso.</p>
           ) : (
             <ul className="mt-2 divide-y divide-slate-100">
-              {person.enrollments.map((enrollment) => (
-                <li key={enrollment.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-                  <Link href={`/dashboard/aula/${enrollment.course.id}`} className="inline-flex min-h-11 min-w-0 items-center font-semibold text-blue-700 underline">{enrollment.course.name}</Link>
-                  <span className="text-sm text-slate-600">
-                    {ENROLLMENT[enrollment.status] ?? "Inscrito"}{enrollment.status === "ACTIVE" ? ` · ${Math.round(enrollment.progressPercent)} % de avance` : ""}
-                  </span>
+              {detail.enrollments.map((row) => (
+                <li key={row.id} className="py-2">
+                  <Link className={link} href={`/dashboard/aula/${row.course.id}`}>{row.course.name}</Link>
+                  <p className="text-sm text-slate-600">{spanishLabel(row.status)} · {Math.round(row.progressPercent)} % de avance</p>
                 </li>
               ))}
             </ul>
           )}
           {isStudent && (
-            <Link href={`/dashboard/gestion/estudiantes/${person.id}`} className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 underline">
-              Ver notas, asistencia y cuenta
-            </Link>
+            <Link className={link} href={`/dashboard/gestion/estudiantes/${person.id}`}>Ver notas, asistencia y cuenta</Link>
           )}
         </section>
       )}
 
-      {person.role === "PARENT" && (
-        <section aria-labelledby="hijos" className="rounded-xl border border-slate-200 bg-white p-5">
-          <h2 id="hijos" className="text-lg font-bold text-slate-950">Estudiantes a su cargo</h2>
-          {person.children.length === 0 ? (
-            <p className="mt-2 text-sm text-slate-600">Todavía no tiene estudiantes vinculados.</p>
-          ) : (
-            <ul className="mt-2 divide-y divide-slate-100">
-              {person.children.map((link) => (
-                <li key={link.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-                  <Link href={`/dashboard/gestion/personas/${link.student.id}`} className="inline-flex min-h-11 min-w-0 items-center font-semibold text-blue-700 underline">{link.student.name}</Link>
-                  <span className="text-sm text-slate-600">{RELATIONSHIP[link.relationship] ?? "Vínculo"}{link.status === "PENDING" ? " · Por confirmar" : ""}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-          {capabilities.has("guardianship.manage") && (
-            <Link href="/dashboard/configuracion/tutores" className="mt-2 inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 underline">Gestionar vínculos de tutores</Link>
-          )}
-        </section>
+      {isParent && user.role !== "TEACHER" && (
+        <Family
+          title="Hijos vinculados"
+          empty="No tiene hijos vinculados. Sin un vínculo activo no ve nada de ningún estudiante."
+          rows={detail.children}
+          canLink={capabilities.has("guardianship.manage")}
+        />
       )}
+      {isStudent && user.role !== "TEACHER" && (
+        <Family
+          title="Tutores"
+          empty="No tiene tutores vinculados."
+          rows={detail.guardians}
+          canLink={capabilities.has("guardianship.manage")}
+        />
+      )}
+    </div>
+  );
+}
+
+function Family({ title, empty, rows, canLink }: { title: string; empty: string; rows: Array<{ id: string; relationship: string; status: string; person: { id: string; name: string } }>; canLink: boolean }) {
+  return (
+    <section aria-label={title} className={card}>
+      <h2 className="font-semibold text-slate-950">{title}</h2>
+      {rows.length === 0 ? (
+        <p className="mt-1 text-sm text-slate-600">{empty}</p>
+      ) : (
+        <ul className="mt-2 divide-y divide-slate-100">
+          {rows.map((row) => (
+            <li key={row.id} className="py-2">
+              <Link className={link} href={`/dashboard/gestion/personas/${row.person.id}`}>{row.person.name}</Link>
+              <p className="text-sm text-slate-600">{RELATIONSHIP[row.relationship] ?? "Otro vínculo"} · {row.status === "ACTIVE" ? "Vínculo activo" : "Vínculo pendiente: aún no ve nada"}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+      {canLink && <Link className={link} href="/dashboard/configuracion/tutores">Gestionar vínculos de tutores</Link>}
+    </section>
+  );
+}
+
+function Item({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <dt className="font-medium text-slate-600">{label}</dt>
+      <dd className="break-words text-slate-900">{value}</dd>
     </div>
   );
 }

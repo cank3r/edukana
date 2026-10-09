@@ -4,7 +4,7 @@ import { getEffectiveCapabilities } from "@/lib/authorization";
 import { courseWhereForScope, resolveCourseReadScope } from "@/lib/course-scope";
 import { getCommunityAnnouncementWhere } from "@/lib/announcement-data";
 import { db } from "@/lib/db";
-import { countLabel } from "@/lib/plural";
+import { plural } from "@/lib/ux";
 import { AdminHome } from "./AdminHome";
 import { CoordinatorHome } from "./CoordinatorHome";
 import { ParentHome } from "./ParentHome";
@@ -38,10 +38,10 @@ export default async function DashboardPage() {
       db.paymentConcept.count({ where: { institutionId: iid, studentId: user.id, status: { in: ["PENDING", "OVERDUE", "PARTIAL"] } } }),
     ]);
     attention = [
-      ...(pendingTasks > 0 ? [{ href: "/dashboard/aula", title: "Completar tareas", detail: countLabel(pendingTasks, "tarea pendiente", "tareas pendientes"), icon: <CalendarCheck size={18} /> }] : []),
-      ...(pendingPayments > 0 ? [{ href: "/dashboard/mi-cuenta", title: "Revisar estado de cuenta", detail: countLabel(pendingPayments, "pago pendiente", "pagos pendientes"), icon: <CreditCard size={18} /> }] : []),
+      ...(pendingTasks > 0 ? [{ href: "/dashboard/aula", title: "Completar tareas", detail: plural(pendingTasks, "tarea pendiente", "tareas pendientes"), icon: <CalendarCheck size={18} /> }] : []),
+      ...(pendingPayments > 0 ? [{ href: "/dashboard/mi-cuenta", title: "Revisar estado de cuenta", detail: plural(pendingPayments, "pago pendiente", "pagos pendientes"), icon: <CreditCard size={18} /> }] : []),
     ];
-    continueItems = [{ href: "/dashboard/aula", title: "Continuar aprendiendo", detail: countLabel(courses, "curso activo", "cursos activos"), icon: <BookOpen size={18} /> }];
+    continueItems = [{ href: "/dashboard/aula", title: "Continuar aprendiendo", detail: plural(courses, "curso activo", "cursos activos"), icon: <BookOpen size={18} /> }];
     if (capabilities.has("schedule.view")) continueItems.push({ href: "/dashboard/calendario", title: "Ver próximas fechas", detail: "Calendario académico", icon: <CalendarCheck size={18} /> });
     summary = [{ label: "Cursos activos", value: courses, href: "/dashboard/aula" }, { label: "Tareas pendientes", value: pendingTasks, href: "/dashboard/aula" }, { label: "Pagos pendientes", value: pendingPayments, href: "/dashboard/mi-cuenta" }];
   } else if (user.role === "TEACHER" && capabilities.has("course.view")) {
@@ -50,9 +50,9 @@ export default async function DashboardPage() {
       capabilities.has("course.roster.view") ? db.enrollment.count({ where: { status: "ACTIVE", course: { institutionId: iid, teacherId: user.id } } }) : 0,
       capabilities.has("course.manage") ? db.submission.count({ where: { status: "SUBMITTED", assignment: { course: { institutionId: iid, teacherId: user.id } } } }) : 0,
     ]);
-    attention = submissions > 0 ? [{ href: "/dashboard/aula", title: "Calificar entregas", detail: countLabel(submissions, "entrega espera revisión", "entregas esperan revisión"), icon: <AlertCircle size={18} /> }] : [];
-    continueItems = [{ href: "/dashboard/aula", title: "Continuar en mis cursos", detail: countLabel(courses, "curso asignado", "cursos asignados"), icon: <BookOpen size={18} /> }];
-    if (capabilities.has("course.roster.view")) continueItems.push({ href: "/dashboard/aula", title: "Ver estudiantes por curso", detail: countLabel(students, "inscripción activa", "inscripciones activas"), icon: <Users size={18} /> });
+    attention = submissions > 0 ? [{ href: "/dashboard/aula", title: "Calificar entregas", detail: plural(submissions, "entrega espera revisión", "entregas esperan revisión"), icon: <AlertCircle size={18} /> }] : [];
+    continueItems = [{ href: "/dashboard/aula", title: "Continuar en mis cursos", detail: plural(courses, "curso asignado", "cursos asignados"), icon: <BookOpen size={18} /> }];
+    if (capabilities.has("course.roster.view")) continueItems.push({ href: "/dashboard/aula", title: "Ver estudiantes por curso", detail: plural(students, "inscripción activa", "inscripciones activas"), icon: <Users size={18} /> });
     summary = [{ label: "Mis cursos", value: courses, href: "/dashboard/aula" }];
     if (capabilities.has("course.roster.view")) summary.push({ label: "Estudiantes", value: students, href: "/dashboard/aula" });
     if (capabilities.has("course.manage")) summary.push({ label: "Por calificar", value: submissions, href: "/dashboard/aula" });
@@ -66,18 +66,18 @@ export default async function DashboardPage() {
       capabilities.has("admissions.manage") ? db.admissionLead.count({ where: { institutionId: iid, stage: { in: ["INTERESTED", "DOCUMENTS", "REVIEW"] } } }) : 0,
       announcementWhere ? db.announcement.count({ where: announcementWhere }) : 0,
     ]);
-    if (capabilities.has("admissions.manage") && admissions > 0) attention.push({ href: "/dashboard/admisiones", title: "Revisar admisiones", detail: countLabel(admissions, "solicitud abierta", "solicitudes abiertas"), icon: <AlertCircle size={18} /> });
-    if (courseWhere) { continueItems.push({ href: "/dashboard/aula", title: "Gestionar cursos", detail: countLabel(courses, "curso disponible", "cursos disponibles"), icon: <BookOpen size={18} /> }); summary.push({ label: "Cursos", value: courses, href: "/dashboard/aula" }); }
-    if (capabilities.has("people.view")) { continueItems.push({ href: "/dashboard/gestion", title: "Consultar personas", detail: countLabel(students, "estudiante activo", "estudiantes activos"), icon: <Users size={18} /> }); summary.push({ label: "Estudiantes activos", value: students, href: "/dashboard/gestion" }); }
-    if (capabilities.has("announcement.publish")) continueItems.push({ href: "/dashboard/comunidad", title: "Publicar un aviso", detail: countLabel(announcements, "aviso publicado", "avisos publicados"), icon: <Megaphone size={18} /> });
+    if (capabilities.has("admissions.manage") && admissions > 0) attention.push({ href: "/dashboard/admisiones", title: "Revisar admisiones", detail: plural(admissions, "solicitud abierta", "solicitudes abiertas"), icon: <AlertCircle size={18} /> });
+    if (courseWhere) { continueItems.push({ href: "/dashboard/aula", title: "Gestionar cursos", detail: plural(courses, "curso disponible", "cursos disponibles"), icon: <BookOpen size={18} /> }); summary.push({ label: "Cursos", value: courses, href: "/dashboard/aula" }); }
+    if (capabilities.has("people.view")) { continueItems.push({ href: "/dashboard/gestion", title: "Consultar personas", detail: plural(students, "estudiante activo", "estudiantes activos"), icon: <Users size={18} /> }); summary.push({ label: "Estudiantes activos", value: students, href: "/dashboard/gestion" }); }
+    if (capabilities.has("announcement.publish")) continueItems.push({ href: "/dashboard/comunidad", title: "Publicar un aviso", detail: plural(announcements, "aviso publicado", "avisos publicados"), icon: <Megaphone size={18} /> });
     if (capabilities.has("admissions.manage")) summary.push({ label: "Admisiones abiertas", value: admissions, href: "/dashboard/admisiones" });
   } else if (user.role === "PARENT") {
     const linkedChildren = capabilities.has("child.portal.view") ? await db.guardianship.count({ where: { institutionId: iid, parentId: user.id, status: "ACTIVE", parent: { institutionId: iid, role: "PARENT", status: "ACTIVE" }, student: { institutionId: iid, role: "STUDENT", status: "ACTIVE" } } }) : 0;
-    continueItems = capabilities.has("child.portal.view") ? [{ href: "/dashboard/hijos", title: "Abrir Mis hijos", detail: linkedChildren ? countLabel(linkedChildren, "hijo vinculado", "hijos vinculados") : "Sin hijos vinculados", icon: <Users size={18} /> }] : [];
+    continueItems = capabilities.has("child.portal.view") ? [{ href: "/dashboard/hijos", title: "Abrir Mis hijos", detail: linkedChildren ? plural(linkedChildren, "hijo vinculado", "hijos vinculados") : "Sin hijos vinculados", icon: <Users size={18} /> }] : [];
     summary = capabilities.has("child.portal.view") ? [{ label: "Hijos vinculados", value: linkedChildren, href: "/dashboard/hijos" }] : [];
   } else {
     const announcements = await db.announcement.count({ where: await getCommunityAnnouncementWhere(user, { canManage: false, canPublish: false }) });
-    attention = announcements > 0 ? [{ href: "/dashboard/comunidad", title: "Leer avisos", detail: countLabel(announcements, "aviso publicado", "avisos publicados"), icon: <Megaphone size={18} /> }] : [];
+    attention = announcements > 0 ? [{ href: "/dashboard/comunidad", title: "Leer avisos", detail: plural(announcements, "aviso publicado", "avisos publicados"), icon: <Megaphone size={18} /> }] : [];
     continueItems = [{ href: "/dashboard/comunidad", title: "Consultar avisos", detail: "Comunicaciones dirigidas a tutores", icon: <Megaphone size={18} /> }];
     summary = [{ label: "Avisos", value: announcements, href: "/dashboard/comunidad" }];
   }
