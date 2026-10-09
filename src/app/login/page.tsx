@@ -207,6 +207,10 @@ function LoginForm() {
             </button>
           </form>
 
+          <p className="mt-4 text-center text-sm">
+            <Link href="/recuperar" className="inline-flex min-h-11 items-center font-semibold underline" style={{ color: "var(--blue)" }}>¿Olvidaste tu contraseña o es tu primera vez?</Link>
+          </p>
+
           <p className="mt-4 text-center text-xs" style={{ color: "#64748B" }}>
             ¿Base de datos nueva? <Link href="/setup" className="font-semibold underline" style={{ color: "var(--blue)" }}>Crear la primera institución</Link>
           </p>

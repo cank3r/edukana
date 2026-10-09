@@ -15,6 +15,7 @@ jobs:
       AUTH_SECRET: circleci-build-only-secret-at-least-32-characters
       CERTIFICATE_SECRET: circleci-certificate-secret-at-least-32-characters
       AUTH_URL: http://127.0.0.1:3000
+      EDUKANA_INTEGRATION_DB: "1"
     steps:
       - checkout
       - restore_cache:
@@ -34,6 +35,12 @@ jobs:
             npx prisma migrate deploy
             npx prisma migrate status
       - run: { name: Ejecutar pruebas, command: npm test }
+      - run: { name: Esperar PostgreSQL, command: dockerize -wait tcp://127.0.0.1:5432 -timeout 60s }
+      - run: { name: Aplicar migraciones en PostgreSQL real, command: npx prisma migrate deploy }
+      - run:
+          name: Verificar que las migraciones coinciden con schema.prisma
+          command: npx prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --exit-code
+      - run: { name: Pruebas de integración con dos instituciones, command: npm run test:integration }
       - run: { name: Smoke tests autenticados y RBAC, command: npm run test:auth }
       - run: { name: Ejecutar ESLint, command: npm run lint }
       - run: { name: Verificar TypeScript, command: npm run typecheck }

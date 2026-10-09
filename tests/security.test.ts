@@ -20,8 +20,8 @@ test("rechaza credenciales con formato inválido", () => {
 });
 
 test("diagnostica cada rechazo de credenciales sin registrar secretos", () => {
-  const source = readFileSync(join(process.cwd(), "src", "lib", "auth.ts"), "utf8");
-  for (const reason of ["invalid_input", "active_user_match_count", "missing_password", "password_mismatch"]) {
+  const source = ["src/lib/auth.ts", "src/server/login.ts"].map((file) => readFileSync(join(process.cwd(), file), "utf8")).join("\n");
+  for (const reason of ["invalid_input", "too_many_attempts", "unknown_account", "account_suspended", "missing_password", "password_mismatch", "no_active_institution"]) {
     assert.match(source, new RegExp(`rejectCredentials\\(\\"${reason}\\"`));
   }
   const diagnosticCall = source.match(/console\.warn\([\s\S]*?\);/)?.[0] ?? "";

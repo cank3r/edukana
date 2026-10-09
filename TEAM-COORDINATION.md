@@ -17,23 +17,46 @@ Una spec DRAFT o una conversación externa no puede contradecir estas fuentes si
 
 ## Responsabilidades
 
-| Participante | Responsabilidad primaria | Puede escribir | No debe hacer |
-|---|---|---|---|
-| Carlos | Dirección de producto, decisiones, aprobación de specs, prueba como usuario y merge | Decisiones y aprobaciones | Fusionar sin evidencia o asignar dos escritores al mismo contrato |
-| Claude | Arquitectura de fondo: migraciones, sesión/login, integridad SQL, Postgres CI, DAL e importaciones masivas | Rama propia y alcance reclamado; esquema solo con claim exclusivo | Editar UI o contratos activos de Kiro sin handoff |
-| Kiro | Integrar cada recorrido: implementación de spec, acciones, UI, E2E, despliegue Preview y correcciones | Rama propia; todos los archivos del claim activo | Empezar otra spec o cambiar arquitectura aprobada sin registrar decisión |
-| Codex | Revisión independiente, seguridad adversarial, casos límite, textos simples y QA | Docs/tests en rama propia si existe claim; por defecto revisión | Editar esquema o producción; aprobar el trabajo que él mismo escribió |
+Desde el 2026-10-08 el trabajo se reparte por **módulos completos**, no por capas. Cada agente construye su módulo de punta a punta —base de datos, lógica, pantallas y pruebas— y nadie espera a otro para avanzar.
 
-Un solo agente modifica `prisma/schema.prisma` y la migración activa. Un segundo agente revisa después de terminar, nunca escribe en paralelo sobre el mismo contrato.
+**Meta única del tramo:** *un instituto da un curso completo*. Nada fuera de esa meta entra hasta que Carlos la recorra en el navegador.
+
+| Módulo | Dueño | Qué entrega, de punta a punta | Carpetas propias |
+|---|---|---|---|
+| **M1 · Personas y arranque** | Claude | Inicio del administrador con primeros pasos; períodos; personas (crear, editar, importar, invitar, suspender); recuperar contraseña; elegir institución; datos de la institución; avisos (crear, editar, borrar) | `src/app/dashboard/gestion/**`, `src/app/dashboard/configuracion/**`, `src/app/dashboard/comunidad/**`, `src/app/dashboard/page.tsx`, `src/app/{login,recuperar,restablecer,elegir-institucion,setup}/**`, `src/server/{people,platform,imports,security,integrations}/**`, `src/server/{identity,login,session,password-reset}.ts`, `src/lib/auth.ts`, `src/proxy.ts` |
+| **M2 · Curso y contenido** | Kiro | Crear, editar y archivar cursos; secciones, lecciones y archivos; matricular y retirar; horario; asistencia; lo que ve el estudiante al entrar a su curso | `src/app/dashboard/aula/**` (salvo evaluación), `src/app/dashboard/portal/**`, `src/app/dashboard/calendario/**`, `src/app/dashboard/hijos/**`, `src/server/courses/**` |
+| **M3 · Evaluación** | Codex | Tareas y entregas; exámenes con tiempo; calificaciones y su corrección con motivo; lo que ve el estudiante de sus notas | `src/app/dashboard/evaluacion/**` (nueva), `src/server/{exams,grade-history}.ts`, `src/server/actions/exams.ts`, `src/server/assessment/**` |
+
+Carlos decide, prueba como usuario y autoriza cada fusión. Fuera de la meta y sin dueño por ahora: admisiones, cobros, reportes, certificados.
+
+### Qué significa "terminado"
+
+Un módulo está terminado cuando **Carlos lo recorre en el Preview y dice que se entiende**. Que pasen las pruebas es condición necesaria, no suficiente. Además:
+
+- Todo lo que se puede crear se puede **editar y borrar o archivar**, con confirmación que muestra el impacto.
+- Cada pantalla cumple `.kiro/steering/simplicity.md`: una acción principal, sin términos internos, usable a 360 px.
+- Cada pantalla vacía explica qué es y ofrece el botón para empezar.
+
+### Archivos compartidos
+
+Tres lugares generan choques. Regla para todos: **solo agregar líneas propias; nunca modificar ni reordenar las de otro**.
+
+| Archivo | Regla |
+|---|---|
+| `prisma/schema.prisma` y `prisma/migrations/**` | Cada módulo agrega sus modelos en un bloque propio al final, marcado `// --- M1 ---`, `// --- M2 ---` o `// --- M3 ---`, y su propia migración con fecha y hora. Solo cambios aditivos. Para tocar un modelo de otro módulo (por ejemplo una columna en `Enrollment`), se pide en el PR del dueño. Antes de crear una migración: `git pull` de la rama base, y fusionar pronto para no acumular. |
+| `src/lib/ux.ts` (menú y textos) y `src/components/dashboard/Sidebar.tsx` | Agregar la entrada propia; no cambiar las demás. |
+| `src/app/dashboard/academico/actions.ts` | Archivo heredado que mezcla curso y evaluación. M2 y M3 **no lo editan**: cada uno mueve sus acciones a `src/server/courses/**` o `src/server/assessment/**` y deja de importarlo. Se borra cuando quede vacío. |
+| `TEAM-COORDINATION.md` | Cada agente edita solo su fila. |
 
 ## Flujo por tarea
 
-1. Carlos aprueba objetivo y criterios.
-2. Claude prepara o revisa arquitectura, migración y pruebas de fondo cuando el sprint lo requiere.
-3. Kiro integra el recorrido completo sobre esa base y produce Preview/E2E.
-4. Codex revisa de forma independiente seguridad, UX, casos límite y textos.
-5. Kiro corrige hallazgos; Claude revisa cambios estructurales si los hubo.
-6. Carlos prueba como usuario y autoriza merge.
+1. Cada agente trabaja en su rama `m1/…`, `m2/…` o `m3/…`, creada desde `integration/curso-completo`.
+2. Abre PR hacia `integration/curso-completo` en trozos pequeños: una pantalla o un recorrido por PR, no el módulo entero.
+3. CI en verde y Preview funcionando son requisito para pedir la prueba de Carlos.
+4. Carlos recorre el Preview. Si se entiende, autoriza la fusión; si no, dice qué no entendió y se corrige.
+5. Nadie fusiona a `master` ni despliega a producción sin autorización explícita de Carlos.
+
+Un agente solo se detiene si de verdad no puede avanzar; en ese caso escribe el bloqueo en su fila y sigue con otra parte de su módulo.
 
 ## Protocolo antes de editar
 
@@ -58,17 +81,26 @@ Un solo agente modifica `prisma/schema.prisma` y la migración activa. Un segund
 
 ## Claims activos
 
+Los claims siguen la convención canónica de `.kiro/steering/spec-governance.md`.
+
 | ID | Agente | Rama | Estado | Alcance exclusivo | Última actualización | Siguiente paso / bloqueo |
 |---|---|---|---|---|---|---|
+| M1 | Claude | `m1/*` desde `integration/curso-completo` | IMPLEMENTING | Módulo M1 (ver Responsabilidades) | 2026-10-08 | Primero: editar y borrar avisos; inicio del administrador con primeros pasos. Ya incluido en la rama base: sesión viva, login con límite de intentos, recuperación, identidad global, importación CSV, invitaciones, suspender/reactivar y sus pantallas. |
+| M2 | Kiro | `m2/*` desde `integration/curso-completo` | PLANNED | Módulo M2 (ver Responsabilidades) | 2026-10-08 | Empezar por editar y archivar curso, sección y lección. |
+| M3 | Codex | `m3/*` desde `integration/curso-completo` | PLANNED | Módulo M3 (ver Responsabilidades) | 2026-10-08 | Empezar por la pantalla de examen con contador sobre `startExamAttemptAction` / `submitExamAttemptAction`, y editar/borrar tarea. Contratos del servidor ya existentes: ver `docs/proposals/S1-SEC/design.md`. |
 | S0-GOV | Kiro | `fix/role-access-hardening` | BLOCKED | `TEAM-COORDINATION.md`, `AGENTS.md`, `.kiro/PLAN.md`, `.kiro/steering/{current-state,simplicity,tech,data-model,product,spec-governance,structure}.md`, documentación S0, CI PostgreSQL y runner E2E | 2026-10-08 | Revisión independiente final `PASS`: preflight exacto/read-only antes de escrituras, curso por ID y pickers por código. Puerta local: 93/93, auth 11/11, tipos, lint, build 23/23, audit 0, migraciones 6/6. No crear otro Supabase ni iniciar S1. Bloqueos únicos: autorización de commit/push y login/bypass de Preview para el recorrido desplegado. |
 | S0-AUTH-DIAG | Kiro | `fix/role-access-hardening` | REVIEW | Diagnóstico seguro de credenciales en `src/lib/auth.ts` y prueba contractual en `tests/security.test.ts`; sin esquema, migraciones ni secretos | 2026-10-09 | Diagnóstico listo: cuatro causas explícitas, SHA/tenant/rol/updatedAt sin PII. Puerta: 94/94, auth 12/12, tipos, lint, build 23/23 y audit 0. Publicar en ambas ramas feature, ejecutar un solo login y leer `[auth][credentials-rejected]` en Vercel. |
+
+Historial: los claims S1-SEC-A, S2-ID-A, S2-UI-A (Claude) quedaron integrados en `integration/curso-completo`; sus PR #6, #7 y #8 se cierran a favor de esa rama. S3-PROP (PR #9) queda en espera hasta cumplir la meta del tramo.
+
+**Requisito operativo:** `integration/curso-completo` necesita tres migraciones aplicadas en el Supabase de staging (`s1_security`, `s1_grade_autograded`, `s2_identity`). Sin ellas el inicio de sesión de sus Preview falla.
 
 ## Claims reservados siguientes
 
 | ID | Estado | Alcance | Dependencia |
 |---|---|---|---|
-| S1-SEC | PLANNED | Sesión viva, rate limit, recuperación, examen temporal, Postgres CI | S0-GOV DONE |
-| S2-ID | PLANNED | Identidad global, Membership, invitaciones y CSV | S1-SEC DONE |
+| S1-SEC | DONE (servidor) | Sesión viva, rate limit, recuperación, examen temporal, Postgres CI | S0-GOV DONE |
+| S2-ID | DONE (servidor y pantallas de acceso) | Identidad global, Membership, invitaciones y CSV | S1-SEC DONE |
 | S3-ACADEMIC | PLANNED | Course/Offering, programa, cohorte, grupo y matrícula masiva | S2-ID DONE |
 | S4-HYBRID | PLANNED | ClassSession, Panel Hoy, MeetingProvider y notificaciones | S3-ACADEMIC DONE |
 | S5-VIDEO | PLANNED | VideoProvider y streaming | S3-ACADEMIC DONE |

@@ -7,6 +7,9 @@ declare module "next-auth" {
     role: EdukanaRole;
     institutionId: string;
     institutionSlug: string;
+    sessionVersion: number;
+    identityId: string | null;
+    institutionCount: number;
   }
 
   interface Session {
@@ -15,6 +18,9 @@ declare module "next-auth" {
       role: EdukanaRole;
       institutionId: string;
       institutionSlug: string;
+      sessionVersion: number;
+      identityId: string | null;
+      institutionCount: number;
     };
   }
 }

@@ -7,10 +7,11 @@ import { createFirstInstitution, type SetupState } from "./actions";
 const initial: SetupState = { ok: false, message: "" };
 const input = "mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-blue-500";
 
-export function SetupForm() {
+export function SetupForm({ token }: { token: string }) {
   const [state, action, pending] = useActionState(createFirstInstitution, initial);
   return (
     <form action={action} className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <input type="hidden" name="setupToken" value={token} />
       <fieldset className="space-y-4" disabled={pending || state.ok}>
         <legend className="mb-3 text-lg font-bold text-slate-950">Institución y administrador</legend>
         <label className="block text-sm font-medium">Nombre de la institución<input className={input} name="institutionName" required maxLength={160} autoComplete="organization" /></label>

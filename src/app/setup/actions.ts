@@ -4,6 +4,8 @@ import bcrypt from "bcryptjs";
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { ensureIdentity } from "@/server/identity";
+import { checkSetupToken } from "@/server/setup-token";
 
 export type SetupState = { ok: boolean; message: string };
 
@@ -16,6 +18,9 @@ const setupSchema = z.object({
 });
 
 export async function createFirstInstitution(_state: SetupState, formData: FormData): Promise<SetupState> {
+  if (checkSetupToken(String(formData.get("setupToken") ?? "")) === "invalid") {
+    return { ok: false, message: "La puesta en marcha inicial no está disponible." };
+  }
   const parsed = setupSchema.safeParse(Object.fromEntries(formData.entries()));
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Revisa los datos." };
 
@@ -27,8 +32,10 @@ export async function createFirstInstitution(_state: SetupState, formData: FormD
         data: { name: parsed.data.institutionName, slug: parsed.data.slug, type: "SCHOOL" },
         select: { id: true },
       });
+      const identityId = await ensureIdentity(tx, { email: parsed.data.adminEmail, passwordHash: password });
       const admin = await tx.user.create({
         data: {
+          identityId,
           institutionId: institution.id,
           name: parsed.data.adminName,
           email: parsed.data.adminEmail,

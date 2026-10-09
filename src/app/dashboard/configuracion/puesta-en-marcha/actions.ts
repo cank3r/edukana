@@ -1,5 +1,6 @@
 "use server";
 
+import { ensureIdentity } from "@/server/identity";
 import bcrypt from "bcryptjs";
 import { Prisma, type Role } from "@prisma/client";
 import { revalidatePath } from "next/cache";
@@ -38,7 +39,11 @@ export async function createPilotUser(_state: OnboardingState, formData: FormDat
     const actor = await requireActor("people.manage");
     const password = await bcrypt.hash(parsed.data.password, 12);
     await db.$transaction(async (tx) => {
-      const created = await tx.user.create({ data: { institutionId: actor.institutionId, ...parsed.data, password, status: "ACTIVE" }, select: { id: true, role: true } });
+      const identityId = await ensureIdentity(tx, { email: parsed.data.email, passwordHash: password });
+      const created = await tx.user.create({
+        data: { identityId, institutionId: actor.institutionId, ...parsed.data, password, status: "ACTIVE" },
+        select: { id: true, role: true },
+      });
       await tx.auditLog.create({ data: { institutionId: actor.institutionId, userId: actor.id, action: "USER_CREATED", entity: "User", entityId: created.id, changes: { role: created.role } } });
     });
     revalidatePath("/dashboard/configuracion/puesta-en-marcha");
