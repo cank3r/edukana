@@ -4,8 +4,10 @@ import { getEffectiveCapabilities } from "@/lib/authorization";
 import { courseWhereForScope, resolveCourseReadScope } from "@/lib/course-scope";
 import { getCommunityAnnouncementWhere } from "@/lib/announcement-data";
 import { db } from "@/lib/db";
+import { getIndependentHome } from "@/server/platform/independent";
 import { AdminHome } from "./AdminHome";
 import { CoordinatorHome } from "./CoordinatorHome";
+import { IndependentHome } from "./IndependentHome";
 import { StudentHome } from "./StudentHome";
 import { TeacherHome } from "./TeacherHome";
 import { AlertCircle, BookOpen, CalendarCheck, ChevronRight, CreditCard, Megaphone, Users } from "lucide-react";
@@ -19,6 +21,10 @@ export default async function DashboardPage() {
   const user = session!.user;
   const iid = user.institutionId;
   const capabilities = await getEffectiveCapabilities(iid, user.role);
+  if (capabilities.has("tenant.settings.manage")) {
+    const independent = await getIndependentHome(iid);
+    if (independent) return <IndependentHome home={independent} userName={user.name} />;
+  }
   if (capabilities.has("tenant.settings.manage")) return <AdminHome institutionId={iid} userName={user.name} canManagePeople={capabilities.has("people.manage")} canPublish={capabilities.has("announcement.publish")} />;
   if (user.role === "STUDENT" && capabilities.has("student.portal.view")) return <StudentHome user={{ id: user.id, institutionId: iid }} userName={user.name} />;
   if (user.role === "TEACHER" && capabilities.has("course.view") && capabilities.has("course.manage")) return <TeacherHome user={{ id: user.id, institutionId: iid }} userName={user.name} />;
