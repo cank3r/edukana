@@ -35,7 +35,9 @@ export default async function ExamResultPage({
     return (
       <NothingHere
         title="Resultado del examen"
-        message={intro.hasOngoingAttempt ? "Tienes este examen en curso. Cuando lo envíes, aquí verás tu resultado." : "Todavía no tienes un resultado de este examen."}
+        message={intro.hasOngoingAttempt ? "Tienes este examen en curso. Cuando lo envíes, aquí verás tu resultado." : intro.hasUnsubmittedExpiredAttempt
+          ? "El tiempo de un intento terminó, pero aún no hay un envío confirmado. No hay resultado para ese intento. Si acabas de enviarlo, espera y vuelve a consultar; si no, habla con tu docente."
+          : "Todavía no tienes un resultado de este examen."}
         href={examHref}
         label={intro.hasOngoingAttempt ? "Continuar examen" : "Ir al examen"}
       />

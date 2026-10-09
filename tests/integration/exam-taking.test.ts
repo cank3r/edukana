@@ -222,3 +222,24 @@ test("presentar: la lista refleja intentos usados, mejor nota y por qué no se p
   const result = await getAttemptResult(student, second.attemptId, at(200));
   assert.equal(result?.canRetry, false);
 });
+
+test("presentar: vencer el reloj no muestra claves antes de confirmar el envío", async () => {
+  const examId = await makeExam("it_et_expiry_review");
+  const started = await startExamAttempt(student, examId, T0);
+  assert.ok(started.ok);
+  if (!started.ok) return;
+  for (const offsetMs of [-1, 0, 15_000, 30_000, 30_001]) {
+    const now: Date = new Date(started.expiresAt.getTime() + offsetMs);
+    assert.equal(await getAttemptResult(student, started.attemptId, now), null);
+    const intro = await getExamIntro(student, examId, now);
+    assert.equal(intro?.lastFinishedAttemptId, null);
+    assert.equal(intro?.hasUnsubmittedExpiredAttempt, offsetMs >= 0);
+  }
+  const before = await db.examAttempt.findUniqueOrThrow({ where: { id: started.attemptId } });
+  assert.equal(before.status, "IN_PROGRESS", "las lecturas no finalizan ni modifican el intento");
+  const submitted = await submitExamAttempt(student, started.attemptId, { [MC]: MC_KEY, [TF]: "Verdadero" },
+    new Date(started.expiresAt.getTime() + 15_000));
+  assert.ok(submitted.ok, "la entrega todavía se admite durante la tolerancia de red");
+  const result = await getAttemptResult(student, started.attemptId, new Date(started.expiresAt.getTime() + 16_000));
+  assert.equal(result?.review?.[0].correctAnswer, MC_KEY, "solo el envío confirmado permite la revisión");
+});
