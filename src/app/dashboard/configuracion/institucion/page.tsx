@@ -4,6 +4,8 @@ import { auth } from "@/lib/auth";
 import { getEffectiveCapabilities } from "@/lib/authorization";
 import { getInstitutionSettings, INSTITUTION_TYPE_OPTIONS, LANGUAGE_OPTIONS, timeZoneOptions } from "@/server/platform/institution-settings";
 import { InstitutionSettingsForm } from "./InstitutionSettingsForm";
+import { getInstitutionBranding } from "@/server/platform/branding";
+import { BrandColorForm } from "./BrandColorForm";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +17,7 @@ export default async function InstitutionSettingsPage() {
   const institution = await getInstitutionSettings(user.institutionId);
   if (!institution) redirect("/dashboard");
   const zones = timeZoneOptions(institution.timezone);
+  const branding = await getInstitutionBranding(user.institutionId);
 
   return (
     <div className="mx-auto max-w-2xl space-y-5 p-4 sm:p-8">
@@ -30,6 +33,7 @@ export default async function InstitutionSettingsPage() {
         latinAmerica={zones.latinAmerica}
         otherZones={zones.rest}
       />
+      <BrandColorForm current={branding?.brandColor ?? null} />
       <p className="text-sm text-slate-600">El logo todavía no se puede cambiar desde aquí.</p>
     </div>
   );
