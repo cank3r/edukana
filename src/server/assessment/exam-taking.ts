@@ -30,6 +30,8 @@ export type StudentExamSummary = {
   best: { score: number; maxScore: number } | null;
   pendingReview: boolean;
   hasOngoingAttempt: boolean;
+  /** Venció el tiempo, pero no se ha confirmado el envío. No es un resultado. */
+  hasUnsubmittedExpiredAttempt: boolean;
   /** Intento terminado más reciente, para «Ver mi resultado». */
   lastFinishedAttemptId: string | null;
   canStart: boolean;
@@ -136,7 +138,7 @@ function summarize(exam: ExamFacts, attempts: AttemptSummary[], enrollmentStatus
     if (attempt.status !== "GRADED" || attempt.score === null || !attempt.maxScore) continue;
     if (!best || attempt.score > best.score) best = { score: attempt.score, maxScore: attempt.maxScore };
   }
-  const finished = attempts.filter((attempt) => !isOngoing(attempt, now));
+  const finished = attempts.filter((attempt) => attempt.status !== "IN_PROGRESS");
   const lastFinished = finished.length ? finished.reduce((a, b) => (a.attemptNumber > b.attemptNumber ? a : b)) : null;
 
   let startBlock: StartBlock | null = null;
@@ -164,6 +166,8 @@ function summarize(exam: ExamFacts, attempts: AttemptSummary[], enrollmentStatus
     best,
     pendingReview: attempts.some((attempt) => attempt.status === "SUBMITTED"),
     hasOngoingAttempt,
+    hasUnsubmittedExpiredAttempt: attempts.some((attempt) =>
+      attempt.status === "IN_PROGRESS" && attempt.expiresAt !== null && attempt.expiresAt <= now),
     lastFinishedAttemptId: lastFinished?.id ?? null,
     canStart: startBlock === null,
     startBlock,
@@ -330,7 +334,9 @@ export async function getAttemptResult(actor: Actor, attemptId: string, now = ne
       },
     },
   });
-  if (!attempt || isOngoing(attempt, now)) return null;
+  // El reloj no finaliza un intento: el envío aún puede llegar durante la tolerancia de red.
+  // No entregar claves hasta que una escritura haya confirmado un estado terminal.
+  if (!attempt || attempt.status === "IN_PROGRESS") return null;
   const enrollment = await enrollmentOf(actor, attempt.exam.courseId);
   if (!enrollment) return null;
 

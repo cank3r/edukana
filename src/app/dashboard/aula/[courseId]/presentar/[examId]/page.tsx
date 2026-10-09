@@ -104,6 +104,13 @@ export default async function TakeExamPage({ params }: { params: Promise<{ cours
         )}
       </section>
 
+      {intro.hasUnsubmittedExpiredAttempt && (
+        <p role="status" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-900">
+          El tiempo de un intento terminó, pero aún no hay un envío confirmado. No hay resultado para ese intento.
+          Si acabas de enviarlo, espera y vuelve a consultar; si no, habla con tu docente.
+        </p>
+      )}
+
       <div className="flex flex-wrap gap-2">
         {intro.lastFinishedAttemptId && <Link className={secondaryLink} href={resultHref}>Ver mi resultado</Link>}
         <Link className={secondaryLink} href={`/dashboard/aula/${courseId}`}>Volver al curso</Link>
