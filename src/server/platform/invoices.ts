@@ -6,6 +6,18 @@ import { lockBilling } from "./subscriptions";
 
 export const invoicePeriodSchema = z.object({ periodStart: z.date(), periodEnd: z.date(), dueDate: z.date() })
   .refine((value) => value.periodEnd > value.periodStart, "El final del período debe ser posterior al inicio.");
+/** datetime-local fields represent UTC explicitly, preserving millisecond trial boundaries. */
+export function parsePlatformInvoiceForm(form: FormData) {
+  const utc = (key: string) => {
+    const value = String(form.get(key) ?? "");
+    if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?$/.test(value)) {
+      throw new Error("Revisa las fechas del período.");
+    }
+    return new Date(`${value}Z`);
+  };
+  return invoicePeriodSchema.parse({ periodStart: utc("start"), periodEnd: utc("end"),
+    dueDate: new Date(String(form.get("due") ?? "")) });
+}
 export async function generatePlatformInvoice(operator: string | null, institutionId: string, input: unknown) {
   requirePlatformOperator(operator);
   const period = invoicePeriodSchema.parse(input);

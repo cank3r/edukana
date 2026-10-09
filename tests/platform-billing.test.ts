@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { platformPlanSchema, requirePlatformOperator } from "@/server/platform/plans";
-import { invoicePeriodSchema } from "@/server/platform/invoices";
+import { invoicePeriodSchema, parsePlatformInvoiceForm } from "@/server/platform/invoices";
 import { GET } from "@/app/api/cron/plataforma/route";
 
 test("billing authorization fails closed without operator allowlist", () => {
@@ -35,4 +35,12 @@ test("billing cron rejects missing configuration, absent and incorrect bearer", 
     assert.equal((await GET(new Request("https://example.test/api/cron/plataforma", { headers: { authorization } }))).status, 401);
   }
   if (before === undefined) delete process.env.CRON_SECRET; else process.env.CRON_SECRET = before;
+});
+
+test("billing invoice form preserves millisecond UTC period boundaries", () => {
+  const form = new FormData();
+  form.set("start", "2025-01-01T23:30:14.123"); form.set("end", "2025-01-31T23:30:14.123"); form.set("due", "2025-01-31");
+  const period = parsePlatformInvoiceForm(form);
+  assert.equal(period.periodEnd.toISOString(), "2025-01-31T23:30:14.123Z");
+  form.set("end", "2025-01-31"); assert.throws(() => parsePlatformInvoiceForm(form));
 });

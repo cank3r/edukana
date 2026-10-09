@@ -20,6 +20,6 @@ export function BillingInput({ label, name, value, type = "text", required = tru
   label: string; name: string; value?: string | number; type?: string; required?: boolean;
 }) {
   return <label className="block text-sm">{label}<input name={name} type={type} defaultValue={value}
-    required={required} min={type === "number" ? 0 : undefined} step={type === "number" ? 1 : undefined}
+    required={required} min={type === "number" ? 0 : undefined} step={type === "number" ? 1 : type === "datetime-local" ? "any" : undefined}
     className="mt-1 block min-h-11 w-full rounded-lg border border-gray-300 px-3" /></label>;
 }

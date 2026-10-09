@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { createTrialSubscription, PLATFORM_TRIAL_DAYS, seedPlatformPlans } from "@/server/platform/plan-defaults";
 import { listPlatformPlans, updatePlatformPlan, getInstitutionPlanFeatures } from "@/server/platform/plans";
 import { changeInstitutionPlan, extendSubscription, expirePlatformSubscriptions } from "@/server/platform/subscriptions";
-import { generatePlatformInvoice, payPlatformInvoice, voidPlatformInvoice, listPlatformInvoices } from "@/server/platform/invoices";
+import { generatePlatformInvoice, payPlatformInvoice, voidPlatformInvoice, listPlatformInvoices, parsePlatformInvoiceForm } from "@/server/platform/invoices";
 import { getInstitutionBilling, getInstitutionPlanUsage } from "@/server/platform/limits";
 import { createInstitution } from "@/server/platform/institutions";
 import { registerIndependentTeacher } from "@/server/platform/independent";
@@ -137,4 +137,34 @@ test("billing: independent signup receives 30-day FREE trial", async () => {
   const sub = await db.institutionSubscription.findUniqueOrThrow({ where: { institutionId: result.institutionId } });
   assert.equal(sub.status, "TRIAL"); assert.equal(sub.planCode, "FREE");
   assert.equal(sub.trialEndsAt?.getTime(), now.getTime() + 30 * 86400000);
+});
+
+test("billing: the invoice form preserves exact trial boundaries and payment activates it", async () => {
+  await reset();
+  const trialStart = new Date("2025-01-01T23:30:14.123Z");
+  const trialEnd = new Date("2025-01-31T23:30:14.123Z");
+  await db.institutionSubscription.update({ where: { institutionId: a }, data: {
+    status: "TRIAL", currentPeriodStart: trialStart, currentPeriodEnd: trialEnd,
+  } });
+  const form = new FormData();
+  form.set("start", trialStart.toISOString().slice(0, -1));
+  form.set("end", trialEnd.toISOString().slice(0, -1));
+  form.set("due", "2025-01-31");
+  const invoice = await generatePlatformInvoice(OP, a, parsePlatformInvoiceForm(form));
+  assert.equal(invoice.periodEnd.getTime(), trialEnd.getTime());
+  await payPlatformInvoice(OP, a, invoice.id, payment);
+  const subscription = await db.institutionSubscription.findUniqueOrThrow({ where: { institutionId: a } });
+  assert.equal(subscription.status, "ACTIVE");
+  assert.equal(subscription.currentPeriodEnd.getTime(), trialEnd.getTime());
+});
+
+test("billing: extending a past-due period into the future clears attention without reviving canceled", async () => {
+  await reset();
+  await db.institutionSubscription.update({ where: { institutionId: a }, data: { status: "PAST_DUE" } });
+  const future = new Date(Date.now() + 30 * 86400000);
+  await extendSubscription(OP, a, future);
+  assert.equal((await db.institutionSubscription.findUniqueOrThrow({ where: { institutionId: a } })).status, "ACTIVE");
+  await db.institutionSubscription.update({ where: { institutionId: a }, data: { status: "CANCELED" } });
+  await extendSubscription(OP, a, new Date(future.getTime() + 86400000));
+  assert.equal((await db.institutionSubscription.findUniqueOrThrow({ where: { institutionId: a } })).status, "CANCELED");
 });

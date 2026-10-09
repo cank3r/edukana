@@ -33,8 +33,8 @@ export async function BillingSection({ institutionId }: { institutionId: string 
       </BillingForm></details>
       <details><summary className="min-h-11 cursor-pointer py-3">Generar factura del período</summary>
         <BillingForm operation="invoice" institutionId={institutionId} label="Generar factura">
-          <BillingInput label="Inicio" name="start" type="date" value={date(sub.currentPeriodStart)} />
-          <BillingInput label="Fin" name="end" type="date" value={date(sub.currentPeriodEnd)} />
+          <BillingInput label="Inicio (UTC)" name="start" type="datetime-local" value={sub.currentPeriodStart.toISOString().slice(0, -1)} />
+          <BillingInput label="Fin (UTC)" name="end" type="datetime-local" value={sub.currentPeriodEnd.toISOString().slice(0, -1)} />
           <BillingInput label="Fecha de vencimiento" name="due" type="date" value={date(sub.currentPeriodEnd)} />
         </BillingForm></details></>}
     <h3 className="font-semibold">Facturas</h3>{invoices.length === 0 && <p>Aún no hay facturas. Genera la primera para registrar el cobro.</p>}

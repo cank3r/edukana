@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { getOperatorEmail } from "@/server/platform/operator-session";
 import { updatePlatformPlan } from "@/server/platform/plans";
 import { changeInstitutionPlan, extendSubscription } from "@/server/platform/subscriptions";
-import { generatePlatformInvoice, payPlatformInvoice, voidPlatformInvoice } from "@/server/platform/invoices";
+import { generatePlatformInvoice, payPlatformInvoice, voidPlatformInvoice, parsePlatformInvoiceForm } from "@/server/platform/invoices";
 
 export type BillingActionState = { message: string; ok: boolean };
 export async function billingAction(_previous: BillingActionState, form: FormData): Promise<BillingActionState> {
@@ -24,8 +24,7 @@ export async function billingAction(_previous: BillingActionState, form: FormDat
         await changeInstitutionPlan(operator, institutionId, { planCode: text("planCode"), priceCents: number("priceCents"),
           confirmation: text("confirmation"), notes: text("notes") }); break;
       case "extend": await extendSubscription(operator, institutionId, new Date(text("end"))); break;
-      case "invoice": await generatePlatformInvoice(operator, institutionId, {
-        periodStart: new Date(text("start")), periodEnd: new Date(text("end")), dueDate: new Date(text("due")) }); break;
+      case "invoice": await generatePlatformInvoice(operator, institutionId, parsePlatformInvoiceForm(form)); break;
       case "pay": await payPlatformInvoice(operator, institutionId, text("invoiceId"), {
         paidAt: new Date(text("paidAt")), paymentMethod: text("paymentMethod"), reference: text("reference") }); break;
       case "void": await voidPlatformInvoice(operator, institutionId, text("invoiceId")); break;

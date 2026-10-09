@@ -37,7 +37,9 @@ export async function extendSubscription(operator: string | null, institutionId:
     await lockBilling(tx, institutionId);
     const before = await tx.institutionSubscription.findUniqueOrThrow({ where: { institutionId } });
     if (end <= before.currentPeriodEnd) throw new Error("La nueva fecha debe ser posterior al vencimiento actual.");
-    const after = await tx.institutionSubscription.update({ where: { institutionId }, data: { currentPeriodEnd: end } });
+    const after = await tx.institutionSubscription.update({ where: { institutionId }, data: {
+      currentPeriodEnd: end, ...(before.status === "PAST_DUE" && end > new Date() ? { status: "ACTIVE" as const } : {}),
+    } });
     await auditPlatform(tx, operator, "PLATFORM_SUBSCRIPTION_EXTENDED", "InstitutionSubscription", after.id, institutionId, before, after);
     return after;
   });
