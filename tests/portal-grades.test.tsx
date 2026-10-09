@@ -87,8 +87,9 @@ const prismaGlobal = globalThis as unknown as { prisma?: PrismaClient };
 const originalPrisma = prismaGlobal.prisma;
 prismaGlobal.prisma = fake as unknown as PrismaClient;
 let restoreAuth = () => {};
-let listPortalTasks: typeof import("../src/server/assessment/student-portal-tasks").listPortalTasksForStudent;
+// «Mi aprendizaje» ahora solo redirige a «Mis cursos»: se conserva la prueba de que nunca lee datos.
 let PortalPage: typeof import("../src/app/dashboard/portal/page").default;
+let listPortalTasks: typeof import("../src/server/assessment/student-portal-tasks").listPortalTasksForStudent;
 before(async () => {
   // Substitute only the session boundary; the page, capability checks, reader and policy are production code.
   const require = createRequire(import.meta.url);
@@ -117,25 +118,13 @@ beforeEach(() => {
 const read = () => listPortalTasks(student, course.id);
 const renderTasks = async () => renderToStaticMarkup(<PortalTasks data={await read()} />);
 
-test("actual portal page redacts a hidden linked grade instead of showing stale Submission.score", async () => {
-  item!.isPublished = false;
-  const html = renderToStaticMarkup(await PortalPage());
-  assert.ok(html.includes("Tarea de prueba"));
-  assert.ok(html.includes("Entregada"));
-  for (const value of ["Nota:", "37 de", "86 de", "Comentario confidencial", "Exonerada"]) assert.ok(!html.includes(value));
-  assert.ok(html.includes("Calificación final:"));
-  assert.ok(html.includes("78"));
-  assert.ok(html.includes("Estado de cuenta"));
-  assert.deepEqual(reads.sort(), ["course-access", "payments", "portal-courses", "tasks"].sort());
-});
-
 test("portal reader and rendered page use corrected linked grades, including zero", async () => {
   for (const score of [86, 0]) {
     entries[0].score = score;
     const result = await read();
     assert.equal(result?.assignments[0].score, score);
     assert.ok(!JSON.stringify(result).includes("Comentario confidencial"));
-    const html = renderToStaticMarkup(await PortalPage());
+    const html = await renderTasks();
     assert.ok(html.includes(`Nota: ${score} de 100`));
     assert.ok(!html.includes("37 de"));
   }
