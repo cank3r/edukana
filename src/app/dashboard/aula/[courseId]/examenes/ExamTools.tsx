@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
-import { deleteExamAction, reviewExamAttemptAction, saveExamAction, setExamPublishedAction, type ExamActionState } from "@/server/actions/exam-admin";
+import { deleteExamAction, reviewExamAttemptAction, saveExamAction, type ExamActionState } from "@/server/actions/exam-admin";
 import { QUESTION_TYPE_LABEL, formatPoints, type QuestionKind } from "../preguntas/labels";
+
+export { PublishExam } from "./PublishExam";
 
 const primary = "min-h-11 rounded-lg bg-blue-600 px-4 py-2.5 font-semibold text-white disabled:opacity-60";
 const secondary = "inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 font-semibold text-slate-800 disabled:opacity-60";
@@ -169,7 +171,13 @@ export function ExamForm({ courseId, bank, categories, exam, timezoneLabel }: { 
             )}
           </div>
         )}
-        {exam && !locked && <p className="text-sm text-slate-600">Las preguntas que ya están en el examen se quedan como estaban cuando las agregaste. Si corregiste una en el banco y quieres la versión nueva, quítala de aquí y vuelve a agregarla.</p>}
+        {exam && !locked && (
+          <p className="text-sm text-slate-600">
+            Las preguntas que ya están en el examen conservan su versión guardada. Si corregiste una en el banco y quieres usar
+            la versión nueva, primero oculta el examen si está publicado. Quita la pregunta y guarda los cambios. Después,
+            vuelve a agregarla desde el banco y guarda otra vez. Si estaba publicado, vuelve a publicarlo cuando termines.
+          </p>
+        )}
       </section>
 
       <section className="space-y-4" aria-labelledby="examen-reglas">
@@ -217,43 +225,6 @@ export function ExamForm({ courseId, bank, categories, exam, timezoneLabel }: { 
         <Link href={`${base}/examenes`} className={secondary}>{exam ? "Volver a exámenes" : "Cancelar"}</Link>
       </div>
       {!exam && <p className="text-sm text-slate-600">El examen se guarda como borrador: los estudiantes no lo ven hasta que lo publiques.</p>}
-    </form>
-  );
-}
-
-/** Publicar u ocultar, con confirmación que dice a quién afecta. */
-export function PublishExam({ examId, published, blocker, attemptCount }: { examId: string; published: boolean; blocker: string | null; attemptCount: number }) {
-  const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const [state, action, pending] = useActionState(setExamPublishedAction, empty);
-
-  useEffect(() => {
-    if (state.ok) router.refresh();
-  }, [state, router]);
-
-  if (!published && blocker) return <p className="rounded-lg bg-slate-50 p-3 text-sm text-slate-700">{blocker}</p>;
-  if (!open || state.ok) {
-    return (
-      <div className="space-y-2">
-        {state.ok && <Notice state={state} />}
-        <button type="button" className={published ? secondary : primary} onClick={() => setOpen(true)}>{published ? "Ocultar examen" : "Publicar examen"}</button>
-      </div>
-    );
-  }
-  return (
-    <form action={action} className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-800">
-      <input type="hidden" name="examId" value={examId} />
-      <input type="hidden" name="publish" value={published ? "false" : "true"} />
-      <p>
-        {published
-          ? `Los estudiantes dejarán de ver este examen y nadie podrá empezar un intento nuevo.${attemptCount ? " Los intentos ya hechos y sus notas se conservan; quien lo esté presentando ahora todavía puede enviarlo." : ""}`
-          : "Los estudiantes inscritos en el curso verán el examen y podrán presentarlo dentro de las fechas que pusiste. Cuando alguien lo empiece, ya no podrás cambiar las preguntas ni los puntos."}
-      </p>
-      {!state.ok && state.message && <p role="alert" className="mt-2 font-semibold text-red-800">{state.message}</p>}
-      <div className="mt-3 flex flex-wrap gap-2">
-        <button type="submit" className={primary} disabled={pending}>{pending ? "Guardando…" : published ? "Sí, ocultar" : "Sí, publicar"}</button>
-        <button type="button" className={secondary} disabled={pending} onClick={() => setOpen(false)}>Cancelar</button>
-      </div>
     </form>
   );
 }
