@@ -6,7 +6,7 @@ import { getEffectiveCapabilities } from "@/lib/authorization";
 import { countUnread } from "@/server/notifications";
 import { brandCssVariables } from "@/server/platform/brand-color";
 import { getInstitutionBranding } from "@/server/platform/branding";
-import { isIndependentInstitution } from "@/server/platform/independent";
+import { isIndependentInstitution } from "@/server/platform/independent-kind";
 import { getOperatorEmail } from "@/server/platform/operator-session";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {

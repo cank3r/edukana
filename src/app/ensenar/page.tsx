@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AuthCard } from "@/components/auth/AuthCard";
-import { isIndependentSignupEnabled } from "@/server/platform/independent";
+import { isIndependentSignupEnabled } from "@/server/platform/independent-kind";
 import { SignupForm } from "./SignupForm";
 
 export const dynamic = "force-dynamic";

@@ -3,40 +3,17 @@ import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { normalizeEmail } from "@/server/identity";
+import { INDEPENDENT_KIND, isIndependentSettings, isIndependentSignupEnabled } from "@/server/platform/independent-kind";
 import { newPasswordSchema } from "@/server/password-reset";
 import { isAttemptAllowed, recordAttempt } from "@/server/security/login-throttle";
 
 /**
  * Docente independiente: una persona que enseña por su cuenta. Por dentro es una institución
  * más (con `settings.kind = "INDEPENDENT"`), con un único administrador que también da los cursos.
- * No necesita migración: la marca vive en `Institution.settings`, que ya existe.
+ * No necesita migración: la marca vive en `Institution.settings`, que ya existe (ver `independent-kind.ts`).
  */
 
-export const INDEPENDENT_KIND = "INDEPENDENT";
-
-/** true si los ajustes de la institución la marcan como espacio de docente independiente. */
-export function isIndependentSettings(settings: unknown): boolean {
-  return Boolean(settings && typeof settings === "object" && !Array.isArray(settings) && (settings as Record<string, unknown>).kind === INDEPENDENT_KIND);
-}
-
-/** Lee la marca de la institución de quien está en sesión. Nunca recibe un id desde el navegador. */
-export async function isIndependentInstitution(institutionId: string): Promise<boolean> {
-  if (!institutionId) return false;
-  const institution = await db.institution.findUnique({ where: { id: institutionId }, select: { settings: true } });
-  return isIndependentSettings(institution?.settings);
-}
-
-/**
- * `INDEPENDENT_SIGNUP_ENABLED`: "true"/"1" lo activa y "false"/"0" lo apaga. Sin valor, queda
- * activo en desarrollo, pruebas y vistas previas, y apagado en producción.
- */
-export function isIndependentSignupEnabled(env: Record<string, string | undefined> = process.env): boolean {
-  const value = env.INDEPENDENT_SIGNUP_ENABLED?.trim().toLowerCase();
-  if (value === "true" || value === "1") return true;
-  if (value === "false" || value === "0") return false;
-  if (env.VERCEL_ENV) return env.VERCEL_ENV !== "production";
-  return env.NODE_ENV !== "production";
-}
+export { isIndependentInstitution, isIndependentSettings, isIndependentSignupEnabled } from "@/server/platform/independent-kind";
 
 export const independentSignupSchema = z.object({
   name: z.string().trim().min(3, "Escribe tu nombre (al menos 3 letras).").max(120, "El nombre es demasiado largo."),

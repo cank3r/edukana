@@ -4,7 +4,7 @@ import { Building2, CalendarRange, ChevronRight, GraduationCap, HeartHandshake, 
 import { auth } from "@/lib/auth";
 import { getEffectiveCapabilities } from "@/lib/authorization";
 import { canManageOrganizationalUnits } from "@/lib/organizational-units";
-import { isIndependentInstitution } from "@/server/platform/independent";
+import { isIndependentInstitution } from "@/server/platform/independent-kind";
 
 export const dynamic = "force-dynamic";
 

@@ -5,7 +5,7 @@ import { courseWhereForScope, resolveCourseWriteScope } from "@/lib/course-scope
 import { db } from "@/lib/db";
 import { ImageUploader } from "@/components/dashboard/ImageUploader";
 import { courseUsage } from "@/server/courses/course";
-import { isIndependentInstitution } from "@/server/platform/independent";
+import { isIndependentInstitution } from "@/server/platform/independent-kind";
 import { CourseForm } from "../../nuevo/CourseForm";
 import { CourseStateTools } from "./CourseStateTools";
 
