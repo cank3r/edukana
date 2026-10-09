@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/lib/auth";
 import { getEffectiveCapabilities } from "@/lib/authorization";
 import { sendInvitations, sendPendingInvitations } from "@/server/people/invitations";
+import { updatePerson } from "@/server/people/profile";
 import { setPersonStatus } from "@/server/people/status";
 import type { EdukanaRole } from "@/types/next-auth";
 
@@ -83,5 +84,25 @@ export async function setPersonStatusAction(_state: PeopleActionState, formData:
     return { ok: true, message: status === "SUSPENDED" ? "Acceso suspendido." : "Acceso reactivado." };
   } catch (error) {
     return failure("setPersonStatusAction", error);
+  }
+}
+
+/** Corrige los datos de una persona. Campos: `userId`, `name`, `phone`, `role`. */
+export async function updatePersonAction(_state: PeopleActionState, formData: FormData): Promise<PeopleActionState> {
+  const guard = await requirePeopleManager();
+  if (guard.error !== null) return { ok: false, message: guard.error };
+  try {
+    const result = await updatePerson(guard.actor, {
+      userId: String(formData.get("userId") ?? ""),
+      name: String(formData.get("name") ?? ""),
+      phone: String(formData.get("phone") ?? ""),
+      role: String(formData.get("role") ?? ""),
+    });
+    if (!result.ok) return result;
+    revalidatePath("/dashboard/gestion");
+    revalidatePath("/dashboard/gestion/accesos");
+    return { ok: true, message: "Datos guardados." };
+  } catch (error) {
+    return failure("updatePersonAction", error);
   }
 }
