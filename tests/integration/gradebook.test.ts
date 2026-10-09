@@ -249,7 +249,7 @@ test("CSV: lleva BOM, escapa comas y comillas, y desactiva las fórmulas", async
   assert.ok(lines.includes("student A,estudiante@a.test,9,Exonerado,90"), csv.content);
 });
 
-test("actividad manual: se edita y se borra con sus notas; la que viene de una tarea no se toca aquí", async () => {
+test("actividad manual: se edita pero no se borra con notas; la que viene de una tarea no se toca aquí", async () => {
   const edit = { gradeItemId: itemId, title: "Exposición", maxScore: 8, categoryId };
   const tooLow = await updateManualItem(A.teacher, edit);
   assert.equal(tooLow.ok, false, "ya hay un 9");
@@ -268,7 +268,42 @@ test("actividad manual: se edita y se borra con sus notas; la que viene de una t
   assert.equal((await loadGradebook(A.teacher, A.courseId))?.items.find((item) => item.id === linked.id)?.source, "assignment");
 
   for (const outsider of [A.teacher2, A.student, B.teacher]) assert.equal((await deleteManualItem(outsider, itemId)).ok, false);
-  assert.equal((await deleteManualItem(A.teacher, itemId)).ok, true);
-  assert.equal(await db.gradeItem.count({ where: { id: itemId } }), 0);
-  assert.equal(await db.gradeEntry.count({ where: { gradeItemId: itemId } }), 0);
+  const before = await db.gradeEntry.findMany({
+    where: { gradeItemId: itemId }, include: { revisions: { orderBy: { id: "asc" } } }, orderBy: { id: "asc" },
+  });
+  assert.ok(before.some((entry) => entry.revisions.length > 0), "hay correcciones que conservar");
+  const result = await deleteManualItem(A.teacher, itemId);
+  assert.equal(result.ok, false);
+  assert.match(result.message, /no se puede borrar/);
+  assert.equal(await db.gradeItem.count({ where: { id: itemId } }), 1);
+  assert.deepEqual(await db.gradeEntry.findMany({
+    where: { gradeItemId: itemId }, include: { revisions: { orderBy: { id: "asc" } } }, orderBy: { id: "asc" },
+  }), before, "no cambian las notas, sus autores, motivos ni revisiones");
+});
+
+test("actividad manual: una exoneración sin nota impide borrarla, aunque la matrícula esté retirada", async () => {
+  const excused = await db.gradeItem.create({
+    data: { ...scope, gradingPeriodId: periodId, categoryId, title: "Exoneración que se conserva" },
+  });
+  assert.equal((await saveGrade(A.teacher, {
+    gradeItemId: excused.id, enrollmentId: ENROLLMENT_2, score: null, isExcused: true,
+  })).ok, true);
+  await db.enrollment.update({ where: { id: ENROLLMENT_2 }, data: { status: "DROPPED" } });
+  const entry = await db.gradeEntry.findFirstOrThrow({ where: { gradeItemId: excused.id } });
+  assert.equal((await deleteManualItem(A.teacher, excused.id)).ok, false);
+  assert.equal(await db.gradeItem.count({ where: { id: excused.id } }), 1);
+  assert.deepEqual(await db.gradeEntry.findUnique({ where: { id: entry.id } }), entry);
+  await db.enrollment.update({ where: { id: ENROLLMENT_2 }, data: { status: "ACTIVE" } });
+});
+
+test("actividad manual: una actividad vacía sí se borra", async () => {
+  const empty = await db.gradeItem.create({
+    data: { ...scope, gradingPeriodId: periodId, categoryId, title: "Actividad vacía" },
+  });
+  for (const outsider of [A.teacher2, A.student, B.admin]) {
+    assert.equal((await deleteManualItem(outsider, empty.id)).ok, false);
+  }
+  assert.deepEqual(await deleteManualItem(A.teacher, empty.id), { ok: true, message: "Se borró «Actividad vacía»." });
+  assert.equal(await db.gradeItem.count({ where: { id: empty.id } }), 0);
+  assert.equal((await deleteManualItem(A.teacher, empty.id)).ok, false, "no anuncia un segundo borrado inexistente");
 });
