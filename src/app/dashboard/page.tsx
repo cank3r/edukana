@@ -4,6 +4,7 @@ import { getEffectiveCapabilities } from "@/lib/authorization";
 import { courseWhereForScope, resolveCourseReadScope } from "@/lib/course-scope";
 import { getCommunityAnnouncementWhere } from "@/lib/announcement-data";
 import { db } from "@/lib/db";
+import { AdminHome } from "./AdminHome";
 import { AlertCircle, BookOpen, CalendarCheck, ChevronRight, CreditCard, Megaphone, Users } from "lucide-react";
 
 const roleLabel = { SUPER_ADMIN: "Súper administrador", ADMIN: "Administrador", COORDINATOR: "Coordinador", TEACHER: "Docente", STUDENT: "Estudiante", PARENT: "Tutor" } as const;
@@ -15,6 +16,7 @@ export default async function DashboardPage() {
   const user = session!.user;
   const iid = user.institutionId;
   const capabilities = await getEffectiveCapabilities(iid, user.role);
+  if (capabilities.has("tenant.settings.manage")) return <AdminHome institutionId={iid} userName={user.name} canManagePeople={capabilities.has("people.manage")} canPublish={capabilities.has("announcement.publish")} />;
   const courseWhere = courseWhereForScope(iid, resolveCourseReadScope(user, capabilities));
   let attention: TaskLink[] = [];
   let continueItems: TaskLink[] = [];

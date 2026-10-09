@@ -83,14 +83,14 @@ test("minimiza los datos del curso para estudiantes y bloquea cursos completados
   const classroom = readFileSync(join(process.cwd(), "src", "app", "dashboard", "aula", "page.tsx"), "utf8");
   const course = readFileSync(join(process.cwd(), "src", "app", "dashboard", "aula", "[courseId]", "page.tsx"), "utf8");
   assert.match(classroom, /!capabilities\.has\("course\.view"\)/);
-  assert.match(classroom, /capabilities\.has\("course\.roster\.view"\) && <span/);
-  assert.match(course, /studentId: user\.id, status: \{ in: \["ACTIVE", "COMPLETED"\]/);
-  assert.match(course, /questionBank: \{ where: canManage \? \{\} : \{ id: "__restricted__" \}/);
-  assert.doesNotMatch(course, /bankItem: true/);
-  assert.match(course, /canViewRoster && <section id="estudiantes">/);
-  assert.match(course, /isReadOnlyStudent = ownEnrollment\?\.status === "COMPLETED"/);
-  assert.match(course, /Curso completado: la entrega está disponible solo para consulta/);
-  assert.match(course, /Curso completado: los exámenes están disponibles solo para consulta/);
+  assert.match(classroom, /const showRoster = capabilities\.has\("course\.roster\.view"\)/);
+  assert.match(classroom, /courseListWhere\(user\.institutionId, readScope/);
+  assert.match(course, /status: \{ in: \["ACTIVE", "COMPLETED"\] \}, \.\.\.\(isStudent \? \{ studentId: user\.id \}/);
+  assert.match(course, /isStudent \? courseListWhere\(user\.institutionId, readScope\)/);
+  assert.doesNotMatch(course, /bankItem|answerKey/);
+  assert.match(course, /canViewRoster && <AreaCard href=\{`\$\{base\}\/estudiantes`\}/);
+  assert.match(course, /readOnly = own\?\.status === "COMPLETED"/);
+  assert.match(course, /Ya completaste este curso/);
 });
 
 
