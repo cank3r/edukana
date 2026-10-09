@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getEffectiveCapabilities } from "@/lib/authorization";
@@ -19,7 +18,6 @@ export default async function InstitutionSettingsPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-5 p-4 sm:p-8">
       <header>
-        <Link href="/dashboard/configuracion" className="inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 underline">Volver a Configuración</Link>
         <h1 className="text-2xl font-bold" style={{ color: "var(--navy)" }}>Datos de la institución</h1>
         <p className="mt-1 text-sm text-slate-600">Lo básico de tu institución. Puedes cambiarlo cuando quieras.</p>
       </header>

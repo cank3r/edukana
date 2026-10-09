@@ -58,8 +58,6 @@ export default async function LeadPage({ params }: { params: Promise<{ leadId: s
 
   return (
     <div className="mx-auto max-w-3xl space-y-5 p-4 sm:p-8">
-      <Link href="/dashboard/admisiones" className="inline-flex min-h-11 items-center font-semibold text-blue-700 underline">← Volver a Admisiones</Link>
-
       <header>
         <h1 className="break-words text-2xl font-bold" style={{ color: "var(--navy)" }}>{lead.name}</h1>
         <p className="mt-1 text-sm text-slate-600">

@@ -5,10 +5,12 @@ import { join } from "node:path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { loadLegacyExamForm } from "./helpers/legacy-exam-actions.mjs";
-import { breadcrumbLabel, COURSE_MORE_AREAS, COURSE_TABS, navigationForRole, roleLabel, spanishLabel } from "../src/lib/ux";
+import { breadcrumbLabel, COURSE_MORE_AREAS, COURSE_TABS, groupNavigation, MAX_MAIN_NAVIGATION, navigationForRole, roleLabel, spanishLabel } from "../src/lib/ux";
 
 test("muestra módulos claros y propios de cada rol", () => {
-  assert.deepEqual(navigationForRole("STUDENT").map((item) => item.label), ["Inicio", "Mi aprendizaje", "Cursos", "Avisos", "Calendario"]);
+  assert.deepEqual(navigationForRole("STUDENT").map((item) => item.label), ["Inicio", "Mis cursos", "Avisos", "Calendario", "Mi estado de cuenta", "Mis certificados"]);
+  assert.equal(navigationForRole("TEACHER").find((item) => item.href === "/dashboard/aula")?.label, "Mis cursos");
+  assert.equal(navigationForRole("STUDENT").some((item) => item.href === "/dashboard/portal"), false);
   assert.equal(navigationForRole("TEACHER").some((item) => item.href === "/dashboard/gestion"), false);
   assert.equal(navigationForRole("PARENT").some((item) => item.href === "/dashboard/aula"), false);
   assert.equal(navigationForRole("PARENT").some((item) => item.href === "/dashboard/calendario"), false);
@@ -85,6 +87,26 @@ test("el dashboard oculta pendientes en cero y usa el término Cobros", () => {
 test("el curso no duplica la navegación Volver que ya ofrece el breadcrumb", () => {
   const course = readFileSync(join(process.cwd(), "src", "app", "dashboard", "aula", "[courseId]", "page.tsx"), "utf8");
   assert.doesNotMatch(course, /Volver a cursos/);
+});
+
+test("el menú muestra como máximo cinco entradas por rol y agrupa lo demás bajo «Más»", () => {
+  for (const role of ["SUPER_ADMIN", "ADMIN", "COORDINATOR", "TEACHER", "STUDENT", "PARENT"] as const) {
+    const all = navigationForRole(role);
+    const { main, more } = groupNavigation(all);
+    assert.ok(main.length + (more.length ? 1 : 0) <= MAX_MAIN_NAVIGATION, role);
+    assert.deepEqual([...main, ...more], all, `${role}: no se pierde ninguna entrada`);
+    assert.equal(main[0]?.label, "Inicio");
+  }
+  const student = groupNavigation(navigationForRole("STUDENT"));
+  assert.deepEqual(student.more.map((item) => item.href), ["/dashboard/mi-cuenta", "/dashboard/mis-certificados"]);
+});
+
+test("las pantallas con barra de migas no repiten su propio «← Volver»", () => {
+  const pages = ["tareas/page.tsx", "tareas/[assignmentId]/page.tsx", "examenes/page.tsx", "examenes/[examId]/page.tsx", "examenes/[examId]/resultados/page.tsx", "preguntas/page.tsx", "estudiantes/page.tsx", "calificaciones/page.tsx", "mis-notas/page.tsx", "clases/page.tsx", "asistencia/page.tsx", "certificados/page.tsx", "contenido/page.tsx"];
+  for (const page of pages) {
+    const source = readFileSync(join(process.cwd(), "src", "app", "dashboard", "aula", "[courseId]", ...page.split("/")), "utf8");
+    assert.doesNotMatch(source, /← |Volver a \{|>Volver al curso</, page);
+  }
 });
 
 

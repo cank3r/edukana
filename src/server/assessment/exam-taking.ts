@@ -1,11 +1,13 @@
 import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { questionSnapshot, type AttemptQuestion, type QuestionSnapshot } from "@/server/exams";
+import { examPassed } from "@/server/assessment/exam-pass";
 
 /**
  * Lecturas del estudiante para presentar un examen. Ninguna escribe.
  * Todas exigen matrícula en el curso dentro de la institución del estudiante, y ninguna
- * entrega la clave de respuestas antes de enviar ni cuando el examen no permite revisión.
+ * entrega la clave de respuestas antes de enviar, mientras le queden intentos con el examen abierto,
+ * ni cuando el examen no permite revisión.
  */
 
 type Actor = { id: string; institutionId: string };
@@ -83,8 +85,18 @@ export type AttemptResult = {
   expiredWithoutAnswers: boolean;
   attemptsLeft: number;
   canRetry: boolean;
-  /** Solo cuando el examen permite revisión; si no, `null` y la clave no sale del servidor. */
+  /** Porcentaje para aprobar del examen, si lo tiene. */
+  passingPercent: number | null;
+  /** «Aprobado» (true) / «No aprobado» (false); null si el examen no fija porcentaje o la nota no es definitiva. */
+  passed: boolean | null;
+  /**
+   * Solo cuando el examen permite revisión y el estudiante ya no puede volver a presentarlo
+   * (sin intentos, examen cerrado o curso terminado) ni tiene otro intento abierto; si no, `null`
+   * y la clave no sale del servidor.
+   */
   review: ReviewedQuestion[] | null;
+  /** El examen muestra las correctas, pero todavía no: le quedan intentos o el examen sigue abierto. */
+  reviewLater: boolean;
 };
 
 const VIEW_STATUSES = ["ACTIVE", "COMPLETED"] as const;
@@ -340,12 +352,15 @@ export async function getAttemptResult(actor: Actor, attemptId: string, now = ne
           title: true,
           courseId: true,
           showReview: true,
+          passingPercent: true,
           opensAt: true,
           closesAt: true,
           maxAttempts: true,
           course: { select: { institution: { select: { timezone: true } } } },
           questions: { select: questionSelect, orderBy: { order: "asc" } },
           _count: { select: { attempts: { where: { studentId: actor.id, institutionId: actor.institutionId } } } },
+          // Otro intento propio sin terminar (aunque su reloj haya vencido, el envío aún puede llegar).
+          attempts: { where: { studentId: actor.id, institutionId: actor.institutionId, status: "IN_PROGRESS" }, select: { id: true }, take: 1 },
         },
       },
     },
@@ -362,6 +377,10 @@ export async function getAttemptResult(actor: Actor, attemptId: string, now = ne
   const attemptsLeft = Math.max(0, exam.maxAttempts - exam._count.attempts);
   const open = !(exam.opensAt && now < exam.opensAt) && !(exam.closesAt && now >= exam.closesAt);
   const answers = new Map(attempt.answers.map((answer) => [answer.bankItemId, answer]));
+  // Las correctas solo salen cuando ya no hay forma de usarlas en otro intento.
+  const closed = exam.closesAt !== null && now >= exam.closesAt;
+  const noMoreTries = attemptsLeft === 0 || closed || enrollment.status !== "ACTIVE";
+  const reviewOpen = noMoreTries && exam.attempts.length === 0;
 
   return {
     attemptId: attempt.id,
@@ -377,7 +396,10 @@ export async function getAttemptResult(actor: Actor, attemptId: string, now = ne
     expiredWithoutAnswers: attempt.answers.length === 0,
     attemptsLeft,
     canRetry: attemptsLeft > 0 && open && enrollment.status === "ACTIVE",
-    review: exam.showReview
+    passingPercent: exam.passingPercent,
+    passed: attempt.status === "GRADED" ? examPassed(attempt.score, attempt.maxScore ?? totalPoints, exam.passingPercent) : null,
+    reviewLater: exam.showReview && !reviewOpen,
+    review: exam.showReview && reviewOpen
       ? snapshots.map(({ question, snapshot }) => {
           const answer = answers.get(question.bankItemId);
           return {

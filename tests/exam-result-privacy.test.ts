@@ -17,7 +17,7 @@ const attempt = () => ({
   id: "attempt", attemptNumber: 1, status, expiresAt, submittedAt: status === "IN_PROGRESS" ? null : expiresAt,
   score: 1, maxScore: 1, answers: [],
   exam: { id: "exam", title: "Exam", courseId: "course", showReview, opensAt: null, closesAt: null,
-    maxAttempts: 1, course: { institution: { timezone: "UTC" } }, questions: [question], _count: { attempts: 1 } },
+    maxAttempts: 1, course: { institution: { timezone: "UTC" } }, questions: [question], _count: { attempts: 1 }, attempts: [] },
 });
 const fake = {
   examAttempt: { findFirst: async () => attempt() },

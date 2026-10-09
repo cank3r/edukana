@@ -29,7 +29,7 @@ export async function StudentHome({ user, userName }: Props) {
               : "Cuando tu institución te inscriba en un curso nuevo, aparecerá aquí."}
           </p>
           {!home.notEnrolled && (
-            <Link href="/dashboard/portal" className="mt-4 inline-flex min-h-11 items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-blue-400">Ver mis cursos terminados</Link>
+            <Link href="/dashboard/aula" className="mt-4 inline-flex min-h-11 items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-900 hover:border-blue-400">Ver mis cursos terminados</Link>
           )}
         </div>
       ) : (
@@ -86,7 +86,7 @@ export async function StudentHome({ user, userName }: Props) {
           <section className="mb-8" aria-labelledby="mis-cursos">
             <div className="mb-3 flex items-center justify-between gap-3">
               <h2 id="mis-cursos" className="text-lg font-bold text-slate-900">Mis cursos</h2>
-              <Link href="/dashboard/portal" className="inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 underline">Ver todos</Link>
+              <Link href="/dashboard/aula" className="inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 underline">Ver todos</Link>
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               {home.courses.map((course) => <CourseCard key={course.courseId} course={course} />)}
@@ -123,8 +123,11 @@ export function CourseCard({ course }: { course: StudentCourse }) {
   );
 }
 
-/** Próximas clases en vivo; el botón solo se activa desde 15 minutos antes hasta que termina. */
-export function LiveClassList({ classes, empty }: { classes: HomeLiveClass[]; empty: string }) {
+/**
+ * Próximas clases en vivo. Para el estudiante el botón solo se activa desde 15 minutos antes hasta que termina;
+ * quien da la clase (`host`) puede entrar cuando quiera, igual que en la pantalla de clases del curso.
+ */
+export function LiveClassList({ classes, empty, host = false }: { classes: HomeLiveClass[]; empty: string; host?: boolean }) {
   if (classes.length === 0) return <p className={`${card} text-sm text-slate-700`}>{empty}</p>;
   return (
     <ul className="space-y-3">
@@ -138,7 +141,7 @@ export function LiveClassList({ classes, empty }: { classes: HomeLiveClass[]; em
               <p className="mt-1 text-sm font-medium text-slate-900">{item.when} · {Math.round((item.endsAt.getTime() - item.startsAt.getTime()) / 60_000)} min</p>
             </div>
           </div>
-          {item.canJoin && item.joinUrl ? (
+          {(item.canJoin || host) && item.joinUrl ? (
             <a href={item.joinUrl} target="_blank" rel="noopener noreferrer" className="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-emerald-700 px-5 py-3 text-base font-semibold text-white hover:bg-emerald-800 sm:w-auto sm:inline-flex">
               Entrar a clase
               <span className="sr-only"> (se abre en otra pestaña)</span>

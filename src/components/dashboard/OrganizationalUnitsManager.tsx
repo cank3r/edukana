@@ -21,7 +21,7 @@ export function OrganizationalUnitsManager({ units, people }: { units: Unit[]; p
       <h2 className="font-bold">Crear unidad</h2><p className="mb-3 text-sm text-slate-500">Añade un departamento, sede o unidad organizativa.</p>
       <div className="flex flex-col gap-2 sm:flex-row"><label className="sr-only" htmlFor="new-unit-name">Nombre de la unidad</label><input className={input} id="new-unit-name" maxLength={100} minLength={2} name="name" placeholder="Ej. Departamento de Ciencias" required /><button className={primary} disabled={pending} type="submit">{pending ? "Creando…" : "Crear unidad"}</button></div><Feedback state={state} />
     </form>
-    <section aria-labelledby="units-heading"><h2 className="mb-3 text-lg font-bold" id="units-heading">Unidades configuradas</h2><div className="space-y-4">{units.map((unit) => <UnitCard key={unit.id} people={people} unit={unit} />)}{!units.length && <p className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">Todavía no hay unidades. Crea la primera para usarla al segmentar anuncios.</p>}</div></section>
+    <section aria-labelledby="units-heading"><h2 className="mb-3 text-lg font-bold" id="units-heading">Unidades configuradas</h2><div className="space-y-4">{units.map((unit) => <UnitCard key={unit.id} people={people} unit={unit} />)}{!units.length && <p className="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">Todavía no hay unidades. Crea la primera para elegirla al enviar un aviso.</p>}</div></section>
   </div>;
 }
 

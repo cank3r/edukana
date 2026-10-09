@@ -19,7 +19,7 @@ const EXPLANATION = "Explicación secreta de la capital";
 const T0 = new Date("2026-10-08T12:00:00Z");
 const at = (seconds: number) => new Date(T0.getTime() + seconds * 1000);
 
-async function makeExam(id: string, options: { showReview?: boolean; maxAttempts?: number; withOpenQuestion?: boolean; opensAt?: Date; closesAt?: Date } = {}) {
+async function makeExam(id: string, options: { showReview?: boolean; maxAttempts?: number; withOpenQuestion?: boolean; opensAt?: Date; closesAt?: Date; passingPercent?: number } = {}) {
   const bankIds = options.withOpenQuestion ? [MC, TF, OPEN] : [MC, TF];
   const bank = await db.questionBankItem.findMany({ where: { id: { in: bankIds } }, orderBy: { id: "asc" } });
   await db.exam.create({
@@ -35,6 +35,7 @@ async function makeExam(id: string, options: { showReview?: boolean; maxAttempts
       showReview: options.showReview ?? true,
       opensAt: options.opensAt,
       closesAt: options.closesAt,
+      passingPercent: options.passingPercent,
       questions: {
         create: bank.map((item, order) => ({
           institutionId: A.institutionId,
@@ -109,7 +110,7 @@ test("presentar: el intento en curso se puede retomar, sin la clave y sin alarga
 });
 
 test("presentar: con revisión permitida el resultado trae su respuesta, la correcta y la explicación", async () => {
-  const examId = await makeExam("it_et_review");
+  const examId = await makeExam("it_et_review", { maxAttempts: 1 });
   const started = await startExamAttempt(student, examId, T0);
   assert.ok(started.ok);
   if (!started.ok) return;
@@ -120,8 +121,9 @@ test("presentar: con revisión permitida el resultado trae su respuesta, la corr
   assert.equal(result.score, 1);
   assert.equal(result.maxScore, 3);
   assert.equal(result.pendingReview, false);
-  assert.equal(result.attemptsLeft, 1);
-  assert.equal(result.canRetry, true);
+  assert.equal(result.attemptsLeft, 0);
+  assert.equal(result.canRetry, false);
+  assert.equal(result.reviewLater, false);
   assert.ok(result.review);
   const [first, second] = result.review;
   assert.deepEqual(
@@ -224,7 +226,7 @@ test("presentar: la lista refleja intentos usados, mejor nota y por qué no se p
 });
 
 test("presentar: vencer el reloj no muestra claves antes de confirmar el envío", async () => {
-  const examId = await makeExam("it_et_expiry_review");
+  const examId = await makeExam("it_et_expiry_review", { maxAttempts: 1 });
   const started = await startExamAttempt(student, examId, T0);
   assert.ok(started.ok);
   if (!started.ok) return;
@@ -242,4 +244,80 @@ test("presentar: vencer el reloj no muestra claves antes de confirmar el envío"
   assert.ok(submitted.ok, "la entrega todavía se admite durante la tolerancia de red");
   const result = await getAttemptResult(student, started.attemptId, new Date(started.expiresAt.getTime() + 16_000));
   assert.equal(result?.review?.[0].correctAnswer, MC_KEY, "solo el envío confirmado permite la revisión");
+});
+
+test("presentar: con intentos restantes las correctas esperan; aparecen tras el último intento enviado", async () => {
+  const examId = await makeExam("it_et_review_later", { maxAttempts: 2 });
+  const first = await startExamAttempt(student, examId, T0);
+  assert.ok(first.ok);
+  if (!first.ok) return;
+  await submitExamAttempt(student, first.attemptId, { [MC]: "Lima", [TF]: "Verdadero" }, at(60));
+
+  const early = await getAttemptResult(student, first.attemptId, at(61));
+  assert.ok(early);
+  assert.deepEqual([early.attemptsLeft, early.canRetry, early.review, early.reviewLater], [1, true, null, true]);
+  assertNoKey(early, "resultado con intentos restantes");
+
+  // Usó el último intento pero aún no lo envía: tampoco se ven las correctas del primero.
+  const second = await startExamAttempt(student, examId, at(120));
+  assert.ok(second.ok);
+  if (!second.ok) return;
+  const during = await getAttemptResult(student, first.attemptId, at(130));
+  assert.deepEqual([during?.attemptsLeft, during?.review, during?.reviewLater], [0, null, true]);
+  assertNoKey(during, "resultado con otro intento abierto");
+
+  await submitExamAttempt(student, second.attemptId, { [MC]: MC_KEY, [TF]: "Verdadero" }, at(180));
+  for (const attemptId of [first.attemptId, second.attemptId]) {
+    const done = await getAttemptResult(student, attemptId, at(181));
+    assert.equal(done?.reviewLater, false);
+    assert.equal(done?.review?.[0].correctAnswer, MC_KEY);
+  }
+  // Otro estudiante y otra institución siguen sin ver nada.
+  assert.equal(await getAttemptResult(notEnrolled, first.attemptId, at(181)), null);
+  assert.equal(await getAttemptResult(outsider, first.attemptId, at(181)), null);
+});
+
+test("presentar: si el examen ya cerró, las correctas aparecen aunque queden intentos", async () => {
+  const examId = await makeExam("it_et_review_closed", { maxAttempts: 3, closesAt: at(300) });
+  const started = await startExamAttempt(student, examId, T0);
+  assert.ok(started.ok);
+  if (!started.ok) return;
+  await submitExamAttempt(student, started.attemptId, { [MC]: "Lima", [TF]: "Verdadero" }, at(60));
+  const open = await getAttemptResult(student, started.attemptId, at(61));
+  assert.deepEqual([open?.attemptsLeft, open?.review, open?.reviewLater], [2, null, true]);
+  const closed = await getAttemptResult(student, started.attemptId, at(301));
+  assert.equal(closed?.canRetry, false);
+  assert.equal(closed?.review?.[0].correctAnswer, MC_KEY);
+});
+
+test("presentar: con porcentaje para aprobar el resultado dice Aprobado o No aprobado solo con nota definitiva", async () => {
+  const examId = await makeExam("it_et_passing", { maxAttempts: 2, passingPercent: 60 });
+  const first = await startExamAttempt(student, examId, T0);
+  assert.ok(first.ok);
+  if (!first.ok) return;
+  await submitExamAttempt(student, first.attemptId, { [MC]: "Lima", [TF]: "Verdadero" }, at(60));
+  const failed = await getAttemptResult(student, first.attemptId, at(61));
+  assert.deepEqual([failed?.score, failed?.maxScore, failed?.passingPercent, failed?.passed], [1, 3, 60, false]);
+
+  const second = await startExamAttempt(student, examId, at(120));
+  assert.ok(second.ok);
+  if (!second.ok) return;
+  await submitExamAttempt(student, second.attemptId, { [MC]: MC_KEY, [TF]: "Verdadero" }, at(180));
+  assert.equal((await getAttemptResult(student, second.attemptId, at(181)))?.passed, true);
+
+  // Sin porcentaje no hay veredicto; con respuesta escrita pendiente, tampoco.
+  const plainId = await makeExam("it_et_passing_none", { maxAttempts: 1 });
+  const plain = await startExamAttempt(student, plainId, T0);
+  assert.ok(plain.ok);
+  if (!plain.ok) return;
+  await submitExamAttempt(student, plain.attemptId, { [MC]: MC_KEY, [TF]: "Verdadero" }, at(60));
+  assert.deepEqual([(await getAttemptResult(student, plain.attemptId, at(61)))?.passingPercent, (await getAttemptResult(student, plain.attemptId, at(61)))?.passed], [null, null]);
+
+  const pendingId = await makeExam("it_et_passing_pending", { maxAttempts: 1, passingPercent: 10, withOpenQuestion: true });
+  const pending = await startExamAttempt(student, pendingId, T0);
+  assert.ok(pending.ok);
+  if (!pending.ok) return;
+  await submitExamAttempt(student, pending.attemptId, { [MC]: MC_KEY, [TF]: "Verdadero", [OPEN]: "Con la luz" }, at(60));
+  const waiting = await getAttemptResult(student, pending.attemptId, at(61));
+  assert.deepEqual([waiting?.pendingReview, waiting?.passed], [true, null]);
 });

@@ -37,7 +37,6 @@ export default async function AssignmentsPage({ params }: { params: Promise<{ co
     return (
       <div className="mx-auto max-w-3xl space-y-6 p-4 sm:p-8">
         <header>
-          <Link className="inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 underline" href={base}>← Volver a {data.course.name}</Link>
           <h1 className="text-2xl font-bold" style={{ color: "var(--navy)" }}>Mis tareas</h1>
           <p className="mt-1 text-sm text-slate-600">Abre una tarea para leer las instrucciones y entregarla.</p>
         </header>
@@ -85,7 +84,6 @@ export default async function AssignmentsPage({ params }: { params: Promise<{ co
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-4 sm:p-8">
       <header>
-        <Link className="inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 underline" href={base}>← Volver a {data.course.name}</Link>
         <h1 className="text-2xl font-bold" style={{ color: "var(--navy)" }}>Tareas</h1>
         <p className="mt-1 text-sm text-slate-600">Crea tareas, publícalas y califica lo que entregan tus estudiantes.</p>
       </header>

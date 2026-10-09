@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getStudentProgress } from "@/server/courses/enrollment";
@@ -28,7 +27,6 @@ export default async function StudentProgressPage({ params }: { params: Promise<
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-4 sm:p-8">
       <header>
-        <Link className="inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 underline" href={`/dashboard/aula/${data.course.id}/estudiantes`}>← Volver a estudiantes</Link>
         <h1 className="mt-1 break-words text-2xl font-bold" style={{ color: "var(--navy)" }}>{student.name}</h1>
         <p className="break-words text-sm text-slate-600">{student.email} · {data.course.name}</p>
         <p className="mt-2 text-sm font-medium text-slate-800">

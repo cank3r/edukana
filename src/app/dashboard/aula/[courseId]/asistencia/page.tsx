@@ -85,7 +85,7 @@ export default async function AttendancePage({
   );
 }
 
-function Shell({ courseId, courseName, view, children }: { courseId: string; courseName: string; view: string; children: ReactNode }) {
+function Shell({ courseId, view, children }: { courseId: string; courseName: string; view: string; children: ReactNode }) {
   const base = `/dashboard/aula/${courseId}/asistencia`;
   const tabs = [
     { key: "tomar", label: "Tomar asistencia", href: base },
@@ -95,7 +95,6 @@ function Shell({ courseId, courseName, view, children }: { courseId: string; cou
   return (
     <div className="mx-auto max-w-4xl space-y-5 p-4 sm:p-8">
       <header>
-        <Link className={link} href={`/dashboard/aula/${courseId}`}>← Volver a {courseName}</Link>
         <h1 className="mt-1 text-2xl font-bold" style={{ color: "var(--navy)" }}>Asistencia</h1>
       </header>
       <nav aria-label="Secciones de asistencia" className="flex flex-wrap gap-2">
@@ -234,7 +233,6 @@ function StudentView({ data }: { data: MyAttendance }) {
   return (
     <div className="mx-auto max-w-3xl space-y-5 p-4 sm:p-8">
       <header>
-        <Link className={link} href={`/dashboard/aula/${data.course.id}`}>← Volver a {data.course.name}</Link>
         <h1 className="mt-1 text-2xl font-bold" style={{ color: "var(--navy)" }}>Mi asistencia</h1>
       </header>
       {data.days.length === 0 ? (

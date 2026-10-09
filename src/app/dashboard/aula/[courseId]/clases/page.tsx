@@ -1,16 +1,12 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getEffectiveCapabilities } from "@/lib/authorization";
-import { formatZonedDay, formatZonedTime, zonedDateKey, zonedTimeValue } from "@/lib/timezone";
+import { formatZonedDay, formatZonedTime, timeZoneDisplayName, zonedDateKey, zonedTimeValue } from "@/lib/timezone";
 import { LIVE_CLASS_DURATIONS, MAX_REPEAT_WEEKS, listLiveClasses, type LiveClassItem } from "@/server/courses/live-classes";
 import { JoinClass, ManageClass, ScheduleClass, type ClassView } from "./ClassTools";
 import { safeJoinUrl } from "./phase";
 
 export const dynamic = "force-dynamic";
-
-/** «America/Santo_Domingo» → «Santo Domingo». */
-const zoneName = (timeZone: string) => (timeZone.split("/").pop() ?? timeZone).replaceAll("_", " ");
 
 function toView(item: LiveClassItem, timeZone: string): ClassView {
   return {
@@ -38,7 +34,7 @@ export default async function LiveClassesPage({ params }: { params: Promise<{ co
   const list = await listLiveClasses({ id: user.id, institutionId: user.institutionId, role: user.role }, courseId, now);
   if (!list) notFound();
 
-  const zoneLabel = `hora de ${zoneName(list.timeZone)}`;
+  const zoneLabel = timeZoneDisplayName(list.timeZone);
   const upcoming = list.upcoming.map((item) => toView(item, list.timeZone));
   const past = list.past.map((item) => toView(item, list.timeZone));
   const nothing = upcoming.length === 0 && past.length === 0;
@@ -66,7 +62,6 @@ export default async function LiveClassesPage({ params }: { params: Promise<{ co
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-4 sm:p-8">
       <header>
-        <Link className="inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 underline" href={`/dashboard/aula/${list.courseId}`}>← {list.courseName}</Link>
         <h1 className="text-2xl font-bold" style={{ color: "var(--navy)" }}>Clases en vivo</h1>
         <p className="mt-1 text-sm text-slate-600">
           {list.canManage

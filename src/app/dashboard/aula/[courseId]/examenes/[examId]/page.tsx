@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
+import { timeZoneDisplayName } from "@/lib/timezone";
 import { getExamForm, publishBlocker } from "@/server/assessment/exam-admin";
 import { DeleteExam, ExamForm, PublishExam } from "../ExamTools";
 
@@ -24,7 +25,6 @@ export default async function EditExamPage({ params }: { params: Promise<{ cours
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-4 sm:p-8">
       <header>
-        <Link href={base} className="inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 underline">← Exámenes</Link>
         <h1 className="break-words text-2xl font-bold" style={{ color: "var(--navy)" }}>{exam.title}</h1>
         <p className="mt-1 text-sm text-slate-600">{STATUS[exam.status]}</p>
       </header>
@@ -40,7 +40,7 @@ export default async function EditExamPage({ params }: { params: Promise<{ cours
       </section>
 
       <section className="rounded-xl border border-slate-200 bg-white p-5">
-        <ExamForm courseId={data.course.id} bank={data.bank} categories={data.categories} exam={exam} timezoneLabel={data.timezone.replaceAll("_", " ")} />
+        <ExamForm courseId={data.course.id} bank={data.bank} categories={data.categories} exam={exam} timezoneLabel={timeZoneDisplayName(data.timezone)} />
       </section>
 
       <section className="rounded-xl border border-slate-200 bg-white p-5" aria-labelledby="examen-borrar">

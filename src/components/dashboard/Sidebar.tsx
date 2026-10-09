@@ -6,10 +6,10 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
   BarChart2, BookOpen, Building2, Calendar, ChevronRight, CreditCard, GraduationCap,
-  LayoutDashboard, LogOut, Megaphone, Menu, Settings, UserCircle, UserPlus, Users,
+  LayoutDashboard, LogOut, Megaphone, Menu, MoreHorizontal, Settings, UserCircle, UserPlus, Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { navigationForRole } from "@/lib/ux";
+import { groupNavigation, navigationForRole, type NavigationItem } from "@/lib/ux";
 import type { EdukanaRole } from "@/types/next-auth";
 import type { Capability } from "@/lib/capabilities";
 
@@ -36,7 +36,26 @@ const ICONS = {
 
 export default function Sidebar({ user, capabilities }: { user: SidebarUser; capabilities: Capability[] }) {
   const pathname = usePathname();
-  const visibleItems = navigationForRole(user.role, capabilities);
+  const { main, more } = groupNavigation(navigationForRole(user.role, capabilities));
+  const isActive = (item: NavigationItem) => pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
+  const moreActive = more.some(isActive);
+
+  const mobileLink = (item: NavigationItem) => {
+    const Icon = ICONS[item.icon];
+    const active = isActive(item);
+    return <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} onClick={(event) => event.currentTarget.closest("details.mobile-menu")?.removeAttribute("open")} className={cn("flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-base font-semibold", active ? "bg-blue-600 text-white" : "text-slate-800 hover:bg-slate-100")}><Icon size={20} aria-hidden="true" /><span>{item.label}</span></Link>;
+  };
+  const desktopLink = (item: NavigationItem) => {
+    const Icon = ICONS[item.icon];
+    const active = isActive(item);
+    return (
+      <Link key={item.href} href={item.href} title={item.label} aria-current={active ? "page" : undefined}
+        className={cn("group flex items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all md:justify-start", active ? "text-white" : "text-gray-400 hover:bg-white/5 hover:text-white")}
+        style={active ? { background: "var(--blue)", color: "white" } : {}}>
+        <Icon size={18} aria-hidden="true" /><span className="hidden flex-1 md:block">{item.label}</span>{active && <ChevronRight size={14} className="hidden opacity-60 md:block" />}
+      </Link>
+    );
+  };
 
   return (
     <>
@@ -44,17 +63,19 @@ export default function Sidebar({ user, capabilities }: { user: SidebarUser; cap
         <Link href="/dashboard" aria-label="Ir al inicio de Edukana">
           <Image src="/logos/edukana_horizontal_color_fondo_oscuro.svg" alt="Edukana" width={128} height={34} priority />
         </Link>
-        <details className="group">
+        <details className="mobile-menu group">
           <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-lg border border-white/20 px-3 py-2 text-sm font-semibold text-white hover:bg-white/10">
             <Menu size={20} aria-hidden="true" /> Menú
           </summary>
           <div className="absolute right-2 top-[calc(100%-0.25rem)] w-[min(22rem,calc(100vw-1rem))] rounded-xl border border-slate-200 bg-white p-2 shadow-xl">
             <nav aria-label="Navegación móvil" className="space-y-1">
-              {visibleItems.map((item) => {
-                const Icon = ICONS[item.icon];
-                const active = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
-                return <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} onClick={(event) => event.currentTarget.closest("details")?.removeAttribute("open")} className={cn("flex min-h-11 items-center gap-3 rounded-lg px-3 py-2 text-base font-semibold", active ? "bg-blue-600 text-white" : "text-slate-800 hover:bg-slate-100")}><Icon size={20} aria-hidden="true" /><span>{item.label}</span></Link>;
-              })}
+              {main.map(mobileLink)}
+              {more.length > 0 && (
+                <details open={moreActive || undefined}>
+                  <summary className="flex min-h-11 cursor-pointer list-none items-center gap-3 rounded-lg px-3 py-2 text-base font-semibold text-slate-800 hover:bg-slate-100 [&::-webkit-details-marker]:hidden"><MoreHorizontal size={20} aria-hidden="true" /> Más</summary>
+                  <div className="ml-4 space-y-1 border-l border-slate-200 pl-2">{more.map(mobileLink)}</div>
+                </details>
+              )}
             </nav>
             {(user.institutionCount ?? 1) > 1 && <Link href="/elegir-institucion" className="mt-2 flex min-h-11 items-center gap-3 rounded-lg border-t border-slate-200 px-3 py-2 text-base font-semibold text-slate-700 hover:bg-slate-100"><Building2 size={20} aria-hidden="true" /> Cambiar de institución</Link>}
             <Link href="/dashboard/perfil" onClick={(event) => event.currentTarget.closest("details")?.removeAttribute("open")} className="mt-2 flex min-h-11 items-center gap-3 rounded-lg border-t border-slate-200 px-3 py-2 text-base font-semibold text-slate-700 hover:bg-slate-100"><UserCircle size={20} aria-hidden="true" /> Mi perfil</Link>
@@ -74,17 +95,13 @@ export default function Sidebar({ user, capabilities }: { user: SidebarUser; cap
       </div>
 
       <nav aria-label="Navegación principal" className="flex-1 space-y-0.5 overflow-y-auto px-2 py-4 md:px-3">
-        {visibleItems.map((item) => {
-          const Icon = ICONS[item.icon];
-          const active = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
-          return (
-            <Link key={item.href} href={item.href} title={item.label} aria-current={active ? "page" : undefined}
-              className={cn("group flex items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all md:justify-start", active ? "text-white" : "text-gray-400 hover:bg-white/5 hover:text-white")}
-              style={active ? { background: "var(--blue)", color: "white" } : {}}>
-              <Icon size={18} aria-hidden="true" /><span className="hidden flex-1 md:block">{item.label}</span>{active && <ChevronRight size={14} className="hidden opacity-60 md:block" />}
-            </Link>
-          );
-        })}
+        {main.map(desktopLink)}
+        {more.length > 0 && (
+          <details open={moreActive || undefined}>
+            <summary className="flex cursor-pointer list-none items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-400 transition-all hover:bg-white/5 hover:text-white md:justify-start [&::-webkit-details-marker]:hidden"><MoreHorizontal size={18} aria-hidden="true" /><span className="hidden md:block">Más</span></summary>
+            <div className="space-y-0.5 md:ml-3 md:border-l md:border-white/10 md:pl-2">{more.map(desktopLink)}</div>
+          </details>
+        )}
       </nav>
 
       <div className="space-y-2 border-t px-2 pb-4 pt-3 md:px-3" style={{ borderColor: "rgba(255,255,255,0.06)" }}>

@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { listCourseStudents, listGroupsForEnrollment } from "@/server/courses/enrollment";
@@ -25,7 +24,6 @@ export default async function CourseStudentsPage({ params }: { params: Promise<{
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-4 sm:p-8">
       <header>
-        <Link className="inline-flex min-h-11 items-center text-sm font-semibold text-blue-700 underline" href={`/dashboard/aula/${course.id}`}>← Volver a {course.name}</Link>
         <h1 className="mt-1 text-2xl font-bold" style={{ color: "var(--navy)" }}>Estudiantes</h1>
         <p className="mt-1 text-sm text-slate-600">Mira quién está inscrito, cuánto ha avanzado cada uno y quién necesita atención.</p>
       </header>
