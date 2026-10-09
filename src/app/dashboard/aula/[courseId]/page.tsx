@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getEffectiveCapabilities } from "@/lib/authorization";
 import { canManageCourse, courseWhereForScope, resolveCourseReadScope, resolveCourseWriteScope } from "@/lib/course-scope";
+import { courseListWhere } from "@/server/courses/course";
 import { calculateWeightedGrade } from "@/lib/lms";
 import { spanishLabel } from "@/lib/ux";
 import CourseTabs from "@/components/dashboard/CourseTabs";
@@ -24,15 +25,21 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ c
   const capabilities = await getEffectiveCapabilities(user.institutionId, user.role);
   if (!capabilities.has("course.view")) notFound();
   const readScope = resolveCourseReadScope(user, capabilities);
-  const readWhere = courseWhereForScope(user.institutionId, readScope);
+  const isStudent = readScope.kind === "student";
+  const scopedReadWhere = courseWhereForScope(user.institutionId, readScope);
+  const readWhere = isStudent ? courseListWhere(user.institutionId, readScope) : scopedReadWhere;
   if (!readWhere) notFound();
-  const accessibleCourse = await db.course.findFirst({ where: { id: courseId, ...readWhere }, select: { teacherId: true } });
+  const accessibleCourse = await db.course.findFirst({
+    where: { id: courseId, ...readWhere },
+    select: { teacherId: true, archivedAt: true },
+  });
   if (!accessibleCourse) notFound();
   const writeScope = resolveCourseWriteScope(user, capabilities);
-  const canManage = canManageCourse(writeScope, accessibleCourse.teacherId);
+  const canManage = canManageCourse(writeScope, accessibleCourse.teacherId) && !accessibleCourse.archivedAt;
+  const canEditCourse = canManage && capabilities.has("course.edit");
+  const canChangeCourseState = writeScope.kind === "all" && capabilities.has("course.archive");
   const canEnroll = canManage && capabilities.has("enrollment.manage");
   const canViewRoster = capabilities.has("course.roster.view");
-  const isStudent = readScope.kind === "student";
   const course = await db.course.findFirst({
     where: { id: courseId, ...readWhere },
     include: {
@@ -124,6 +131,20 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ c
 
   return <div className="mx-auto max-w-7xl p-4 sm:p-8">
     <header className="mb-6 rounded-3xl p-6 text-white sm:p-8" style={{ background: "linear-gradient(135deg,var(--navy),#173b9c)" }}><span className="rounded bg-white/10 px-2 py-1 text-xs font-mono text-cyan-200">{course.code ?? "CURSO"}</span><h1 className="mt-3 text-3xl font-bold">{course.name}</h1><p className="mt-2 max-w-3xl text-slate-300">{course.description}</p><div className="mt-5 flex flex-wrap gap-4 text-sm text-slate-300"><span>{course.teacher.name}</span><span>{course.period.name}</span>{canViewRoster && <span>{course.enrollments.length} estudiantes</span>}{ownEnrollment && <span>{ownEnrollment.progressPercent}% completado</span>}</div></header>
+
+    {(canEditCourse || canChangeCourseState) && (
+      <div className="mb-5 flex justify-end">
+        <Link href={`/dashboard/aula/${course.id}/editar`} className="inline-flex min-h-11 items-center rounded-lg bg-blue-600 px-4 py-2.5 font-semibold text-white">
+          {accessibleCourse.archivedAt ? "Revisar curso archivado" : "Editar curso"}
+        </Link>
+      </div>
+    )}
+
+    {accessibleCourse.archivedAt && (
+      <div className="mb-5 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900" role="status">
+        <strong>Vista de consulta.</strong> Este curso está archivado. Puedes revisar su historial, pero no cambiar contenido, matrículas, asistencia ni evaluaciones.
+      </div>
+    )}
 
     {isReadOnlyStudent && <div className="mb-5 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900"><strong>Curso completado.</strong> Esta es una vista de consulta; ya no puedes enviar tareas, iniciar exámenes ni cambiar el progreso.</div>}
 
