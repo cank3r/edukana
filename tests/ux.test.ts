@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { breadcrumbLabel, groupNavigation, MAX_MAIN_NAVIGATION, navigationForRole, roleLabel, spanishLabel } from "../src/lib/ux";
+import { breadcrumbLabel, groupNavigation, MAX_MAIN_NAVIGATION, navigationForRole, plural, roleLabel, spanishLabel } from "../src/lib/ux";
 
 test("muestra módulos claros y propios de cada rol", () => {
   assert.deepEqual(navigationForRole("STUDENT").map((item) => item.label), ["Inicio", "Mis cursos", "Avisos", "Calendario", "Mi estado de cuenta", "Mis certificados"]);
@@ -88,4 +88,11 @@ test("las pantallas con barra de migas no repiten su propio «← Volver»", () 
 test("Aula conserva visibles los cursos completados del estudiante", () => {
   const classroom = readFileSync(join(process.cwd(), "src", "app", "dashboard", "aula", "page.tsx"), "utf8");
   assert.match(classroom, /status: \{ in: \["ACTIVE", "COMPLETED"\] \}/);
+});
+
+test("plural: «1 aviso», «0 avisos», «3 avisos»; la ficha de persona tiene su miga", () => {
+  assert.equal(plural(1, "aviso publicado", "avisos publicados"), "1 aviso publicado");
+  assert.equal(plural(0, "aviso publicado", "avisos publicados"), "0 avisos publicados");
+  assert.equal(plural(3, "curso", "cursos"), "3 cursos");
+  assert.equal(breadcrumbLabel("personas"), "Personas");
 });

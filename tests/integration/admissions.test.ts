@@ -94,8 +94,15 @@ test("convertir crea a la persona en A como estudiante y repetirlo no duplica", 
   assert.equal(person.name, "Ana Aspirante");
   const lead = await db.admissionLead.findUniqueOrThrow({ where: { id: leadId } });
   assert.equal(lead.stage, "ENROLLED");
-  assert.equal(convertedUserId(lead.documents), first.userId);
-  assert.match(lead.notes ?? "", /Convertida en estudiante/);
+  assert.equal(lead.convertedUserId, first.userId, "el vínculo va en su propio campo");
+  assert.ok(lead.convertedAt);
+  assert.equal(lead.documents, null, "ya no se guarda dentro de documents");
+  assert.equal(lead.notes, "Llamó por teléfono.", "la conversión va al historial, no a las notas");
+  const detail = await getLead(A.institutionId, leadId);
+  assert.equal(detail?.person?.id, first.userId);
+  assert.equal(detail?.person?.access, "NOT_INVITED");
+  assert.equal(detail?.createdPerson, true);
+  assert.ok(detail?.convertedAt);
 
   const [again, twice] = await Promise.all([convertLead(A.admin, { leadId }), convertLead(A.admin, { leadId })]);
   for (const repeat of [again, twice]) {
@@ -214,4 +221,23 @@ test("borrar: una solicitud convertida se rechaza; una abierta se borra y queda 
   assert.equal(await db.admissionLead.count({ where: { id: leadId } }), 0);
   assert.equal((await audits(leadId, "ADMISSION_DELETED")).length, 1);
   assert.equal((await deleteLead(A.admin, leadId)).ok, false);
+});
+
+test("una solicitud antigua con el vínculo dentro de documents se sigue leyendo como convertida", async () => {
+  const leadId = await newLead("legado@admisiones.test", "Solicitud Antigua");
+  await db.admissionLead.update({
+    where: { id: leadId },
+    data: { stage: "ENROLLED", documents: { convertedUserId: A.student.id, convertedAt: "2026-09-01T12:00:00.000Z" } },
+  });
+  const lead = await db.admissionLead.findUniqueOrThrow({ where: { id: leadId } });
+  assert.equal(convertedUserId(lead), A.student.id);
+  const detail = await getLead(A.institutionId, leadId);
+  assert.equal(detail?.convertedUserId, A.student.id);
+  assert.equal(detail?.person?.id, A.student.id);
+  assert.equal(detail?.convertedAt?.toISOString(), "2026-09-01T12:00:00.000Z");
+  const again = await convertLead(A.admin, { leadId });
+  assert.ok(again.ok);
+  assert.equal(again.alreadyConverted, true);
+  assert.equal(again.userId, A.student.id);
+  assert.equal((await deleteLead(A.admin, leadId)).ok, false, "una convertida no se borra");
 });
