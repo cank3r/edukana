@@ -1,12 +1,15 @@
 import Link from "next/link";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, ChevronRight } from "lucide-react";
 import { Panel } from "./parts";
 
 export type AttentionItem = { id: string; title: string; detail: string; href: string; action: string };
 
-/** «Requiere tu atención» en formato compacto: lo que hay que resolver y el botón para hacerlo. */
+/**
+ * «Requiere tu atención»: un renglón por tema (qué pasa y cuánto) y, al tocarlo, la pantalla donde se resuelve.
+ * Solo dice «Todo al día» cuando de verdad no hay nada pendiente.
+ */
 export function Attention({ items, empty }: { items: AttentionItem[]; empty?: { title: string; detail: string } }) {
-  const calm = empty ?? { title: "Todo al día", detail: "No hay pendientes que requieran tu atención ahora." };
+  const calm = empty ?? { title: "Todo al día", detail: "No hay entregas atrasadas, estudiantes en riesgo, cobros vencidos ni solicitudes sin atender." };
   return (
     <Panel id="requiere-atencion" title="Requiere tu atención" className="h-full">
       {items.length === 0 ? (
@@ -18,19 +21,18 @@ export function Attention({ items, empty }: { items: AttentionItem[]; empty?: { 
           </div>
         </div>
       ) : (
-        <ul className="space-y-2">
+        <ul className="-mx-2 divide-y divide-slate-100">
           {items.map((item) => (
-            <li key={item.id} className="rounded-xl border border-amber-200 bg-amber-50 p-3">
-              <div className="flex items-start gap-2.5">
-                <AlertCircle className="mt-0.5 shrink-0 text-amber-700" size={18} aria-hidden="true" />
-                <div className="min-w-0 flex-1">
-                  <p className="break-words text-sm font-semibold text-slate-950">{item.title}</p>
-                  <p className="mt-0.5 text-sm text-slate-700">{item.detail}</p>
-                  <Link href={item.href} className="mt-2 inline-flex min-h-11 items-center rounded-lg border border-amber-300 bg-white px-3 text-sm font-semibold text-slate-900 hover:border-amber-500">
-                    {item.action}
-                  </Link>
-                </div>
-              </div>
+            <li key={item.id}>
+              <Link href={item.href} className="group flex min-h-11 items-start gap-2.5 rounded-lg px-2 py-2.5 hover:bg-amber-50">
+                <AlertCircle className="mt-0.5 shrink-0 text-amber-600" size={18} aria-hidden="true" />
+                <span className="min-w-0 flex-1">
+                  <span className="block break-words text-sm font-semibold text-slate-950 group-hover:underline">{item.title}</span>
+                  <span className="mt-0.5 block text-sm text-slate-600">{item.detail}</span>
+                  <span className="sr-only">{item.action}</span>
+                </span>
+                <ChevronRight className="mt-0.5 shrink-0 text-slate-400 group-hover:text-slate-700" size={18} aria-hidden="true" />
+              </Link>
             </li>
           ))}
         </ul>

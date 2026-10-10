@@ -40,7 +40,9 @@ export function TrendChart({ id, title, summary, weeks, series, threshold }: {
       </div>
       <ChartSvg id={`${id}-m`} className="sm:hidden" size={MOBILE} title={title} summary={summary} weeks={weeks} series={series} threshold={threshold} />
       <ChartSvg id={`${id}-e`} className="hidden sm:block" size={DESKTOP} title={title} summary={summary} weeks={weeks} series={series} threshold={threshold} />
-      <table className="sr-only">
+      {/* La tabla va dentro de un div: una tabla con «sr-only» se estira a lo ancho de su texto y desborda la página en el celular. */}
+      <div className="sr-only">
+      <table>
         <caption>{title}, semana por semana</caption>
         <thead>
           <tr>
@@ -57,6 +59,7 @@ export function TrendChart({ id, title, summary, weeks, series, threshold }: {
           ))}
         </tbody>
       </table>
+      </div>
     </figure>
   );
 }
@@ -104,7 +107,8 @@ function ChartSvg({ id, className, size, title, summary, weeks, series, threshol
       {threshold && (
         <g>
           <line x1={pad.left} x2={size.width - pad.right} y1={y(threshold.value)} y2={y(threshold.value)} stroke="#B91C1C" strokeWidth="1" strokeDasharray="4 4" opacity="0.7" />
-          <text x={size.width - pad.right} y={y(threshold.value) - 5} textAnchor="end" fontSize={size.font - 1} fill="#B91C1C">{threshold.label}</text>
+          {/* El rótulo va en el margen izquierdo, junto a 0 % y 100 %: así nunca queda encima de un punto. */}
+          <text x={pad.left - 8} y={y(threshold.value) + 4} textAnchor="end" fontSize={size.font} fontWeight={600} fill="#B91C1C">{threshold.label}</text>
         </g>
       )}
       {weeks.map((label, index) =>

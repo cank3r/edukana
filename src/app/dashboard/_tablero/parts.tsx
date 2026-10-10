@@ -11,7 +11,7 @@ const TONE_CLASS: Record<Change["tone"], string> = { good: "text-emerald-700", b
 
 export function Panel({ id, title, action, children, className = "" }: { id: string; title: string; action?: ReactNode; children: ReactNode; className?: string }) {
   return (
-    <section aria-labelledby={`${id}-titulo`} className={`min-w-0 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 ${className}`}>
+    <section id={id} aria-labelledby={`${id}-titulo`} className={`min-w-0 scroll-mt-20 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 ${className}`}>
       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <h2 id={`${id}-titulo`} className="text-base font-bold sm:text-lg" style={{ color: NAVY }}>{title}</h2>
         {action}
@@ -108,9 +108,9 @@ export function Indicator({ href, label, value, detail, change, fallback, trend,
 }
 
 /** Etiqueta corta de una señal (en riesgo, necesita atención). */
-export function Tag({ children, tone = "warn" }: { children: ReactNode; tone?: "warn" | "info" }) {
+export function Tag({ children, tone = "warn", title }: { children: ReactNode; tone?: "warn" | "info"; title?: string }) {
   return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${tone === "warn" ? "bg-red-50 text-red-800 ring-1 ring-red-200" : "bg-slate-100 text-slate-700 ring-1 ring-slate-200"}`}>
+    <span title={title} className={`inline-flex items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ${tone === "warn" ? "bg-red-50 text-red-800 ring-1 ring-red-200" : "bg-slate-100 text-slate-700 ring-1 ring-slate-200"}`}>
       {children}
     </span>
   );

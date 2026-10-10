@@ -2,7 +2,7 @@
  * Institución de demostración «Instituto Técnico Demo».
  *
  * `createDemo` crea UNA institución nueva (siempre con el mismo identificador) que parece un instituto
- * técnico dominicano con ocho semanas de clases: 120 estudiantes, 10 docentes, 2 programas con 4 grupos,
+ * técnico dominicano con ocho semanas de clases: 123 estudiantes (3 llegaron este mes), 10 docentes, 2 programas con 4 grupos,
  * 12 cursos con contenido, asistencia dos veces por semana, tareas semanales con entregas y notas,
  * exámenes con intentos (algunos con respuestas abiertas por revisar), cobros, admisiones, avisos,
  * notificaciones, horario, clases en vivo, catálogo con pedidos y reseñas, y certificados.
@@ -38,6 +38,7 @@ import {
   ADMIN,
   COORDINATOR,
   COURSES,
+  RECENT_STUDENTS,
   DEMO_EMAIL_DOMAIN,
   GUARDIANS,
   LEADS,
@@ -47,6 +48,7 @@ import {
   type DemoCourse,
   type DemoStudent,
   type StudentProfile,
+  type TeacherKey,
 } from "./content";
 
 export { DEMO_EMAIL_DOMAIN };
@@ -57,6 +59,9 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 /** El cuatrimestre empezó hace 8 semanas y 2 días: hay 8 semanas completas de clases. */
 const PERIOD_START = -58;
 const WEEKS = 8;
+/** El cuatrimestre dura 120 días: a esta altura «toca» haber visto esta parte de las lecciones. */
+const PERIOD_DAYS = 120;
+const EXPECTED_PROGRESS = -PERIOD_START / PERIOD_DAYS;
 
 type Actor = { id: string; institutionId: string; role: EdukanaRole };
 type Log = (message: string) => void;
@@ -133,9 +138,11 @@ function weekdayOf(key: string) {
   return day === 0 ? 7 : day;
 }
 
-/** Cómo le va a cada perfil. */
-const PROFILE: Record<StudentProfile, {
-  /** Parte de las lecciones publicadas que ya completó. */
+type Profile = {
+  /**
+   * Avance: parte de las lecciones publicadas que ya completó, medida contra lo que «toca» a esta altura del
+   * cuatrimestre (1 = va justo al día). Así el avance promedio sigue la semana del período.
+   */
   progress: [number, number];
   /** Asistencia (presente o tarde) entre clases tomadas. */
   attendance: [number, number];
@@ -148,12 +155,56 @@ const PROFILE: Record<StudentProfile, {
   /** Entrega antes de tiempo la tarea que todavía no vence. */
   early: number;
   exam: { take: number; correct: number; retry: number; sample: [number, number, number] };
-}> = {
-  destacado: { progress: [0.85, 1], attendance: [0.92, 0.98], late: 0.03, missing: 0, lateTask: 0.02, score: [88, 100], early: 0.7, exam: { take: 1, correct: 0.92, retry: 0.05, sample: [0.85, 0.15, 0] } },
-  regular: { progress: [0.55, 0.85], attendance: [0.84, 0.92], late: 0.07, missing: 0, lateTask: 0.08, score: [72, 92], early: 0.3, exam: { take: 0.96, correct: 0.76, retry: 0.25, sample: [0.45, 0.5, 0.05] } },
-  atrasado: { progress: [0.32, 0.5], attendance: [0.82, 0.88], late: 0.12, missing: 0, lateTask: 0.35, score: [62, 80], early: 0, exam: { take: 0.85, correct: 0.62, retry: 0.2, sample: [0.1, 0.7, 0.2] } },
-  en_riesgo: { progress: [0.05, 0.25], attendance: [0.62, 0.73], late: 0.15, missing: 0.35, lateTask: 0.5, score: [45, 68], early: 0, exam: { take: 0.6, correct: 0.42, retry: 0.5, sample: [0, 0.5, 0.5] } },
 };
+
+/** Cómo le va a cada perfil. Los de «en riesgo» se ajustan con `RISK_PATTERNS`: cada uno falla en lo suyo. */
+const PROFILE: Record<StudentProfile, Profile> = {
+  destacado: { progress: [1.1, 1.35], attendance: [0.92, 0.98], late: 0.03, missing: 0, lateTask: 0.02, score: [88, 100], early: 0.15, exam: { take: 1, correct: 0.92, retry: 0.05, sample: [0.85, 0.15, 0] } },
+  regular: { progress: [0.85, 1.1], attendance: [0.85, 0.92], late: 0.07, missing: 0, lateTask: 0.08, score: [74, 92], early: 0.05, exam: { take: 0.96, correct: 0.76, retry: 0.25, sample: [0.45, 0.5, 0.05] } },
+  atrasado: { progress: [0.62, 0.85], attendance: [0.83, 0.88], late: 0.12, missing: 0, lateTask: 0.3, score: [72, 88], early: 0, exam: { take: 0.85, correct: 0.66, retry: 0.2, sample: [0.1, 0.7, 0.2] } },
+  en_riesgo: { progress: [0.62, 0.8], attendance: [0.85, 0.9], late: 0.12, missing: 0, lateTask: 0.4, score: [72, 84], early: 0, exam: { take: 0.8, correct: 0.66, retry: 0.3, sample: [0.1, 0.7, 0.2] } },
+};
+
+type Weakness = "asistencia" | "tareas" | "notas" | "avance" | "cobros";
+/**
+ * En qué falla cada estudiante «en riesgo», en el orden en que aparecen en `STUDENTS`: unos en una sola cosa,
+ * otros en dos o tres. Así la lista de riesgo se parece a la de un instituto real (no todos con todo).
+ */
+const RISK_PATTERNS: Weakness[][] = [
+  ["asistencia", "tareas", "notas"], // Yaritza Mejía Lora (la de la guía de la demo)
+  ["avance", "notas"],
+  ["cobros", "tareas"],
+  ["asistencia"],
+  ["notas"],
+  ["tareas", "avance", "cobros"],
+  ["asistencia", "notas"],
+  ["avance"],
+  ["notas", "cobros"],
+];
+const WEAKNESSES = new Map<string, Set<Weakness>>(
+  STUDENTS.filter((student) => student.profile === "en_riesgo").map((student, index) => [student.email, new Set(RISK_PATTERNS[index % RISK_PATTERNS.length])]),
+);
+const weakIn = (student: DemoStudent, weakness: Weakness) => WEAKNESSES.get(student.email)?.has(weakness) ?? false;
+
+/** El perfil de un estudiante, con sus puntos débiles si está en riesgo. */
+function profileOf(student: DemoStudent): Profile {
+  const base = PROFILE[student.profile];
+  if (student.profile !== "en_riesgo") return base;
+  return {
+    ...base,
+    progress: weakIn(student, "avance") ? [0.1, 0.35] : base.progress,
+    attendance: weakIn(student, "asistencia") ? [0.62, 0.72] : base.attendance,
+    missing: weakIn(student, "tareas") ? 0.15 : 0,
+    score: weakIn(student, "notas") ? [46, 64] : base.score,
+    exam: weakIn(student, "notas") ? { take: 0.6, correct: 0.42, retry: 0.5, sample: [0, 0.5, 0.5] } : base.exam,
+  };
+}
+
+/**
+ * Cuántas entregas deja cada docente por calificar: todas de los últimos días (lo demás ya tiene nota).
+ * Con las respuestas abiertas de examen por revisar, cada docente queda entre 3 y 20 pendientes.
+ */
+const PENDING_GRADING: Record<TeacherKey, number> = { rosa: 12, julio: 9, ramon: 13, yokasta: 6, milagros: 10, victor: 5, domingo: 8, fausto: 4, lissette: 7, yahaira: 3 };
 
 const ABSENCE_NOTES = ["Avisó por WhatsApp que estaba enferma.", "Cita médica.", "Problema con el transporte.", "No avisó.", "Turno extra en el trabajo.", "Se fue la luz en su sector y no pudo llegar."];
 const FEEDBACK: Array<[number, string[]]> = [
@@ -174,7 +225,7 @@ const WEEKLY_ANSWERS = [
 // Crear
 // ---------------------------------------------------------------------------------------
 
-/** Plan de la demostración: sus 120 estudiantes caben sin que aparezca el aviso de límite del plan. */
+/** Plan de la demostración: sus 123 estudiantes caben sin que aparezca el aviso de límite del plan. */
 const DEMO_PLAN = "PRO" as const;
 
 /**
@@ -254,6 +305,7 @@ type BuiltEnrollment = {
   courseIndex: number;
   status: "ACTIVE" | "COMPLETED" | "DROPPED";
   progressPercent: number;
+  enrolledAt: Date;
   completedAt: Date | null;
   withdrawnAt: Date | null;
   withdrawReason: string | null;
@@ -286,6 +338,15 @@ async function fill(institutionId: string, adminId: string, passwordHash: string
   const lastDue = Number(today.slice(8, 10)) < 15 ? `${today.slice(0, 7)}-15` : shiftMonth(today, 1);
   const monthDues = [shiftMonth(lastDue, -2), shiftMonth(lastDue, -1), lastDue];
   const offsetOf = (key: string) => Math.round((storedDay(key).getTime() - storedDay(today).getTime()) / DAY_MS);
+  // Quienes llegaron este mes: entran dentro del mes en curso (aunque la demo se cargue el día 1).
+  const monthStart = at(`${today.slice(0, 7)}-01`, "00:00");
+  const daysIntoMonth = Math.max(0, (now.getTime() - monthStart.getTime()) / DAY_MS);
+  const recentJoin = new Map<string, Date>();
+  RECENT_STUDENTS.forEach((student, index) => {
+    const daysAgo = Math.min([6, 4, 2][index] ?? 1, daysIntoMonth * [0.75, 0.5, 0.25][index]!);
+    recentJoin.set(student.email, new Date(now.getTime() - Math.max(daysAgo * DAY_MS, Math.min(3 * 60 * 60_000, daysIntoMonth * DAY_MS * 0.2))));
+  });
+  const joinedOf = (student: DemoStudent) => recentJoin.get(student.email) ?? null;
 
   // --- Personas ------------------------------------------------------------------------------------
   log("Creando personas…");
@@ -317,7 +378,7 @@ async function fill(institutionId: string, adminId: string, passwordHash: string
       phone: person.phone,
       role: person.role,
       status: "ACTIVE" as const,
-      createdAt: new Date(joined.getTime() + index * 60_000),
+      createdAt: recentJoin.get(person.email) ?? new Date(joined.getTime() + index * 60_000),
     };
   });
   await inBatches(users, (data) => db.user.createMany({ data }));
@@ -342,7 +403,7 @@ async function fill(institutionId: string, adminId: string, passwordHash: string
     start.slice(0, 4) === end.slice(0, 4)
       ? `Cuatrimestre ${capital(monthOf(start))}–${capital(monthOf(end))} ${start.slice(0, 4)}`
       : `Cuatrimestre ${capital(monthOf(start))} ${start.slice(0, 4)}–${capital(monthOf(end))} ${end.slice(0, 4)}`;
-  const current = { start: dayKey(PERIOD_START), end: dayKey(PERIOD_START + 119) };
+  const current = { start: dayKey(PERIOD_START), end: dayKey(PERIOD_START + PERIOD_DAYS - 1) };
   const previous = { start: dayKey(PERIOD_START - 121), end: dayKey(PERIOD_START - 1) };
   const currentPeriod = await createPeriod(admin, { name: periodName(current.start, current.end), startDate: current.start, endDate: current.end });
   if (!currentPeriod.ok) throw new Error(`Demo: falló el período actual: ${currentPeriod.message}`);
@@ -496,7 +557,7 @@ async function fill(institutionId: string, adminId: string, passwordHash: string
     ];
     for (const code of new Set(codes)) {
       const courseIndex = built.indexOf(courseByCode(code));
-      enrollments.push({ id: newId(), studentId: userId(student.email), student, courseIndex, status: "ACTIVE", progressPercent: 0, completedAt: null, withdrawnAt: null, withdrawReason: null });
+      enrollments.push({ id: newId(), studentId: userId(student.email), student, courseIndex, status: "ACTIVE", progressPercent: 0, enrolledAt: joinedOf(student) ?? enrolledAt, completedAt: null, withdrawnAt: null, withdrawReason: null });
     }
   }
   const enrollmentsOf = (courseIndex: number) => enrollments.filter((row) => row.courseIndex === courseIndex);
@@ -525,12 +586,18 @@ async function fill(institutionId: string, adminId: string, passwordHash: string
     const course = built[enrollment.courseIndex];
     const total = course.lessons.length;
     const next = random(`avance:${course.data.code}:${enrollment.student.email}`);
-    const [low, high] = PROFILE[enrollment.student.profile].progress;
-    const done = enrollment.status === "COMPLETED" ? total : Math.round(total * uniform(next, low, high));
+    const [low, high] = profileOf(enrollment.student).progress;
+    const joinedAt = joinedOf(enrollment.student);
+    // Quien llegó este mes ya hizo las primeras lecciones (un poco menos que sus compañeros).
+    const share = joinedAt ? [0.35, 0.3, 0.28][RECENT_STUDENTS.findIndex((row) => row.email === enrollment.student.email)] ?? 0.3 : Math.min(1, EXPECTED_PROGRESS * uniform(next, low, high));
+    const done = enrollment.status === "COMPLETED" ? total : Math.round(total * share);
+    const span = joinedAt ? Math.max(0.1, (now.getTime() - joinedAt.getTime()) / DAY_MS - 0.05) : -PERIOD_START - 3;
     for (let index = 0; index < done; index += 1) {
       const lesson = course.lessons[index];
-      // Las lecciones se completan a lo largo del cuatrimestre; la última, hace pocos días.
-      const daysAgo = Math.max(0.2, (-PERIOD_START - 3) * (1 - (index + 1) / Math.max(done, 1)) + uniform(next, 0.3, 4));
+      // Las lecciones se completan a lo largo del cuatrimestre (o desde que llegó); la última, hace pocos días.
+      const daysAgo = joinedAt
+        ? Math.max(0.02, span * (1 - (index + 0.5) / Math.max(done, 1)))
+        : Math.max(0.2, span * (1 - (index + 1) / Math.max(done, 1)) + uniform(next, 0.3, 4));
       const completedAt = past(new Date(now.getTime() - daysAgo * DAY_MS), next);
       progressRows.push({
         institutionId,
@@ -554,7 +621,7 @@ async function fill(institutionId: string, adminId: string, passwordHash: string
       courseId: built[row.courseIndex].id,
       status: row.status,
       progressPercent: row.progressPercent,
-      enrolledAt,
+      enrolledAt: row.enrolledAt,
       completedAt: row.completedAt,
       withdrawnAt: row.withdrawnAt,
       withdrawReason: row.withdrawReason,
@@ -568,7 +635,7 @@ async function fill(institutionId: string, adminId: string, passwordHash: string
   // --- Asistencia: dos clases por semana en las últimas 8 semanas, con leve mejora -----------------
   log("Tomando asistencia de las últimas ocho semanas…");
   const attendanceRate = new Map(STUDENTS.map((student) => {
-    const [low, high] = PROFILE[student.profile].attendance;
+    const [low, high] = profileOf(student).attendance;
     return [student.email, uniform(random(`asistencia:${student.email}`), low, high)];
   }));
   const sessionRows: Prisma.AttendanceSessionCreateManyInput[] = [];
@@ -595,14 +662,20 @@ async function fill(institutionId: string, adminId: string, passwordHash: string
     });
     for (const enrollment of enrollmentsOf(courseIndex)) {
       const next = random(`clases:${course.data.code}:${enrollment.student.email}`);
-      const rate = attendanceRate.get(enrollment.student.email)!;
-      const counted = sessions.filter((session) => !enrollment.withdrawnAt || at(session.date, "23:59") < enrollment.withdrawnAt);
+      const joinedKey = joinedOf(enrollment.student) ? zonedDateKey(enrollment.enrolledAt, TIME_ZONE) : null;
+      // Quien llegó este mes solo tiene las clases desde que entró, y no ha faltado.
+      const rate = joinedKey ? 1 : attendanceRate.get(enrollment.student.email)!;
+      const counted = sessions.filter((session) => (!enrollment.withdrawnAt || at(session.date, "23:59") < enrollment.withdrawnAt) && (!joinedKey || session.date >= joinedKey));
       const absences = Math.round((1 - rate) * counted.length);
-      // Más ausencias al principio: la asistencia mejora un poco semana a semana.
-      const ranked = counted
-        .map((session) => ({ session, key: next() * (1 + 0.8 * (1 - session.index / Math.max(1, sessions.length - 1))) }))
-        .sort((a, b) => b.key - a.key);
-      const absent = new Set(ranked.slice(0, absences).map((row) => row.session.id));
+      // Las ausencias se reparten a lo largo del cuatrimestre (un poco más al principio): así la asistencia
+      // de cualquier semana o mes se parece a la del estudiante, y mejora levemente con el tiempo.
+      const absent = new Set<string>();
+      const offset = next();
+      for (let k = 0; k < absences; k += 1) {
+        let position = Math.min(counted.length - 1, Math.floor(counted.length * ((k + offset) / absences) ** 1.2));
+        while (absent.has(counted[position].id)) position = (position + 1) % counted.length;
+        absent.add(counted[position].id);
+      }
       for (const session of counted) {
         let status: "PRESENT" | "LATE" | "ABSENT" | "EXCUSED" = "PRESENT";
         let notes: string | null = null;
@@ -614,7 +687,7 @@ async function fill(institutionId: string, adminId: string, passwordHash: string
             status = "ABSENT";
             notes = next() < 0.6 ? pick(next, ABSENCE_NOTES) : null;
           }
-        } else if (next() < PROFILE[enrollment.student.profile].late) {
+        } else if (next() < profileOf(enrollment.student).late) {
           status = "LATE";
           notes = "Llegó 15 minutos tarde.";
         }
@@ -645,6 +718,16 @@ async function fill(institutionId: string, adminId: string, passwordHash: string
   const gradeEntryRows: Prisma.GradeEntryCreateManyInput[] = [];
   type BuiltTask = { id: string; courseIndex: number; title: string; week: number; due: Date };
   const tasks: BuiltTask[] = [];
+  type Work = { row: Prisma.SubmissionCreateManyInput; entry: Prisma.GradeEntryCreateManyInput; teacher: TeacherKey };
+  const waiting: Work[] = [];
+  /** Deja la entrega calificada, con su nota en el libro. */
+  const grade = ({ row, entry }: Work) => {
+    row.status = "GRADED";
+    row.score = entry.score;
+    row.feedback = entry.feedback;
+    row.gradedAt = entry.gradedAt;
+    gradeEntryRows.push(entry);
+  };
   for (const [courseIndex, course] of built.entries()) {
     const topics = course.lessons.filter((lesson) => lesson.type !== "VIDEO");
     for (let week = 1; week <= WEEKS + 1; week += 1) {
@@ -679,50 +762,62 @@ async function fill(institutionId: string, adminId: string, passwordHash: string
 
       for (const enrollment of enrollmentsOf(courseIndex)) {
         const student = enrollment.student;
-        const profile = PROFILE[student.profile];
+        const profile = profileOf(student);
         const next = random(`tarea:${course.data.code}:${week}:${student.email}`);
         if (enrollment.withdrawnAt && due > enrollment.withdrawnAt) continue;
-        // Un estudiante atrasado olvidó la práctica de la semana 6 de un curso: también sale en riesgo.
-        const forgot = student.email === demoEmail("wilkin.santana") && course.data.code === "ENF-102" && week === 6;
+        const joinedAt = joinedOf(student);
+        // Quien llegó este mes no debe las tareas que vencieron antes de que entrara.
+        if (joinedAt && due < joinedAt) continue;
+        // Un estudiante atrasado olvidó dos prácticas seguidas de un curso: también sale en riesgo.
+        const forgot = student.email === demoEmail("wilkin.santana") && course.data.code === "ENF-102" && (week === 6 || week === 7);
         let submittedAt: Date;
         let late = false;
         if (upcoming) {
           if (next() >= profile.early) continue;
-          submittedAt = past(new Date(now.getTime() - uniform(next, 0.3, 3) * DAY_MS), next);
+          submittedAt = past(new Date(Math.max(now.getTime() - uniform(next, 0.3, 3) * DAY_MS, (joinedAt?.getTime() ?? 0) + 60 * 60_000)), next);
         } else {
           if (forgot || next() < profile.missing) continue;
-          late = next() < profile.lateTask;
+          late = !joinedAt && next() < profile.lateTask;
           submittedAt = late
             ? past(new Date(due.getTime() + uniform(next, 0.2, 2.5) * DAY_MS), next)
-            : new Date(due.getTime() - uniform(next, 0.1, 3) * DAY_MS);
+            : past(new Date(Math.max(due.getTime() - uniform(next, 0.1, 3) * DAY_MS, (joinedAt?.getTime() ?? 0) + 60 * 60_000)), next);
         }
         const answers = handmade?.answers;
         const content = answers?.length
           ? answers[student.profile === "destacado" || student.profile === "regular" ? 0 : answers.length - 1]
           : pick(next, WEEKLY_ANSWERS)(topic);
-        // Se califica lo que venció hace más de 4 días; la última semana queda casi toda por calificar.
-        const graded = !upcoming && (week < WEEKS || next() < 0.3);
         const [low, high] = profile.score;
-        const score = graded ? Math.max(0, Math.min(100, between(next, low, high) - (late ? 5 : 0))) : null;
-        const gradedAt = graded ? past(new Date(Math.max(submittedAt.getTime(), due.getTime()) + uniform(next, 1.5, 4) * DAY_MS), next) : null;
-        const feedback = score !== null ? feedbackFor(next, score) : null;
-        submissionRows.push({
+        const score = Math.max(0, Math.min(100, between(next, low, high) - (late ? 5 : 0)));
+        // Lo de semanas anteriores se calificó a los pocos días; lo de esta semana, hace horas o un día.
+        const settled = !upcoming && week < WEEKS;
+        const base = upcoming ? submittedAt.getTime() : Math.max(submittedAt.getTime(), due.getTime());
+        const gradedAt = past(new Date(base + (settled ? uniform(next, 1.5, 4) : uniform(next, 0.3, 1.5)) * DAY_MS), next);
+        const feedback = feedbackFor(next, score);
+        const row: Prisma.SubmissionCreateManyInput = {
           institutionId,
           assignmentId: id,
           studentId: enrollment.studentId,
           enrollmentId: enrollment.id,
           content,
-          status: graded ? "GRADED" : "SUBMITTED",
+          status: "SUBMITTED",
           submittedAt,
-          score,
-          feedback,
-          gradedAt,
-        });
-        if (score !== null && gradedAt) {
-          gradeEntryRows.push({ institutionId, gradeItemId, enrollmentId: enrollment.id, score, feedback, gradedById: course.teacherId, gradedAt, autoGraded: false });
-        }
+          score: null,
+          feedback: null,
+          gradedAt: null,
+        };
+        submissionRows.push(row);
+        const work = { row, entry: { institutionId, gradeItemId, enrollmentId: enrollment.id, score, feedback, gradedById: course.teacherId, gradedAt, autoGraded: false }, teacher: course.data.teacher };
+        if (settled) grade(work);
+        else waiting.push(work);
       }
     }
+  }
+  // Cada docente ya calificó casi todo: quedan por calificar solo sus entregas más recientes.
+  for (const [teacher, keep] of Object.entries(PENDING_GRADING) as Array<[TeacherKey, number]>) {
+    const mine = waiting
+      .filter((work) => work.teacher === teacher)
+      .sort((a, b) => (b.row.submittedAt as Date).getTime() - (a.row.submittedAt as Date).getTime());
+    mine.slice(keep).forEach(grade);
   }
   await inBatches(assignmentRows, (data) => db.assignment.createMany({ data }));
   await inBatches(gradeItemRows, (data) => db.gradeItem.createMany({ data }));
@@ -791,10 +886,11 @@ async function fill(institutionId: string, adminId: string, passwordHash: string
 
     for (const enrollment of enrollmentsOf(courseIndex)) {
       const student = enrollment.student;
-      const profile = PROFILE[student.profile].exam;
+      const profile = profileOf(student).exam;
       const next = random(`examen:${course.data.code}:${student.email}`);
-      if (next() >= profile.take) continue;
-      const firstDay = between(next, 2, 13);
+      // Quien llegó este mes todavía no presenta el examen.
+      if (joinedOf(student) || next() >= profile.take) continue;
+      const firstDay = between(next, 3, 13);
       const days = [firstDay, ...(next() < profile.retry && firstDay > 2 ? [between(next, 1, firstDay - 1)] : [])];
       let lastGraded: { score: number; at: Date; reviewed: boolean } | null = null;
       for (const [attemptIndex, day] of days.entries()) {
@@ -805,8 +901,8 @@ async function fill(institutionId: string, adminId: string, passwordHash: string
         const correct = Math.min(0.98, profile.correct + attemptIndex * 0.12);
         let auto = 0;
         let openScore: number | null = null;
-        // Las respuestas abiertas de hace más de 4 días ya están revisadas; las recientes esperan al docente.
-        const reviewed = day > 4;
+        // El docente revisa las respuestas abiertas a los pocos días: solo esperan las de ayer y anteayer.
+        const reviewed = day > 2;
         for (const question of questions) {
           let response: string;
           if (question.type === "SHORT_ANSWER") {
@@ -1008,20 +1104,21 @@ async function fill(institutionId: string, adminId: string, passwordHash: string
   const methods = ["TRANSFER", "CASH", "CARD", "TRANSFER"] as const;
   const payNote = (method: string, next: Rand) =>
     method === "TRANSFER" ? `Transferencia ${pick(next, ["Banreservas", "Banco Popular", "BHD", "Banco Santa Cruz"])}, ref. ${between(next, 10000, 99999)}` : method === "CARD" ? "Pago con tarjeta en caja." : "Pago en efectivo en caja.";
-  /** Parte pagada (0 a 1) de cada cobro según el perfil. */
-  const paidShare = (kind: "inscripcion" | 1 | 2 | 3, profile: StudentProfile, next: Rand) => {
+  /**
+   * Parte pagada (0 a 1) de cada cobro. Casi todos están al día; solo quienes tienen atrasado el pago
+   * (`RISK_PATTERNS` con «cobros») deben cargos vencidos. La mensualidad que vence en los próximos días
+   * la paga antes una parte de cada grupo.
+   */
+  const paidShare = (kind: "inscripcion" | 1 | 2 | 3, student: DemoStudent, next: Rand) => {
     const roll = next();
-    if (kind === "inscripcion") return profile === "en_riesgo" && roll < 0.3 ? 0.5 : 1;
-    if (kind === 1) return profile === "en_riesgo" ? (roll < 0.6 ? 1 : 0.5) : 1;
-    if (kind === 2) {
-      if (profile === "destacado") return 1;
-      if (profile === "regular") return roll < 0.9 ? 1 : roll < 0.95 ? 0.5 : 0;
-      if (profile === "atrasado") return roll < 0.5 ? 1 : 0.5;
-      return roll < 0.25 ? 0.5 : 0;
-    }
-    if (profile === "destacado") return roll < 0.9 ? 1 : 0;
-    if (profile === "regular") return roll < 0.55 ? 1 : 0;
-    return profile === "atrasado" && roll < 0.2 ? 1 : 0;
+    const owes = weakIn(student, "cobros");
+    if (kind === "inscripcion") return owes ? 0.5 : 1;
+    if (kind === 1) return owes && roll < 0.5 ? 0.5 : 1;
+    if (kind === 2) return owes ? (roll < 0.4 ? 0.5 : 0) : 1;
+    if (owes) return 0;
+    if (student.profile === "destacado") return roll < 0.9 ? 1 : 0;
+    if (student.profile === "regular") return roll < 0.5 ? 1 : 0;
+    return roll < 0.25 ? 1 : 0;
   };
   const charge = (studentId: string, concept: string, cents: number, dueKey: string, share: number, next: Rand, paidOffset: number) => {
     const id = newId();
@@ -1052,16 +1149,29 @@ async function fill(institutionId: string, adminId: string, passwordHash: string
     const id = userId(student.email);
     const next = random(`cobros:${student.email}`);
     const enrollDue = dayKey(PERIOD_START + 3);
-    charge(id, `Inscripción ${periodName(current.start, current.end)} · ${info.name}`, info.enrollmentFeeCents, enrollDue, paidShare("inscripcion", student.profile, next), next, PERIOD_START + between(next, -6, 2));
+    charge(id, `Inscripción ${periodName(current.start, current.end)} · ${info.name}`, info.enrollmentFeeCents, enrollDue, paidShare("inscripcion", student, next), next, PERIOD_START + between(next, -6, 2));
     monthDues.forEach((dueKey, index) => {
-      charge(id, `Mensualidad de ${monthOf(dueKey)} · ${info.name}`, info.monthlyFeeCents, dueKey, paidShare((index + 1) as 1 | 2 | 3, student.profile, next), next, offsetOf(dueKey) + between(next, -5, 3));
+      charge(id, `Mensualidad de ${monthOf(dueKey)} · ${info.name}`, info.monthlyFeeCents, dueKey, paidShare((index + 1) as 1 | 2 | 3, student, next), next, offsetOf(dueKey) + between(next, -5, 3));
     });
   }
-  // Excel: cuatro lo compraron en el catálogo (pedido pagado); los otros dos pagan en caja.
-  const buyers = ["altagracia.henriquez", "manuel.rosario", "indhira.vasquez", "wendy.marte"].map(demoEmail);
+  // Excel: cuatro lo compraron en el catálogo antes de empezar y dos este mes (pedido pagado); los demás
+  // pagan en caja (la que llegó este mes por admisiones, el día que se inscribió).
+  const earlyBuyers = ["altagracia.henriquez", "manuel.rosario", "indhira.vasquez", "wendy.marte"].map(demoEmail);
+  const recentBuyers = RECENT_STUDENTS.filter((student) => student.recent === "catalogo").map((student) => student.email);
+  const buyers = [...earlyBuyers, ...recentBuyers];
   for (const student of STUDENTS.filter((row) => row.track === "EXCEL" && !buyers.includes(row.email))) {
     const next = random(`excel:${student.email}`);
-    charge(userId(student.email), "Curso Excel para la Oficina", courseByCode("EXC-100").data.catalogPriceCents ?? 250000, dayKey(PERIOD_START + 7), student.profile === "atrasado" ? 0.4 : 1, next, PERIOD_START + between(next, 2, 10));
+    const joinedAt = joinedOf(student);
+    const joinedOffset = joinedAt ? -Math.round((now.getTime() - joinedAt.getTime()) / DAY_MS) : null;
+    charge(
+      userId(student.email),
+      "Curso Excel para la Oficina",
+      courseByCode("EXC-100").data.catalogPriceCents ?? 250000,
+      joinedAt ? zonedDateKey(joinedAt, TIME_ZONE) : dayKey(PERIOD_START + 7),
+      1,
+      next,
+      joinedOffset ?? PERIOD_START + between(next, 2, 10),
+    );
   }
   await inBatches(chargeRows, (data) => db.paymentConcept.createMany({ data }));
   await inBatches(paymentRows, (data) => db.payment.createMany({ data }));
@@ -1070,22 +1180,37 @@ async function fill(institutionId: string, adminId: string, passwordHash: string
 
   // --- Catálogo: pedidos pagados y reseñas ---------------------------------------------------------
   const excel = courseByCode("EXC-100");
-  const orders = buyers.map((email, index) => {
-    const next = random(`pedido:${email}`);
-    const paid = atOffset(PERIOD_START - 6 + index * 2, clock(next, 9, 20));
-    return {
-      institutionId,
-      courseId: excel.id,
-      buyerId: userId(email),
-      amountCents: excel.data.catalogPriceCents ?? 250000,
-      currency: "DOP",
-      status: "PAID",
-      paymentMethod: index % 2 ? "CARD" : "TRANSFER",
-      paymentNote: index % 2 ? "Pago con tarjeta en caja." : `Transferencia Banco Popular, ref. ${between(next, 10000, 99999)}`,
-      paidAt: paid,
-      createdAt: new Date(paid.getTime() - between(next, 2, 30) * 60 * 60_000),
-    };
+  const order = (email: string, courseId: string, cents: number, paid: Date | null, index: number, next: Rand): Prisma.CourseOrderCreateManyInput => ({
+    institutionId,
+    courseId,
+    buyerId: userId(email),
+    amountCents: cents,
+    currency: "DOP",
+    status: paid ? "PAID" : "PENDING",
+    paymentMethod: paid ? (index % 2 ? "CARD" : "TRANSFER") : null,
+    paymentNote: paid ? (index % 2 ? "Pago con tarjeta en caja." : `Transferencia Banco Popular, ref. ${between(next, 10000, 99999)}`) : "Dijo que hace la transferencia esta semana.",
+    paidAt: paid,
+    createdAt: new Date((paid ?? now).getTime() - between(next, 2, 30) * 60 * 60_000),
   });
+  const excelCents = excel.data.catalogPriceCents ?? 250000;
+  // Los cuatro de antes del cuatrimestre, repartidos en sus últimas semanas.
+  const orders = earlyBuyers.map((email, index) => {
+    const next = random(`pedido:${email}`);
+    return order(email, excel.id, excelCents, atOffset(PERIOD_START - [20, 12, 6, 1][index], clock(next, 9, 20)), index, next);
+  });
+  // Los dos que lo compraron este mes: pagaron un rato antes de entrar al curso.
+  recentBuyers.forEach((email, index) => {
+    const next = random(`pedido:${email}`);
+    orders.push(order(email, excel.id, excelCents, past(new Date(joinedOf(STUDENTS.find((row) => row.email === email)!)!.getTime() - between(next, 20, 90) * 60_000), next), index + 1, next));
+  });
+  // Uno por pagar: una estudiante de Contabilidad separó Mercadeo Digital en el catálogo y aún no paga.
+  const marketing = courseByCode("MER-101");
+  const marketingIndex = built.indexOf(marketing);
+  const pendingBuyer = STUDENTS.find((student) => student.group === "CON-N" && student.profile === "regular" && !enrollmentsOf(marketingIndex).some((row) => row.student.email === student.email));
+  if (pendingBuyer && marketing.data.catalogPriceCents) {
+    const next = random(`pedido:${pendingBuyer.email}`);
+    orders.push({ ...order(pendingBuyer.email, marketing.id, marketing.data.catalogPriceCents, null, 0, next), createdAt: new Date(now.getTime() - uniform(next, 0.5, 2) * DAY_MS) });
+  }
   await db.courseOrder.createMany({ data: orders });
   await db.courseReview.createMany({
     data: [
@@ -1131,9 +1256,15 @@ async function fill(institutionId: string, adminId: string, passwordHash: string
   const groupForTrack = (student: DemoStudent) => (student.group ? groupIdByKey.get(student.group) ?? null : null);
   for (const lead of LEADS) {
     const id = newId();
-    const createdAt = new Date(now.getTime() - lead.daysAgo * DAY_MS);
     const convertedUserId = lead.student ? userId(lead.student.email) : null;
-    const convertedAt = lead.student ? new Date(enrolledAt.getTime() - 3 * DAY_MS) : null;
+    // La que llegó este mes: escribió unos días antes de inscribirse, siempre dentro del mes en curso.
+    const joinedAt = lead.recent && lead.student ? joinedOf(lead.student) : null;
+    const createdAt = joinedAt
+      ? new Date(Math.max(monthStart.getTime() + 60 * 60_000, joinedAt.getTime() - 2 * DAY_MS, joinedAt.getTime() - (joinedAt.getTime() - monthStart.getTime()) / 2))
+      : new Date(now.getTime() - lead.daysAgo * DAY_MS);
+    const convertedAt = joinedAt ?? (lead.student ? new Date(enrolledAt.getTime() - 3 * DAY_MS) : null);
+    // Cada paso del embudo, cada 12 horas (o más seguido si se inscribió enseguida).
+    const stepMs = (steps: number) => Math.min(12 * 60 * 60_000, ((convertedAt ?? now).getTime() - createdAt.getTime()) / (steps + 1));
     leadRows.push({
       id,
       institutionId,
@@ -1152,8 +1283,9 @@ async function fill(institutionId: string, adminId: string, passwordHash: string
     auditRows.push({ institutionId, userId: coordinatorId, action: "ADMISSION_CREATED", entity: "AdmissionLead", entityId: id, changes: { stage: "INTERESTED", source: lead.source }, createdAt });
     const final = lead.stage === "ENROLLED" ? "ACCEPTED" : lead.stage;
     const path = final === "REJECTED" ? ["REJECTED"] : STEPS.slice(1, STEPS.indexOf(final as (typeof STEPS)[number]) + 1);
+    const step = stepMs(path.length);
     let from: string = "INTERESTED";
-    path.forEach((to, step) => {
+    path.forEach((to, index) => {
       auditRows.push({
         institutionId,
         userId: coordinatorId,
@@ -1161,7 +1293,7 @@ async function fill(institutionId: string, adminId: string, passwordHash: string
         entity: "AdmissionLead",
         entityId: id,
         changes: { from, to, ...(to === "REJECTED" && lead.reason ? { reason: lead.reason } : {}) },
-        createdAt: new Date(createdAt.getTime() + (step + 1) * 12 * 60 * 60_000),
+        createdAt: new Date(createdAt.getTime() + (index + 1) * step),
       });
       from = to;
     });
@@ -1217,16 +1349,19 @@ async function fill(institutionId: string, adminId: string, passwordHash: string
         createdAt: new Date(lastGraded.due.getTime() + 3 * DAY_MS - (8 * 60 + 27) * 60_000),
       });
     }
-    notificationRows.push({
-      institutionId,
-      userId: enrollment.studentId,
-      kind: "exam",
-      title: `Nuevo examen en ${course.data.name}: ${exam.title}`,
-      body: "Tienes 30 minutos y dos intentos.",
-      href: `/dashboard/aula/${course.id}/presentar`,
-      readAt: new Date(now.getTime() - 10 * DAY_MS),
-      createdAt: at(opensKey, "07:00"),
-    });
+    // El aviso del examen salió antes de que llegaran quienes entraron este mes.
+    if (!joinedOf(enrollment.student)) {
+      notificationRows.push({
+        institutionId,
+        userId: enrollment.studentId,
+        kind: "exam",
+        title: `Nuevo examen en ${course.data.name}: ${exam.title}`,
+        body: "Tienes 30 minutos y dos intentos.",
+        href: `/dashboard/aula/${course.id}/presentar`,
+        readAt: new Date(now.getTime() - 10 * DAY_MS),
+        createdAt: at(opensKey, "07:00"),
+      });
+    }
   }
   for (const row of chargeRows.filter((item) => item.status === "PENDING" && (item.dueDate as Date) > now)) {
     notificationRows.push({

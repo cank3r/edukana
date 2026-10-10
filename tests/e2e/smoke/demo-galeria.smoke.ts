@@ -124,6 +124,15 @@ class Gallery {
             if (!parent || parent.getBoundingClientRect().right > window.innerWidth + 1 || getComputedStyle(parent).overflowX !== "visible") continue;
             found.push(`<${element.tagName.toLowerCase()} class="${String(element.className).slice(0, 100)}"> ${Math.round(box.width)}px «${(element.innerText || "").replace(/\s+/g, " ").slice(0, 50)}»`);
           }
+          // Si ninguno cumple esa regla, los más profundos que pasan del borde derecho.
+          if (!found.length) {
+            for (const element of Array.from(document.querySelectorAll<HTMLElement>("body *"))) {
+              if (element.getBoundingClientRect().right <= window.innerWidth + 1 || element.querySelector("*")) continue;
+              const chain: string[] = [];
+              for (let node: HTMLElement | null = element; node && node !== document.body && chain.length < 4; node = node.parentElement) chain.push(`${node.tagName.toLowerCase()}.${String(node.className).split(" ").slice(0, 3).join(".")}`);
+              found.push(chain.reverse().join(" > "));
+            }
+          }
           const culprit = found.slice(0, 3).join(" · ");
           return { extra, culprit };
         })

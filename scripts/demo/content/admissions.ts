@@ -1,8 +1,8 @@
-import { DEMO_EMAIL_DOMAIN, STUDENTS, type DemoStudent } from "./people";
+import { DEMO_EMAIL_DOMAIN, RECENT_STUDENTS, STUDENTS, type DemoStudent } from "./people";
 
 /**
- * 25 solicitudes de admisión en todas las etapas. Las 6 «inscritas» son estudiantes que ya están en
- * la institución: llegaron por admisiones y se convirtieron en estudiantes al empezar el cuatrimestre.
+ * 26 solicitudes de admisión en todas las etapas. Las 7 «inscritas» son estudiantes que ya están en
+ * la institución: 6 llegaron por admisiones al empezar el cuatrimestre y 1 entró este mes al curso de Excel.
  */
 export type DemoLeadStage = "INTERESTED" | "DOCUMENTS" | "REVIEW" | "ACCEPTED" | "REJECTED" | "ENROLLED";
 export type DemoLead = {
@@ -18,6 +18,8 @@ export type DemoLead = {
   reason?: string;
   /** Solo en las inscritas: el estudiante en que se convirtió. */
   student?: DemoStudent;
+  /** Llegó y se inscribió este mes: la semilla calcula sus fechas dentro del mes en curso (ignora `daysAgo`). */
+  recent?: boolean;
 };
 
 const mail = (local: string) => `${local}@${DEMO_EMAIL_DOMAIN}`;
@@ -79,4 +81,20 @@ function converted(): DemoLead[] {
   }));
 }
 
-export const LEADS: DemoLead[] = [...OPEN, ...converted()];
+/** La estudiante que entró este mes a Excel por admisiones. */
+function convertedThisMonth(): DemoLead[] {
+  return RECENT_STUDENTS.filter((student) => student.recent === "admisiones").map((student) => ({
+    name: student.name,
+    email: student.email,
+    phone: student.phone,
+    programInterest: "Excel para la Oficina",
+    source: "WhatsApp",
+    stage: "ENROLLED" as const,
+    daysAgo: 0,
+    notes: "Preguntó por el curso de Excel de los sábados para su trabajo en una ferretería. Pagó en caja y se inscribió.",
+    student,
+    recent: true,
+  }));
+}
+
+export const LEADS: DemoLead[] = [...OPEN, ...converted(), ...convertedThisMonth()];

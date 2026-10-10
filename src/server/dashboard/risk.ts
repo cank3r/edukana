@@ -218,6 +218,25 @@ export function riskSignalLabel(signal: RiskSignal, row: RiskStudent): string {
   }
 }
 
+/**
+ * La señal en dos o tres palabras, para las etiquetas del inicio («Asistencia 69 %», «Nota 46»).
+ * El detalle (en qué curso, comparado con quién) queda en la lista completa de Reportes.
+ */
+export function riskSignalShort(signal: RiskSignal, row: RiskStudent): string {
+  switch (signal) {
+    case "asistencia":
+      return `Asistencia ${formatPercent(Math.round((row.attended / Math.max(1, row.classes)) * 100))}`;
+    case "tareas":
+      return `${row.overdueTasks} tareas vencidas`;
+    case "notas":
+      return `Nota ${Math.round(row.lowestGrade ?? 0)}`;
+    case "avance":
+      return `Avance ${formatPercent(Math.round(row.averageProgress))}`;
+    case "cobros":
+      return row.overdueCharges === 1 ? "1 cargo vencido" : `${row.overdueCharges} cargos vencidos`;
+  }
+}
+
 /** Nombre de cada señal para los filtros. */
 export const RISK_SIGNAL_NAMES: Record<RiskSignal, string> = {
   asistencia: `Asistencia menor de ${RISK_ATTENDANCE_PERCENT} %`,

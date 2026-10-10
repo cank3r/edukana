@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import { after, before, test } from "node:test";
 import { db } from "@/lib/db";
+import { getEffectiveCapabilities } from "@/lib/authorization";
+import { zonedDateKey, zonedTimeToUtc } from "@/lib/timezone";
+import { getBoardAttention } from "@/server/dashboard/attention";
+import { resolveBoardContext } from "@/server/dashboard/context";
+import { getTeacherLoad } from "@/server/dashboard/courses";
+import { getBoardIndicators } from "@/server/dashboard/indicators";
+import { getAtRiskStudents } from "@/server/dashboard/risk";
 import { authenticateCredentials } from "@/server/login";
 import { createPerson } from "@/server/people/create";
 import { DEMO_EMAIL_DOMAIN, GUARDIANS, STUDENTS } from "../../scripts/demo/content";
@@ -118,7 +125,7 @@ test("demo: crea un instituto técnico con ocho semanas de actividad realista", 
   // Personas y acceso.
   const roles = await db.user.groupBy({ by: ["role"], where: scope, _count: { _all: true } });
   const byRole = Object.fromEntries(roles.map((row) => [row.role, row._count._all]));
-  assert.deepEqual(byRole, { ADMIN: 1, COORDINATOR: 1, TEACHER: 10, STUDENT: 120, PARENT: 15 });
+  assert.deepEqual(byRole, { ADMIN: 1, COORDINATOR: 1, TEACHER: 10, STUDENT: 123, PARENT: 15 });
   assert.equal(await db.identity.count({ where: { email: DEMO_DOMAIN, passwordHash: null } }), 0);
   for (const email of [`directora@${DEMO_EMAIL_DOMAIN}`, `rosa.almonte@${DEMO_EMAIL_DOMAIN}`, STUDENTS[0].email, STUDENTS[100].email, GUARDIANS[0].email]) {
     const login = await authenticateCredentials({ email, password: PASSWORD, ip: "10.77.0.1", institutionSlug: DEMO_SLUG });
@@ -162,9 +169,10 @@ test("demo: crea un instituto técnico con ocho semanas de actividad realista", 
   assert.equal(await db.enrollment.count({ where: { ...scope, status: "COMPLETED" } }), 4);
   assert.equal(await db.certificate.count({ where: { ...scope, revokedAt: null } }), 3);
   const progress = await db.enrollment.aggregate({ where: { ...scope, status: "ACTIVE" }, _avg: { progressPercent: true } });
-  assert.ok((progress._avg.progressPercent ?? 0) > 45 && (progress._avg.progressPercent ?? 0) < 80, `avance promedio: ${progress._avg.progressPercent}`);
+  // A la mitad del cuatrimestre (semana 9 de 18), el avance promedio anda por la mitad.
+  assert.ok((progress._avg.progressPercent ?? 0) > 38 && (progress._avg.progressPercent ?? 0) < 60, `avance promedio: ${progress._avg.progressPercent}`);
 
-  // Asistencia: ~88 % en promedio, 8 a 10 estudiantes bajo 80 % y una leve mejora.
+  // Asistencia: ~89 % en promedio, unos pocos estudiantes bajo 80 % y una leve mejora.
   const records = await db.attendance.findMany({ where: scope, select: { status: true, date: true, enrollment: { select: { studentId: true } } } });
   const attended = (rows: typeof records) => {
     const counted = rows.filter((row) => row.status !== "EXCUSED");
@@ -175,7 +183,7 @@ test("demo: crea un instituto técnico con ocho semanas de actividad realista", 
   const byStudent = new Map<string, typeof records>();
   for (const row of records) byStudent.set(row.enrollment.studentId, [...(byStudent.get(row.enrollment.studentId) ?? []), row]);
   const low = [...byStudent.values()].map(attended).filter((rate) => rate < 0.8);
-  assert.ok(low.length >= 8 && low.length <= 10, `estudiantes con asistencia baja: ${low.length}`);
+  assert.ok(low.length >= 2 && low.length <= 5, `estudiantes con asistencia baja: ${low.length}`);
   assert.ok(low.every((rate) => rate >= 0.55 && rate <= 0.78), "los de asistencia baja están entre 60 y 75 %");
   const middle = now.getTime() - 28 * DAY_MS;
   const early = attended(records.filter((row) => row.date.getTime() < middle));
@@ -187,52 +195,83 @@ test("demo: crea un instituto técnico con ocho semanas de actividad realista", 
   const graded = submissions.filter((row) => row.status === "GRADED").length;
   const lateCount = submissions.filter((row) => row.assignment.dueDate && row.submittedAt > row.assignment.dueDate).length;
   assert.ok(submissions.length > 3000, `entregas: ${submissions.length}`);
-  assert.ok(graded > submissions.length * 0.7 && graded < submissions.length, `calificadas: ${graded} de ${submissions.length}`);
+  assert.ok(graded > submissions.length * 0.9 && graded < submissions.length, `calificadas: ${graded} de ${submissions.length}`);
   assert.ok(lateCount > 50 && lateCount < submissions.length * 0.2, `entregas tarde: ${lateCount}`);
   assert.ok(submissions.every((row) => row.submittedAt < now), "ninguna entrega en el futuro");
   const pastTasks = await db.assignment.findMany({ where: { ...scope, dueDate: { lt: now } }, select: { id: true, courseId: true, dueDate: true } });
   assert.equal(pastTasks.length, 12 * 8);
   let missing = 0;
   for (const task of pastTasks) {
-    const enrolled = await db.enrollment.count({ where: { courseId: task.courseId, status: { in: ["ACTIVE", "COMPLETED"] } } });
-    missing += enrolled - (await db.submission.count({ where: { assignmentId: task.id, enrollment: { status: { in: ["ACTIVE", "COMPLETED"] } } } }));
+    // Quien entró después de que venció la tarea no la debe.
+    const owed = { status: { in: ["ACTIVE", "COMPLETED"] as Array<"ACTIVE" | "COMPLETED"> }, enrolledAt: { lte: task.dueDate! } };
+    const enrolled = await db.enrollment.count({ where: { courseId: task.courseId, ...owed } });
+    missing += enrolled - (await db.submission.count({ where: { assignmentId: task.id, enrollment: owed } }));
   }
-  assert.ok(missing > 20 && missing < 300, `tareas vencidas sin entregar: ${missing}`);
+  assert.ok(missing >= 8 && missing < 80, `tareas vencidas sin entregar: ${missing}`);
   assert.ok(await db.gradeEntry.count({ where: scope }) > graded, "las notas de tareas y exámenes llegan al libro");
 
   // Exámenes: intentos calificados y respuestas abiertas por revisar.
   const attempts = await db.examAttempt.groupBy({ by: ["status"], where: scope, _count: { _all: true } });
   const attemptsBy = Object.fromEntries(attempts.map((row) => [row.status, row._count._all]));
   assert.ok((attemptsBy.GRADED ?? 0) > 200, `intentos calificados: ${attemptsBy.GRADED}`);
-  assert.ok((attemptsBy.SUBMITTED ?? 0) > 20, `intentos por revisar: ${attemptsBy.SUBMITTED}`);
+  assert.ok((attemptsBy.SUBMITTED ?? 0) >= 5, `intentos por revisar: ${attemptsBy.SUBMITTED}`);
   assert.equal(attemptsBy.IN_PROGRESS ?? 0, 0);
   assert.equal(await db.examAnswer.count({ where: { ...scope, attempt: { status: "SUBMITTED" }, score: null, bankItem: { type: "SHORT_ANSWER" } } }), attemptsBy.SUBMITTED);
   assert.equal(await db.examAnswer.count({ where: { ...scope, attempt: { status: "GRADED" }, score: null } }), 0, "un intento calificado no tiene respuestas sin puntos");
 
-  // Cobros: inscripción y tres mensualidades, ~80 % pagado, algunos vencidos.
+  // Cobros: inscripción y tres mensualidades, ~87 % pagado, unos pocos vencidos.
   const charges = await db.paymentConcept.findMany({ where: scope, select: { status: true, dueDate: true, amountCents: true, payments: { select: { amountCents: true } } } });
-  assert.equal(charges.length, 114 * 4 + 2);
+  assert.equal(charges.length, 114 * 4 + 3);
   const paid = charges.filter((charge) => charge.status === "PAID").length / charges.length;
   assert.ok(paid > 0.72 && paid < 0.9, `cobros pagados: ${(paid * 100).toFixed(1)} %`);
   assert.ok(charges.some((charge) => charge.status === "PARTIAL"));
   assert.ok(charges.every((charge) => charge.payments.reduce((sum, payment) => sum + payment.amountCents, 0) === (charge.status === "PENDING" ? 0 : charge.status === "PAID" ? charge.amountCents : charge.payments[0]?.amountCents)), "lo pagado coincide con el estado de cada cobro");
   const overdue = charges.filter((charge) => charge.status !== "PAID" && charge.dueDate && charge.dueDate < now);
-  assert.ok(overdue.length >= 5, `cobros vencidos: ${overdue.length}`);
+  assert.ok(overdue.length >= 5 && overdue.length <= 15, `cobros vencidos: ${overdue.length}`);
 
   // Admisiones, catálogo, avisos, clases y notificaciones.
-  const leads = await db.admissionLead.findMany({ where: scope, select: { stage: true, convertedUserId: true } });
-  assert.equal(leads.length, 25);
+  const monthStart = zonedTimeToUtc(`${zonedDateKey(now, "America/Santo_Domingo").slice(0, 7)}-01`, "00:00", "America/Santo_Domingo")!;
+  const leads = await db.admissionLead.findMany({ where: scope, select: { stage: true, convertedUserId: true, createdAt: true } });
+  assert.equal(leads.length, 26);
   assert.equal(new Set(leads.map((lead) => lead.stage)).size, 6);
   const converted = leads.filter((lead) => lead.stage === "ENROLLED");
-  assert.equal(converted.length, 6);
-  assert.equal(await db.user.count({ where: { ...scope, role: "STUDENT", id: { in: converted.map((lead) => lead.convertedUserId!) } } }), 6);
-  assert.equal(await db.courseOrder.count({ where: { ...scope, status: "PAID" } }), 4);
+  assert.equal(converted.length, 7);
+  assert.equal(await db.user.count({ where: { ...scope, role: "STUDENT", id: { in: converted.map((lead) => lead.convertedUserId!) } } }), 7);
+  assert.ok(converted.some((lead) => lead.createdAt >= monthStart), "una solicitud de este mes ya es estudiante («Inscritas» no sale en 0)");
+  assert.equal(await db.courseOrder.count({ where: { ...scope, status: "PAID" } }), 6);
+  assert.ok(await db.courseOrder.count({ where: { ...scope, status: "PAID", paidAt: { gte: monthStart } } }) >= 2, "al menos dos pedidos pagados este mes");
+  assert.equal(await db.courseOrder.count({ where: { ...scope, status: "PENDING" } }), 1);
   assert.equal(await db.courseReview.count({ where: scope }), 2);
   assert.ok(await db.announcement.count({ where: scope }) >= 6);
   assert.ok(await db.liveClass.count({ where: { ...scope, startsAt: { gt: now } } }) >= 12);
   assert.ok(await db.liveClass.count({ where: { ...scope, startsAt: { gt: now, lt: new Date(now.getTime() + 2 * DAY_MS) } } }) >= 1, "hay una clase en vivo en las próximas 48 horas");
   assert.ok(await db.scheduleSlot.count({ where: scope }) >= 24);
   assert.ok(await db.notification.count({ where: { ...scope, readAt: null } }) > 100);
+
+  // Lo que ve la directora en el tablero: pocos en riesgo, con señales variadas, y docentes casi al día.
+  const director = await db.user.findFirstOrThrow({ where: { ...scope, role: "ADMIN" }, select: { id: true } });
+  const ctx = await resolveBoardContext({ id: director.id, institutionId: demoId, role: "ADMIN" }, await getEffectiveCapabilities(demoId, "ADMIN"), "mes", now);
+  const risk = await getAtRiskStudents(ctx, { limit: 50 });
+  assert.ok(risk.total >= 8 && risk.total <= 12, `estudiantes en riesgo: ${risk.total}`);
+  assert.ok(risk.rows.some((row) => row.signals.length === 1), "hay estudiantes con una sola señal");
+  assert.ok(risk.rows.every((row) => row.signals.length <= 3), "nadie tiene todas las señales");
+  assert.ok(Object.values(risk.counts).filter((n) => n > 0).length >= 4, `señales variadas: ${JSON.stringify(risk.counts)}`);
+  assert.ok(risk.rows.some((row) => row.name === "Yaritza Mejía Lora"), "la estudiante en riesgo de la guía sale en la lista");
+  const teachers = await getTeacherLoad(ctx, { limit: 20 });
+  assert.equal(teachers.total, 10);
+  for (const teacher of teachers.rows) {
+    assert.ok(teacher.pendingGrading >= 3 && teacher.pendingGrading <= 20, `${teacher.name}: ${teacher.pendingGrading} por calificar`);
+    assert.ok(teacher.oldestPendingAt && now.getTime() - teacher.oldestPendingAt.getTime() < 7 * DAY_MS, `${teacher.name}: lo pendiente es de los últimos 7 días`);
+  }
+  const indicators = await getBoardIndicators(ctx);
+  if (indicators.attendance && indicators.attendance.whole > 0) {
+    assert.ok(indicators.attendance.percent! >= 85 && indicators.attendance.percent! <= 95, `asistencia del mes: ${indicators.attendance.percent}`);
+  }
+  const attention = await getBoardAttention(ctx);
+  assert.equal(attention.grading, null, "ninguna entrega espera nota más de 7 días");
+  assert.equal(attention.risk?.total, risk.total, "«Requiere tu atención» resume los estudiantes en riesgo");
+  assert.ok(attention.charges && attention.charges.charges >= 1 && attention.charges.charges <= overdue.length, "y los cargos vencidos");
+  assert.ok(attention.admissions && attention.admissions.waiting === leads.filter((lead) => lead.stage === "INTERESTED").length, "y las solicitudes sin atender");
 
   // Aislamiento: nada de la demostración apunta a otra institución.
   assert.equal(await db.user.count({ where: { email: DEMO_DOMAIN, NOT: scope } }), 0);

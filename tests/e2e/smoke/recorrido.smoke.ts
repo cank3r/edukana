@@ -32,6 +32,12 @@ const heading = (page: Page, name: string | RegExp) => expect(page.getByRole("he
 /** Mensaje de éxito de una acción (los formularios lo muestran con role="status"). */
 const done = (page: Page, text: RegExp) => expect(page.getByRole("status").filter({ hasText: text }).first()).toBeVisible();
 const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+/** En el celular la página no puede ser más ancha que la pantalla (nada de desplazarse hacia el lado). */
+async function fitsScreen(page: Page) {
+  if ((page.viewportSize()?.width ?? 1280) >= 600) return;
+  const size = await page.evaluate(() => ({ page: document.documentElement.scrollWidth, screen: window.innerWidth }));
+  expect(size.page, `la página mide ${size.page}px en una pantalla de ${size.screen}px`).toBeLessThanOrEqual(size.screen);
+}
 
 /** Inicia sesión o deja constancia de que el recorrido no pudo empezar. */
 async function start(tour: Tour, email: string) {
@@ -80,6 +86,7 @@ test("administrador", async ({ page }, info) => {
     await heading(page, "Últimas 8 semanas");
     await heading(page, "Cursos");
     await heading(page, "Docentes");
+    await fitsScreen(page);
   });
   await tour.step("inicio este periodo", async () => {
     await page.getByRole("link", { name: "Este período" }).filter({ visible: true }).first().click();
@@ -639,6 +646,7 @@ test("coordinador", async ({ page }, info) => {
     await heading(page, "Estudiantes en riesgo");
     await heading(page, "Docentes");
     await expect(page.getByText(/^Cobrado /).filter({ visible: true })).toHaveCount(0);
+    await fitsScreen(page);
   });
   await tour.step("inicio esta semana", async () => {
     await page.getByRole("link", { name: "Esta semana" }).filter({ visible: true }).first().click();

@@ -1,11 +1,16 @@
 import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 import { getAdmissionsFunnel } from "@/server/dashboard/admissions";
+import { getBoardAttention } from "@/server/dashboard/attention";
 import type { BoardContext } from "@/server/dashboard/context";
 import { COURSE_SORT_KEYS, LOW_COURSE_PROGRESS, QUIET_DAYS, getCourseHealth, getTeacherLoad, parseCourseSort, type CourseHealth, type CourseSortKey } from "@/server/dashboard/courses";
 import { NO_DATA, compare, formatCount, formatMoneyShort, formatPercent } from "@/server/dashboard/format";
 import { getBoardIndicators, type BoardIndicators } from "@/server/dashboard/indicators";
-import { PASSING_GRADE_PERCENT, RISK_ATTENDANCE_PERCENT, getAtRiskStudents, riskSignalLabel } from "@/server/dashboard/risk";
+import { periodStatusText } from "@/server/dashboard/range";
+import { PASSING_GRADE_PERCENT, RISK_ATTENDANCE_PERCENT, RISK_SIGNAL_NAMES, getAtRiskStudents, riskSignalLabel, riskSignalShort } from "@/server/dashboard/risk";
+import { STALE_SUBMISSION_DAYS } from "@/server/admin-home";
+import { plural } from "@/lib/ux";
+import { Attention, type AttentionItem } from "./Attention";
 import { BlockSkeleton, CornerLink, Indicator, NAVY, Panel, RangeSwitch, Tag, WhenFilled } from "./parts";
 import { TrendChart } from "./TrendChart";
 
@@ -13,6 +18,8 @@ import { TrendChart } from "./TrendChart";
 export const BOARD_RISK_ROWS = 6;
 export const BOARD_COURSE_ROWS = 8;
 export const BOARD_TEACHER_ROWS = 5;
+/** Cuántas señales se ven por estudiante en el inicio; las demás se resumen en «+N». */
+export const BOARD_RISK_TAGS = 2;
 
 export type QuickAction = { href: string; label: string; icon: ReactNode };
 type Query = { rango?: string; orden?: string };
@@ -31,13 +38,16 @@ function boardHref(current: Query, changes: Query, anchor?: string) {
  * La estructura es siempre la misma, aunque la institución esté vacía: cada bloque dice cuándo se llena.
  * Cada bloque aparece solo si el rol tiene la capacidad que lo respalda (ver `BoardContext.can`).
  */
-export function Board({ ctx, userName, query, quickActions, firstSteps, attention }: {
+export function Board({ ctx, userName, query, quickActions, firstSteps, alerts, attentionEmpty }: {
   ctx: BoardContext;
   userName?: string | null;
   query: Query;
   quickActions: QuickAction[];
   firstSteps?: ReactNode;
-  attention: ReactNode;
+  /** Avisos propios de cada inicio (período vencido, invitaciones…); el tablero agrega sus pendientes por tema. */
+  alerts: AttentionItem[];
+  /** Qué decir cuando no hay nada (por ejemplo, mientras se ven los primeros pasos). */
+  attentionEmpty?: { title: string; detail: string };
 }) {
   const firstName = userName?.split(" ")[0];
   const current: Query = { rango: query.rango ? ctx.range.key : undefined, orden: query.orden };
@@ -88,7 +98,11 @@ export function Board({ ctx, userName, query, quickActions, firstSteps, attentio
 
       <div className="grid gap-5 lg:grid-cols-3">
         {/* En el celular «Requiere tu atención» va justo después de las cifras; en pantalla ancha, al costado. */}
-        <div className={`min-w-0 ${showResults ? "lg:order-2" : "lg:col-span-3"}`}>{attention}</div>
+        <div className={`min-w-0 ${showResults ? "lg:order-2" : "lg:col-span-3"}`}>
+          <Suspense fallback={<BlockSkeleton title="Requiere tu atención" rows={3} className="h-full" />}>
+            <AttentionBlock ctx={ctx} alerts={alerts} empty={attentionEmpty} />
+          </Suspense>
+        </div>
         {showResults && (
           <Suspense fallback={<BlockSkeleton title="Últimas 8 semanas" rows={4} className="lg:col-span-2" />}>
             <TrendBlock ctx={ctx} indicators={indicators} />
@@ -133,7 +147,7 @@ function PeriodLine({ ctx }: { ctx: BoardContext }) {
     <div className="mt-2 max-w-md">
       <p className="text-sm text-slate-700">
         <span className="font-semibold">{ctx.period.name}</span>
-        {progress ? (progress.ended ? ", ya terminó" : `, semana ${progress.week} de ${progress.weeks}`) : ", todavía no empieza"}
+        , {periodStatusText(ctx.period, progress, ctx.timezone)}
       </p>
       {progress && (
         <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-200" aria-hidden="true">
@@ -142,6 +156,63 @@ function PeriodLine({ ctx }: { ctx: BoardContext }) {
       )}
     </div>
   );
+}
+
+// ---------- Requiere tu atención ----------
+
+/** Nombre corto de cada señal en el resumen («4 con nota baja»). */
+const RISK_SUMMARY: Record<string, string> = {
+  asistencia: "con asistencia baja",
+  tareas: "con tareas vencidas",
+  notas: "con nota baja",
+  avance: "con avance bajo",
+  cobros: "con cargos vencidos",
+};
+
+async function AttentionBlock({ ctx, alerts, empty }: { ctx: BoardContext; alerts: AttentionItem[]; empty?: { title: string; detail: string } }) {
+  const pending = await getBoardAttention(ctx);
+  const items: AttentionItem[] = [...alerts];
+  if (pending.grading) {
+    const { waiting, courses } = pending.grading;
+    items.push({
+      id: "board-grading",
+      title: `${plural(waiting, "entrega espera", "entregas esperan")} nota hace más de ${STALE_SUBMISSION_DAYS} días`,
+      detail: courses === 1 ? "En 1 curso. Revisa con su docente." : `En ${formatCount(courses)} cursos. Revisa con cada docente.`,
+      href: ctx.can.teachers ? "#docentes" : "#cursos",
+      action: ctx.can.teachers ? "Ver docentes" : "Ver cursos",
+    });
+  }
+  if (pending.risk) {
+    const { total, top } = pending.risk;
+    items.push({
+      id: "board-risk",
+      title: `${plural(total, "estudiante", "estudiantes")} en riesgo`,
+      detail: top.length ? `${top.map((entry) => `${formatCount(entry.count)} ${RISK_SUMMARY[entry.signal]}`).join(", ")}.` : "Con al menos una señal de alerta.",
+      href: ctx.can.fullRiskList ? "/dashboard/analitica/riesgo" : "#riesgo",
+      action: "Ver estudiantes en riesgo",
+    });
+  }
+  if (pending.charges) {
+    const { charges, students } = pending.charges;
+    items.push({
+      id: "board-charges",
+      title: `${plural(charges, "cargo vencido", "cargos vencidos")} sin pagar`,
+      detail: students === 1 ? "De 1 estudiante." : `De ${formatCount(students)} estudiantes.`,
+      href: "/dashboard/pagos",
+      action: "Ver cobros",
+    });
+  }
+  if (pending.admissions) {
+    const { waiting, oldestDays } = pending.admissions;
+    items.push({
+      id: "board-admissions",
+      title: `${plural(waiting, "solicitud de ingreso", "solicitudes de ingreso")} sin atender`,
+      detail: oldestDays === 0 ? "Llegaron hoy." : `La más antigua llegó hace ${oldestDays === 1 ? "1 día" : `${oldestDays} días`}.`,
+      href: "/dashboard/admisiones",
+      action: "Ver admisiones",
+    });
+  }
+  return <Attention items={items} empty={empty} />;
 }
 
 // ---------- Cifras grandes ----------
@@ -323,22 +394,35 @@ async function RiskBlock({ ctx }: { ctx: BoardContext }) {
         <WhenFilled>Ningún estudiante tiene señales de alerta por ahora. La lista se llena sola con la asistencia, las tareas y las notas.</WhenFilled>
       ) : (
         <ul className="divide-y divide-slate-100">
-          {risk.rows.map((row) => (
-            <li key={row.studentId} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
-              {/* Ancho propio para el nombre: con varias señales, sin esto se parte en tres renglones. */}
-              <div className="min-w-0 sm:w-44 sm:shrink-0">
-                {ctx.can.personLink ? (
-                  <Link href={`/dashboard/gestion/personas/${row.studentId}`} className="inline-flex min-h-11 items-center break-words font-semibold text-slate-900 underline-offset-2 hover:underline sm:min-h-0">{row.name}</Link>
-                ) : (
-                  <span className="font-semibold text-slate-900">{row.name}</span>
-                )}
-                <p className="text-xs text-slate-500">{row.courses === 1 ? "1 curso" : `${row.courses} cursos`}</p>
-              </div>
-              <ul className="flex flex-wrap gap-1.5 sm:justify-end" aria-label={`Señales de ${row.name}`}>
-                {row.signals.map((signal) => <li key={signal}><Tag>{riskSignalLabel(signal, row)}</Tag></li>)}
-              </ul>
-            </li>
-          ))}
+          {risk.rows.map((row) => {
+            // Las dos señales más importantes a la vista; el resto, en «+N» (y completas en la lista de Reportes).
+            const shown = row.signals.slice(0, BOARD_RISK_TAGS);
+            const rest = row.signals.slice(BOARD_RISK_TAGS);
+            const restText = rest.map((signal) => riskSignalLabel(signal, row)).join(", ");
+            return (
+              <li key={row.studentId} className="flex flex-col gap-1.5 py-2.5 sm:flex-row sm:items-center sm:gap-3">
+                <p className="min-w-0 truncate sm:flex-1">
+                  {ctx.can.personLink ? (
+                    <Link href={`/dashboard/gestion/personas/${row.studentId}`} className="inline-flex min-h-11 items-center font-semibold text-slate-900 underline-offset-2 hover:underline sm:min-h-0">{row.name}</Link>
+                  ) : (
+                    <span className="font-semibold text-slate-900">{row.name}</span>
+                  )}
+                </p>
+                <ul className="flex flex-wrap gap-1.5 sm:shrink-0 sm:flex-nowrap" aria-label={`Señales de ${row.name}`}>
+                  {shown.map((signal) => (
+                    <li key={signal}><Tag title={`${RISK_SIGNAL_NAMES[signal]}: ${riskSignalLabel(signal, row)}`}>{riskSignalShort(signal, row)}</Tag></li>
+                  ))}
+                  {rest.length > 0 && (
+                    <li>
+                      <Tag tone="info" title={restText}>
+                        +{rest.length}<span className="sr-only"> {rest.length === 1 ? "señal más" : "señales más"}: {restText}</span>
+                      </Tag>
+                    </li>
+                  )}
+                </ul>
+              </li>
+            );
+          })}
         </ul>
       )}
     </Panel>

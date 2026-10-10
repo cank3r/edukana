@@ -3,7 +3,6 @@ import type { Capability } from "@/lib/capabilities";
 import { ALERTS_IN_FIRST_STEPS, getAdminHome } from "@/server/admin-home";
 import { resolveBoardContext, type BoardActor } from "@/server/dashboard/context";
 import { getFirstStepsGuide } from "@/server/first-steps";
-import { Attention } from "./_tablero/Attention";
 import { Board, type QuickAction } from "./_tablero/Board";
 import { FirstSteps } from "./FirstSteps";
 
@@ -21,8 +20,9 @@ export async function AdminHome({ actor, capabilities, userName, query }: Props)
     canManagePeople ? getFirstStepsGuide(actor.institutionId) : null,
   ]);
   const showGuide = Boolean(guide?.visible);
-  // Lo que ya pide «Primeros pasos» no se repite en «Requiere tu atención».
-  const alerts = showGuide ? home.alerts.filter((alert) => !ALERTS_IN_FIRST_STEPS.includes(alert.id)) : home.alerts;
+  // Lo que ya pide «Primeros pasos» no se repite en «Requiere tu atención», y las entregas atrasadas
+  // las resume el propio tablero (junto con riesgo, cobros y admisiones).
+  const alerts = home.alerts.filter((alert) => alert.id !== "stale-submissions" && !(showGuide && ALERTS_IN_FIRST_STEPS.includes(alert.id)));
   const icon = (Icon: typeof UserPlus) => <Icon size={16} aria-hidden="true" />;
 
   const actions: QuickAction[] = [
@@ -42,7 +42,8 @@ export async function AdminHome({ actor, capabilities, userName, query }: Props)
       query={query}
       quickActions={actions}
       firstSteps={showGuide && guide ? <FirstSteps steps={guide.steps} /> : null}
-      attention={<Attention items={alerts} empty={showGuide ? { title: "Empieza por los primeros pasos", detail: "Cuando la institución funcione, aquí aparecerá lo que necesite tu atención." } : undefined} />}
+      alerts={alerts}
+      attentionEmpty={showGuide ? { title: "Empieza por los primeros pasos", detail: "Cuando la institución funcione, aquí aparecerá lo que necesite tu atención." } : undefined}
     />
   );
 }

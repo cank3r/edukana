@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches-ignore: [qa-capturas, ci-registros]
+    branches-ignore: [qa-capturas, ci-registros, qa-capturas-pulido-tablero]
 
 permissions:
   contents: write
@@ -243,6 +243,16 @@ jobs:
           path: ${{ steps.capture_files.outputs.path }}/
           if-no-files-found: warn
           retention-days: 14
+      # TEMPORAL (solo rama pulido/tablero-demo, se quita antes del PR): copia de revisión en qa-capturas-pulido-tablero.
+      - name: Publicar capturas para revisión (temporal)
+        if: always() && github.ref_name == 'pulido/tablero-demo' && steps.capture_files.outputs.path != ''
+        run: |
+          set -e
+          cd "${{ steps.capture_files.outputs.path }}"
+          echo '{"git":{"deploymentEnabled":false}}' > vercel.json
+          git init -q -b qa-capturas-pulido-tablero && git add -A
+          git -c user.name="edukana-ci" -c user.email="ci@users.noreply.github.com" commit -q -m "capturas de ${GITHUB_REF_NAME} @ ${GITHUB_SHA::7}"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" qa-capturas-pulido-tablero
       - name: Publicar el resultado como comentario del commit
         if: always()
         run: |

@@ -104,11 +104,30 @@ export function trendWeeks(now: Date, timeZone: string, weeks = TREND_WEEKS): Bo
   });
 }
 
-/** Qué tan avanzado va el período: «Semana 6 de 16». Null si no hay período o si no ha empezado. */
-export function periodProgress(period: PeriodRef | null, now: Date): { week: number; weeks: number; percent: number; ended: boolean } | null {
+/** Un período de más semanas que esto (un año escolar) no se cuenta por semanas: «semana 41 de 78» no ayuda. */
+export const MAX_COUNTED_WEEKS = 30;
+
+/**
+ * Qué tan avanzado va el período: «Semana 6 de 16». Null si no hay período o si no ha empezado.
+ * `long` marca los períodos de más de `MAX_COUNTED_WEEKS` semanas, que se nombran por su año.
+ */
+export function periodProgress(period: PeriodRef | null, now: Date): { week: number; weeks: number; percent: number; ended: boolean; long: boolean } | null {
   if (!period || period.startDate > now) return null;
   const total = Math.max(1, period.endDate.getTime() - period.startDate.getTime());
   const elapsed = Math.min(total, now.getTime() - period.startDate.getTime());
   const weeks = Math.max(1, Math.ceil(total / (7 * DAY_MS)));
-  return { week: Math.min(weeks, Math.floor(elapsed / (7 * DAY_MS)) + 1), weeks, percent: (elapsed / total) * 100, ended: period.endDate < now };
+  return { week: Math.min(weeks, Math.floor(elapsed / (7 * DAY_MS)) + 1), weeks, percent: (elapsed / total) * 100, ended: period.endDate < now, long: weeks > MAX_COUNTED_WEEKS };
+}
+
+/**
+ * Lo que va después del nombre del período en el encabezado: «semana 9 de 18», «Período 2026» (o
+ * «Período 2026–2027») si es largo, «ya terminó» o «todavía no empieza».
+ */
+export function periodStatusText(period: PeriodRef, progress: ReturnType<typeof periodProgress>, timeZone: string): string {
+  if (!progress) return "todavía no empieza";
+  if (progress.ended) return "ya terminó";
+  if (!progress.long) return `semana ${progress.week} de ${progress.weeks}`;
+  const from = zonedDateKey(period.startDate, timeZone).slice(0, 4);
+  const to = zonedDateKey(period.endDate, timeZone).slice(0, 4);
+  return `Período ${from === to ? from : `${from}–${to}`}`;
 }

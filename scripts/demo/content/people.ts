@@ -29,6 +29,11 @@ export type DemoStudent = {
   group: GroupKey | null;
   profile: StudentProfile;
   electives: ElectiveCode[];
+  /**
+   * Llegó este mes al curso de Excel: por admisiones («admisiones») o comprándolo en el catálogo («catalogo»).
+   * La semilla le pone la fecha de entrada dentro del mes en curso y solo le cuenta lo que pasó desde entonces.
+   */
+  recent?: "admisiones" | "catalogo";
 };
 export type DemoGuardian = { name: string; email: string; phone: string; studentEmail: string; relationship: "MOTHER" | "FATHER" | "LEGAL_GUARDIAN" };
 
@@ -201,7 +206,14 @@ const NAMED_ELECTIVES: Record<string, ElectiveCode[]> = {
   [mail("jose.fernandez")]: ["MER-101"],
 };
 
-/** 120 estudiantes: 30 + 28 en Enfermería, 30 + 26 en Contabilidad y 6 que solo toman Excel. */
+/** Tres que entraron este mes a Excel: uno por admisiones y dos que lo compraron en el catálogo. */
+export const RECENT_STUDENTS: DemoStudent[] = [
+  { name: "Rocío Almánzar Peña", email: mail("rocio.almanzar"), phone: "829-555-0409", track: "EXCEL", group: null, profile: "regular", electives: ["EXC-100"], recent: "admisiones" },
+  { name: "Wáscar Rafael Tejada", email: mail("wascar.tejada"), phone: "809-555-0407", track: "EXCEL", group: null, profile: "regular", electives: ["EXC-100"], recent: "catalogo" },
+  { name: "Nicauris Pichardo Sosa", email: mail("nicauris.pichardo"), phone: "849-555-0408", track: "EXCEL", group: null, profile: "destacado", electives: ["EXC-100"], recent: "catalogo" },
+];
+
+/** 123 estudiantes: 30 + 28 en Enfermería, 30 + 26 en Contabilidad, 6 que solo toman Excel y 3 que llegaron este mes. */
 export const STUDENTS: DemoStudent[] = [
   ...NAMED.map((student, index): DemoStudent => {
     const group: GroupKey | null = student.track === "ENF" ? "ENF-M" : student.track === "CON" ? "CON-N" : null;
@@ -209,4 +221,5 @@ export const STUDENTS: DemoStudent[] = [
     return { ...student, group, electives: [...new Set([...student.electives, ...extra])] };
   }),
   ...generated(),
+  ...RECENT_STUDENTS,
 ];

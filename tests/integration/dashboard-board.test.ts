@@ -3,11 +3,12 @@ import { after, before, test } from "node:test";
 import { db } from "@/lib/db";
 import { getEffectiveCapabilities } from "@/lib/authorization";
 import { getAdmissionsFunnel } from "@/server/dashboard/admissions";
+import { getBoardAttention } from "@/server/dashboard/attention";
 import { resolveBoardContext, type BoardActor } from "@/server/dashboard/context";
 import { getCourseHealth, getTeacherLoad } from "@/server/dashboard/courses";
 import { compare, formatPercent } from "@/server/dashboard/format";
 import { getBoardIndicators } from "@/server/dashboard/indicators";
-import { resolveRange, trendWeeks } from "@/server/dashboard/range";
+import { periodProgress, periodStatusText, resolveRange, trendWeeks } from "@/server/dashboard/range";
 import { getAtRiskStudents } from "@/server/dashboard/risk";
 import { ensureSeed } from "./setup";
 
@@ -242,6 +243,44 @@ test("ventanas: semana desde el lunes, mes desde el día 1 y comparación a la m
   assert.equal(formatPercent(82.4), "82 %");
   assert.equal(formatPercent(null), "—");
   assert.equal(compare(82.4, 80.4, "la semana pasada", { kind: "points", higherIsBetter: true })?.text, "2 puntos más que la semana pasada");
+});
+
+test("encabezado del período: semanas en un cuatrimestre, el año en un período largo", () => {
+  const tz = "America/Santo_Domingo";
+  const term = { id: "t", name: "Cuatrimestre", startDate: at("2026-08-10T04:00:00Z"), endDate: at("2026-12-12T04:00:00Z") };
+  const progress = periodProgress(term, NOW);
+  assert.equal(progress?.long, false);
+  assert.equal(periodStatusText(term, progress, tz), "semana 10 de 18");
+  // Un año escolar de 78 semanas no dice «semana 41 de 78».
+  const school = { id: "y", name: "Año escolar", startDate: at("2026-01-05T04:00:00Z"), endDate: at("2027-06-30T04:00:00Z") };
+  const long = periodProgress(school, NOW);
+  assert.equal(long?.long, true);
+  assert.equal(periodStatusText(school, long, tz), "Período 2026–2027");
+  const year = { id: "z", name: "Año 2026", startDate: at("2026-01-05T04:00:00Z"), endDate: at("2026-12-18T04:00:00Z") };
+  assert.equal(periodStatusText(year, periodProgress(year, NOW), tz), "Período 2026");
+  assert.equal(periodStatusText(term, periodProgress(term, at("2027-01-10T12:00:00Z")), tz), "ya terminó");
+  assert.equal(periodStatusText(term, periodProgress(term, at("2026-08-01T12:00:00Z")), tz), "todavía no empieza");
+});
+
+test("requiere tu atención: un resumen por tema con lo que ya calcula el tablero", async () => {
+  const ctx = await contextOf(adminA, "semana");
+  // Las 2 entregas por calificar llegaron hace 2 días: todavía no están atrasadas.
+  assert.deepEqual(await getBoardAttention(ctx), {
+    grading: null,
+    risk: { total: 3, top: [{ signal: "asistencia", count: 1 }, { signal: "tareas", count: 1 }] },
+    charges: { charges: 1, students: 1 },
+    admissions: { waiting: 2, oldestDays: 8 },
+  });
+  // Ocho días después, esas 2 entregas (del 12 y del 14) ya esperan más de 7 días.
+  const later = await resolveBoardContext(adminA, await getEffectiveCapabilities(TA, "ADMIN"), "semana", new Date(NOW.getTime() + 8 * 24 * 60 * 60_000));
+  assert.deepEqual((await getBoardAttention(later)).grading, { waiting: 2, courses: 1 });
+  // Coordinación: sin cobros; B no ve nada de A.
+  const coord = await getBoardAttention(await contextOf(coordA, "semana"));
+  assert.equal(coord.charges, null);
+  assert.equal(coord.risk?.total, 2);
+  const b = await getBoardAttention(await contextOf(adminB, "semana"));
+  assert.equal(b.admissions?.waiting, 1);
+  assert.ok(!JSON.stringify(b).includes("tb_a_"));
 });
 
 test("tablero del administrador: cada cifra cuadra con lo sembrado", async () => {
