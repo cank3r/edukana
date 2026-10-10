@@ -1,0 +1,127 @@
+
+> edukana@0.1.0 build
+> next build
+
+▲ Next.js 16.4.0 (Turbopack)
+✓ Running next.config.ts took 22ms
+⚠ No build cache found. Please configure build caching for faster rebuilds. Read more: https://nextjs.org/docs/messages/no-cache
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 6.9s
+  Running TypeScript ...
+  Finished TypeScript in 14.0s ...
+  Collecting page data using 3 workers ...
+  Generating static pages using 3 workers (0/19) ...
+  Generating static pages using 3 workers (4/19) 
+  Generating static pages using 3 workers (9/19) 
+  Generating static pages using 3 workers (14/19) 
+✓ Generating static pages using 3 workers (19/19) in 196ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ○ /_not-found
+├ ƒ /api/announcement-assets
+├ ƒ /api/assets
+├ ƒ /api/assets/[assetId]
+├ ƒ /api/auth/[...nextauth]
+├ ƒ /api/avatar
+├ ƒ /api/certificados/[code]
+├ ƒ /api/local-storage
+├ ƒ /api/pilot-preflight
+├ ƒ /api/public-images/[assetId]
+├ ƒ /api/uploads
+├ ƒ /api/uploads/[assetId]
+├ ƒ /catalogo/[institutionSlug]
+├ ƒ /catalogo/[institutionSlug]/[courseId]
+├ ƒ /certificados
+├ ƒ /certificados/[code]
+├ ƒ /dashboard
+├ ƒ /dashboard/admisiones
+├ ƒ /dashboard/admisiones/[leadId]
+├ ƒ /dashboard/analitica
+├ ƒ /dashboard/analitica/descargar
+├ ƒ /dashboard/analitica/riesgo
+├ ƒ /dashboard/aula
+├ ƒ /dashboard/aula/[courseId]
+├ ƒ /dashboard/aula/[courseId]/asistencia
+├ ƒ /dashboard/aula/[courseId]/asistencia/descargar
+├ ƒ /dashboard/aula/[courseId]/calificaciones
+├ ƒ /dashboard/aula/[courseId]/calificaciones/descargar
+├ ƒ /dashboard/aula/[courseId]/certificados
+├ ƒ /dashboard/aula/[courseId]/clases
+├ ƒ /dashboard/aula/[courseId]/contenido
+├ ƒ /dashboard/aula/[courseId]/editar
+├ ƒ /dashboard/aula/[courseId]/estudiantes
+├ ƒ /dashboard/aula/[courseId]/estudiantes/[enrollmentId]
+├ ƒ /dashboard/aula/[courseId]/examenes
+├ ƒ /dashboard/aula/[courseId]/examenes/[examId]
+├ ƒ /dashboard/aula/[courseId]/examenes/[examId]/resultados
+├ ƒ /dashboard/aula/[courseId]/examenes/nuevo
+├ ƒ /dashboard/aula/[courseId]/generar-preguntas
+├ ƒ /dashboard/aula/[courseId]/horario
+├ ƒ /dashboard/aula/[courseId]/leccion/[lessonId]
+├ ƒ /dashboard/aula/[courseId]/mis-notas
+├ ƒ /dashboard/aula/[courseId]/preguntas
+├ ƒ /dashboard/aula/[courseId]/preguntas/[questionId]
+├ ƒ /dashboard/aula/[courseId]/preguntas/nueva
+├ ƒ /dashboard/aula/[courseId]/presentar
+├ ƒ /dashboard/aula/[courseId]/presentar/[examId]
+├ ƒ /dashboard/aula/[courseId]/presentar/[examId]/resultado
+├ ƒ /dashboard/aula/[courseId]/tareas
+├ ƒ /dashboard/aula/[courseId]/tareas/[assignmentId]
+├ ƒ /dashboard/aula/nuevo
+├ ƒ /dashboard/calendario
+├ ƒ /dashboard/comunidad
+├ ƒ /dashboard/configuracion
+├ ƒ /dashboard/configuracion/institucion
+├ ƒ /dashboard/configuracion/periodos
+├ ƒ /dashboard/configuracion/puesta-en-marcha
+├ ƒ /dashboard/configuracion/roles
+├ ƒ /dashboard/configuracion/tutores
+├ ƒ /dashboard/configuracion/unidades
+├ ƒ /dashboard/gestion
+├ ƒ /dashboard/gestion/accesos
+├ ƒ /dashboard/gestion/estudiantes/[studentId]
+├ ƒ /dashboard/gestion/grupos
+├ ƒ /dashboard/gestion/grupos/[groupId]
+├ ƒ /dashboard/gestion/personas
+├ ƒ /dashboard/gestion/personas/[userId]
+├ ƒ /dashboard/gestion/programas
+├ ƒ /dashboard/gestion/programas/[programId]
+├ ƒ /dashboard/hijos
+├ ƒ /dashboard/hijos/[studentId]
+├ ƒ /dashboard/horario
+├ ƒ /dashboard/mi-cuenta
+├ ƒ /dashboard/mi-cuenta/recibo
+├ ƒ /dashboard/mi-cuenta/recibo/[paymentId]
+├ ƒ /dashboard/mis-certificados
+├ ƒ /dashboard/notificaciones
+├ ƒ /dashboard/notificaciones/preferencias
+├ ƒ /dashboard/pagos
+├ ƒ /dashboard/pagos/recibo
+├ ƒ /dashboard/pagos/recibo/[paymentId]
+├ ƒ /dashboard/perfil
+├ ƒ /dashboard/portal
+├ ƒ /dashboard/ventas
+├ ƒ /elegir-institucion
+├ ƒ /ensenar
+├ ƒ /login
+├ ƒ /operador
+├ ƒ /operador/[institutionId]
+├ ƒ /operador/nueva
+├ ○ /recuperar
+├ ƒ /restablecer/[token]
+└ ƒ /setup
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

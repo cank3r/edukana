@@ -1,0 +1,49 @@
+
+> edukana@0.1.0 test:smoke:seed
+> node --require ./tests/integration/stub-server-only.cjs --import tsx tests/e2e/smoke/seed.ts
+
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+Semilla del recorrido lista: {
+  institutionId: 'cmv1opn2z0000fe3z6g393q67',
+  courseId: 'cmv1opn3u000nfe3zsgsgbg3s',
+  lessonIds: [
+    'cmv1opn4g000zfe3zzvodjfpv',
+    'cmv1opn4r0015fe3zrcdcdy2f',
+    'cmv1opn58001hfe3z4l4lpe2r',
+    'cmv1opn5j001nfe3zq5ezp1n5'
+  ],
+  assignmentId: 'cmv1opn6c0028fe3zozz7sjvs',
+  examId: 'cmv1opn6x002nfe3z7hwtaqr1',
+  questionIds: [
+    'cmv1opn6n002gfe3zalktljnd',
+    'cmv1opn6q002ife3z65ycttch',
+    'cmv1opn6s002kfe3zpv52vqnu'
+  ],
+  programId: 'cmv1opn7o0039fe3zyn96xl1f',
+  groupId: 'cmv1opn7w003ffe3zorxzsnxr',
+  announcementId: 'cmv1opn86003mfe3z43kzunc1',
+  studentIds: [ 'cmv1opn360009fe3zp1iahogx', 'cmv1opn38000cfe3zjqu2occ5' ],
+  gradedStudentIds: [ 'cmv1opn3a000ffe3zc40a6571', 'cmv1opn3b000ife3zeaseilwt' ],
+  finishedCourseId: 'cmv1opnb20055fe3zz736aal0',
+  certificateCode: 'EDU-73D935E1E334',
+  teacherId: 'cmv1opn350006fe3ztmz4r1qh'
+}

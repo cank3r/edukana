@@ -1,0 +1,1189 @@
+
+> edukana@0.1.0 test:integration
+> node --require ./tests/integration/stub-server-only.cjs --import tsx --test --test-concurrency=1 --test-reporter=spec "tests/integration/**/*.test.ts"
+
+✔ inicio del administrador: los números de A coinciden con conteos directos (113.659886ms)
+✔ inicio del administrador: los números de B no incluyen nada de A (28.523091ms)
+✔ inicio del administrador: una institución vacía devuelve ceros y avisa que falta el período (10.628967ms)
+✔ primeros pasos: no reaparecen en una institución que ya funciona por una invitación pendiente (20.307567ms)
+✔ inicio del administrador: un curso cuyos estudiantes lo completaron no cuenta como «sin estudiantes» (19.41405ms)
+✔ inicio del administrador: con el tiempo avisa del período vencido y de entregas sin calificar (6.798113ms)
+✔ crear, avanzar y retroceder de etapa deja cada cambio en el historial (122.004957ms)
+✔ convertir crea a la persona en A como estudiante y repetirlo no duplica (63.038335ms)
+prisma:error 
+Invalid `client.identity.upsert()` invocation in
+/home/runner/work/edukana/edukana/src/server/identity.ts:15:42
+
+  12  */
+  13 export async function ensureIdentity(client: Client, input: { email: string; passwordHash?: string | null }) {
+  14   const email = normalizeEmail(input.email);
+→ 15   const identity = await client.identity.upsert(
+Unique constraint failed on the fields: (`email`)
+✔ dos conversiones simultáneas de la misma solicitud crean una sola persona (37.902113ms)
+✔ un correo que ya es de alguien en A no falla: ofrece vincular y no crea otra persona (43.088786ms)
+✔ convertir con grupo respeta la institución y el cupo (40.941206ms)
+✔ otra institución y quien no tiene el permiso quedan fuera (25.383105ms)
+✔ borrar: una solicitud convertida se rechaza; una abierta se borra y queda registrado (13.997727ms)
+✔ una solicitud antigua con el vínculo dentro de documents se sigue leyendo como convertida (17.461502ms)
+✔ IA contexto: solo lecciones publicadas de capítulos publicados del curso inscrito (76.873431ms)
+✔ IA pregunta: responde con el curso, cita solo lecciones enviadas y no guarda el texto (27.495359ms)
+✔ IA pregunta: si no está en el curso o no cita, dice que le pregunte al docente (19.328849ms)
+✔ IA pregunta: sin acceso al curso no llama a la IA (9.66142ms)
+✔ IA: sin clave o apagada por la institución queda desactivada y no se llama (22.811665ms)
+✔ IA genera: el docente del curso recibe borradores validados; nada se guarda (38.440125ms)
+✔ IA guarda: las revisadas entran al banco por el camino existente y respetan permisos (21.843649ms)
+✔ IA límite: cuenta por persona y por hora (11.816244ms)
+✔ avisos: el autor corrige título, mensaje y fijado; queda en auditoría (60.527047ms)
+✔ avisos: datos no válidos se rechazan sin cambiar nada (2.101444ms)
+✔ avisos: otro docente no puede corregir ni borrar un aviso ajeno (3.487121ms)
+✔ avisos: quien gestiona todos los avisos puede corregir el de otra persona, pero no el de otra institución (6.075412ms)
+✔ avisos: borrar lo quita con sus destinatarios y no toca otros avisos (9.825346ms)
+✔ primeros pasos: se marcan solos según los datos y son por institución (47.387776ms)
+✔ direct action calls: expired session, wrong role, foreign tenant, and missing enrollment fail closed (86.936169ms)
+✔ direct action calls: session identity wins over forged IDs and permitted replacement preserves history (51.521401ms)
+✔ direct action calls: unpublished tasks/course, closed deadline, completed or withdrawn enrollment reject writes (29.03917ms)
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+✔ direct action calls: no-column corrections require a reason and graded work cannot be replaced (77.879828ms)
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+✔ direct action calls: linked corrections keep actor, reason and revision; unauthorized reviewers cannot write (72.609389ms)
+✔ direct action calls: a submission link cannot be silently lost through a text-only replacement (24.728892ms)
+✔ direct action calls: assignment publication is atomic and only course managers can change it (47.501886ms)
+✔ fechas: la hora local de la institución se guarda como el instante correcto y se lee igual (77.066379ms)
+✔ fechas: la fecha límite se dice en palabras (1.931597ms)
+✔ docente: crea una tarea en borrador con su columna de notas, la corrige y la publica (74.840754ms)
+✔ docente: una tarea sin entregas se borra sin motivo, junto con su columna de notas (16.311066ms)
+✔ acceso: docente de otro curso, estudiantes y personas de otra institución no gestionan la tarea (37.804639ms)
+✔ estudiante: entrega texto y al reenviar queda guardada la versión anterior (55.730561ms)
+✔ estudiante: no ve la entrega de otro, y quien no está inscrito o es de otra institución no entra (22.954912ms)
+✔ estudiante: después de la fecha límite solo entrega si la tarea acepta entregas tarde (38.354025ms)
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+✔ calificar: valida el rango, crea la nota en el libro y el estudiante ve nota y comentario (80.479201ms)
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+✔ corregir una nota: sin motivo se rechaza y con motivo queda en el historial (43.468505ms)
+✔ borrar con entregas o notas: conserva la historia incluso en un período sin publicar (21.778795ms)
+✔ entrega con enlaces: rechaza reemplazarla y conserva texto, enlace, fecha e historia (41.504045ms)
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+✔ privacidad: el listado y el detalle siguen la publicación y la nota vigente del libro (65.229019ms)
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+✔ una tarea sin columna conserva la nota y el comentario de su entrega (42.904911ms)
+✔ borrar también conserva borradores y notas sin entrega (27.446027ms)
+✔ la hoja del día trae a los inscritos en Presente y ofrece la clase en vivo como título (121.52525ms)
+✔ guardar y corregir la misma fecha no duplica (33.550997ms)
+✔ un estudiante no inscrito o de otra institución se rechaza y no se guarda nada (26.129913ms)
+✔ docente ajeno, otra institución y roles sin permiso: rechazados (39.215522ms)
+✔ fecha futura o inválida rechazada (9.175793ms)
+✔ porcentajes: la tardanza cuenta como asistencia y la justificada no suma ni resta (42.957521ms)
+✔ el estudiante solo ve lo suyo (18.834269ms)
+✔ CSV: BOM, comas y comillas escapadas, y celdas que parecen fórmula neutralizadas (6.760183ms)
+✔ quien se retiró conserva su registro; borrar una sesión quita solo ese día (37.281763ms)
+✔ catálogo: solo aparecen los cursos públicos, publicados y no archivados de esa institución (148.868078ms)
+✔ inscripción gratuita: crea la persona y la matrícula, invita, y repetirla no duplica (238.48425ms)
+✔ correo ya miembro: se inscribe sin duplicar a la persona; correo de otra institución reutiliza su identidad (54.328361ms)
+✔ protección: el campo trampa no crea nada y hay límite de solicitudes por correo (70.605786ms)
+prisma:error 
+Invalid `db.coupon.create()` invocation in
+/home/runner/work/edukana/edukana/src/server/catalog/coupons.ts:77:36
+
+  74 }
+  75 
+  76 try {
+→ 77   const coupon = await db.coupon.create(
+Unique constraint failed on the fields: (`institutionId`,`code`)
+✔ pedido con cupón: calcula el descuento y dos confirmaciones simultáneas no superan los usos (110.746929ms)
+✔ confirmar pago: activa a la persona, la inscribe una sola vez e invita una sola vez (35.734436ms)
+✔ cancelar: el pedido queda cancelado y ya no se puede confirmar (8.717347ms)
+✔ permisos: sin «gestionar cobros» no se ve ni se cambia nada (16.042802ms)
+✔ aislamiento: B no ve ni toca pedidos, cupones ni cursos de A (17.552494ms)
+✔ catálogo del panel: poner un curso en venta con precio en centavos (13.299674ms)
+✔ reseñas: solo quien está inscrito, de 1 a 5, y la suya se corrige sin duplicar (16.06151ms)
+✔ emitir exige matrícula de ese curso que cumpla los requisitos, y repetirlo no duplica (168.647053ms)
+✔ emitir a todos: solo a quienes cumplen y aún no lo tienen (32.387874ms)
+✔ marcar curso como completado hace que cumpla; se puede deshacer mientras no tenga certificado (47.077019ms)
+✔ un docente ajeno, un estudiante, un tutor y la otra institución no pueden gestionar certificados (48.834484ms)
+✔ el estudiante solo ve sus certificados (21.188861ms)
+✔ anular: pide motivo, deja constancia y el código deja de verificar (57.722999ms)
+✔ inicio del coordinador: entregas atrasadas, cursos por completar, docentes y avisos de su institución (123.429865ms)
+✔ inicio del coordinador: lo que pasa en A no mueve el inicio de B, y viceversa (33.872737ms)
+✔ capítulo: el docente del curso lo crea como borrador, lo corrige, lo publica y lo oculta (92.489223ms)
+✔ lección: crear, corregir, publicar y borrar; el video exige un enlace (44.258969ms)
+✔ reordenar capítulos: subir y bajar intercambia vecinos y el orden queda consecutivo (56.322617ms)
+✔ reordenar lecciones: solo dentro de su capítulo, consecutivo y sin duplicados (84.590856ms)
+✔ borrar capítulo: se borran sus lecciones y el avance registrado, y nada más (43.104812ms)
+✔ permisos: otro docente de A, un estudiante y cualquier usuario de B son rechazados sin cambiar nada (137.418596ms)
+✔ permisos: administración y coordinación de A gestionan cualquier curso de A; cada docente, solo el suyo (23.745056ms)
+✔ avance: publicar, ocultar, crear y borrar lecciones recalcula el avance de las matrículas activas (84.08038ms)
+✔ inscribir varios: crea las inscripciones y repetirlo no duplica (99.566014ms)
+✔ cupo: si no caben todos no inscribe a nadie, y dos operaciones simultáneas no lo superan (28.243337ms)
+✔ retirar conserva entregas y avance; reincorporar restaura (116.762477ms)
+✔ aislamiento: estudiantes, cursos e inscripciones de otra institución se rechazan (29.214459ms)
+✔ permiso: un docente ajeno al curso, un estudiante o un tutor no pueden gestionar sus inscritos (31.928135ms)
+✔ inscribir un grupo completo: entran sus estudiantes activos, es idempotente y respeta el cupo (29.840718ms)
+✔ se está quedando atrás: menos de la mitad del promedio con 3 o más inscritos, o 14 días sin actividad (0.343842ms)
+✔ crear: nace como borrador en la institución de quien actúa, con auditoría (72.018761ms)
+✔ crear: sin código ni cupo también funciona y valida el nombre (9.570037ms)
+✔ crear: se rechaza un docente o un período de otra institución, y a quien no es docente (5.477647ms)
+✔ crear: un docente crea cursos propios aunque pida otro docente (5.714211ms)
+✔ editar: corrige los datos en A; no alcanza cursos de B ni de otro docente (18.961705ms)
+✔ publicar y pasar a borrador: el estudiante inscrito solo ve el curso publicado (15.122056ms)
+✔ archivar oculta el curso al estudiante y a la lista de activos; restaurar lo devuelve (16.648685ms)
+✔ borrar: se rechaza con inscripciones y explica que se archive; un curso vacío sí se borra (44.620035ms)
+✔ nada de la institución B cambió (5.941143ms)
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 18,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 18,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 16,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 16,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+✔ demo: crea una institución completa, coherente y con datos realistas (5227.517491ms)
+✔ demo: repetirla no duplica nada (95.198885ms)
+✔ demo: quitarla borra solo la demostración y deja intactas A y B (128.399674ms)
+✔ fechas: la hora del reloj de la institución se convierte al instante real y vuelve igual (70.340589ms)
+✔ banco: crear guarda cada tipo en el formato que califica el examen (18.132428ms)
+✔ banco: rechaza preguntas incompletas con un mensaje claro (21.804236ms)
+✔ banco: buscar, filtrar por tipo, editar y borrar (37.739832ms)
+✔ permisos: docente ajeno, estudiante, tutor y usuarios de otra institución son rechazados (145.742714ms)
+✔ examen: no admite preguntas de otro curso ni de otra institución, ni repetidas (44.189676ms)
+✔ examen: se crea como borrador y no se publica sin preguntas ni con cero puntos (35.547649ms)
+✔ examen: guarda reglas, fechas en la hora de la institución, orden y puntos; se reordena mientras no tenga intentos (63.153857ms)
+✔ compatibilidad: un examen armado aquí se inicia, se envía y se autocalifica con src/server/exams.ts (81.153751ms)
+✔ con intentos: no cambian preguntas, puntos ni reglas; sí título, instrucciones, fechas y publicación (135.29177ms)
+✔ revisión: las respuestas cortas quedan pendientes hasta que quien gestiona el curso pone los puntos (91.122193ms)
+✔ aprobar: el porcentaje para aprobar se valida, se guarda, se corrige aunque haya intentos y llega a resultados (83.795953ms)
+✔ hidden exam: reload resumes only the owner's current attempt without extending time or revealing results (133.181698ms)
+✔ hidden exam: no absent, expired, undated or terminal attempt can authorize readers (47.793015ms)
+✔ hidden exam: resuming requires the owner's enrollment to stay active (25.968721ms)
+✔ first start holds the exam while editing waits, then the edit cannot change its questions or rules (164.155787ms)
+✔ editing first commits a complete question set before start reads snapshots and grading rules (67.597123ms)
+✔ presentar: la introducción no trae preguntas ni la clave, y dice cuántos intentos quedan (73.080313ms)
+✔ presentar: el intento en curso se puede retomar, sin la clave y sin alargar el tiempo (28.121793ms)
+✔ presentar: con revisión permitida el resultado trae su respuesta, la correcta y la explicación (24.046682ms)
+✔ presentar: sin revisión permitida el resultado no trae las correctas (21.457377ms)
+✔ presentar: quien no cursa el curso y quien es de otra institución no ven nada (28.203725ms)
+✔ presentar: nadie ve el intento ni el resultado de otro estudiante (29.685311ms)
+✔ presentar: la lista refleja intentos usados, mejor nota y por qué no se puede iniciar (68.933772ms)
+✔ presentar: vencer el reloj no muestra claves antes de confirmar el envío (54.170301ms)
+✔ presentar: con intentos restantes las correctas esperan; aparecen tras el último intento enviado (47.960176ms)
+✔ presentar: si el examen ya cerró, las correctas aparecen aunque queden intentos (22.174266ms)
+✔ presentar: con porcentaje para aprobar el resultado dice Aprobado o No aprobado solo con nota definitiva (71.871005ms)
+✔ examen: iniciar entrega las preguntas sin la clave y fija la hora límite en el servidor (85.850822ms)
+✔ examen: dos inicios simultáneos consumen un solo intento (22.752745ms)
+✔ examen: enviado a tiempo se califica y la nota queda marcada como automática (27.443416ms)
+✔ examen: dentro de la tolerancia se acepta; pasado el tiempo se rechaza y el intento se cierra (31.995234ms)
+✔ examen: dos envíos simultáneos producen una sola calificación (21.236535ms)
+✔ examen: agotados los intentos no se puede iniciar otro, y uno abandonado cuenta (20.39846ms)
+✔ examen: editar la pregunta del banco no cambia cómo se califica un examen ya creado (21.807772ms)
+✔ examen: con respuesta abierta queda en revisión y no publica nota automática (17.11425ms)
+✔ sin matrícula: un estudiante de la institución que no cursa el curso no puede iniciar (8.249663ms)
+✔ ID de otra institución: el examen ajeno no existe para un estudiante de B (6.881913ms)
+✔ ID de otro usuario: nadie puede enviar el intento de otra persona (12.983824ms)
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+✔ crear, pago parcial y pago total dejan los estados correctos; el sobrepago se rechaza (177.761676ms)
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+✔ un cargo con vencimiento pasado se muestra vencido sin cambiar lo guardado; el resumen suma en centavos (85.179929ms)
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+✔ editar no baja de lo pagado; anular exige motivo y conserva el historial; borrar solo sin pagos (93.989956ms)
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 2,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 2,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+✔ cargo a un grupo: uno por estudiante activo, y repetir la operación no duplica (57.914385ms)
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+✔ otra institución: estudiante, grupo, curso y cargo de B se rechazan (37.421638ms)
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+✔ el estudiante solo ve su cuenta; el tutor, solo con permiso del rol y del vínculo (91.916647ms)
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+✔ sin permiso para gestionar cobros todo se rechaza (55.742045ms)
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+✔ anular un pago: exige motivo, no borra nada y recalcula el cargo en la misma operación (116.716839ms)
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+✔ dos pagos parciales simultáneos nunca suman más que el saldo (30.373073ms)
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+✔ recibo: lo ven quien cobra, el estudiante dueño y su tutor autorizado; nadie más (89.792022ms)
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+✔ pagos antiguos del registro de auditoría: cuentan solo si el cargo no tiene filas de pago, y se copian al primer pago nuevo (58.112331ms)
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+✔ chargeBalances solo devuelve cargos de la institución pedida (22.490026ms)
+✔ historia de notas: la primera nota no genera revisión y repetirla no cambia nada (67.699217ms)
+✔ historia de notas: corregir una nota conserva valor anterior, valor nuevo, actor y fecha (8.634903ms)
+✔ historia de notas: con el período publicado, cambiar una nota exige motivo y sin él nada cambia (9.845043ms)
+✔ historia de entregas: reenviar conserva la versión anterior con su fecha (10.783114ms)
+✔ alta inicial: con SETUP_TOKEN definido solo vale el valor exacto (0.497128ms)
+✔ alta inicial: sin SETUP_TOKEN se conserva el comportamiento anterior y un valor corto se rechaza (0.495765ms)
+✔ URLs firmadas: un documento vive 60 segundos y un video 5 minutos como máximo (9.215017ms)
+✔ libro: solo quien gestiona el curso puede prepararlo; la configuración sencilla crea «General» al 100 % (88.397995ms)
+✔ actividad manual: nace visible salvo que se pida oculta, y ni un docente ajeno ni otra institución pueden crearla (22.381461ms)
+✔ nota: se pone dentro del rango y solo por quien gestiona el curso (33.088202ms)
+✔ nota: corregirla exige el motivo y deja la revisión con quién, cuándo, de cuánto a cuánto y por qué (43.475398ms)
+✔ exonerado: no cuenta en el promedio y se puede quitar (55.414708ms)
+✔ mis notas: el estudiante solo ve lo publicado y solo lo suyo (57.7819ms)
+✔ período publicado: hasta cambiar solo el comentario exige motivo (15.741112ms)
+✔ categorías: los pesos deben sumar 100 y no se quita una categoría con actividades (39.360493ms)
+✔ CSV: lleva BOM, escapa comas y comillas, y desactiva las fórmulas (10.425758ms)
+✔ actividad manual: se edita pero no se borra con notas; la que viene de una tarea no se toca aquí (38.714286ms)
+✔ actividad manual: una exoneración sin nota impide borrarla, aunque la matrícula esté retirada (15.201087ms)
+✔ actividad manual: una actividad vacía sí se borra (12.396906ms)
+✔ tutor: ve a su hijo vinculado y a nadie más (168.40258ms)
+✔ tutor: con los permisos de la semilla solo recibe lo académico y los avisos (15.130744ms)
+✔ tareas y notas: solo lo publicado y solo lo de su hijo (16.994311ms)
+✔ asistencia, clases y estado de cuenta: aparecen solo cuando el vínculo y el rol lo permiten (135.222396ms)
+✔ sin permiso académico en el vínculo: las secciones académicas llegan vacías (17.334124ms)
+✔ vínculo revocado, pendiente o cuenta suspendida: no devuelve nada (46.448519ms)
+✔ otra institución: el tutor de B no ve nada de A (26.519365ms)
+✔ quien no es tutor recibe vacío, aunque pregunte por sí mismo o diga ser tutor (21.013466ms)
+✔ registro: crea cuenta, espacio independiente, administrador que enseña y período; entra a su espacio (1152.382504ms)
+✔ registro: dos docentes independientes quedan aislados entre sí (369.395969ms)
+✔ institución normal: el administrador no puede ponerse a sí mismo como docente (4.008336ms)
+✔ correo existente: con contraseña errónea se rechaza; con la correcta se reutiliza la cuenta (26.444257ms)
+✔ registro: contraseña débil y datos incompletos se rechazan sin crear nada (5.923079ms)
+✔ límite de intentos: el mismo correo no puede registrar sin fin (1694.436889ms)
+✔ variable apagada: el alta se niega y la página /ensenar responde 404 (175.580271ms)
+✔ variable: activa por omisión en todos los entornos; solo false/0 la apaga (0.376173ms)
+✔ la semilla crea dos instituciones con la misma forma (58.441701ms)
+✔ docente: solo lee sus cursos de su institución (5.626265ms)
+✔ estudiante: solo lee cursos con matrícula; sin matrícula no lee ninguno (5.215228ms)
+✔ tutor: nunca obtiene alcance directo de cursos (1.042504ms)
+✔ administración: lee todos los cursos de su institución y ninguno de la otra (3.644705ms)
+✔ ID de otra institución: el alcance propio no encuentra el curso ajeno (2.268035ms)
+✔ ID de otro usuario: un docente no obtiene alcance de escritura sobre el curso de un colega (2.777506ms)
+✔ sin permiso: retirar course.manage a docentes de A les quita escritura y no afecta a B (3.588351ms)
+✔ avisos: el estudiante ve el aviso de su curso y nunca el de la otra institución (7.011402ms)
+✔ avisos: un estudiante sin matrícula no recibe el aviso dirigido al curso (3.921593ms)
+✔ avisos: el tutor lo recibe por su vínculo activo y deja de recibirlo al revocarlo (11.999585ms)
+✔ lección: el estudiante inscrito la ve con el temario publicado y su avance (81.042038ms)
+✔ siguiente y anterior respetan el orden y saltan lo no publicado (20.437564ms)
+✔ completar calcula el porcentaje sobre las lecciones publicadas y no cambia el estado de la matrícula (39.559475ms)
+✔ marcar dos veces es idempotente y conserva la fecha (22.705102ms)
+✔ marcar como no completada baja el avance; repetirlo no cambia nada (51.245004ms)
+✔ lo no publicado no se ve ni se completa (15.76772ms)
+✔ un estudiante no inscrito y un estudiante de otra institución no pueden ver ni completar (20.003873ms)
+✔ matrícula retirada no entra; matrícula completada consulta pero no cambia su avance (18.318843ms)
+✔ vista previa: solo quien gestiona el curso, y sin avance (19.090244ms)
+✔ video: solo se incrusta YouTube o Vimeo con dirección armada por nosotros (2.423406ms)
+✔ el docente guarda un video junto al texto y se guarda la dirección de inserción segura (117.01008ms)
+✔ se rechazan enlaces que no son de una fuente permitida y no se cambia nada (38.292106ms)
+✔ el estudiante inscrito ve el video; uno de otra institución no ve la lección ni puede cambiarla (46.88299ms)
+✔ crear: el docente programa una clase; la hora se interpreta en la zona de la institución y se guarda en UTC (101.143888ms)
+✔ crear: enlace que no es https, fecha pasada, duración no positiva y datos incompletos se rechazan sin guardar nada (27.236366ms)
+✔ repetir: N semanas crea N clases independientes a la misma hora local, también al cruzar un cambio de horario (20.718939ms)
+✔ solape: programar encima de otra clase del mismo curso avisa pero guarda (22.125034ms)
+✔ editar y borrar: quien gestiona el curso cambia la clase y luego la borra, con auditoría (35.721907ms)
+✔ permisos: docente ajeno, estudiante, tutor y cualquier persona de B no pueden crear, editar ni borrar en A (36.398601ms)
+✔ ver: el estudiante inscrito la ve en solo lectura; el no inscrito, el tutor y la gente de B no (55.728417ms)
+✔ agenda: cada quien ve lo suyo en los próximos 14 días y la de B no incluye nada de A (86.894037ms)
+✔ límite por correo: el intento siguiente al máximo de fallos se rechaza (80.941522ms)
+✔ límite por correo: no afecta a otro correo ni depende de mayúsculas o espacios (2.719146ms)
+✔ límite por correo: los fallos fuera de la ventana de 15 minutos ya no cuentan (1.462471ms)
+✔ límite por correo: un ingreso correcto no cuenta como fallo (11.925556ms)
+✔ límite por IP: muchos correos distintos desde una IP terminan bloqueando esa IP (32.490234ms)
+✔ los límites de login y de recuperación se cuentan por separado (1.413479ms)
+✔ la tabla no guarda correos ni IP en claro (2.036822ms)
+✔ IP del cliente: toma el primer valor de x-forwarded-for (17.399042ms)
+✔ login: correo y contraseña correctos entran a la institución de la persona (93.09272ms)
+[auth][credentials-rejected] { reason: 'password_mismatch', deploymentSha: 'local' }
+[auth][credentials-rejected] { reason: 'unknown_account', deploymentSha: 'local' }
+[auth][credentials-rejected] { reason: 'missing_password', deploymentSha: 'local' }
+✔ login: contraseña incorrecta, correo inexistente y cuenta sin contraseña dan el mismo resultado (1020.413497ms)
+[auth][credentials-rejected] {
+  reason: 'no_active_institution',
+  deploymentSha: 'local',
+  institutionCount: 0
+}
+✔ login: una membresía suspendida no entra aunque la contraseña sea correcta (9.507418ms)
+[auth][credentials-rejected] { reason: 'password_mismatch', deploymentSha: 'local' }
+[auth][credentials-rejected] { reason: 'password_mismatch', deploymentSha: 'local' }
+[auth][credentials-rejected] { reason: 'password_mismatch', deploymentSha: 'local' }
+[auth][credentials-rejected] { reason: 'password_mismatch', deploymentSha: 'local' }
+[auth][credentials-rejected] { reason: 'password_mismatch', deploymentSha: 'local' }
+[auth][credentials-rejected] { reason: 'too_many_attempts', deploymentSha: 'local' }
+✔ login: tras el máximo de fallos, ni la contraseña correcta entra (28.746343ms)
+✔ identidad: el mismo correo en dos instituciones entra con una sola contraseña y puede elegir (13.721538ms)
+[auth][credentials-rejected] {
+  reason: 'no_active_institution',
+  deploymentSha: 'local',
+  institutionCount: 1
+}
+✔ identidad: pedir una institución a la que no pertenece no entra (8.037683ms)
+✔ identidad: con una membresía suspendida entra solo a la otra institución (11.146811ms)
+[auth][credentials-rejected] { reason: 'account_suspended', deploymentSha: 'local' }
+✔ identidad: una identidad suspendida no entra a ninguna institución (7.550277ms)
+✔ cambio de institución: solo hacia una membresía activa de la misma identidad (17.028549ms)
+✔ por omisión: sí para avisos, notas y cargos; no para lo demás (1.005406ms)
+✔ sin preferencia guardada manda el valor por omisión (0.250698ms)
+✔ la preferencia de la persona manda sobre el valor por omisión (0.14985ms)
+✔ quien notifica puede impedir el correo y un tipo desconocido nunca va por correo (0.156583ms)
+✔ cada rol ve solo lo que le puede llegar, con textos claros (0.925819ms)
+✔ sin preferencias guardadas: casillas con los valores por omisión de su rol (65.340331ms)
+✔ preferencia apagada: la notificación queda en la aplicación pero no se envía el correo (19.495706ms)
+✔ preferencia encendida para un tipo apagado por omisión: sí se envía (11.968003ms)
+✔ email: false de quien notifica gana a la preferencia; la inscripción nunca va por correo (11.769161ms)
+✔ guardar es idempotente: lo no marcado queda en «no» y lo que no es de su rol se ignora (24.332976ms)
+✔ aislamiento: cada quien cambia solo lo suyo; otra institución o una cuenta suspendida no puede (30.406636ms)
+✔ notify: solo personas activas de la institución, nunca de otra ni suspendidas (85.227978ms)
+✔ deliverEmails: máximo un lote por llamada y nunca a suspendidos aunque se pidan (4.961202ms)
+✔ leer: lista propia por páginas, conteo de no leídas y markRead solo sobre las propias (23.878806ms)
+✔ abrir una notificación propia la marca leída y devuelve solo rutas internas (5.282361ms)
+✔ agrupar por día en la zona de la institución (17.162409ms)
+✔ aviso publicado: a su audiencia (y tutores), sin el autor, sin suspendidos ni B; correo si son pocos (18.720449ms)
+✔ tarea: publicada a estudiantes activos; entrega al docente; nota al estudiante con correo (105.321909ms)
+✔ examen publicado: a los estudiantes activos del curso (39.539203ms)
+✔ clase en vivo: a los estudiantes, con la hora de la institución (correo solo si lo activan) (17.015106ms)
+deliverEmails: no se pudo enviar {
+  correlationId: '29bf7ca1-ac46-4bfe-a90b-456a7f7df5ac',
+  kind: 'live_class',
+  userId: 'nt_s1',
+  error: 'Error: proveedor caído'
+}
+deliverEmails: no se pudo enviar {
+  correlationId: '2e1c5edf-0ae9-4a22-ab9d-748449ad5ac4',
+  kind: 'live_class',
+  userId: 'nt_s2',
+  error: 'Error: proveedor caído'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'live_class',
+  count: 2,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+✔ un fallo del correo no rompe la acción y la notificación queda en la aplicación (31.221969ms)
+prisma:error 
+Invalid `prisma.$executeRawUnsafe()` invocation:
+
+
+Raw query failed. Code: `22012`. Message: `ERROR: division by zero`
+notificación dentro de la transacción falló {
+  correlationId: '7e05aa95-c751-460f-902e-29c81b091628',
+  label: 'enrollment',
+  error: PrismaClientKnownRequestError: 
+  Invalid `prisma.$executeRawUnsafe()` invocation:
+  
+  
+  Raw query failed. Code: `22012`. Message: `ERROR: division by zero`
+      at $n.handleRequestError (/home/runner/work/edukana/edukana/node_modules/@prisma/client/runtime/library.js:121:7315)
+      at $n.handleAndLogRequestError (/home/runner/work/edukana/edukana/node_modules/@prisma/client/runtime/library.js:121:6623)
+      at $n.request (/home/runner/work/edukana/edukana/node_modules/@prisma/client/runtime/library.js:121:6307)
+      at async l (/home/runner/work/edukana/edukana/node_modules/@prisma/client/runtime/library.js:130:9633)
+      at async Object.createMany (/home/runner/work/edukana/edukana/tests/integration/notifications.test.ts:306:49)
+      at async notify (/home/runner/work/edukana/edukana/src/server/notifications/index.ts:91:19)
+      at async withSavepoint (/home/runner/work/edukana/edukana/src/server/notifications/index.ts:229:20)
+      at async notifyWithinTransaction (/home/runner/work/edukana/edukana/src/server/notifications/index.ts:214:11)
+      at async <anonymous> (/home/runner/work/edukana/edukana/tests/integration/notifications.test.ts:308:21)
+      at async Proxy._transactionWithCallback (/home/runner/work/edukana/edukana/node_modules/@prisma/client/runtime/library.js:130:8000) {
+    code: 'P2010',
+    clientVersion: '5.22.0',
+    meta: { code: '22012', message: 'ERROR: division by zero' }
+  }
+}
+✔ un fallo al guardar dentro de la transacción no la tumba (16.004105ms)
+✔ certificado emitido: al estudiante (correo solo si lo activa) (45.874302ms)
+✔ inscripción (curso y grupo): al estudiante, solo en la aplicación (38.981853ms)
+✔ cargo creado: al estudiante, en la aplicación y por correo (también en lote, tras confirmar) (40.553125ms)
+✔ quien no es operador no ve el panel ni puede reenviar invitaciones (90.106708ms)
+✔ el listado trae todas las instituciones con sus propios conteos (10.22057ms)
+✔ el detalle muestra solo los administradores de esa institución y su invitación (26.642075ms)
+✔ reenviar la invitación usa el envío de invitaciones y solo alcanza al administrador de esa institución (21.069415ms)
+✔ color: normaliza, valida y oscurece lo que no se lee con letras blancas (1.525668ms)
+✔ color: solo quien administra lo cambia, en su institución, y se puede volver al de Edukana (27.739325ms)
+✔ inicio de sesión con marca: identificador existente muestra su marca; uno desconocido, nada (10.58036ms)
+✔ identificador sugerido a partir del nombre (0.583229ms)
+✔ mis datos: guarda mi nombre y mi teléfono y deja constancia (90.700023ms)
+✔ mis datos: rechaza nombre corto o teléfono largo sin guardar (8.006377ms)
+✔ mis datos: un id que no es de la institución de la sesión no cambia a nadie (9.413501ms)
+✔ contraseña: la actual incorrecta se rechaza sin cambiar nada (23.551269ms)
+✔ contraseña: una nueva débil o igual a la actual se rechaza sin cambiar nada (23.648766ms)
+[auth][credentials-rejected] { reason: 'password_mismatch', deploymentSha: 'local' }
+✔ contraseña: el cambio correcto deja entrar con la nueva y cierra la sesión anterior (1041.179125ms)
+✔ contraseña: una cuenta que aún no tiene contraseña recibe la indicación de recuperarla (9.213543ms)
+✔ contraseña: tras varios intentos fallidos con la actual se pide esperar (36.786846ms)
+✔ tareas: expired sessions cannot submit or grade; no service executes (278.804557ms)
+✔ tareas: only an authorized student reaches the submission service (1.227021ms)
+✔ tareas: session identity and every submission field reach the service unchanged apart from its documented trimming (1.204489ms)
+✔ tareas: a graded re-submission rejection is preserved and does not refresh (0.368418ms)
+✔ tareas: successful re-submission refreshes both canonical and course routes (0.58414ms)
+✔ tareas: students and parents cannot call gradeSubmissionAction directly (0.359842ms)
+✔ tareas: grade, feedback, and correction reason are delegated without score coercion (0.491077ms)
+✔ tareas: missing correction reason and blank score stay blank for canonical validation (0.322833ms)
+✔ tareas: publication reads only its own fields and preserves failure without fallback (0.542833ms)
+✔ tareas: students and parents cannot publish; no service executes (0.426397ms)
+✔ estudiante: la portada enlaza a sus áreas sin leer evaluaciones ni ofrecer herramientas de gestión (18.052066ms)
+✔ estudiante: «Opinar sobre este curso» solo si el curso está en el catálogo público (12.258439ms)
+✔ estudiante con el curso completado: aviso de solo consulta y acceso a sus resultados (6.117212ms)
+✔ alcance: otra institución, inscripción retirada, sin permiso, tutor u otro docente no ven el curso (1.229926ms)
+✔ docente: ve las áreas de gestión y el horario, no las vistas del estudiante (8.179192ms)
+✔ the linked timed list leads to the real intro and preserves ongoing/retry/result navigation (16.681587ms)
+✔ blocked starts expose details and history only, including exhausted and completed courses (4.639202ms)
+✔ empty, foreign and non-student timed lists do not offer new attempts (2.071668ms)
+✔ recuperación: un correo desconocido no envía nada, no crea enlaces y no falla (72.75831ms)
+✔ recuperación: una cuenta suspendida no recibe enlace (7.596784ms)
+✔ recuperación: el enlace cambia la contraseña, sirve una sola vez e invalida las sesiones abiertas (1046.651352ms)
+✔ recuperación: dos usos simultáneos del mismo enlace cambian la contraseña una sola vez (685.363491ms)
+✔ recuperación: un enlace vencido o inventado se rechaza con el mismo mensaje (693.516064ms)
+✔ recuperación: una contraseña débil se rechaza sin consumir el enlace (347.006125ms)
+✔ recuperación: el mismo correo en dos instituciones recibe un solo enlace y la contraseña vale en ambas (1031.330554ms)
+[auth][credentials-rejected] { reason: 'missing_password', deploymentSha: 'local' }
+✔ recuperación: cuenta importada sin contraseña la define con el enlace y luego entra (1360.441882ms)
+✔ recuperación: las solicitudes repetidas para un correo dejan de enviar correos al llegar al límite (29.895479ms)
+✔ invitación: quien no tiene contraseña recibe un enlace de 7 días con el que la crea y entra (774.992112ms)
+✔ invitación: el enlace vence a los 7 días (351.064332ms)
+✔ invitación: quien ya tiene contraseña recibe un aviso sin enlace y su contraseña no cambia (11.1681ms)
+✔ invitación: no alcanza a personas de otra institución ni a suspendidas (4.053171ms)
+✔ invitación masiva: invita a los pendientes de la institución y repetirla no reenvía (23.452559ms)
+sendInvitations: no se pudo enviar {
+  correlationId: '764043b5-4c9d-4a42-a1b2-e857cc4c500e',
+  userId: 'b_student',
+  error: Error: proveedor caído
+      at Object.send (/home/runner/work/edukana/edukana/tests/integration/people-access.test.ts:101:13)
+      at sendInvitations (/home/runner/work/edukana/edukana/src/server/people/invitations.ts:58:32)
+      at async TestContext.<anonymous> (/home/runner/work/edukana/edukana/tests/integration/people-access.test.ts:106:20)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+}
+✔ invitación masiva: si el correo falla, lo informa y las personas siguen pendientes (13.1059ms)
+[auth][credentials-rejected] {
+  reason: 'no_active_institution',
+  deploymentSha: 'local',
+  institutionCount: 0
+}
+✔ suspender: corta la sesión abierta y el login en esa institución; reactivar los devuelve (33.430713ms)
+✔ suspender: en una institución no quita el acceso a la otra (15.193924ms)
+✔ suspender: reglas — motivo obligatorio, no a uno mismo, no a otra institución, no al último administrador (22.655247ms)
+✔ operador: solo los correos de PLATFORM_OPERATOR_EMAILS; sin la variable, nadie (1.680679ms)
+prisma:error 
+Invalid `tx.institution.create()` invocation in
+/home/runner/work/edukana/edukana/src/server/platform/institutions.ts:53:48
+
+  50 let created: { institutionId: string; adminUserId: string };
+  51 try {
+  52   created = await db.$transaction(async (tx) => {
+→ 53     const institution = await tx.institution.create(
+Unique constraint failed on the fields: (`slug`)
+✔ alta de institución: crea institución, administrador sin contraseña e invitación; aislada de las demás (704.111121ms)
+✔ alta de institución: un administrador que ya existe en otra conserva su contraseña y gana una segunda membresía (15.558028ms)
+✔ editar persona: corrige nombre, teléfono y rol dentro de la institución, con las reglas de administrador (39.009687ms)
+✔ crear persona: queda en la institución de quien la crea, sin contraseña, con el correo normalizado y registrada (69.39549ms)
+✔ crear persona: un correo que ya existe en la institución se rechaza con un mensaje claro (6.220952ms)
+✔ crear persona: datos incompletos o mal escritos no crean nada (3.18148ms)
+✔ crear persona: si el correo ya existe en otra institución, reutiliza la identidad y no toca su contraseña (25.942236ms)
+✔ crear persona: solo un administrador puede crear a otro administrador (8.376746ms)
+✔ crear persona: no se puede crear en otra institución (8.369595ms)
+sendInvitations: no se pudo enviar {
+  correlationId: '38e867c7-912b-42c0-8e57-f8b5ece65537',
+  userId: 'cmv1ko4hf000psj6uum5ki21e',
+  error: Error: proveedor caído
+      at Object.send (/home/runner/work/edukana/edukana/tests/integration/people-create.test.ts:115:13)
+      at sendInvitations (/home/runner/work/edukana/edukana/src/server/people/invitations.ts:58:32)
+      at async TestContext.<anonymous> (/home/runner/work/edukana/edukana/tests/integration/people-create.test.ts:120:19)
+      at async Test.run (node:internal/test_runner/test:1054:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+}
+✔ crear persona con invitación: recibe un correo con el enlace para crear su contraseña (22.977117ms)
+✔ ficha: un administrador de B no ve la ficha de ninguna persona de A (61.442843ms)
+✔ ficha: estudiante con sus cursos y sus tutores; tutor con sus hijos; docente con sus cursos (37.32973ms)
+✔ ficha: un docente solo abre a estudiantes de sus cursos y no ve sus tutores (11.763112ms)
+✔ ficha: el acceso distingue sin invitar, invitación pendiente, vencida y contraseña creada (22.687736ms)
+✔ CSV: lee comillas, comas dentro de un campo, saltos de línea, BOM y punto y coma (56.684748ms)
+✔ CSV de salida: neutraliza fórmulas para que Excel no las ejecute (0.464688ms)
+✔ personas: acepta encabezados en español con tildes y asigna Estudiante por defecto (1.058176ms)
+✔ personas: reporta cada fila rechazada con su número y motivo, y conserva las válidas (0.815032ms)
+✔ personas: sin columnas de nombre y correo no procesa nada y lo explica (0.219059ms)
+✔ personas: nadie puede importarse como administrador (0.189945ms)
+✔ importación: 1,600 estudiantes se crean en la institución correcta y repetir el archivo no duplica (459.737888ms)
+✔ importación: no modifica una cuenta que ya existía con ese correo (7.570834ms)
+✔ importación: las cuentas nacen sin contraseña y activas, listas para el enlace de activación (1.789742ms)
+✔ importación: cada cuenta nueva queda enlazada a una identidad con su mismo correo (3.211836ms)
+✔ importación: una persona que ya existe en otra institución conserva su identidad y su contraseña (8.135948ms)
+✔ períodos: crear, listar con estado, editar y borrar (114.649295ms)
+✔ períodos: el estado sale de las fechas y de la marca de actual (0.274122ms)
+✔ períodos: fechas invertidas, imposibles o nombre vacío se rechazan sin guardar nada (11.284698ms)
+✔ períodos: si las fechas se cruzan con otro avisa pero guarda (28.414569ms)
+✔ períodos: marcar como actual deja uno solo en la institución y no toca la otra (41.562859ms)
+✔ períodos: el primero de una institución queda como actual (35.137811ms)
+✔ períodos: no se borra uno con cursos ni con cobros, y se explica por qué (19.805767ms)
+✔ períodos: sin permiso o desde otra institución no se puede crear, editar, marcar ni borrar (33.726385ms)
+✔ institución: cambiar los datos de A no toca B ni los datos internos de A (15.132141ms)
+✔ institución: zona horaria, tipo, idioma o nombre inválidos se rechazan sin guardar (5.990905ms)
+✔ institución: quien no tiene el permiso no cambia nada, y el administrador de B solo cambia B (13.429661ms)
+✔ institución: el selector ofrece primero América Latina y siempre incluye la zona actual (4.561226ms)
+✔ portal reader uses corrected linked grades, including zero (231.026272ms)
+✔ published manual grades and exemptions appear without a Submission and contain no exempt score (0.773083ms)
+✔ a missing, cleared, other-student or other-institution entry never falls back to a Submission grade (0.740442ms)
+✔ a malformed linked item fails closed without stale fallback (0.814129ms)
+✔ unlinked grades require own graded submission; drafts and another student's work stay private (0.824609ms)
+✔ task reader preserves tenant, enrollment, course publication and task publication gates (0.539918ms)
+✔ the actual portal retains both STUDENT role and capability checks before reading data (1.080948ms)
+✔ portal: hidden linked grades suppress stale submission scores and exemption state (100.700674ms)
+✔ portal: linked correction and zero come from the exact enrollment's entry (22.16953ms)
+✔ portal: published manual grades and exemptions do not require a submission (16.492101ms)
+✔ portal: cleared, foreign-institution and missing entries cannot use a stale submission (20.644672ms)
+✔ portal: unlinked zero is visible, but an ungraded or draft submission score is private (21.242158ms)
+✔ portal: student, tenant, publication and enrollment gates do not expand task access (26.834829ms)
+prisma:error 
+Invalid `tx.program.create()` invocation in
+/home/runner/work/edukana/edukana/src/server/academic/programs.ts:59:40
+
+  56 const data = parsed.data;
+  57 try {
+  58   const programId = await db.$transaction(async (tx) => {
+→ 59     const program = await tx.program.create(
+Unique constraint failed on the fields: (`institutionId`,`name`)
+✔ programa: crear, editar, nombre repetido y aislamiento entre instituciones (127.443173ms)
+✔ programa: agregar cursos de la institución, sin repetir, reordenar con Subir/Bajar y quitar (52.923725ms)
+prisma:error 
+Invalid `tx.studentGroup.create()` invocation in
+/home/runner/work/edukana/edukana/src/server/academic/groups.ts:121:43
+
+  118 try {
+  119   return await db.$transaction(async (tx) => {
+  120     if (!(await programBelongs(tx, actor.institutionId, data.programId))) return fail("Ese programa ya no existe. Elige otro o deja el grupo sin programa.");
+→ 121     const group = await tx.studentGroup.create(
+Unique constraint failed on the fields: (`institutionId`,`name`)
+✔ grupo: crear, validar fechas y cupo, editar; borrar el programa deja al grupo sin programa (55.367378ms)
+✔ estudiantes del grupo: solo estudiantes activos de la misma institución y respetando el cupo (71.049949ms)
+✔ cursos del grupo: de la misma institución, sin repetir, y todos los del programa de una vez (50.041463ms)
+✔ inscribir al grupo: crea lo que falta, es idempotente, no reactiva retirados y borrar el grupo conserva las matrículas (77.184682ms)
+✔ inscribir al grupo: un curso sin cupo para todos no se toca y los demás sí; un suspendido no se inscribe (56.036426ms)
+✔ inscribir al grupo: dos ejecuciones simultáneas no duplican ni pasan el cupo del curso (76.235527ms)
+✔ nada de la institución B cambió y la semilla de A quedó intacta (5.523773ms)
+✔ permisos: sin permiso de reportes se rechaza; el administrador ve todo (106.622098ms)
+✔ cifras de arriba: coinciden con conteos directos (53.275615ms)
+✔ cursos: una fila por curso con sus conteos, y se ordena por enlaces (16.433622ms)
+✔ estudiantes en riesgo: el motivo sale en palabras (9.220074ms)
+✔ docentes, grupos y programas (8.562444ms)
+✔ acceso: quién no puede entrar todavía, por rol (14.792267ms)
+✔ aislamiento: nada de B aparece en A, y un filtro ajeno se ignora (25.885426ms)
+✔ alcance limitado: quien solo ve sus cursos no ve los demás, ni cobros, ni accesos (26.209214ms)
+✔ cobros: no se devuelven sin permiso de cobros (20.207547ms)
+✔ CSV: marca UTF-8 y celdas escapadas (25.04592ms)
+✔ cobros: lo cobrado y lo pendiente salen de los pagos reales, sin contar los anulados (13.98521ms)
+✔ el docente agrega, cambia y borra un bloque; cada paso queda registrado (129.067604ms)
+✔ se rechaza el choque de docente y de aula; un bloque en otras fechas o en otra aula sí entra (51.618329ms)
+✔ avisa (sin bloquear) cuando estudiantes del curso tienen otra clase a esa hora (19.397392ms)
+✔ docente ajeno, estudiante y otra institución no cambian el horario; el estudiante inscrito lo ve sin editar (52.021644ms)
+✔ la semana del estudiante solo trae sus cursos, con sus clases en vivo; quien administra elige docente o aula (76.061572ms)
+✔ s1_security: un aviso creado sin audiencia no queda visible para toda la institución (50.442882ms)
+prisma:error 
+Invalid `db.paymentConcept.create()` invocation in
+/home/runner/work/edukana/edukana/tests/integration/schema.test.ts:22:23
+
+  19 
+  20 test("s1_security: un cobro no puede referenciar a un estudiante inexistente", async () => {
+  21   await assert.rejects(
+→ 22     db.paymentConcept.create(
+Foreign key constraint violated: `payment_concepts_studentId_fkey (index)`
+✔ s1_security: un cobro no puede referenciar a un estudiante inexistente (7.909085ms)
+✔ sesión viva: una cuenta activa obtiene rol e institución desde la base (53.840526ms)
+✔ sesión viva: un token anterior a S1, sin versión, sigue siendo válido mientras la versión sea 0 (2.412184ms)
+✔ sesión viva: una cuenta suspendida no tiene sesión aunque su token sea válido (2.082689ms)
+✔ sesión viva: suspender una cuenta corta el acceso en la siguiente lectura (6.962329ms)
+✔ sesión viva: el rol sale de la base y no del token (10.479645ms)
+✔ sesión viva: invalidar sesiones deja sin efecto los tokens anteriores y admite el nuevo (5.745287ms)
+✔ ID de otra institución: no se pueden invalidar sesiones de una cuenta ajena (2.761847ms)
+✔ sesión viva: un identificador inexistente o vacío no tiene sesión (1.482899ms)
+✔ identidad: suspender a una persona en una institución no le quita el acceso a la otra (5.759705ms)
+✔ identidad: suspender la identidad corta el acceso en todas sus instituciones (5.349019ms)
+✔ identidad: un token no sirve para una membresía de otra identidad (3.55639ms)
+✔ enlace de clase: solo https (84.353731ms)
+✔ inicio del estudiante: ve su siguiente lección, sus pendientes y sus clases (50.36112ms)
+✔ inicio del estudiante: no aparece nada de otra institución, de cursos sin matrícula, archivados o sin publicar (25.341984ms)
+✔ inicio del estudiante: sin matrícula ve el estado vacío; el examen sin intentos deja de estar pendiente (31.185288ms)
+✔ mis cursos: lista activos y completados con su nota final, sin archivados ni sin publicar (2.332706ms)
+✔ inicio del docente: ve solo sus cursos, sus entregas por calificar y sus clases (19.648036ms)
+✔ inicio del docente: cuenta los exámenes con respuestas cortas por revisar (20.590184ms)
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+✔ grading wins: resubmission cannot erase the grade or replace the graded content (152.918108ms)
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+✔ resubmission wins: in-flight grading rejects the new version even when timestamps match (81.702858ms)
+✔ concurrent first submissions serialize and preserve both submitted versions (62.991363ms)
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+✔ concurrent grading rechecks the committed grade and requires a correction reason (62.088494ms)
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+✔ concurrent grading with a reason records the actual preceding score in history and audit (72.629167ms)
+✔ reglas: tipo declarado, tamaño, firma de bytes y nombre saneado (55.806687ms)
+✔ entrega con archivo: solo el dueño y quien gestiona el curso pueden descargarlo (89.004602ms)
+✔ entrega: otro estudiante, otro docente u otra institución no pueden adjuntar a esta tarea (27.337583ms)
+✔ contenido que no corresponde a su tipo se rechaza y se borra (10.309219ms)
+✔ al reenviar, la versión anterior conserva sus archivos (36.305175ms)
+✔ la ruta pública solo sirve la imagen del curso o el logo en uso (36.045072ms)
+✔ permisos de imagen: solo quien edita el curso o la configuración de la institución (12.321548ms)
+✔ quitar la imagen limpia el campo y borra el archivo (47.217591ms)
+ℹ tests 426
+ℹ suites 0
+ℹ pass 426
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 58883.38006

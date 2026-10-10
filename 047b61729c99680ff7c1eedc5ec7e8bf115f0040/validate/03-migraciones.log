@@ -1,0 +1,44 @@
+Prisma schema loaded from prisma/schema.prisma
+Datasource "db": PostgreSQL database "edukana", schema "public" at "127.0.0.1:5432"
+
+11 migrations found in prisma/migrations
+
+Applying migration `20260930000000_alpha_baseline`
+Applying migration `20261001193000_real_edukana_mvp`
+Applying migration `20261003231500_role_capability_overrides`
+Applying migration `20261003234000_guardianship`
+Applying migration `20261004111500_advanced_announcements`
+Applying migration `20261004223000_announcement_image_mimes`
+Applying migration `20261008160000_s1_security`
+Applying migration `20261008190000_s1_grade_autograded`
+Applying migration `20261008220000_s2_identity`
+Applying migration `20261009040000_curso_completo`
+Applying migration `20261009120000_tanda_3`
+
+The following migration(s) have been applied:
+
+migrations/
+  └─ 20260930000000_alpha_baseline/
+    └─ migration.sql
+  └─ 20261001193000_real_edukana_mvp/
+    └─ migration.sql
+  └─ 20261003231500_role_capability_overrides/
+    └─ migration.sql
+  └─ 20261003234000_guardianship/
+    └─ migration.sql
+  └─ 20261004111500_advanced_announcements/
+    └─ migration.sql
+  └─ 20261004223000_announcement_image_mimes/
+    └─ migration.sql
+  └─ 20261008160000_s1_security/
+    └─ migration.sql
+  └─ 20261008190000_s1_grade_autograded/
+    └─ migration.sql
+  └─ 20261008220000_s2_identity/
+    └─ migration.sql
+  └─ 20261009040000_curso_completo/
+    └─ migration.sql
+  └─ 20261009120000_tanda_3/
+    └─ migration.sql
+      
+All migrations have been successfully applied.

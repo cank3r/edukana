@@ -1,0 +1,23 @@
+
+> edukana@0.1.0 test:smoke
+> playwright test --config=playwright.smoke.config.ts
+
+
+Running 14 tests using 1 worker
+
+[1/14] [movil] › tests/e2e/smoke/recorrido.smoke.ts:43:5 › administrador institucion nueva
+[2/14] [movil] › tests/e2e/smoke/recorrido.smoke.ts:60:5 › administrador
+[3/14] [movil] › tests/e2e/smoke/recorrido.smoke.ts:233:5 › docente
+[4/14] [movil] › tests/e2e/smoke/recorrido.smoke.ts:420:5 › estudiante
+[5/14] [movil] › tests/e2e/smoke/recorrido.smoke.ts:524:5 › tutor
+[6/14] [movil] › tests/e2e/smoke/recorrido.smoke.ts:548:5 › coordinador
+[7/14] [movil] › tests/e2e/smoke/recorrido.smoke.ts:570:5 › publico
+[8/14] [escritorio] › tests/e2e/smoke/recorrido.smoke.ts:43:5 › administrador institucion nueva
+[9/14] [escritorio] › tests/e2e/smoke/recorrido.smoke.ts:60:5 › administrador
+[10/14] [escritorio] › tests/e2e/smoke/recorrido.smoke.ts:233:5 › docente
+[11/14] [escritorio] › tests/e2e/smoke/recorrido.smoke.ts:420:5 › estudiante
+[12/14] [escritorio] › tests/e2e/smoke/recorrido.smoke.ts:524:5 › tutor
+[13/14] [escritorio] › tests/e2e/smoke/recorrido.smoke.ts:548:5 › coordinador
+[14/14] [escritorio] › tests/e2e/smoke/recorrido.smoke.ts:570:5 › publico
+Recorrido: 248 pantallas, 0 con defectos, 0 con advertencias.
+  14 passed (2.3m)
