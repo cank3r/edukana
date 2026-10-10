@@ -1,3 +1,5 @@
+import { getInstitutionFeatures, lockInstitutionSettings } from "@/server/platform/features";
+import { resolveInstitutionFeatures } from "@/server/platform/feature-policy";
 import { createHmac } from "node:crypto";
 import type { Prisma } from "@prisma/client";
 import { getEffectiveCapabilities } from "@/lib/authorization";
@@ -19,10 +21,7 @@ export const AI_OFF_MESSAGES = {
 
 /** La IA está encendida salvo que la institución la haya apagado (`settings.ai.enabled === false`). */
 export function institutionAiEnabled(settings: unknown): boolean {
-  if (!settings || typeof settings !== "object" || Array.isArray(settings)) return true;
-  const ai = (settings as Record<string, unknown>).ai;
-  if (!ai || typeof ai !== "object" || Array.isArray(ai)) return true;
-  return (ai as Record<string, unknown>).enabled !== false;
+  return resolveInstitutionFeatures(settings).ai;
 }
 
 /** Dice si esta persona puede usar la IA ahora y, si no, por qué (en palabras sencillas). */
@@ -30,11 +29,11 @@ export async function getAiAvailability(actor: AiActor): Promise<AiAvailability>
   const client = getAiClient();
   if (!client) return { ok: false, reason: "not-configured", message: AI_OFF_MESSAGES["not-configured"] };
   if (!actor.id || !actor.institutionId) return { ok: false, reason: "no-permission", message: AI_OFF_MESSAGES["no-permission"] };
-  const [institution, capabilities] = await Promise.all([
-    db.institution.findUnique({ where: { id: actor.institutionId }, select: { settings: true } }),
+  const [features, capabilities] = await Promise.all([
+    getInstitutionFeatures(actor.institutionId),
     getEffectiveCapabilities(actor.institutionId, actor.role),
   ]);
-  if (!institution || !institutionAiEnabled(institution.settings)) return { ok: false, reason: "institution-off", message: AI_OFF_MESSAGES["institution-off"] };
+  if (!features.ai) return { ok: false, reason: "institution-off", message: AI_OFF_MESSAGES["institution-off"] };
   if (!capabilities.has("ai.use")) return { ok: false, reason: "no-permission", message: AI_OFF_MESSAGES["no-permission"] };
   return { ok: true, client };
 }
@@ -44,8 +43,12 @@ export async function setInstitutionAiEnabled(actor: AiActor, enabled: boolean):
   const capabilities = await getEffectiveCapabilities(actor.institutionId, actor.role);
   if (!capabilities.has("tenant.settings.manage")) return { ok: false, message: "No tienes permiso para cambiar los datos de la institución." };
   return db.$transaction(async (tx) => {
+    await lockInstitutionSettings(tx, actor.institutionId);
     const institution = await tx.institution.findUnique({ where: { id: actor.institutionId }, select: { settings: true } });
     if (!institution) return { ok: false, message: "No encontramos tu institución. Vuelve a iniciar sesión." } as const;
+    if (resolveInstitutionFeatures(institution.settings).aiLocked) {
+      return { ok: false, message: "Desactivado por Edukana" } as const;
+    }
     const current = institution.settings && typeof institution.settings === "object" && !Array.isArray(institution.settings) ? (institution.settings as Prisma.JsonObject) : {};
     const previousAi = current.ai && typeof current.ai === "object" && !Array.isArray(current.ai) ? (current.ai as Prisma.JsonObject) : {};
     const before = institutionAiEnabled(current);
