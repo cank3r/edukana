@@ -1,0 +1,122 @@
+http://127.0.0.1:3000/dashboard
+
+Saltar al contenido principal
+Menú
+Llegaste al límite de tu plan: 30/30 estudiantes. Escríbenos para ampliarlo.
+
+Hola, Administrador
+
+Instituto Backoffice movil
+
+Sin período académico en curso.
+
+Agregar personas
+Crear un período
+Publicar un aviso
+Registrar un pago
+Ver reportes
+Primeros pasos
+
+Llevas 2 de 5. Sigue el orden: cada paso prepara el siguiente.
+
+Pendiente:
+1. Crea el período académico
+
+Es el tiempo en que se dan las clases, por ejemplo «Enero–Abril 2027». Los cursos se crean dentro de un período.
+
+Crear período
+
+Hecho:
+2. Agrega docentes y estudiantes
+
+Pendiente:
+3. Crea el primer curso
+
+Ponle nombre, elige su docente y el período.
+
+Pendiente:
+4. Inscribe estudiantes en el curso
+
+Un estudiante solo ve los cursos en los que está inscrito.
+
+Hecho:
+5. Envía las invitaciones
+
+Cómo va la institución
+
+Este mes, comparado con el mes pasado a esta misma altura.
+
+Esta semana
+Este mes
+Estudiantes activos
+—
+Se llenará cuando inscribas estudiantes en un curso.
+
+Asistencia promedio
+—
+Se llenará cuando los docentes registren asistencia.
+
+Avance promedio
+—
+Se llenará cuando haya estudiantes inscritos que completen lecciones.
+
+Entregas a tiempo
+—
+Se llenará cuando venza una tarea publicada este mes.
+
+Cobrado este mes
+—
+Se llenará cuando registres cargos y pagos.
+
+Requiere tu atención
+
+Empieza por los primeros pasos
+
+Cuando la institución funcione, aquí aparecerá lo que necesite tu atención.
+
+Últimas 8 semanas
+17 ago
+24 ago
+31 ago
+7 sept
+14 sept
+21 sept
+28 sept
+Hoy
+
+Se llenará cuando los docentes registren asistencia o venzan las primeras tareas.
+
+Estudiantes en riesgo
+
+Aquí aparecen quienes tienen asistencia menor de 80 %, 2 o más tareas vencidas, nota por debajo de 70 o un avance muy por debajo de su grupo.
+
+Ningún estudiante tiene señales de alerta por ahora. La lista se llena sola con la asistencia, las tareas y las notas.
+
+Docentes
+
+Lo que espera calificación y los cursos sin lecciones nuevas, asistencia ni notas en 14 días.
+
+Se llenará cuando haya cursos con un docente asignado.
+
+Cursos
+
+Primero los que necesitan atención. La asistencia es de este mes; en rojo lo que está por debajo de lo esperado.
+
+Se llenará cuando crees el primer curso y le inscribas estudiantes.
+
+Admisiones este mes
+Ver admisiones
+
+Solicitudes nuevas
+
+—
+
+En proceso
+
+—
+
+Inscritas
+
+—
+
+Se llenará cuando llegue la primera solicitud de ingreso este mes.

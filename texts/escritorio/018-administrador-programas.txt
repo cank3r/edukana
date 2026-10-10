@@ -1,0 +1,31 @@
+http://127.0.0.1:3000/dashboard/gestion/programas
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+Notificaciones
+Cerrar sesión
+C
+
+Carla Méndez
+
+admin@instituto-demo.test
+
+Inicio
+Personas
+Programas
+Programas
+
+Un programa es una carrera o diplomado: una lista ordenada de cursos. Es opcional; si solo ofreces cursos sueltos no necesitas crear ninguno.
+
+Crear programa
+Bachillerato Técnico
+1 curso · 1 grupo
+
+¿Ya tienes un programa? Arma un grupo de estudiantes

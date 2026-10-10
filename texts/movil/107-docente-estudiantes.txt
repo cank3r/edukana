@@ -1,0 +1,81 @@
+http://127.0.0.1:3000/dashboard/aula/cmv2jq3m8000oddvxn7ppjhxu/estudiantes
+
+Saltar al contenido principal
+3
+Menú
+Volver al curso
+Estudiantes
+
+Mira quién está inscrito, cuánto ha avanzado cada uno y quién necesita atención.
+
+Inscritos activos
+4
+Sin límite de cupos
+Avance promedio
+0%
+5 lecciones publicadas
+Se están quedando atrás
+0
+Nadie por ahora
+Retirados
+0
+Conservan su historial
+Inscribir estudiantes
+Inscritos (4)
+Buscar estudiante por nombre
+Ana Rodríguez
+
+ana@instituto-demo.test
+
+Activo
+
+0%
+Lecciones
+0 de 5
+Tareas
+0 de 1
+Última actividad
+Sin actividad
+Retirar del curso
+Juan Castillo
+
+juan@instituto-demo.test
+
+Activo
+
+0%
+Lecciones
+0 de 5
+Tareas
+1 de 1
+Última actividad
+10 oct 2026
+Retirar del curso
+Pedro Jiménez
+
+pedro@instituto-demo.test
+
+Activo
+
+0%
+Lecciones
+0 de 5
+Tareas
+0 de 1
+Última actividad
+Sin actividad
+Retirar del curso
+Rosa Almonte
+
+rosa@instituto-demo.test
+
+Activo
+
+0%
+Lecciones
+0 de 5
+Tareas
+1 de 1
+Última actividad
+10 oct 2026
+Retirar del curso

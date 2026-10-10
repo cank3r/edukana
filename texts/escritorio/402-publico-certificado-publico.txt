@@ -1,0 +1,24 @@
+http://127.0.0.1:3000/certificados/EDU-E95314C42A35
+
+INSTITUTO DEMO
+
+Certificado de finalización
+
+Se otorga a
+
+Ana Rodríguez
+
+por haber completado satisfactoriamente el curso
+
+Taller de Lectura
+
+Fecha de emisión
+10 de octubre de 2026
+Código de verificación
+EDU-E95314C42A35
+
+Emitido con Edukana. Cualquiera puede comprobarlo abriendo su enlace o escribiendo este código en Comprobar un certificado.
+
+Certificado auténtico y vigente
+
+Imprimir o guardar como PDF

@@ -1,0 +1,126 @@
+http://127.0.0.1:3000/dashboard/aula
+
+Saltar al contenido principal
+
+Instituto Técnico Demo
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+Notificaciones
+Cerrar sesión
+M
+
+Margarita Rosario Díaz
+
+directora@demo.edukana.do
+
+Inicio
+Cursos
+Cursos
+
+Crea cursos, entra a trabajar en ellos y archiva los que ya terminaron.
+
+Crear curso
+Buscar curso por nombre
+Buscar
+Activos
+Archivados
+Publicado
+CON-101
+Contabilidad Básica
+
+Ramón Peña Castillo · Cuatrimestre Agosto–Diciembre 2026
+
+56 estudiantes
+Abrir
+Publicado
+CON-102
+Matemática Financiera
+
+Yokasta Féliz Matos · Cuatrimestre Agosto–Diciembre 2026
+
+55 estudiantes
+Abrir
+Publicado
+CON-103
+Legislación Tributaria Dominicana
+
+Ramón Peña Castillo · Cuatrimestre Agosto–Diciembre 2026
+
+56 estudiantes
+Abrir
+Publicado
+ELE-101
+Electricidad Residencial
+
+Domingo Antonio Severino · Cuatrimestre Agosto–Diciembre 2026
+
+28 estudiantes
+Abrir
+Publicado
+ELE-102
+Instalaciones Solares Fotovoltaicas
+
+Fausto Rafael Then · Cuatrimestre Agosto–Diciembre 2026
+
+29 estudiantes
+Abrir
+Publicado
+ENF-101
+Anatomía y Fisiología Básica
+
+Rosa Almonte Guzmán · Cuatrimestre Agosto–Diciembre 2026
+
+58 estudiantes
+Abrir
+Publicado
+ENF-102
+Fundamentos de Enfermería
+
+Milagros Concepción Abreu · Cuatrimestre Agosto–Diciembre 2026
+
+58 estudiantes
+Abrir
+Publicado
+ENF-103
+Primeros Auxilios
+
+Julio César Ventura · Cuatrimestre Agosto–Diciembre 2026
+
+58 estudiantes
+Abrir
+Publicado
+EXC-100
+Excel para la Oficina
+
+Yokasta Féliz Matos · Cuatrimestre Agosto–Diciembre 2026
+
+11 estudiantes
+Abrir
+Publicado
+INF-101
+Mantenimiento de Computadoras
+
+Víctor Manuel Liriano · Cuatrimestre Agosto–Diciembre 2026
+
+28 estudiantes
+Abrir
+Publicado
+MER-101
+Mercadeo Digital para Emprendedores
+
+Lissette Marte Cabral · Cuatrimestre Agosto–Diciembre 2026
+
+28 estudiantes
+Abrir
+Publicado
+TUR-101
+Servicio al Turista y Hospitalidad
+
+Yahaira Nolasco Durán · Cuatrimestre Agosto–Diciembre 2026
+
+28 estudiantes
+Abrir

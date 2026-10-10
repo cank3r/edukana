@@ -1,0 +1,15 @@
+http://127.0.0.1:3000/ensenar
+
+Enseña tus cursos en Edukana
+
+Crea tu espacio en un minuto: arma tus cursos, véndelos con tu propia página y acompaña a tus estudiantes. No necesitas una institución.
+
+Tu nombre
+Correo electrónico
+Contraseña
+Al menos 10 caracteres, con letras y números. Si ya tienes cuenta en Edukana, usa tu contraseña de siempre.
+Nombre de tu espacio (opcional)
+Así lo verán tus estudiantes. Puedes cambiarlo después.
+Crear mi espacio de docente
+
+¿Ya tienes cuenta? Inicia sesión

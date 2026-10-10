@@ -1,0 +1,243 @@
+http://127.0.0.1:3000/dashboard/analitica/riesgo
+
+Saltar al contenido principal
+
+Instituto Técnico Demo
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+Admisiones
+Cobros
+Ventas
+Calendario
+Reportes
+Configuración
+Notificaciones
+Cerrar sesión
+M
+
+Margarita Rosario Díaz
+
+directora@demo.edukana.do
+
+Inicio
+Reportes
+Estudiantes en riesgo
+Estudiantes en riesgo
+
+Quienes reúnen señales de alerta en sus cursos activos. La asistencia se cuenta en este mes; las tareas vencidas, las notas y el avance, en todo el curso.
+
+Esta semana
+Este mes
+Este período
+Todas las señales
+Asistencia menor de 80 % (1)
+2 o más tareas vencidas (9)
+Nota por debajo de 70 (24)
+Avance muy bajo (19)
+Cargos vencidos (24)
+31 estudiantes
+Yesica Durán Espaillat
+
+5 cursos, asistencia 69 % (9 de 13), avance 20 %
+
+Asistencia 69 %
+20 tareas vencidas
+Nota 46 de 100 en Electricidad Residencial
+Avance 20 %, muy por debajo de su grupo
+2 cargos vencidos
+Kelvin Arias Matos
+
+4 cursos, asistencia 89 % (8 de 9), avance 17 %
+
+11 tareas vencidas
+Nota 48 de 100 en Electricidad Residencial
+Avance 17 %, muy por debajo de su grupo
+1 cargo vencido
+Cristian Ventura Pérez
+
+4 cursos, asistencia 90 % (9 de 10), avance 11 %
+
+11 tareas vencidas
+Nota 50 de 100 en Legislación Tributaria Dominicana
+Avance 11 %, muy por debajo de su grupo
+2 cargos vencidos
+Omar Mota Agramonte
+
+4 cursos, asistencia 91 % (10 de 11), avance 11 %
+
+12 tareas vencidas
+Nota 50 de 100 en Primeros Auxilios
+Avance 11 %, muy por debajo de su grupo
+1 cargo vencido
+Yaritza Mejía Lora
+
+4 cursos, asistencia 91 % (10 de 11), avance 8.3 %
+
+11 tareas vencidas
+Nota 48 de 100 en Fundamentos de Enfermería
+Avance 8.3 %, muy por debajo de su grupo
+1 cargo vencido
+Rafael Antonio Guzmán
+
+4 cursos, asistencia 100 % (11 de 11), avance 17 %
+
+13 tareas vencidas
+Nota 48 de 100 en Matemática Financiera
+Avance 17 %, muy por debajo de su grupo
+2 cargos vencidos
+Crismeily Hidalgo Mota
+
+4 cursos, asistencia 100 % (10 de 10), avance 19 %
+
+11 tareas vencidas
+Nota 49 de 100 en Instalaciones Solares Fotovoltaicas
+Avance 19 %, muy por debajo de su grupo
+1 cargo vencido
+Fiordaliza Pérez Gómez
+
+4 cursos, asistencia 100 % (11 de 11), avance 11 %
+
+9 tareas vencidas
+Nota 47 de 100 en Mantenimiento de Computadoras
+Avance 11 %, muy por debajo de su grupo
+1 cargo vencido
+Keila Familia Rosario
+
+4 cursos, asistencia 100 % (11 de 11), avance 11 %
+
+9 tareas vencidas
+Nota 47 de 100 en Anatomía y Fisiología Básica
+Avance 11 %, muy por debajo de su grupo
+1 cargo vencido
+Wilkin Santana Mota
+
+4 cursos, asistencia 90 % (9 de 10), avance 36 %
+
+Nota 65 de 100 en Anatomía y Fisiología Básica
+Avance 36 %, muy por debajo de su grupo
+1 cargo vencido
+Johanna Hidalgo Mota
+
+4 cursos, asistencia 90 % (9 de 10), avance 40 %
+
+Nota 67 de 100 en Instalaciones Solares Fotovoltaicas
+Avance 40 %, muy por debajo de su grupo
+1 cargo vencido
+Anyelina Pujols Ozuna
+
+4 cursos, asistencia 91 % (10 de 11), avance 37 %
+
+Nota 66 de 100 en Matemática Financiera
+Avance 37 %, muy por debajo de su grupo
+1 cargo vencido
+Cristian Agramonte Mercedes
+
+4 cursos, asistencia 100 % (10 de 10), avance 42 %
+
+Nota 67 de 100 en Anatomía y Fisiología Básica
+Avance 42 %, muy por debajo de su grupo
+1 cargo vencido
+Mildred Luciano Infante
+
+4 cursos, asistencia 100 % (11 de 11), avance 36 %
+
+Nota 64 de 100 en Anatomía y Fisiología Básica
+Avance 36 %, muy por debajo de su grupo
+1 cargo vencido
+Rafael Herrera Medina
+
+4 cursos, asistencia 100 % (11 de 11), avance 39 %
+
+Nota 66 de 100 en Primeros Auxilios
+Avance 39 %, muy por debajo de su grupo
+1 cargo vencido
+Ángel Luis Morillo
+
+3 cursos, asistencia 86 % (6 de 7), avance 39 %
+
+Nota 62 de 100 en Legislación Tributaria Dominicana
+Avance 39 %, muy por debajo de su grupo
+Brayan Ramírez Ozuna
+
+4 cursos, asistencia 100 % (11 de 11), avance 42 %
+
+Nota 68 de 100 en Mantenimiento de Computadoras
+Avance 42 %, muy por debajo de su grupo
+Félix Antonio Germán
+
+1 curso, asistencia 100 % (2 de 2), avance 44 %
+
+Nota 63 de 100 en Excel para la Oficina
+1 cargo vencido
+Gabriel Lora Reynoso
+
+4 cursos, asistencia 100 % (11 de 11), avance 46 %
+
+Nota 69 de 100 en Contabilidad Básica
+1 cargo vencido
+Joel Antonio Batista
+
+4 cursos, asistencia 100 % (11 de 11), avance 39 %
+
+Nota 63 de 100 en Servicio al Turista y Hospitalidad
+Avance 39 %, muy por debajo de su grupo
+Wanda Encarnación Lantigua
+
+4 cursos, asistencia 100 % (10 de 10), avance 42 %
+
+Nota 66 de 100 en Instalaciones Solares Fotovoltaicas
+Avance 42 %, muy por debajo de su grupo
+Crismeily Gómez Quezada
+
+4 cursos, asistencia 100 % (10 de 10), avance 66 %
+
+1 cargo vencido
+Darling Severino Florentino
+
+4 cursos, asistencia 100 % (11 de 11), avance 72 %
+
+1 cargo vencido
+Frailin Santos Vásquez
+
+5 cursos, asistencia 100 % (14 de 14), avance 71 %
+
+1 cargo vencido
+Franklin Medina Soto
+
+4 cursos, asistencia 100 % (11 de 11), avance 46 %
+
+Nota 65 de 100 en Matemática Financiera
+Moisés Espaillat Rosario
+
+4 cursos, asistencia 100 % (10 de 10), avance 46 %
+
+Nota 64 de 100 en Matemática Financiera
+Starling Beltré Espaillat
+
+4 cursos, asistencia 100 % (11 de 11), avance 74 %
+
+1 cargo vencido
+Yanelis Tavárez Martínez
+
+4 cursos, asistencia 100 % (11 de 11), avance 43 %
+
+Nota 65 de 100 en Legislación Tributaria Dominicana
+Yohanna Disla Vargas
+
+4 cursos, asistencia 100 % (10 de 10), avance 72 %
+
+1 cargo vencido
+Yomaira Castillo Cabral
+
+4 cursos, asistencia 100 % (11 de 11), avance 66 %
+
+1 cargo vencido
+Yulissa Rodríguez Peña
+
+4 cursos, asistencia 100 % (10 de 10), avance 72 %
+
+1 cargo vencido

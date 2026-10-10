@@ -1,0 +1,44 @@
+http://127.0.0.1:3000/operador/cmv2jq3uv006vddvx15hkh63j/vista
+
+Saltar al contenido principal
+Panel de la plataforma
+Volver a mi institución
+Tablero
+Instituciones
+Planes
+Facturación
+Más opciones
+
+Estás viendo Instituto Backoffice escritorio como soporte. Solo lectura.
+
+Salir
+Instituto Backoffice escritorio
+
+30
+
+Estudiantes activos
+
+0
+
+Docentes activos
+
+0
+
+Cursos
+
+0
+
+Inscripciones activas
+
+0
+
+Personas pendientes de invitación
+
+0
+
+Personas suspendidas
+
+Requiere tu atención
+No hay un período académico en curso
+
+Los cursos se crean dentro de un período, por ejemplo «Enero–Abril 2027».

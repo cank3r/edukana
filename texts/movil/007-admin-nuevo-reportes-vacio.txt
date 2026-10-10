@@ -1,0 +1,84 @@
+http://127.0.0.1:3000/dashboard/analitica
+
+Saltar al contenido principal
+Menú
+Volver a Inicio
+Reportes
+
+Cómo va la institución hoy: quiénes estudian, cuánto avanzan y dónde hace falta actuar.
+
+Período
+Todos los períodos
+Ver reportes
+
+Estudiantes con cursos activos
+
+0
+
+Personas inscritas hoy en al menos un curso.
+
+Igual que hace un mes.
+
+Cursos en marcha
+
+0
+
+Cursos visibles para los estudiantes y sin archivar.
+
+Igual que hace un mes.
+
+Avance promedio
+
+Sin datos
+
+De cada 100 lecciones, cuántas han completado en promedio los estudiantes activos.
+
+No se compara con el mes anterior: el avance pasado no se guarda.
+
+Tareas entregadas a tiempo
+
+Sin datos
+
+Ninguna tarea venció en los últimos 30 días.
+
+Todavía no hay datos del mes anterior para comparar.
+
+Asistencia promedio
+
+Sin datos
+
+No se tomó asistencia en los últimos 30 días.
+
+Todavía no hay datos del mes anterior para comparar.
+
+Cobrado y por cobrar
+
+RD$0
+
+Ya cobrado. Falta por cobrar RD$0.
+
+En los últimos 30 días se cobró RD$0; en los 30 anteriores, RD$0.
+
+Cursos
+
+Cuánta gente tiene cada curso y cómo avanza. Se resaltan los cursos con avance promedio menor de 40 %.
+
+No hay cursos para mostrar. Cuando se creen cursos y se inscriban estudiantes, aquí verás su avance.
+
+Estudiantes en riesgo
+
+Estudiantes que conviene contactar: llevan 14 días sin actividad, avanzan mucho menos que su grupo, asisten a menos del 80 % de las clases o tienen tareas vencidas.
+
+Todavía no hay estudiantes inscritos en cursos. Cuando los haya, aquí verás a quién conviene contactar.
+
+Docentes
+
+Carga de cada docente y cuánto llevan esperando los estudiantes por una calificación.
+
+No hay docentes con cursos.
+
+Acceso
+
+Personas que todavía no pueden entrar porque no han creado su contraseña. El archivo trae sus nombres y correos para invitarlas.
+
+Todas las personas activas ya pueden entrar.

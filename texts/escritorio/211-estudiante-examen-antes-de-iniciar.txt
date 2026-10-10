@@ -1,0 +1,49 @@
+http://127.0.0.1:3000/dashboard/aula/cmv2jq3m8000oddvxn7ppjhxu/presentar/cmv2jq3q3002oddvxdz2ylygz
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Mis cursos
+Avisos
+Calendario
+Más
+15
+Notificaciones
+Cerrar sesión
+P
+
+Pedro Jiménez
+
+pedro@instituto-demo.test
+
+Inicio
+Cursos
+Curso
+Exámenes
+Examen
+
+Matemática Básica
+
+Prueba corta: suma y resta
+Instrucciones
+
+Tienes 5 minutos. Lee cada pregunta con calma.
+
+Antes de empezar
+Preguntas
+3
+Tiempo
+5 minutos
+Intentos
+Te quedan 3 intentos de 3
+Abre
+Ya está abierto
+Cierra
+Sin fecha de cierre
+
+Al pulsar «Iniciar examen» el tiempo empieza a correr y no se detiene, aunque cierres la página. Se usa uno de tus intentos.
+
+Iniciar examen
+Volver al curso

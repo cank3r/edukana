@@ -1,0 +1,59 @@
+http://127.0.0.1:3000/operador/tablero
+
+Saltar al contenido principal
+Volver a mi institución
+Tablero
+Instituciones
+Planes
+Facturación
+Más opciones
+Tablero del negocio
+
+Un vistazo a Edukana. Los períodos mensuales se calculan en UTC.
+
+Ver instituciones
+
+5
+
+Instituciones activas
+
+1
+
+Docentes independientes activos
+
+186
+
+Estudiantes activos
+
+11
+
+Docentes activos
+
+6
+
+Altas en 7 días
+
+6
+
+Altas en 30 días
+
+0
+
+Pedidos de IA este mes
+
+0
+
+Tokens de IA este mes
+
+0
+
+Sin actividad registrada en 14 días
+Ventas del catálogo este mes
+
+Todavía no hay pedidos pagados este mes.
+
+Instituciones que requieren atención
+
+La actividad se basa en operaciones registradas. Los accesos anteriores a este tablero no se registraban; una entrada sin registro no confirma que nadie haya entrado.
+
+No hay instituciones que requieran atención por estos motivos.

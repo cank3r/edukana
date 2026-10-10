@@ -1,0 +1,36 @@
+http://127.0.0.1:3000/dashboard
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Mis hijos
+Avisos
+2
+Notificaciones
+Cerrar sesión
+M
+
+Marisol Rodríguez
+
+marisol@instituto-demo.test
+
+Hola, Marisol
+
+¿Cómo van mis hijos?
+
+2 hijos vinculados
+
+Requiere tu atención
+Ana Rodríguez
+1 cargo vencido por pagar
+Mis hijos
+Ana Rodríguez
+1 curso en marcha · avance promedio 17 %
+Próxima clase: Repaso de la unidad 1 · Mañana, 10:00 a. m.
+Ver su resumen
+Pedro Jiménez
+1 curso en marcha · avance promedio 17 %
+Próxima clase: Repaso de la unidad 1 · Mañana, 10:00 a. m.
+Ver su resumen

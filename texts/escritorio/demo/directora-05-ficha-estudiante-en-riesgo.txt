@@ -1,0 +1,67 @@
+http://127.0.0.1:3000/dashboard/gestion/personas/cmv2jq4qx004jf0405b4ec40e
+
+Saltar al contenido principal
+
+Instituto Técnico Demo
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+Notificaciones
+Cerrar sesión
+M
+
+Margarita Rosario Díaz
+
+directora@demo.edukana.do
+
+Inicio
+Personas
+Persona
+Yaritza Mejía Lora
+
+Estudiante
+Puede entrar
+
+Datos
+Correo
+yaritza.mejia@demo.edukana.do
+Teléfono
+829-555-0206
+Rol
+Estudiante
+En la institución desde
+23 jul 2026
+Acceso
+
+Ya creó su contraseña.
+
+Editar
+Enviar aviso de acceso
+Suspender
+Cursos en los que está inscrito
+Anatomía y Fisiología Básica
+
+Activo · 11 % de avance
+
+Fundamentos de Enfermería
+
+Activo · 0 % de avance
+
+Primeros Auxilios
+
+Activo · 11 % de avance
+
+Mantenimiento de Computadoras
+
+Activo · 11 % de avance
+
+Ver notas, asistencia y cuenta
+Tutores
+Mercedes Mejía Lora
+
+Madre · Vínculo activo
+
+Gestionar vínculos de tutores

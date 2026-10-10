@@ -1,0 +1,50 @@
+http://127.0.0.1:3000/dashboard/admisiones
+
+Saltar al contenido principal
+Menú
+Volver a Inicio
+Admisiones
+
+Las personas que quieren entrar a la institución, ordenadas por la etapa en que van. Abre una solicitud para avanzarla o convertirla en estudiante.
+
+Registrar solicitud
+
+3
+
+Solicitudes abiertas
+
+0
+
+Admitidas este mes
+
+0 %
+
+Terminan inscritas
+
+0 de 3
+
+Buscar por nombre o correo
+Programa
+Todos los programas
+Bachillerato Técnico
+Buscar
+Interesado
+1
+Documentos
+1
+En revisión
+1
+Admitido
+0
+Inscrito
+0
+No continúa
+0
+Interesado
+1
+
+Preguntó o dejó sus datos.
+
+Carmen Báez
+Bachillerato Técnico
+Llegó hace un momento · Redes sociales

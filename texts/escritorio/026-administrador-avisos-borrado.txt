@@ -1,0 +1,40 @@
+http://127.0.0.1:3000/dashboard/comunidad
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+Notificaciones
+Cerrar sesión
+C
+
+Carla Méndez
+
+admin@instituto-demo.test
+
+Inicio
+Avisos
+Avisos
+
+Mensajes para las personas de tu institución. Aquí los publicas y los lees.
+
+Publicar un aviso
+
+Aviso borrado. «Reunión de familias, corregido (escritorio)» ya no aparece en la lista.
+
+Bienvenidos al nuevo período
+
+Las clases comienzan esta semana. Revisen su horario y sus cursos.
+
+10 de octubre de 2026
+·
+Carla Méndez
+·
+Toda la institución
+Editar
+Borrar

@@ -1,0 +1,57 @@
+http://127.0.0.1:3000/dashboard/aula/cmv2jq3m8000oddvxn7ppjhxu/clases
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Mis cursos
+Avisos
+Calendario
+Más
+15
+Notificaciones
+Cerrar sesión
+P
+
+Pedro Jiménez
+
+pedro@instituto-demo.test
+
+Inicio
+Cursos
+Curso
+Clases en vivo
+Clases en vivo
+
+Aquí están las clases por videollamada de tu curso. El botón para entrar se activa 15 minutos antes de empezar.
+
+Próximas clases
+
+Domingo, 11 de octubre
+
+Repaso de la unidad 1
+
+10:00 a. m. · 60 minutos
+
+Traigan sus dudas de la unidad 1.
+
+Empieza el domingo, 11 de octubre a las 10:00 a. m.
+
+Lunes, 12 de octubre
+
+Clase de dudas (movil)
+
+3:00 p. m. · 60 minutos
+
+Empieza el lunes, 12 de octubre a las 3:00 p. m.
+
+Lunes, 12 de octubre
+
+Clase de dudas (escritorio)
+
+5:30 p. m. · 60 minutos
+
+Empieza el lunes, 12 de octubre a las 5:30 p. m.
+
+Las horas se muestran en hora de Santo Domingo.

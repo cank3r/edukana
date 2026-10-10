@@ -1,0 +1,64 @@
+http://127.0.0.1:3000/dashboard/mi-cuenta
+
+Saltar al contenido principal
+
+Instituto Técnico Demo
+
+Inicio
+Mis hijos
+Avisos
+Notificaciones
+Cerrar sesión
+M
+
+María Altagracia Reyes
+
+maria.reyes@demo.edukana.do
+
+Inicio
+Mi estado de cuenta
+Estado de cuenta de Ana Mercedes Reyes
+
+Lo que se debe, lo que ya venció y los pagos recibidos. Para pagar, acércate a la administración.
+
+Debe
+RD$0.00
+Vencido
+RD$0.00
+Pagado
+RD$16,000.00
+Por pagar (0)
+
+Todo al día: no hay nada pendiente de pago.
+
+Historial
+Pagos recibidos
+Mensualidad de octubre · Técnico en Enfermería
+9 oct 2026 · Tarjeta
+RD$4,500.00
+Ver recibo
+Mensualidad de septiembre · Técnico en Enfermería
+17 sept 2026 · Transferencia
+RD$4,500.00
+Ver recibo
+Mensualidad de agosto · Técnico en Enfermería
+17 ago 2026 · Efectivo
+RD$4,500.00
+Ver recibo
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería
+10 ago 2026 · Transferencia
+RD$2,500.00
+Ver recibo
+Todos los cargos
+Mensualidad de agosto · Técnico en Enfermería
+Pagado · Vencimiento: 15 ago 2026
+RD$4,500.00
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería
+Pagado · Vencimiento: 16 ago 2026
+RD$2,500.00
+Mensualidad de septiembre · Técnico en Enfermería
+Pagado · Vencimiento: 15 sept 2026
+RD$4,500.00
+Mensualidad de octubre · Técnico en Enfermería
+Pagado · Vencimiento: 15 oct 2026
+RD$4,500.00

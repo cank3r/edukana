@@ -1,0 +1,23 @@
+http://127.0.0.1:3000/login
+
+La educación
+evoluciona.
+Tú también.
+
+Gestiona, enseña, comunica y crece desde una sola plataforma.
+
+© 2026 Edukana · Cerkana
+
+Bienvenido
+
+Ingresa a tu institución
+
+Correo electrónico
+Contraseña
+Ingresar
+
+¿Olvidaste tu contraseña o es tu primera vez?
+
+¿Problemas para ingresar? Escríbenos
+
+Hecho con Edukana

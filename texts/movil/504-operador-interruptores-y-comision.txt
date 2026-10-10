@@ -1,0 +1,107 @@
+http://127.0.0.1:3000/operador/cmv2jq3t10046ddvxnsal4roq
+
+Saltar al contenido principal
+Volver a mi institución
+Tablero
+Instituciones
+Planes
+Facturación
+Más opciones
+Volver a instituciones
+Instituto Backoffice movil
+
+Instituto · alta el 10 de octubre de 2026
+
+31
+
+Personas activas
+
+0
+
+Cursos
+
+0
+
+Sin contraseña todavía
+
+Administración
+
+Administrador movil
+
+admin@backoffice-movil.test
+
+Ya creó su contraseña y puede entrar.
+
+Invitaciones pendientes
+
+Todas las personas activas ya crearon su contraseña.
+
+Marca
+Logo
+
+JPG, PNG o WebP, hasta 5 MB. Se publica al guardar la marca.
+
+Color principal
+
+Ajustamos los colores claros para que las letras se lean bien. Vacío usa el azul de Edukana.
+
+Opciones avanzadas
+
+Al guardar, la marca aparece en el acceso, el catálogo y los próximos correos.
+
+Guardar marca
+Plan y facturación
+
+Profesional · Activo · Vence el 2026-11-09
+
+Precio pactado: 50.00 DOP
+
+Estudiantes: 30 / 1600
+Almacenamiento: 0.0 / 25000 MB
+Pedidos de IA del mes: 0 / 2000
+Cambiar plan
+Extender período
+Generar factura del período
+Facturas
+
+2026-10-10 al 2026-11-09 · 50.00 DOP
+
+Pagada · Vence 2026-11-09
+
+Funciones
+Asistente de IA
+
+Al apagarlo, la administración no podrá volver a encenderlo.
+
+Catálogo público y venta de cursos
+
+Al apagarlo, el catálogo deja de estar disponible y no se aceptan compras nuevas.
+
+Comisión (%)
+
+Solo para el informe de ventas. No cambia lo que se cobra al comprador.
+
+Guardar funciones
+
+Funciones guardadas.
+
+Cursos públicos
+
+Todavía no hay cursos públicos publicados.
+
+Acceso a la institución
+
+Activa
+
+Suspender institución
+Soporte
+
+Consulta las cifras y pendientes del inicio de administración durante 30 minutos. La vista es de solo lectura. La entrada y la salida quedan registradas.
+
+Escribe «Instituto Backoffice movil» para confirmar
+Ver como administrador
+Identificador
+
+backoffice-movil
+
+Nombre corto y único de la institución. Su enlace de entrada con su nombre y colores es /login?institucion=backoffice-movil.

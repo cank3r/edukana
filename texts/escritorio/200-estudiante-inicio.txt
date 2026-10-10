@@ -1,0 +1,77 @@
+http://127.0.0.1:3000/dashboard
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Mis cursos
+Avisos
+Calendario
+Más
+15
+Notificaciones
+Cerrar sesión
+P
+
+Pedro Jiménez
+
+pedro@instituto-demo.test
+
+Hola, Pedro
+
+¿Qué tengo hoy?
+Continúa donde ibas
+
+Matemática Básica
+
+Qué son los números naturales
+
+Continuar
+Hoy y próximos días
+
+Repaso de la unidad 1
+
+Matemática Básica
+
+Mañana, 10:00 a. m. · 60 min
+
+Podrás entrar 15 minutos antes de la hora.
+
+Clase de dudas (movil)
+
+Matemática Básica
+
+lun, 12 oct, 3:00 p. m. · 60 min
+
+Podrás entrar 15 minutos antes de la hora.
+
+Clase de dudas (escritorio)
+
+Matemática Básica
+
+lun, 12 oct, 5:30 p. m. · 60 min
+
+Podrás entrar 15 minutos antes de la hora.
+
+Pendientes
+Ejercicios de repaso (movil)
+Tarea · Matemática Básica
+Vence el jueves 15 de octubre
+Ejercicios de repaso (escritorio)
+Tarea · Matemática Básica
+Vence el jueves 15 de octubre
+Problemas de suma y resta
+Tarea · Matemática Básica
+Vence el sábado 17 de octubre
+Prueba corta: suma y resta
+Examen · Matemática Básica
+Sin presentar
+Mis cursos
+Ver todos
+
+Matemática Básica
+
+Luis Peralta
+
+0% completado

@@ -1,0 +1,68 @@
+http://127.0.0.1:3000/dashboard/admisiones/cmv2jv2q5007ej64woegc5ppb
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+Admisiones
+Cobros
+Ventas
+Calendario
+Reportes
+Configuración
+Notificaciones
+Cerrar sesión
+C
+
+Carla Méndez
+
+admin@instituto-demo.test
+
+Inicio
+Admisiones
+Solicitud
+Lucía Fernández (escritorio)
+
+Admitido Aprobado; falta convertirlo en estudiante. Llegó hace un momento.
+
+Siguiente paso
+Convertir en estudiante
+No continúa
+Datos
+Correo
+lucia.escritorio@correo.test
+Teléfono
+No indicado
+Programa de interés
+Bachillerato Técnico
+De dónde vino
+No indicado
+Notas
+
+Sin notas.
+
+Editar datos
+Historial de cambios
+
+Pasó de «En revisión» a «Admitido».
+
+10 oct 2026, 11:29 · Carla Méndez
+
+Pasó de «Documentos» a «En revisión».
+
+10 oct 2026, 11:29 · Carla Méndez
+
+Pasó de «Interesado» a «Documentos».
+
+10 oct 2026, 11:29 · Carla Méndez
+
+Se registró la solicitud.
+
+10 oct 2026, 11:29 · Carla Méndez
+
+Opciones avanzadas

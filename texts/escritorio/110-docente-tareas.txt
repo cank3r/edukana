@@ -1,0 +1,48 @@
+http://127.0.0.1:3000/dashboard/aula/cmv2jq3m8000oddvxn7ppjhxu/tareas
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Mis cursos
+Avisos
+Calendario
+4
+Notificaciones
+Cerrar sesión
+L
+
+Luis Peralta
+
+docente@instituto-demo.test
+
+Inicio
+Cursos
+Curso
+Tareas
+Tareas
+
+Crea tareas, publícalas y califica lo que entregan tus estudiantes.
+
+Crear tarea
+Ejercicios de repaso (movil)
+Publicada
+
+Vence el jueves 15 de octubre · Puntaje máximo: 100
+
+0 entregas · 0 por calificar
+
+Editar
+Ocultar
+Borrar
+Problemas de suma y resta
+Publicada
+
+Vence el sábado 17 de octubre · Puntaje máximo: 100
+
+3 entregas · 2 por calificar
+
+Editar
+Ocultar
+Borrar

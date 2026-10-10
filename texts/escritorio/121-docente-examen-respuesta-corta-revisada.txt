@@ -1,0 +1,73 @@
+http://127.0.0.1:3000/dashboard/aula/cmv2jq3m8000oddvxn7ppjhxu/examenes/cmv2jq3q3002oddvxdz2ylygz/resultados
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Mis cursos
+Avisos
+Calendario
+4
+Notificaciones
+Cerrar sesión
+L
+
+Luis Peralta
+
+docente@instituto-demo.test
+
+Inicio
+Cursos
+Curso
+Exámenes
+Examen
+Resultados
+Resultados: Prueba corta: suma y resta
+
+Matemática Básica · El examen vale 10 puntos. La nota pasa al libro de calificaciones.
+
+Editar examen
+
+Hay 1 intento con respuestas cortas por revisar. Su nota queda pendiente hasta que les pongas los puntos.
+
+Ana Rodríguez
+Por revisar
+Intento: 1
+Nota: Pendiente (lleva 7 de 10 en las preguntas que se califican solas)
+Empezó: 10 oct 2026, 11:27
+Envió: 10 oct 2026, 11:27
+Tardó: Menos de 1 minuto
+
+Lee cada respuesta y ponle los puntos. Al guardar, la nota del intento queda lista.
+
+PREGUNTA 3 · RESPUESTA CORTA
+
+Explica con tus palabras qué es una llevada.
+
+Respuesta del estudiante
+
+Es cuando la suma pasa de nueve y se pasa una decena a la columna siguiente.
+
+Respuesta esperada: Cuando la suma de una columna pasa de 9 y se lleva una decena a la siguiente.
+
+Puntos (de 0 a 3)
+Comentario (opcional)
+Guardar revisión
+Ver sus respuestas
+Juan Castillo
+Calificado
+Intento: 1
+Nota: 10 de 10
+Empezó: 10 oct 2026, 11:25
+Envió: 10 oct 2026, 11:25
+Tardó: Menos de 1 minuto
+Ver sus respuestas
+Rosa Almonte
+Calificado
+Intento: 1
+Nota: 10 de 10
+Empezó: 10 oct 2026, 11:25
+Envió: 10 oct 2026, 11:25
+Tardó: Menos de 1 minuto
+Ver sus respuestas

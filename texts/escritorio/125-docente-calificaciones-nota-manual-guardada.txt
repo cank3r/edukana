@@ -1,0 +1,138 @@
+http://127.0.0.1:3000/dashboard/aula/cmv2jq3m8000oddvxn7ppjhxu/calificaciones
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Mis cursos
+Avisos
+Calendario
+4
+Notificaciones
+Cerrar sesión
+L
+
+Luis Peralta
+
+docente@instituto-demo.test
+
+Inicio
+Cursos
+Curso
+Calificaciones
+Calificaciones
+
+Toca una nota para ponerla o corregirla. Los estudiantes solo ven las actividades que publiques.
+
+Agregar actividad calificable
+
+Para algo que no es una tarea ni un examen del curso: una exposición, la participación, un trabajo en clase.
+
+Título
+Puntaje máximo
+Mostrar la nota a los estudiantes
+Agregar actividad
+
+Actividad agregada. Ya puedes poner sus notas: los estudiantes las verán.
+
+Notas de 4 estudiantes
+Descargar en CSV
+Estudiante	Promedio
+de 100
+	
+Problemas de suma y resta
+máx. 100 · publicada
+	
+Participación escritorio
+máx. 10 · publicada
+	
+Participación movil
+máx. 10 · publicada
+	
+Prueba corta: suma y resta
+máx. 10 · publicada
+
+Ana Rodríguez	—	
+—
+	
+—
+	
+—
+	
+—
+
+Juan Castillo	92	
+85
+	
+9
+	
+—
+	
+10
+
+Pedro Jiménez	—	
+—
+	
+—
+	
+—
+	
+—
+
+Rosa Almonte	92	
+85
+	
+—
+	
+9
+	
+10
+
+El promedio va de 0 a 100. Cada nota cuenta según su puntaje máximo y el peso de su categoría; lo exonerado («Exon.») y lo que aún no tiene nota no cuentan. Incluye también las actividades ocultas.
+
+Actividades calificables
+
+Problemas de suma y resta
+
+General · máximo 100 · 2 de 4 con nota
+
+Los estudiantes ven esta nota
+
+Ocultar notas
+
+Viene de una tarea: su título y puntaje se cambian allí. Abrir la tarea
+
+Participación escritorio
+
+General · máximo 10 · 1 de 4 con nota
+
+Los estudiantes ven esta nota
+
+Ocultar notas
+Editar
+
+No se puede borrar porque tiene notas, exoneraciones o historial. Puedes editar la actividad.
+
+Participación movil
+
+General · máximo 10 · 1 de 4 con nota
+
+Los estudiantes ven esta nota
+
+Ocultar notas
+Editar
+
+No se puede borrar porque tiene notas, exoneraciones o historial. Puedes editar la actividad.
+
+Prueba corta: suma y resta
+
+General · máximo 10 · 2 de 4 con nota
+
+Los estudiantes ven esta nota
+
+Ocultar notas
+
+Viene de un examen: su título y puntaje se cambian allí. Abrir los exámenes
+
+Opciones avanzadas

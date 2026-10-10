@@ -1,0 +1,332 @@
+http://127.0.0.1:3000/dashboard/aula/cmv2jq4s00085fc9896eb2499/asistencia
+
+Saltar al contenido principal
+
+Instituto Técnico Demo
+
+Inicio
+Mis cursos
+Avisos
+Calendario
+3
+Notificaciones
+Cerrar sesión
+R
+
+Rosa Almonte Guzmán
+
+rosa.almonte@demo.edukana.do
+
+Inicio
+Cursos
+Curso
+Asistencia
+Asistencia
+Tomar asistencia
+Historial
+Resumen por estudiante
+Tomar asistencia de hoy
+
+Sábado, 10 de octubre de 2026
+
+Día
+Título de la clase (opcional)
+
+Todos empiezan en Presente. Toca solo a quien faltó, llegó tarde o tiene justificación.
+
+Ambar Hernández Jiménez
+Presente
+Ausente
+Tarde
+Justificado
+Ana Mercedes Reyes
+Presente
+Ausente
+Tarde
+Justificado
+Anderson Ventura Pérez
+Presente
+Ausente
+Tarde
+Justificado
+Anyelina De la Cruz Almonte
+Presente
+Ausente
+Tarde
+Justificado
+Brayan Ramírez Ozuna
+Presente
+Ausente
+Tarde
+Justificado
+Carolina Méndez Tejada
+Presente
+Ausente
+Tarde
+Justificado
+Crismeily Hidalgo Mota
+Presente
+Ausente
+Tarde
+Justificado
+Cristian Agramonte Mercedes
+Presente
+Ausente
+Tarde
+Justificado
+Daniela Sánchez Ogando
+Presente
+Ausente
+Tarde
+Justificado
+Darling Severino Florentino
+Presente
+Ausente
+Tarde
+Justificado
+Dilenia Tejada Then
+Presente
+Ausente
+Tarde
+Justificado
+Elizabeth Rosario Núñez
+Presente
+Ausente
+Tarde
+Justificado
+Esmeralda Pujols Báez
+Presente
+Ausente
+Tarde
+Justificado
+Euclides Lantigua Almonte
+Presente
+Ausente
+Tarde
+Justificado
+Fiordaliza Marte Jáquez
+Presente
+Ausente
+Tarde
+Justificado
+Frailin Santos Vásquez
+Presente
+Ausente
+Tarde
+Justificado
+Gabriel Polanco Pichardo
+Presente
+Ausente
+Tarde
+Justificado
+Isamar Cuevas Herrera
+Presente
+Ausente
+Tarde
+Justificado
+Joel Antonio Batista
+Presente
+Ausente
+Tarde
+Justificado
+Johanna Jáquez Santos
+Presente
+Ausente
+Tarde
+Justificado
+Juan Carlos Beltré Espaillat
+Presente
+Ausente
+Tarde
+Justificado
+Juana Valdez Herrera
+Presente
+Ausente
+Tarde
+Justificado
+Keila Familia Rosario
+Presente
+Ausente
+Tarde
+Justificado
+Kelvin Jiménez Tejada
+Presente
+Ausente
+Tarde
+Justificado
+Leonel Pichardo García
+Presente
+Ausente
+Tarde
+Justificado
+Leonela Castillo Cabral
+Presente
+Ausente
+Tarde
+Justificado
+Luz Marina Encarnación
+Presente
+Ausente
+Tarde
+Justificado
+Mabel Bautista Valdez
+Presente
+Ausente
+Tarde
+Justificado
+Mariela Abreu Núñez
+Presente
+Ausente
+Tarde
+Justificado
+Massiel Ogando Acosta
+Presente
+Ausente
+Tarde
+Justificado
+Mildred Luciano Infante
+Presente
+Ausente
+Tarde
+Justificado
+Moisés Guerrero Peralta
+Presente
+Ausente
+Tarde
+Justificado
+Nairoby Then Frías
+Presente
+Ausente
+Tarde
+Justificado
+Nathalie Guerrero Polanco
+Presente
+Ausente
+Tarde
+Justificado
+Nicol Mercedes Hidalgo
+Presente
+Ausente
+Tarde
+Justificado
+Omar Mota Agramonte
+Presente
+Ausente
+Tarde
+Justificado
+Paola Andrea Cabrera
+Presente
+Ausente
+Tarde
+Justificado
+Patria Toribio Ureña
+Presente
+Ausente
+Tarde
+Justificado
+Rafael Herrera Medina
+Presente
+Ausente
+Tarde
+Justificado
+Ramón Emilio Reynoso Castillo
+Presente
+Ausente
+Tarde
+Justificado
+Rosalía Martínez Liriano
+Presente
+Ausente
+Tarde
+Justificado
+Rosanna Valdez Ureña
+Presente
+Ausente
+Tarde
+Justificado
+Rubén Javier Cuello
+Presente
+Ausente
+Tarde
+Justificado
+Starlin De los Santos
+Presente
+Ausente
+Tarde
+Justificado
+Starling Liriano Nolasco
+Presente
+Ausente
+Tarde
+Justificado
+Wanda Encarnación Lantigua
+Presente
+Ausente
+Tarde
+Justificado
+Wilkin Santana Mota
+Presente
+Ausente
+Tarde
+Justificado
+Yamilet Ureña Toribio
+Presente
+Ausente
+Tarde
+Justificado
+Yanelis Peralta Ogando
+Presente
+Ausente
+Tarde
+Justificado
+Yaritza Mejía Lora
+Presente
+Ausente
+Tarde
+Justificado
+Yeremi Espaillat Rosario
+Presente
+Ausente
+Tarde
+Justificado
+Yesica Durán Espaillat
+Presente
+Ausente
+Tarde
+Justificado
+Yohanna Disla Vargas
+Presente
+Ausente
+Tarde
+Justificado
+Yomaira García Paulino
+Presente
+Ausente
+Tarde
+Justificado
+Yoselin Cabral Lora
+Presente
+Ausente
+Tarde
+Justificado
+Yudelka Ozuna Pujols
+Presente
+Ausente
+Tarde
+Justificado
+Yulissa Rodríguez Peña
+Presente
+Ausente
+Tarde
+Justificado
+Yunior Báez Javier
+Presente
+Ausente
+Tarde
+Justificado
+
+58 presentes · 0 ausentes
+
+Asistencia del sábado, 10 de octubre de 2026
+
+Guardar asistencia

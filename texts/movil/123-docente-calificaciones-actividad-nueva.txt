@@ -1,0 +1,67 @@
+http://127.0.0.1:3000/dashboard/aula/cmv2jq3m8000oddvxn7ppjhxu/calificaciones
+
+Saltar al contenido principal
+3
+Menú
+Volver al curso
+Calificaciones
+
+Toca una nota para ponerla o corregirla. Los estudiantes solo ven las actividades que publiques.
+
+Agregar actividad calificable
+
+Para algo que no es una tarea ni un examen del curso: una exposición, la participación, un trabajo en clase.
+
+Título
+Puntaje máximo
+Mostrar la nota a los estudiantes
+Agregar actividad
+
+Actividad agregada. Ya puedes poner sus notas: los estudiantes las verán.
+
+Notas de 4 estudiantes
+Descargar en CSV
+Ana Rodríguez
+Promedio: —
+Juan Castillo
+Promedio: —
+Pedro Jiménez
+Promedio: —
+Rosa Almonte
+Promedio: 93
+
+El promedio va de 0 a 100. Cada nota cuenta según su puntaje máximo y el peso de su categoría; lo exonerado («Exon.») y lo que aún no tiene nota no cuentan. Incluye también las actividades ocultas.
+
+Actividades calificables
+
+Problemas de suma y resta
+
+General · máximo 100 · 1 de 4 con nota
+
+Los estudiantes ven esta nota
+
+Ocultar notas
+
+Viene de una tarea: su título y puntaje se cambian allí. Abrir la tarea
+
+Participación movil
+
+General · máximo 10 · 0 de 4 con nota
+
+Los estudiantes ven esta nota
+
+Ocultar notas
+Editar
+Borrar
+
+Prueba corta: suma y resta
+
+General · máximo 10 · 1 de 4 con nota
+
+Los estudiantes ven esta nota
+
+Ocultar notas
+
+Viene de un examen: su título y puntaje se cambian allí. Abrir los exámenes
+
+Opciones avanzadas

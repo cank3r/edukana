@@ -1,0 +1,56 @@
+http://127.0.0.1:3000/dashboard/admisiones/cmv2jv2q5007ej64woegc5ppb
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+Admisiones
+Cobros
+Ventas
+Calendario
+Reportes
+Configuración
+Notificaciones
+Cerrar sesión
+C
+
+Carla Méndez
+
+admin@instituto-demo.test
+
+Inicio
+Admisiones
+Solicitud
+Lucía Fernández (escritorio)
+
+Interesado Preguntó o dejó sus datos. Llegó hace un momento.
+
+Siguiente paso
+Pasar a «Documentos»
+No continúa
+Datos
+Correo
+lucia.escritorio@correo.test
+Teléfono
+No indicado
+Programa de interés
+Bachillerato Técnico
+De dónde vino
+No indicado
+Notas
+
+Sin notas.
+
+Editar datos
+Historial de cambios
+
+Se registró la solicitud.
+
+10 oct 2026, 11:29 · Carla Méndez
+
+Opciones avanzadas

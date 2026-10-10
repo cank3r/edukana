@@ -1,0 +1,29 @@
+http://127.0.0.1:3000/dashboard/analitica/riesgo
+
+Saltar al contenido principal
+Menú
+Volver a Reportes
+Estudiantes en riesgo
+
+Quienes reúnen señales de alerta en sus cursos activos. La asistencia se cuenta en este mes; las tareas vencidas, las notas y el avance, en todo el curso.
+
+Esta semana
+Este mes
+Este período
+Todas las señales
+Asistencia menor de 80 % (1)
+2 o más tareas vencidas (0)
+Nota por debajo de 70 (0)
+Avance muy bajo (0)
+Cargos vencidos (1)
+2 estudiantes
+Juan Castillo
+
+1 curso, asistencia 0 % (0 de 1), avance 0 %
+
+Asistencia 0 %
+Ana Rodríguez
+
+1 curso, asistencia 100 % (1 de 1), avance 0 %
+
+1 cargo vencido

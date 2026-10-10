@@ -1,0 +1,42 @@
+http://127.0.0.1:3000/dashboard/aula/cmv2jq3m8000oddvxn7ppjhxu/tareas
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Mis cursos
+Avisos
+Calendario
+Más
+15
+Notificaciones
+Cerrar sesión
+P
+
+Pedro Jiménez
+
+pedro@instituto-demo.test
+
+Inicio
+Cursos
+Curso
+Tareas
+Mis tareas
+
+Abre una tarea para leer las instrucciones y entregarla.
+
+Pendientes (3)
+Ejercicios de repaso (movil)
+Vence el jueves 15 de octubre
+Ejercicios de repaso (escritorio)
+Vence el jueves 15 de octubre
+Problemas de suma y resta
+Vence el sábado 17 de octubre
+Entregadas (0)
+
+Aquí verás las tareas que entregaste y esperan nota.
+
+Calificadas (0)
+
+Aquí verás tus tareas con nota.

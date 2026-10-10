@@ -1,0 +1,16 @@
+http://127.0.0.1:3000/dashboard/admisiones
+
+Saltar al contenido principal
+Menú
+Volver a Inicio
+Admisiones
+
+Las personas que quieren entrar a la institución, ordenadas por la etapa en que van. Abre una solicitud para avanzarla o convertirla en estudiante.
+
+Registrar solicitud
+
+Todavía no hay solicitudes
+
+Cuando alguien pregunte por un programa, regístralo aquí con su nombre y correo. Luego podrás seguirlo etapa por etapa hasta que sea estudiante.
+
+Registrar la primera solicitud

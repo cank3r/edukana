@@ -1,0 +1,59 @@
+http://127.0.0.1:3000/dashboard/gestion/personas/cmv2jq3lg000addvxw78v49nk
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+Notificaciones
+Cerrar sesión
+C
+
+Carla Méndez
+
+admin@instituto-demo.test
+
+Inicio
+Personas
+Persona
+Ana Rodríguez
+
+Estudiante
+Puede entrar
+
+Datos
+Correo
+ana@instituto-demo.test
+Teléfono
+No indicado
+Rol
+Estudiante
+En la institución desde
+10 oct 2026
+Acceso
+
+Ya creó su contraseña.
+
+Editar
+Enviar aviso de acceso
+Suspender
+Cursos en los que está inscrito
+Taller de Lectura
+
+Completado · 0 % de avance
+
+Matemática Básica
+
+Activo · 20 % de avance
+
+Ver notas, asistencia y cuenta
+Tutores
+Marisol Rodríguez
+
+Madre · Vínculo activo
+
+Gestionar vínculos de tutores

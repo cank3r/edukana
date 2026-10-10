@@ -1,0 +1,206 @@
+http://127.0.0.1:3000/dashboard/analitica
+
+Saltar al contenido principal
+Menú
+Volver a Inicio
+Reportes
+
+Cómo va la institución hoy: quiénes estudian, cuánto avanzan y dónde hace falta actuar.
+
+Período
+Todos los períodos
+Período de verano (movil)
+Año 2026 (actual)
+Programa
+Todos los programas
+Bachillerato Técnico
+Ver reportes
+
+Estudiantes con cursos activos
+
+4
+
+Personas inscritas hoy en al menos un curso.
+
+4 más que hace un mes.
+
+Cursos en marcha
+
+2
+
+Cursos visibles para los estudiantes y sin archivar.
+
+2 más que hace un mes.
+
+Avance promedio
+
+0 %
+
+De cada 100 lecciones, cuántas han completado en promedio los estudiantes activos.
+
+No se compara con el mes anterior: el avance pasado no se guarda.
+
+Tareas entregadas a tiempo
+
+Sin datos
+
+Ninguna tarea venció en los últimos 30 días.
+
+Todavía no hay datos del mes anterior para comparar.
+
+Asistencia promedio
+
+75 %
+
+Clases a las que sí asistieron en los últimos 30 días (las ausencias justificadas no cuentan).
+
+Todavía no hay datos del mes anterior para comparar.
+
+Cobrado y por cobrar
+
+RD$8,500
+
+Ya cobrado. Falta por cobrar RD$9,500, de los cuales RD$3,000 ya vencieron.
+
+En los últimos 30 días se cobró RD$8,500; en los 30 anteriores, RD$0.
+
+Descargar cobros en CSV
+
+Cursos
+
+Cuánta gente tiene cada curso y cómo avanza. Se resaltan los cursos con avance promedio menor de 40 %.
+
+Descargar en CSV
+Avance promedio por curso
+Matemática Básica
+0 % · bajo
+Taller de Lectura
+0 % · bajo
+
+Ordenar por:
+Curso
+Inscritos
+Retirados
+Avance promedio ↑
+Por calificar
+Nota promedio
+
+Cursos: inscritos, retirados, avance, entregas por calificar y nota promedio
+Matemática Básica
+Luis Peralta
+Inscritos: 4
+Retirados: 0
+Avance promedio: 0 %Avance bajo
+Por calificar: 2
+Nota promedio: Sin notas
+Taller de Lectura
+Luis Peralta
+Inscritos: 2
+Retirados: 0
+Avance promedio: 0 %Avance bajo
+Por calificar: Al día
+Nota promedio: Sin notas
+Estudiantes en riesgo
+
+Estudiantes que conviene contactar: llevan 14 días sin actividad, avanzan mucho menos que su grupo, asisten a menos del 80 % de las clases o tienen tareas vencidas.
+
+Descargar en CSV
+Motivos (1 estudiante en total; uno puede tener varios)
+Sin actividad en 14 días
+0
+Tareas vencidas sin entregar
+0
+Asistencia menor de 80 %
+1
+Avance bajo
+0
+
+Ordenar por:
+Estudiante
+Motivo ↓
+Avance
+Asistencia
+Tareas vencidas
+
+Estudiantes en riesgo y el motivo
+Juan Castillo
+Motivo: Asistencia de 0 % (0 de 1 clases)
+Avance: 0 %
+Asistencia: 0 %
+Tareas vencidas: 0
+Docentes
+
+Carga de cada docente y cuánto llevan esperando los estudiantes por una calificación.
+
+Descargar en CSV
+Entregas por calificar
+Luis Peralta
+2
+
+Ordenar por:
+Docente
+Cursos
+Estudiantes
+Por calificar
+La más antigua espera ↑
+
+Docentes: cursos, estudiantes y entregas por calificar
+Luis Peralta
+Cursos: 2
+Estudiantes: 4
+Por calificar: 2
+La más antigua espera: Desde hoy
+Acceso
+
+Personas que todavía no pueden entrar porque no han creado su contraseña. El archivo trae sus nombres y correos para invitarlas.
+
+Descargar en CSV
+2 personas aún no pueden entrar
+Estudiante
+2 de 6
+Administrador
+0 de 1
+Coordinador
+0 de 1
+Tutor
+0 de 1
+Docente
+0 de 1
+
+Para enviarles la invitación ve a Importar e invitar.
+
+Grupos y programas
+
+Tamaño y avance promedio de cada grupo y de cada programa.
+
+Descargar en CSV
+Avance promedio por grupo
+Grupo A – Mañana
+0 %
+
+Ordenar por:
+Grupo
+Estudiantes
+Avance promedio ↑
+
+Grupos: estudiantes y avance promedio
+Grupo A – Mañana
+Programa: Bachillerato Técnico
+Estudiantes: 2 de 30
+Avance promedio: 0 %
+Avance promedio por programa
+Bachillerato Técnico
+0 %
+
+Ordenar por:
+Programa
+Estudiantes
+Avance promedio ↑
+
+Programas: cursos, estudiantes y avance promedio
+Bachillerato Técnico
+Cursos: 1
+Estudiantes: 4
+Avance promedio: 0 %
+
+Descargar programas en CSV
