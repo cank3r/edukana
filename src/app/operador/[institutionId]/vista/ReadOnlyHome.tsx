@@ -1,4 +1,5 @@
 import type { AdminHome } from "@/server/admin-home";
+import { formatCount } from "../../format";
 
 /** Presentation-only projection of the same data used by AdminHome; intentionally has no action props or dashboard links. */
 export function ReadOnlyHome({ home }: { home: AdminHome }) {
@@ -10,7 +11,7 @@ export function ReadOnlyHome({ home }: { home: AdminHome }) {
     <h1 className="break-words text-2xl font-bold" style={{ color: "var(--navy)" }}>{home.institutionName}</h1>
     <section aria-label="Tu institución en números" className="grid grid-cols-2 gap-3 sm:grid-cols-3">
       {(Object.keys(labels) as Array<keyof typeof labels>).map((key) => <div key={key} className="rounded-xl border border-slate-200 bg-white p-4">
-        <p className="text-2xl font-bold text-slate-950">{home.numbers[key]}</p><p className="text-sm text-slate-700">{labels[key]}</p>
+        <p className="text-2xl font-bold text-slate-950">{formatCount(home.numbers[key])}</p><p className="text-sm text-slate-700">{labels[key]}</p>
       </div>)}
     </section>
     <section className="space-y-3"><h2 className="text-lg font-semibold text-slate-950">Requiere tu atención</h2>

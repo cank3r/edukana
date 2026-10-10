@@ -2,7 +2,16 @@
 
 import { useId, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { zonedDateKey, zonedTimeToUtc, zonedTimeValue } from "@/lib/timezone";
+import { OPERATOR_TIME_ZONE } from "../format";
 import { saveAnnouncementAction, endAnnouncementAction } from "./actions";
+
+/** Valor de un campo `datetime-local` en hora de Santo Domingo a partir de un instante ISO. */
+const localValue = (iso: string | null | undefined) => {
+  if (!iso) return undefined;
+  const instant = new Date(iso);
+  return `${zonedDateKey(instant, OPERATOR_TIME_ZONE)}T${zonedTimeValue(instant, OPERATOR_TIME_ZONE)}`;
+};
 
 export type AnnouncementFormValue = {
   id: string; title: string; body: string; level: "INFO" | "WARNING"; audience: "ALL" | "ADMINS" | "INDEPENDENT";
@@ -17,10 +26,14 @@ export function AnnouncementForm({ initial }: { initial?: AnnouncementFormValue 
   return <div className="space-y-6">
     <form aria-label={initial ? "Editar aviso" : "Crear aviso"} className="space-y-4 rounded-xl border bg-white p-4" action={(form) => {
       startTransition(async () => {
-        // Inputs are explicitly UTC, so server and operator device zones cannot shift publication.
+        // Los campos se escriben en hora de Santo Domingo; se envía el instante UTC exacto, sin depender
+        // de la zona del servidor ni del dispositivo del operador.
         for (const key of ["startsAt", "endsAt"]) {
           const value = String(form.get(key) || "");
-          if (value) form.set(key, `${value}:00.000Z`);
+          if (!value) continue;
+          const instant = zonedTimeToUtc(value.slice(0, 10), value.slice(11, 16), OPERATOR_TIME_ZONE);
+          if (!instant) { setMessage("Revisa las fechas: usa día y hora válidos."); return; }
+          form.set(key, instant.toISOString());
         }
         try {
           const result = await saveAnnouncementAction(form);
@@ -45,12 +58,12 @@ export function AnnouncementForm({ initial }: { initial?: AnnouncementFormValue 
           <option value="ALL">Todas las personas</option><option value="ADMINS">Administradores</option>
           <option value="INDEPENDENT">Docentes independientes</option>
         </select></div>
-        <label>Inicio (UTC)<input type="datetime-local" name="startsAt" className={field} required
-          defaultValue={initial?.startsAt.slice(0, 16)} /></label>
-        <label>Fin (UTC, opcional)<input type="datetime-local" name="endsAt" className={field}
-          defaultValue={initial?.endsAt?.slice(0, 16)} /></label>
+        <label>Inicio<input type="datetime-local" name="startsAt" className={field} required
+          defaultValue={localValue(initial?.startsAt)} /></label>
+        <label>Fin (opcional)<input type="datetime-local" name="endsAt" className={field}
+          defaultValue={localValue(initial?.endsAt)} /></label>
       </div>
-      <p className="text-sm text-slate-600">Las fechas están en UTC. Sin fecha de fin, se mostrará hasta que lo termines.</p>
+      <p className="text-sm text-slate-600">Las horas son de Santo Domingo. Sin fecha de fin, se mostrará hasta que lo termines.</p>
       <label className="flex min-h-11 items-center gap-3 text-sm"><input type="checkbox" name="confirmed" value="yes" required />
         Confirmo que el mensaje se mostrará a la audiencia elegida durante estas fechas.</label>
       <button disabled={pending} className="min-h-11 rounded-lg bg-blue-700 px-4 text-white disabled:opacity-50">

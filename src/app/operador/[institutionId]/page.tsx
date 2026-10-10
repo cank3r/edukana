@@ -9,7 +9,7 @@ import { notFound } from "next/navigation";
 import { INSTITUTION_TYPE_OPTIONS } from "@/server/platform/institution-settings";
 import { getInstitutionForOperator, type AdminInvitationState } from "@/server/platform/operator";
 import { getOperatorEmail } from "@/server/platform/operator-session";
-import { formatOperatorDate } from "../format";
+import { formatCount, formatOperatorDate } from "../format";
 import { ResendInvitation } from "./ResendInvitation";
 
 export const dynamic = "force-dynamic";
@@ -36,9 +36,9 @@ export default async function OperatorInstitutionPage({ params }: { params: Prom
       </header>
 
       <section className="grid gap-3 sm:grid-cols-3" aria-label="Resumen">
-        <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="text-2xl font-bold text-slate-950">{institution.activePeople}</p><p className="text-sm text-slate-600">Personas activas</p></div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="text-2xl font-bold text-slate-950">{institution.courses}</p><p className="text-sm text-slate-600">Cursos</p></div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="text-2xl font-bold text-slate-950">{institution.withoutPassword}</p><p className="text-sm text-slate-600">Sin contraseña todavía</p></div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="text-2xl font-bold text-slate-950">{formatCount(institution.activePeople)}</p><p className="text-sm text-slate-600">Personas activas</p></div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="text-2xl font-bold text-slate-950">{formatCount(institution.courses)}</p><p className="text-sm text-slate-600">Cursos</p></div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4"><p className="text-2xl font-bold text-slate-950">{formatCount(institution.withoutPassword)}</p><p className="text-sm text-slate-600">Sin contraseña todavía</p></div>
       </section>
 
       <section className="space-y-3">
@@ -67,7 +67,7 @@ export default async function OperatorInstitutionPage({ params }: { params: Prom
         <p className="text-sm text-slate-700">
           {institution.withoutPassword === 0
             ? "Todas las personas activas ya crearon su contraseña."
-            : `${institution.withoutPassword} ${institution.withoutPassword === 1 ? "persona no ha" : "personas no han"} creado su contraseña. ${institution.pendingInvitations} de ellas no tiene${institution.pendingInvitations === 1 ? "" : "n"} un enlace vigente.`}
+            : `${formatCount(institution.withoutPassword)} ${institution.withoutPassword === 1 ? "persona no ha" : "personas no han"} creado su contraseña. ${formatCount(institution.pendingInvitations)} de ellas no tiene${institution.pendingInvitations === 1 ? "" : "n"} un enlace vigente.`}
         </p>
         {institution.pendingInvitations > 0 && <p className="text-sm text-slate-600">La administración de la institución puede invitarlas desde Personas → Importar e invitar.</p>}
       </section>

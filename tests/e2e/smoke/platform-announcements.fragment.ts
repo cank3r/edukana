@@ -7,7 +7,7 @@ export async function platformAnnouncementsSmoke(page: Page, tag: string) {
   await page.getByRole("link", { name: "Crear aviso", exact: true }).click();
   await page.getByLabel("Título", { exact: true }).fill(title);
   await page.getByLabel("Mensaje", { exact: true }).fill("Mensaje de prueba de la plataforma.");
-  await page.getByLabel("Inicio (UTC)", { exact: true }).fill("2026-01-01T00:00");
+  await page.getByLabel("Inicio", { exact: true }).fill("2026-01-01T00:00");
   await page.getByLabel(/Confirmo que el mensaje/).check();
   await page.getByRole("button", { name: "Crear aviso", exact: true }).click();
   await expect(page.getByRole("status")).toHaveText("Aviso guardado.");

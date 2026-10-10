@@ -24,7 +24,7 @@ export async function backofficeBillingSmoke(page: Page, target: BackofficeTarge
   await expect(change.getByRole("status")).toContainText("Cambios guardados");
   await page.reload();
   await expect(billing).toContainText("Profesional");
-  await expect(billing).toContainText("50.00 DOP");
+  await expect(billing).toContainText("RD$50.00");
   await billing.getByText("Generar factura del período", { exact: true }).click();
   await billing.getByRole("button", { name: "Generar factura", exact: true }).click();
   await expect(billing.getByRole("status")).toContainText("Cambios guardados");
@@ -43,5 +43,5 @@ export async function backofficeBillingSmoke(page: Page, target: BackofficeTarge
   await page.goto("/operador/facturacion?estado=PAID");
   const paid = page.locator("article").filter({ has: page.getByRole("link", { name: target.institutionName, exact: true }) });
   await expect(paid).toContainText("Pagada");
-  await expect(paid).toContainText("50.00 DOP");
+  await expect(paid).toContainText("RD$50.00");
 }

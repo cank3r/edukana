@@ -284,6 +284,7 @@ test.describe("galeria demo", () => {
       await gallery.shot("tablero del negocio", "/operador/tablero", { title: "Tablero del negocio" });
       await gallery.shot("instituciones", "/operador");
       await gallery.shot("ficha institucion demo", `/operador/${demo!.institutionId}`, { title: "Instituto Técnico Demo" });
+      await gallery.shot("facturacion", "/operador/facturacion?estado=ALL", { title: "Facturación" });
     }
     gallery.finish();
   });

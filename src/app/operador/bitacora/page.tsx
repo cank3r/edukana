@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { getOperatorEmail } from "@/server/platform/operator-session";
 import { listAuditLog, type AuditFilters } from "@/server/platform/audit-log";
-const auditDate = (value: Date) => new Intl.DateTimeFormat("es", { timeZone: "UTC", dateStyle: "medium", timeStyle: "short" }).format(value);
+import { formatOperatorDateTime } from "../format";
 export const dynamic = "force-dynamic";
 const control = "min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-slate-950";
 
@@ -28,7 +28,7 @@ export default async function AuditLogPage({ searchParams }: { searchParams: Pro
   if (result?.nextCursor) next.set("cursor", result.nextCursor);
   return <div className="mx-auto max-w-5xl space-y-5 p-4 sm:p-8">
     <header><h1 className="text-2xl font-bold" style={{ color: "var(--navy)" }}>Bitácora</h1>
-      <p className="text-sm text-slate-600">Consulta quién hizo cada cambio. Las fechas usan UTC.</p></header>
+      <p className="text-sm text-slate-600">Consulta quién hizo cada cambio. Las horas se muestran en hora de Santo Domingo; el filtro «Desde» y «Hasta» cuenta días completos en UTC.</p></header>
     <form className="grid gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:grid-cols-2">
       <label className="text-sm">Institución<select name="institutionId" defaultValue={filters.institutionId ?? ""} className={control}>
         <option value="">Todas las instituciones</option>{institutions.map((institution) => <option key={institution.id} value={institution.id}>{institution.name}</option>)}
@@ -47,7 +47,7 @@ export default async function AuditLogPage({ searchParams }: { searchParams: Pro
     {error && <p role="alert" className="rounded-lg bg-red-50 p-4 text-red-800">{error}</p>}
     {result && !result.rows.length && <p className="rounded-xl border border-dashed border-slate-300 p-4 text-slate-700">No hay registros con estos filtros. Cambia las fechas o limpia los filtros.</p>}
     <ol className="space-y-3">{result?.rows.map((row) => <li key={row.id} className="space-y-1 rounded-xl border border-slate-200 bg-white p-4">
-      <p className="text-sm text-slate-600"><time dateTime={row.createdAt.toISOString()}>{auditDate(row.createdAt)} UTC</time></p>
+      <p className="text-sm text-slate-600"><time dateTime={row.createdAt.toISOString()}>{formatOperatorDateTime(row.createdAt)}</time></p>
       <p className="break-all font-semibold text-slate-950">{row.operator}</p>
       <p className="break-all text-sm text-slate-700">{row.action}</p>
       <p className="break-words text-sm text-slate-700">{row.institutionName} · {row.entity}</p>

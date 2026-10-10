@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getOperatorEmail } from "@/server/platform/operator-session";
 import { listIndependentTeachers } from "@/server/platform/independent-report";
-import { formatMoney } from "@/server/finance/money";
+import { formatMoney, formatOperatorDate } from "@/app/operador/format";
+import { plural } from "@/lib/ux";
 
 export async function IndependentTeachersList({ query = "", status = "" }: { query?: string; status?: string }) {
   const rows = await listIndependentTeachers(await getOperatorEmail(), query, new Date(), status);
@@ -14,7 +15,7 @@ export async function IndependentTeachersList({ query = "", status = "" }: { que
       <Link href={`/operador/${row.id}`} className="inline-flex min-h-11 items-center font-semibold text-blue-700 underline">{row.teacherName}</Link>
       <p className="text-sm">{row.name}</p>
       <p className="break-all text-sm text-slate-600">{row.email ?? "Sin correo de administración"}</p>
-      <p className="text-sm">{row.publishedCourses} cursos públicos publicados · Alta: {row.createdAt.toLocaleDateString("es-DO", { timeZone: "UTC" })}</p>
+      <p className="text-sm">{plural(row.publishedCourses, "curso público publicado", "cursos públicos publicados")} · Alta: {formatOperatorDate(row.createdAt)}</p>
       <p className="text-sm">Ventas del mes: {row.sales.length ? row.sales.map((sale) =>
         `${formatMoney(sale.amountCents, sale.currency)} (${sale.count} pedidos)`).join(" · ") : "Sin ventas pagadas"}</p>
     </li>)}</ul>

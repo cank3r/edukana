@@ -74,13 +74,34 @@ export type ChargeRow = {
   payments: PaymentEntry[];
 };
 export type FinanceSummary = { receivableCents: number; overdueCents: number; collectedThisMonthCents: number };
-export type ChargeFilters = { query?: string; status?: string; periodId?: string };
+/** Vista de la lista de Cobros. «Por cobrar» incluye lo vencido. */
+export type ChargeView = "vencidos" | "por-cobrar" | "pagados" | "todos";
+export const CHARGE_VIEWS: readonly ChargeView[] = ["vencidos", "por-cobrar", "pagados", "todos"];
+export const CHARGE_PAGE_SIZE = 50;
+export type ChargeFilters = {
+  query?: string;
+  /** Sin vista se listan todos los cargos (lo que se debe primero). */
+  view?: ChargeView;
+  /** Compatibilidad: un estado que se muestra (OVERDUE, PAID…) se traduce a su vista. */
+  status?: string;
+  periodId?: string;
+  /** Página desde 1, de `CHARGE_PAGE_SIZE` cargos. */
+  page?: number;
+};
 export type ChargeList = {
   currency: string;
   todayKey: string;
   summary: FinanceSummary;
+  /** Todos los cargos de la institución. */
   total: number;
+  /** Cargos que cumplen la búsqueda, el período y la vista. */
   matching: number;
+  /** Cuántos cargos hay en cada vista con la búsqueda y el período actuales. */
+  counts: Record<ChargeView, number>;
+  view: ChargeView;
+  page: number;
+  pageSize: number;
+  pages: number;
   charges: ChargeRow[];
 };
 export type StudentAccount = {
@@ -145,7 +166,6 @@ export const FINANCE_AUDIT = {
 const ENTITY = "PaymentConcept";
 const PAYMENT_ENTITY = "Payment";
 const BATCH_ENTITY = "PaymentBatch";
-const LIST_LIMIT = 200;
 const MAX_GROUP = 1000;
 const NO_PERMISSION = "No tienes permiso para gestionar cobros.";
 const NOT_FOUND = "No encontramos ese cargo. Puede que alguien lo haya borrado; recarga la página.";
@@ -371,36 +391,134 @@ function totals(rows: ChargeRow[]) {
   return { owed, overdue, paid };
 }
 
-/** Resumen y lista de cargos de la institución. Null si quien pide no gestiona cobros. */
+/**
+ * Resumen de cobros de toda la institución: por cobrar (incluye lo vencido), vencido y cobrado en el mes
+ * de hoy. Sale de `chargeBalances`, la misma función del tablero de la dirección, el portal y los
+ * reportes, para que todas las pantallas den la misma cifra.
+ */
+async function financeSummary(institutionId: string, todayKey: string, now: Date): Promise<FinanceSummary> {
+  const ids = await db.paymentConcept.findMany({ where: { institutionId }, select: { id: true } });
+  const balances = await chargeBalances(institutionId, ids.map((row) => row.id), now);
+  const month = todayKey.slice(0, 7);
+  const summary: FinanceSummary = { receivableCents: 0, overdueCents: 0, collectedThisMonthCents: 0 };
+  for (const balance of balances.values()) {
+    // «Cobrado este mes»: pagos no anulados cuyo día de pago cae en el mes de hoy.
+    for (const entry of balance.received) if (entry.paidOn.startsWith(month)) summary.collectedThisMonthCents += entry.amountCents;
+    if (balance.status === "CANCELLED") continue;
+    summary.receivableCents += balance.balanceCents;
+    if (balance.shownStatus === "OVERDUE") summary.overdueCents += balance.balanceCents;
+  }
+  return summary;
+}
+
+type Bucket = { where: Prisma.PaymentConceptWhereInput; orderBy: Prisma.PaymentConceptOrderByWithRelationInput[] };
+
+/**
+ * Grupos de la lista, en el orden en que se muestran: vencido (el más antiguo primero), por vencer (el más
+ * próximo primero), pagado (el más reciente primero) y anulado. Se filtran en la base con el estado guardado
+ * (que registrar y anular pagos mantienen al día) y la fecha de vencimiento: un cargo abierto cuyo día de
+ * vencimiento es anterior a hoy (`AAAA-MM-DD` en la zona de la institución) está vencido, igual que en `shownStatus`.
+ */
+function buckets(todayKey: string): Record<"overdue" | "upcoming" | "paid" | "cancelled", Bucket> {
+  // Las fechas de vencimiento se leen en UTC: antes de la medianoche UTC de hoy es un día anterior.
+  const todayStart = new Date(`${todayKey}T00:00:00.000Z`);
+  const open = { status: { in: ["PENDING", "PARTIAL", "OVERDUE"] as ChargeStatus[] } };
+  const tie: Prisma.PaymentConceptOrderByWithRelationInput[] = [{ createdAt: "desc" }, { id: "asc" }];
+  return {
+    overdue: {
+      where: { AND: [open, { OR: [{ status: "OVERDUE" }, { dueDate: { lt: todayStart } }] }] },
+      orderBy: [{ dueDate: { sort: "asc", nulls: "last" } }, ...tie],
+    },
+    upcoming: {
+      where: { status: { in: ["PENDING", "PARTIAL"] }, OR: [{ dueDate: null }, { dueDate: { gte: todayStart } }] },
+      orderBy: [{ dueDate: { sort: "asc", nulls: "last" } }, ...tie],
+    },
+    paid: { where: { status: "PAID" }, orderBy: [{ paidAt: { sort: "desc", nulls: "last" } }, ...tie] },
+    cancelled: { where: { status: "CANCELLED" }, orderBy: tie },
+  };
+}
+
+const VIEW_BUCKETS: Record<ChargeView, Array<keyof ReturnType<typeof buckets>>> = {
+  vencidos: ["overdue"],
+  "por-cobrar": ["overdue", "upcoming"],
+  pagados: ["paid"],
+  todos: ["overdue", "upcoming", "paid", "cancelled"],
+};
+const STATUS_VIEW: Record<string, ChargeView> = { OVERDUE: "vencidos", PENDING: "por-cobrar", PARTIAL: "por-cobrar", PAID: "pagados" };
+
+/** Condición de búsqueda por estudiante (sin distinguir mayúsculas ni tildes) y período. */
+async function searchWhere(institutionId: string, filters: ChargeFilters): Promise<Prisma.PaymentConceptWhereInput> {
+  const and: Prisma.PaymentConceptWhereInput[] = [];
+  if (filters.periodId) and.push({ periodId: filters.periodId });
+  const needle = plain((filters.query ?? "").trim().slice(0, 80));
+  if (needle) {
+    // Solo los estudiantes con cargos en esta institución (uno por persona), no los cargos.
+    const students = await db.paymentConcept.findMany({
+      where: { institutionId, studentId: { not: null } },
+      distinct: ["studentId"],
+      select: { studentId: true, student: { select: { name: true } } },
+    });
+    const ids = students.filter((row) => row.studentId && plain(row.student?.name ?? "").includes(needle)).map((row) => row.studentId as string);
+    const general = plain("Cargo general").includes(needle);
+    and.push({ OR: [{ studentId: { in: ids } }, ...(general ? [{ studentId: null }] : [])] });
+  }
+  return { AND: and };
+}
+
+/**
+ * Resumen y una página de cargos de la institución. Null si quien pide no gestiona cobros.
+ *
+ * La lista se pagina en la base (`CHARGE_PAGE_SIZE` por página): solo los cargos de la página se leen
+ * con su estudiante, sus pagos y su anulación. Primero lo que se debe (vencido y luego por vencer), después
+ * lo pagado y al final lo anulado.
+ */
 export async function listCharges(actor: Actor, filters: ChargeFilters = {}, now = new Date()): Promise<ChargeList | null> {
   if (!(await canManageFinance(actor))) return null;
-  const { currency, todayKey } = await institutionContext(actor.institutionId, now);
-  const loaded = await loadRows(actor.institutionId, {}, todayKey, true);
-  const rows = loaded.map((item) => item.row);
+  const institutionId = actor.institutionId;
+  const { currency, todayKey } = await institutionContext(institutionId, now);
+  const view: ChargeView = filters.view && CHARGE_VIEWS.includes(filters.view)
+    ? filters.view
+    : (filters.status && STATUS_VIEW[filters.status]) || "todos";
+  const groups = buckets(todayKey);
+  const base = await searchWhere(institutionId, filters);
+  const scoped = (where: Prisma.PaymentConceptWhereInput) => ({ AND: [{ institutionId }, base, where] });
 
-  // «Cobrado este mes»: pagos no anulados cuyo día de pago (`Payment.paidOn`) cae en el mes de hoy.
-  const month = todayKey.slice(0, 7);
-  let collected = 0;
-  for (const { balance } of loaded) {
-    for (const entry of balance.received) if (entry.paidOn.startsWith(month)) collected += entry.amountCents;
-  }
-  const { owed, overdue } = totals(rows);
-
-  const needle = plain((filters.query ?? "").trim());
-  const matching = rows.filter(
-    (row) =>
-      (!needle || plain(row.studentName).includes(needle)) &&
-      (!filters.status || row.status === filters.status) &&
-      (!filters.periodId || row.periodId === filters.periodId),
-  );
-  return {
-    currency,
-    todayKey,
-    summary: { receivableCents: owed, overdueCents: overdue, collectedThisMonthCents: collected },
-    total: rows.length,
-    matching: matching.length,
-    charges: matching.slice(0, LIST_LIMIT),
+  const [summary, total, overdue, upcoming, paid, cancelled] = await Promise.all([
+    financeSummary(institutionId, todayKey, now),
+    db.paymentConcept.count({ where: { institutionId } }),
+    db.paymentConcept.count({ where: scoped(groups.overdue.where) }),
+    db.paymentConcept.count({ where: scoped(groups.upcoming.where) }),
+    db.paymentConcept.count({ where: scoped(groups.paid.where) }),
+    db.paymentConcept.count({ where: scoped(groups.cancelled.where) }),
+  ]);
+  const sizes = { overdue, upcoming, paid, cancelled };
+  const counts: Record<ChargeView, number> = {
+    vencidos: overdue,
+    "por-cobrar": overdue + upcoming,
+    pagados: paid,
+    todos: overdue + upcoming + paid + cancelled,
   };
+  const matching = counts[view];
+  const pages = Math.max(1, Math.ceil(matching / CHARGE_PAGE_SIZE));
+  const page = Math.min(Math.max(1, Math.trunc(filters.page ?? 1) || 1), pages);
+
+  // Recorre los grupos de la vista en orden y toma la parte de cada uno que cae en la página.
+  let skip = (page - 1) * CHARGE_PAGE_SIZE;
+  let take = CHARGE_PAGE_SIZE;
+  const pageIds: string[] = [];
+  for (const key of VIEW_BUCKETS[view]) {
+    if (take <= 0) break;
+    if (skip >= sizes[key]) { skip -= sizes[key]; continue; }
+    const rows = await db.paymentConcept.findMany({ where: scoped(groups[key].where), orderBy: groups[key].orderBy, skip, take, select: { id: true } });
+    pageIds.push(...rows.map((row) => row.id));
+    take -= rows.length;
+    skip = 0;
+  }
+
+  const loaded = pageIds.length ? await loadRows(institutionId, { id: { in: pageIds } }, todayKey, false) : [];
+  const byId = new Map(loaded.map((item) => [item.row.id, item.row]));
+  const charges = pageIds.map((id) => byId.get(id)).filter((row): row is ChargeRow => Boolean(row));
+  return { currency, todayKey, summary, total, matching, counts, view, page, pageSize: CHARGE_PAGE_SIZE, pages, charges };
 }
 
 /** Períodos, grupos y cursos para los formularios. Null si quien pide no gestiona cobros. */
