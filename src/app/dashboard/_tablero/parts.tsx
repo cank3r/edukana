@@ -99,7 +99,7 @@ export function Indicator({ href, label, value, detail, change, fallback, trend,
   return (
     <Link href={href} className="group flex min-w-0 flex-col gap-1 bg-white p-3 hover:bg-slate-50 sm:p-5">
       <span className="text-sm font-semibold text-slate-700 group-hover:underline">{label}</span>
-      <span className={`break-words font-bold tabular-nums tracking-tight ${compact ? "text-2xl sm:text-3xl" : "text-2xl sm:text-4xl"}`} style={{ color: NAVY }}>{value}</span>
+      <span className={`break-words font-bold tabular-nums tracking-tight ${compact ? "text-xl sm:text-2xl lg:text-xl 2xl:text-2xl" : "text-2xl sm:text-4xl"}`} style={{ color: NAVY }}>{value}</span>
       <span className="text-xs text-slate-600 sm:text-sm">{detail}</span>
       <span className="mt-auto pt-2"><Delta change={change} fallback={fallback} /></span>
       <span className="pt-2"><Sparkline values={trend} /></span>

@@ -325,7 +325,8 @@ async function RiskBlock({ ctx }: { ctx: BoardContext }) {
         <ul className="divide-y divide-slate-100">
           {risk.rows.map((row) => (
             <li key={row.studentId} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="min-w-0">
+              {/* Ancho propio para el nombre: con varias señales, sin esto se parte en tres renglones. */}
+              <div className="min-w-0 sm:w-44 sm:shrink-0">
                 {ctx.can.personLink ? (
                   <Link href={`/dashboard/gestion/personas/${row.studentId}`} className="inline-flex min-h-11 items-center break-words font-semibold text-slate-900 underline-offset-2 hover:underline sm:min-h-0">{row.name}</Link>
                 ) : (
@@ -500,7 +501,7 @@ async function AdmissionsBlock({ ctx }: { ctx: BoardContext }) {
   const steps = [
     { label: "Solicitudes nuevas", value: funnel.received, note: funnel.waiting > 0 ? `${formatCount(funnel.waiting)} sin atender todavía` : "Todas atendidas" },
     { label: "En proceso", value: funnel.inProcess, note: "Con documentos, en revisión o admitidas" },
-    { label: "Inscritas", value: funnel.enrolled, note: funnel.rejected > 0 ? `${formatCount(funnel.rejected)} no admitidas` : "Ya son estudiantes" },
+    { label: "Inscritas", value: funnel.enrolled, note: funnel.rejected > 0 ? `${formatCount(funnel.rejected)} ${funnel.rejected === 1 ? "no admitida" : "no admitidas"}` : "Ya son estudiantes" },
   ];
   const change = compare(funnel.received, funnel.receivedBefore, ctx.range.previousLabel, { kind: "count", higherIsBetter: true, unit: ["solicitud", "solicitudes"] });
   return (

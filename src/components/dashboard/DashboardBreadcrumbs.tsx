@@ -37,7 +37,8 @@ export default function DashboardBreadcrumbs() {
           const isVirtualGroup = isVirtual(href);
           const label = labelAt(index);
           // «Personas › Personas › Persona»: el tramo agrupador que repite al anterior no se muestra.
-          if (isVirtualGroup && index > 0 && label === labelAt(index - 1)) return null;
+          // Igual con «Curso › Lección › Lección»: el agrupador sin pantalla repite al tramo siguiente.
+          if (isVirtualGroup && index > 0 && (label === labelAt(index - 1) || (index + 1 < segments.length && label === labelAt(index + 1)))) return null;
           return <span className="flex items-center gap-1" key={href}>{index > 0 && <ChevronRight size={14} aria-hidden="true" />}{current ? <span aria-current="page" className="font-semibold text-slate-900">{label}</span> : isVirtualGroup ? <span>{label}</span> : <Link className="rounded-sm hover:text-blue-700" href={href}>{label}</Link>}</span>;
         })}
       </nav>

@@ -110,8 +110,25 @@ class Gallery {
     fatal.push(...new Set(this.serverErrors));
     if (this.consoleErrors.length) defects.push(`Consola: ${[...new Set(this.consoleErrors)].slice(0, 3).join(" / ")}`);
     if (this.mobile) {
-      const wide = await this.page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth).catch(() => 0);
-      if (wide > 1) defects.push(`Desbordamiento horizontal de ${wide}px.`);
+      // Si la página es más ancha que la pantalla, se anota el elemento más profundo que se sale (para saber qué corregir).
+      const wide = await this.page
+        .evaluate(() => {
+          const extra = document.documentElement.scrollWidth - document.documentElement.clientWidth;
+          if (extra <= 1) return null;
+          const found: string[] = [];
+          for (const element of Array.from(document.querySelectorAll<HTMLElement>("body *"))) {
+            const box = element.getBoundingClientRect();
+            if (box.width === 0 || box.right <= window.innerWidth + 1) continue;
+            // Solo donde nace el desborde: el padre cabe en la pantalla, pero este elemento no (y el padre no lo recorta).
+            const parent = element.parentElement;
+            if (!parent || parent.getBoundingClientRect().right > window.innerWidth + 1 || getComputedStyle(parent).overflowX !== "visible") continue;
+            found.push(`<${element.tagName.toLowerCase()} class="${String(element.className).slice(0, 100)}"> ${Math.round(box.width)}px «${(element.innerText || "").replace(/\s+/g, " ").slice(0, 50)}»`);
+          }
+          const culprit = found.slice(0, 3).join(" · ");
+          return { extra, culprit };
+        })
+        .catch(() => null);
+      if (wide) defects.push(`Desbordamiento horizontal de ${wide.extra}px; se sale: ${wide.culprit}.`);
     }
 
     const file = `${slug(this.role)}-${nn}-${slug(screen)}.jpg`;
