@@ -33,11 +33,11 @@ export async function generatePlatformInvoice(operator: string | null, instituti
     return after;
   });
 }
-export async function payPlatformInvoice(operator: string | null, institutionId: string, invoiceId: string, input: unknown) {
+export async function payPlatformInvoice(operator: string | null, institutionId: string, invoiceId: string, input: unknown, now = new Date()) {
   requirePlatformOperator(operator);
   const payment = z.object({ paymentMethod: z.enum(["transferencia", "efectivo", "tarjeta", "otro"]),
     reference: z.string().trim().max(200).optional(), paidAt: z.date() }).parse(input);
-  if (payment.paidAt > new Date()) throw new Error("La fecha del pago no puede estar en el futuro.");
+  if (payment.paidAt > now) throw new Error("La fecha del pago no puede estar en el futuro.");
   return db.$transaction(async (tx) => {
     await lockBilling(tx, institutionId);
     const before = await tx.platformInvoice.findFirstOrThrow({ where: { id: invoiceId, institutionId } });
@@ -47,8 +47,9 @@ export async function payPlatformInvoice(operator: string | null, institutionId:
     const sub = await tx.institutionSubscription.findUnique({ where: { institutionId } });
     // Current overlapping period or contiguous next period: no gaps, no shortening, no revival of canceled subscriptions.
     if (sub && sub.status !== "CANCELED" && before.periodStart <= sub.currentPeriodEnd && before.periodEnd >= sub.currentPeriodEnd) {
+      const currentPeriodEnd = before.periodEnd > sub.currentPeriodEnd ? before.periodEnd : sub.currentPeriodEnd;
       const updated = await tx.institutionSubscription.update({ where: { institutionId }, data: {
-        status: "ACTIVE", currentPeriodEnd: before.periodEnd > sub.currentPeriodEnd ? before.periodEnd : sub.currentPeriodEnd,
+        status: currentPeriodEnd >= now ? "ACTIVE" : "PAST_DUE", currentPeriodEnd,
       } });
       await auditPlatform(tx, operator, "PLATFORM_SUBSCRIPTION_PAYMENT_APPLIED", "InstitutionSubscription", sub.id, institutionId, sub, updated);
     }

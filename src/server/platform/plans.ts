@@ -27,6 +27,7 @@ export async function updatePlatformPlan(operator: string | null, input: unknown
   requirePlatformOperator(operator);
   const { code, ...data } = platformPlanSchema.parse(input);
   return db.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT "code" FROM "platform_plans" WHERE "code"::text = ${code} FOR UPDATE`;
     const before = await tx.platformPlan.findUniqueOrThrow({ where: { code } });
     const after = await tx.platformPlan.update({ where: { code }, data });
     await auditPlatform(tx, operator, "PLATFORM_PLAN_UPDATED", "PlatformPlan", code, null, before, after);

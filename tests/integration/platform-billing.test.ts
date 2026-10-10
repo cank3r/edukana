@@ -44,7 +44,8 @@ async function reset() {
   } });
 }
 const period = { periodStart: end, periodEnd: new Date("2025-03-01Z"), dueDate: end };
-const payment = { paymentMethod: "transferencia", reference: "TEST", paidAt: new Date("2025-02-10Z") };
+const billingNow = new Date("2025-01-31T23:30:14.123Z");
+const payment = { paymentMethod: "transferencia", reference: "TEST", paidAt: new Date("2025-01-30Z") };
 
 test("billing: all operator services reject an institution administrator", async () => {
   const denied = "admin@a.test";
@@ -64,22 +65,22 @@ test("billing: trial constant and FREE feature lookup", async () => {
 });
 test("billing: paying next period extends subscription atomically and audits", async () => {
   await reset(); const invoice = await generatePlatformInvoice(OP, a, period);
-  await payPlatformInvoice(OP, a, invoice.id, payment);
+  await payPlatformInvoice(OP, a, invoice.id, payment, billingNow);
   const sub = await db.institutionSubscription.findUniqueOrThrow({ where: { institutionId: a } });
   assert.equal(sub.status, "ACTIVE"); assert.equal(sub.currentPeriodEnd.toISOString(), period.periodEnd.toISOString());
   const audit = await db.auditLog.findFirstOrThrow({ where: { action: "PLATFORM_INVOICE_PAID", entityId: invoice.id } });
   assert.equal((audit.changes as { operator: string }).operator, OP);
-  await assert.rejects(() => payPlatformInvoice(OP, a, invoice.id, payment), /abierta/);
+  await assert.rejects(() => payPlatformInvoice(OP, a, invoice.id, payment, billingNow), /abierta/);
 });
 test("billing: paying current period activates without shortening it", async () => {
   await reset(); const invoice = await generatePlatformInvoice(OP, a, { ...period, periodStart: start, periodEnd: end });
-  await payPlatformInvoice(OP, a, invoice.id, payment);
+  await payPlatformInvoice(OP, a, invoice.id, payment, billingNow);
   const sub = await db.institutionSubscription.findUniqueOrThrow({ where: { institutionId: a } });
   assert.equal(sub.status, "ACTIVE"); assert.equal(sub.currentPeriodEnd.toISOString(), end.toISOString());
 });
 test("billing: foreign institution invoice cannot be paid or voided", async () => {
   await reset(); const invoice = await generatePlatformInvoice(OP, a, period);
-  await assert.rejects(() => payPlatformInvoice(OP, b, invoice.id, payment));
+  await assert.rejects(() => payPlatformInvoice(OP, b, invoice.id, payment, billingNow));
   await assert.rejects(() => voidPlatformInvoice(OP, b, invoice.id));
   assert.equal((await db.platformInvoice.findUniqueOrThrow({ where: { id: invoice.id } })).status, "OPEN");
   assert.ok((await getInstitutionBilling(OP, b)).invoices.every((row) => row.institutionId === b));
@@ -87,24 +88,24 @@ test("billing: foreign institution invoice cannot be paid or voided", async () =
 test("billing: VOID is never a payment and expired trial becomes past due without suspending", async () => {
   await reset(); const invoice = await generatePlatformInvoice(OP, a, period);
   await voidPlatformInvoice(OP, a, invoice.id);
-  await assert.rejects(() => payPlatformInvoice(OP, a, invoice.id, payment), /abierta/);
+  await assert.rejects(() => payPlatformInvoice(OP, a, invoice.id, payment, billingNow), /abierta/);
   await expirePlatformSubscriptions(new Date("2025-02-15Z"));
   assert.equal((await db.institutionSubscription.findUniqueOrThrow({ where: { institutionId: a } })).status, "PAST_DUE");
   assert.ok(await db.institution.findUnique({ where: { id: a } }));
 });
 test("billing: paid old period cannot prevent next expiration or reactivate a later period", async () => {
   await reset(); const invoice = await generatePlatformInvoice(OP, a, { ...period, periodStart: start, periodEnd: end });
-  await payPlatformInvoice(OP, a, invoice.id, payment);
+  await payPlatformInvoice(OP, a, invoice.id, payment, billingNow);
   await expirePlatformSubscriptions(new Date("2025-02-15Z"));
   assert.equal((await db.institutionSubscription.findUniqueOrThrow({ where: { institutionId: a } })).status, "PAST_DUE");
 });
 test("billing: paid next period protects subscription, gap periods do not advance", async () => {
   await reset(); const invoice = await generatePlatformInvoice(OP, a, period);
-  await payPlatformInvoice(OP, a, invoice.id, payment);
+  await payPlatformInvoice(OP, a, invoice.id, payment, billingNow);
   await expirePlatformSubscriptions(new Date("2025-02-15Z"));
   assert.equal((await db.institutionSubscription.findUniqueOrThrow({ where: { institutionId: a } })).status, "ACTIVE");
   const gap = await generatePlatformInvoice(OP, a, { periodStart: new Date("2025-05-01Z"), periodEnd: new Date("2025-06-01Z"), dueDate: end });
-  await payPlatformInvoice(OP, a, gap.id, payment);
+  await payPlatformInvoice(OP, a, gap.id, payment, billingNow);
   assert.equal((await db.institutionSubscription.findUniqueOrThrow({ where: { institutionId: a } })).currentPeriodEnd.toISOString(), period.periodEnd.toISOString());
 });
 test("billing: plan change requires written confirmation and synchronizes legacy enum", async () => {
@@ -152,7 +153,7 @@ test("billing: the invoice form preserves exact trial boundaries and payment act
   form.set("due", "2025-01-31");
   const invoice = await generatePlatformInvoice(OP, a, parsePlatformInvoiceForm(form));
   assert.equal(invoice.periodEnd.getTime(), trialEnd.getTime());
-  await payPlatformInvoice(OP, a, invoice.id, payment);
+  await payPlatformInvoice(OP, a, invoice.id, payment, billingNow);
   const subscription = await db.institutionSubscription.findUniqueOrThrow({ where: { institutionId: a } });
   assert.equal(subscription.status, "ACTIVE");
   assert.equal(subscription.currentPeriodEnd.getTime(), trialEnd.getTime());
@@ -167,4 +168,42 @@ test("billing: extending a past-due period into the future clears attention with
   await db.institutionSubscription.update({ where: { institutionId: a }, data: { status: "CANCELED" } });
   await extendSubscription(OP, a, new Date(future.getTime() + 86400000));
   assert.equal((await db.institutionSubscription.findUniqueOrThrow({ where: { institutionId: a } })).status, "CANCELED");
+});
+
+test("billing: payment after expiration does not reactivate an already elapsed period", async () => {
+  await reset();
+  const invoice = await generatePlatformInvoice(OP, a, { periodStart: start, periodEnd: end, dueDate: end });
+  const expiredNow = new Date("2025-02-15Z");
+  await expirePlatformSubscriptions(expiredNow);
+  await payPlatformInvoice(OP, a, invoice.id, payment, expiredNow);
+  const sub = await db.institutionSubscription.findUniqueOrThrow({ where: { institutionId: a } });
+  assert.equal(sub.status, "PAST_DUE");
+  assert.equal(sub.currentPeriodEnd.getTime(), end.getTime());
+  assert.equal((await db.platformInvoice.findUniqueOrThrow({ where: { id: invoice.id } })).status, "PAID");
+});
+
+test("billing: concurrent plan edits preserve an unbroken audit predecessor chain", async () => {
+  const before = await db.platformPlan.findUniqueOrThrow({ where: { code: "ENTERPRISE" } });
+  const ids: string[] = [];
+  try {
+    const base = { ...before, features: { ai: true, catalog: true } };
+    const previous = await db.auditLog.findMany({ where: { action: "PLATFORM_PLAN_UPDATED", entityId: "ENTERPRISE" }, select: { id: true } });
+    await Promise.all([
+      updatePlatformPlan(OP, { ...base, priceCents: 111111 }),
+      updatePlatformPlan(OP, { ...base, priceCents: 222222 }),
+    ]);
+    const entries = await db.auditLog.findMany({ where: {
+      action: "PLATFORM_PLAN_UPDATED", entityId: "ENTERPRISE", id: { notIn: previous.map((row) => row.id) },
+    } });
+    ids.push(...entries.map((row) => row.id));
+    assert.equal(entries.length, 2);
+    const changes = entries.map((row) => row.changes as { before: { priceCents: number }; after: { priceCents: number } });
+    const first = changes.find((row) => row.before.priceCents === before.priceCents);
+    assert.ok(first);
+    const second = changes.find((row) => row !== first);
+    assert.equal(second?.before.priceCents, first.after.priceCents);
+  } finally {
+    await db.platformPlan.update({ where: { code: before.code }, data: { priceCents: before.priceCents } });
+    await db.auditLog.deleteMany({ where: { id: { in: ids } } });
+  }
 });
