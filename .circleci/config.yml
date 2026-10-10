@@ -87,6 +87,13 @@ jobs:
             dockerize -wait tcp://127.0.0.1:5432 -timeout 60s
             npx prisma migrate deploy
       - run: { name: Sembrar el Instituto Demo, command: npm run test:smoke:seed }
+      # Galería de la demo en uso (tests/e2e/smoke/demo-galeria.smoke.ts) con una contraseña aleatoria que no se imprime.
+      - run:
+          name: Cargar «Instituto Técnico Demo» para la galería
+          command: |
+            echo "export DEMO_PASSWORD=$(openssl rand -hex 12)" >> "$BASH_ENV"
+            source "$BASH_ENV"
+            node --require ./tests/integration/stub-server-only.cjs --import tsx tests/e2e/smoke/demo-load.ts
       - run: { name: Compilar producción, command: npm run build }
       - run:
           name: Arrancar la aplicación

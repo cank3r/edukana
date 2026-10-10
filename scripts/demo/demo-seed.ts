@@ -1202,7 +1202,8 @@ async function fill(institutionId: string, adminId: string, passwordHash: string
       body: "Revisa la fecha límite en la tarea.",
       href: `/dashboard/aula/${course.id}/tareas/${upcoming.id}`,
       readAt: next() < 0.4 ? new Date(now.getTime() - DAY_MS) : null,
-      createdAt: new Date(upcoming.due.getTime() - 7 * DAY_MS),
+      // La tarea vence a las 11:59 p. m.; se avisa por la mañana, cuando el docente la publica (no a medianoche).
+      createdAt: new Date(upcoming.due.getTime() - 7 * DAY_MS - (15 * 60 + 14) * 60_000),
     });
     if (gradedKeys.has(`${lastGraded.id}:${enrollment.id}`)) {
       notificationRows.push({
@@ -1213,7 +1214,7 @@ async function fill(institutionId: string, adminId: string, passwordHash: string
         body: `Curso: ${course.data.name}. Abre la tarea para ver tu nota y los comentarios.`,
         href: `/dashboard/aula/${course.id}/tareas/${lastGraded.id}`,
         readAt: next() < 0.6 ? new Date(now.getTime() - 2 * DAY_MS) : null,
-        createdAt: new Date(lastGraded.due.getTime() + 3 * DAY_MS),
+        createdAt: new Date(lastGraded.due.getTime() + 3 * DAY_MS - (8 * 60 + 27) * 60_000),
       });
     }
     notificationRows.push({
