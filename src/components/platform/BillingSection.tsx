@@ -21,8 +21,9 @@ export async function BillingSection({ institutionId }: { institutionId: string 
       : <p>Esta institución todavía no tiene suscripción. Elige un plan para comenzar.</p>}
     <details><summary className="min-h-11 cursor-pointer py-3">Cambiar plan</summary>
       <BillingForm operation="change" institutionId={institutionId} label="Confirmar cambio de plan">
-        <label className="block">Plan<select name="planCode" defaultValue={sub?.planCode ?? "FREE"} className="block min-h-11 w-full border">
-          {plans.filter((plan) => plan.active).map((plan) => <option key={plan.code} value={plan.code}>{plan.name}</option>)}</select></label>
+        <div><label htmlFor={`billing-plan-${institutionId}`} className="block">Plan</label>
+          <select id={`billing-plan-${institutionId}`} name="planCode" defaultValue={sub?.planCode ?? "FREE"} className="block min-h-11 w-full border">
+          {plans.filter((plan) => plan.active).map((plan) => <option key={plan.code} value={plan.code}>{plan.name}</option>)}</select></div>
         <BillingInput label="Precio pactado en centavos" name="priceCents" type="number" value={sub?.priceCents ?? 0} />
         <BillingInput label="Notas" name="notes" value={sub?.notes ?? ""} required={false} />
         <BillingInput label={`Para confirmar, escribe ${institution.name}`} name="confirmation" />
@@ -44,8 +45,9 @@ export async function BillingSection({ institutionId }: { institutionId: string 
       {invoice.status === "OPEN" && <><details><summary className="min-h-11 cursor-pointer py-3">Marcar como pagada</summary>
         <BillingForm operation="pay" institutionId={institutionId} label="Registrar pago">
           <input type="hidden" name="invoiceId" value={invoice.id} />
-          <label className="block">Método<select name="paymentMethod" className="block min-h-11 w-full border">
-            {['transferencia', 'efectivo', 'tarjeta', 'otro'].map((method) => <option key={method}>{method}</option>)}</select></label>
+          <div><label htmlFor={`billing-method-${invoice.id}`} className="block">Método</label>
+            <select id={`billing-method-${invoice.id}`} name="paymentMethod" className="block min-h-11 w-full border">
+            {['transferencia', 'efectivo', 'tarjeta', 'otro'].map((method) => <option key={method}>{method}</option>)}</select></div>
           <BillingInput label="Referencia" name="reference" required={false} />
           <BillingInput label="Fecha del pago" name="paidAt" type="date" value={date(new Date())} />
         </BillingForm></details>

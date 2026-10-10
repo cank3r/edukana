@@ -200,3 +200,9 @@ G b417536 integrado localmente en 4837a211, baseactual 8e1580a. Revisión indepe
 ### Integración publicada y corrección de harness — 2026-10-10 00:38 UTC
 
 El usuario confirmó conservar vercel.json heredado. Base A–F publicada en a540932; G PR #108 e integración final PR #109, SHA e9c9ca7. CI 38009779593 en curso; aún no aceptación visual ni runtime final. El integrador conserva la escritura de documentos y publicación con lease. G-host retoma exclusivamente tests/integration/catalog.test.ts y helper de contexto si hace falta: el catálogo ahora exige headers de request y el harness Node anterior no los proveía. Mantener intacto el guard de Host de producción. Revisor G valida esta corrección antes de publicar; no se toca schema ni migraciones.
+
+### Correcciones de accesibilidad observadas en navegador — 2026-10-10 00:48 UTC
+
+Validación real del SHA 563b1a: 137 base, 98 backoffice y 522 PostgreSQL PASS. Capturas y errores de navegador muestran nombres accesibles contaminados por opciones/ayudas/texto inicial. G-ui retoma exclusivamente BrandingForm.tsx, BillingSection.tsx y operador/avisos/AnnouncementForm.tsx para asociaciones explícitas label/htmlFor/id y aria-describedby. Smoke conserva selectores exactos y todas las verificaciones; ensamblador smoke retoma fragmento de suspensión para completar de nuevo los campos requeridos después del rechazo. Revisor independiente valida la corrección y las capturas finales; no se declara aceptación visual todavía.
+
+Extensión coordinada del mismo hallazgo: G-ui también es único escritor de operador/[institutionId]/SuspensionForm.tsx. Los campos controlados conservarán motivo y confirmación ante rechazo; el éxito conserva el remount existente. Smoke sustituye el relleno compensatorio por una aserción de que el motivo permanece, verificando la corrección UX real.

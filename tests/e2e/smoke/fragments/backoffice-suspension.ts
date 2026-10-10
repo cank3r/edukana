@@ -24,6 +24,8 @@ export async function exerciseInstitutionSuspension(input: {
   await section.getByLabel(`Escribe «${institutionName}» para confirmar`).fill("Nombre incorrecto");
   await section.getByRole("button", { name: "Suspender institución", exact: true }).click();
   await expect(section.getByRole("alert")).toContainText("El nombre no coincide");
+  // A rejected confirmation must preserve the reason so the operator can correct only the name.
+  await expect(section.getByLabel("Motivo de la suspensión")).toHaveValue("Revisión de acceso del recorrido");
   await section.getByLabel(`Escribe «${institutionName}» para confirmar`).fill(institutionName);
   await section.getByRole("button", { name: "Suspender institución", exact: true }).click();
   try {

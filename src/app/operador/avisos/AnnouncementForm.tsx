@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useId, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { saveAnnouncementAction, endAnnouncementAction } from "./actions";
 
@@ -10,6 +10,7 @@ export type AnnouncementFormValue = {
 };
 const field = "min-h-11 w-full rounded-lg border border-slate-300 bg-white p-2";
 export function AnnouncementForm({ initial }: { initial?: AnnouncementFormValue }) {
+  const fieldId = useId();
   const router = useRouter();
   const [message, setMessage] = useState("");
   const [pending, startTransition] = useTransition();
@@ -31,16 +32,19 @@ export function AnnouncementForm({ initial }: { initial?: AnnouncementFormValue 
       {initial && <input type="hidden" name="id" value={initial.id} />}
       <label className="block">Título<input className={field} name="title" required minLength={3} maxLength={160}
         defaultValue={initial?.title} /></label>
-      <label className="block">Mensaje<textarea className={field} name="body" rows={5} required maxLength={4000}
-        defaultValue={initial?.body} /></label>
+      <div><label htmlFor={`${fieldId}-body`} className="block">Mensaje</label>
+        <textarea id={`${fieldId}-body`} className={field} name="body" rows={5} required maxLength={4000}
+        defaultValue={initial?.body} /></div>
       <div className="grid gap-4 sm:grid-cols-2">
-        <label>Importancia<select name="level" className={field} defaultValue={initial?.level ?? "INFO"}>
+        <div><label htmlFor={`${fieldId}-level`}>Importancia</label>
+          <select id={`${fieldId}-level`} name="level" className={field} defaultValue={initial?.level ?? "INFO"}>
           <option value="INFO">Información</option><option value="WARNING">Importante</option>
-        </select></label>
-        <label>Quién lo verá<select name="audience" className={field} defaultValue={initial?.audience ?? "ALL"}>
+        </select></div>
+        <div><label htmlFor={`${fieldId}-audience`}>Quién lo verá</label>
+          <select id={`${fieldId}-audience`} name="audience" className={field} defaultValue={initial?.audience ?? "ALL"}>
           <option value="ALL">Todas las personas</option><option value="ADMINS">Administradores</option>
           <option value="INDEPENDENT">Docentes independientes</option>
-        </select></label>
+        </select></div>
         <label>Inicio (UTC)<input type="datetime-local" name="startsAt" className={field} required
           defaultValue={initial?.startsAt.slice(0, 16)} /></label>
         <label>Fin (UTC, opcional)<input type="datetime-local" name="endsAt" className={field}

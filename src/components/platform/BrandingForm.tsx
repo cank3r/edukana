@@ -1,12 +1,13 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useId, useState } from "react";
 import { IMAGE_ACCEPT, validateUploadRequest } from "@/lib/uploads";
 import { saveOperatorBrandAction, prepareOperatorLogoAction, confirmOperatorLogoAction } from "@/server/actions/platform-branding";
 
 const field = "mt-1 min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-base";
 export type BrandingValues = { name: string; logoUrl: string | null; brandColor: string | null; domain: string | null; hideEdukanaBrand: boolean };
 export function BrandingForm({ institutionId, values }: { institutionId: string; values: BrandingValues }) {
+  const fieldId = useId();
   const [state, action, pending] = useActionState(saveOperatorBrandAction, { ok: false, message: "" });
   const [assetId, setAssetId] = useState("");
   const [uploading, setUploading] = useState(false);
@@ -35,27 +36,31 @@ export function BrandingForm({ institutionId, values }: { institutionId: string;
       <img src={values.logoUrl} alt="Logo actual" className="h-20 w-20 object-contain" />
       <label className="flex min-h-11 items-center gap-2"><input name="removeLogo" type="checkbox" />Quitar logo</label>
     </div>}
-    <label className="block text-sm font-medium">Logo
-      <input type="file" accept={IMAGE_ACCEPT} disabled={pending || uploading} className={`${field} py-2`}
+    <div>
+      <label htmlFor={`${fieldId}-logo`} className="block text-sm font-medium">Logo</label>
+      <input id={`${fieldId}-logo`} aria-describedby={`${fieldId}-logo-help`} type="file" accept={IMAGE_ACCEPT} disabled={pending || uploading} className={`${field} py-2`}
         onChange={(event) => void upload(event.target.files?.[0])} />
-      <span className="mt-1 block text-sm font-normal text-slate-600">JPG, PNG o WebP, hasta 5 MB. Se publica al guardar la marca.</span>
-    </label>
+      <p id={`${fieldId}-logo-help`} className="mt-1 text-sm text-slate-600">JPG, PNG o WebP, hasta 5 MB. Se publica al guardar la marca.</p>
+    </div>
     {uploadMessage && <p role="status" className="text-sm text-slate-700">{uploadMessage}</p>}
-    <label className="block text-sm font-medium">Color principal
-      <input name="brandColor" defaultValue={values.brandColor ?? ""} placeholder="#2457F5" maxLength={7} className={field} />
-      <span className="mt-1 block text-sm font-normal text-slate-600">Ajustamos los colores claros para que las letras se lean bien. Vacío usa el azul de Edukana.</span>
-    </label>
+    <div>
+      <label htmlFor={`${fieldId}-color`} className="block text-sm font-medium">Color principal</label>
+      <input id={`${fieldId}-color`} aria-describedby={`${fieldId}-color-help`} name="brandColor" defaultValue={values.brandColor ?? ""} placeholder="#2457F5" maxLength={7} className={field} />
+      <p id={`${fieldId}-color-help`} className="mt-1 text-sm text-slate-600">Ajustamos los colores claros para que las letras se lean bien. Vacío usa el azul de Edukana.</p>
+    </div>
     <details className="rounded-lg border border-slate-200 p-3">
       <summary className="min-h-11 cursor-pointer font-medium">Opciones avanzadas</summary>
-      <label className="block text-sm font-medium">Dominio de entrada
-        <input name="domain" defaultValue={values.domain ?? ""} placeholder="aula.colegio.edu.do" autoCapitalize="none"
+      <div>
+        <label htmlFor={`${fieldId}-domain`} className="block text-sm font-medium">Dominio de entrada</label>
+        <input id={`${fieldId}-domain`} aria-describedby={`${fieldId}-domain-help`} name="domain" defaultValue={values.domain ?? ""} placeholder="aula.colegio.edu.do" autoCapitalize="none"
           autoCorrect="off" spellCheck={false} maxLength={253} className={field} />
-        <span className="mt-1 block text-sm font-normal text-slate-600">Sin https://, rutas ni puertos. Requiere configurar DNS y Vercel por separado. Vacío quita el dominio propio.</span>
-      </label>
-      <label className="mt-3 block text-sm font-medium">Confirmar cambio de dominio
-        <input name="confirmation" autoComplete="off" placeholder={values.name} className={field} />
-        <span className="mt-1 block text-sm font-normal text-slate-600">Solo al cambiar el dominio: escribe «{values.name}». Los próximos enlaces usarán el nuevo dominio; configura su DNS antes de compartirlos.</span>
-      </label>
+        <p id={`${fieldId}-domain-help`} className="mt-1 text-sm text-slate-600">Sin https://, rutas ni puertos. Requiere configurar DNS y Vercel por separado. Vacío quita el dominio propio.</p>
+      </div>
+      <div className="mt-3">
+        <label htmlFor={`${fieldId}-confirmation`} className="block text-sm font-medium">Confirmar cambio de dominio</label>
+        <input id={`${fieldId}-confirmation`} aria-describedby={`${fieldId}-confirmation-help`} name="confirmation" autoComplete="off" placeholder={values.name} className={field} />
+        <p id={`${fieldId}-confirmation-help`} className="mt-1 text-sm text-slate-600">Solo al cambiar el dominio: escribe «{values.name}». Los próximos enlaces usarán el nuevo dominio; configura su DNS antes de compartirlos.</p>
+      </div>
       <label className="mt-3 flex min-h-11 items-center gap-2 text-sm">
         <input name="hideEdukanaBrand" type="checkbox" defaultChecked={values.hideEdukanaBrand} />Ocultar «Hecho con Edukana» cuando el plan no lo define
       </label>

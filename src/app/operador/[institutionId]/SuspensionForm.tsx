@@ -1,11 +1,14 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useId, useState } from "react";
 import { setInstitutionSuspensionAction } from "@/server/actions/platform-suspension";
 
 export function SuspensionForm({ institutionId, name, status }: {
   institutionId: string; name: string; status: "ACTIVE" | "SUSPENDED";
 }) {
+  const fieldId = useId();
+  const [reason, setReason] = useState("");
+  const [confirmation, setConfirmation] = useState("");
   const [open, setOpen] = useState(false);
   const [state, action, pending] = useActionState(setInstitutionSuspensionAction, { ok: false, message: "" });
   const suspending = status === "ACTIVE";
@@ -25,15 +28,16 @@ export function SuspensionForm({ institutionId, name, status }: {
       </p>
       <input type="hidden" name="institutionId" value={institutionId} />
       <input type="hidden" name="status" value={suspending ? "SUSPENDED" : "ACTIVE"} />
-      {suspending && <label className="block text-sm font-medium">
-        Motivo de la suspensión
-        <textarea name="reason" required maxLength={1000} rows={3} disabled={pending}
+      {suspending && <div>
+        <label htmlFor={`${fieldId}-reason`} className="block text-sm font-medium">Motivo de la suspensión</label>
+        <textarea id={`${fieldId}-reason`} aria-describedby={`${fieldId}-reason-help`} name="reason"
+          value={reason} onChange={(event) => setReason(event.target.value)} required maxLength={1000} rows={3} disabled={pending}
           className="mt-1 block min-h-11 w-full rounded-lg border border-slate-400 p-3" />
-        <span className="font-normal text-slate-600">No incluyas contraseñas ni información sensible.</span>
-      </label>}
+        <p id={`${fieldId}-reason-help`} className="text-sm text-slate-600">No incluyas contraseñas ni información sensible.</p>
+      </div>}
       <label className="block break-words text-sm font-medium">
         Escribe «{name}» para confirmar
-        <input name="confirmation" required maxLength={160} autoComplete="off" disabled={pending}
+        <input name="confirmation" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} required maxLength={160} autoComplete="off" disabled={pending}
           className="mt-1 block min-h-11 w-full rounded-lg border border-slate-400 p-3" />
       </label>
       <div className="flex flex-wrap gap-2">
