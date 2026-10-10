@@ -6,6 +6,9 @@ import { ensureIdentity, listActiveMemberships, normalizeEmail } from "@/server/
 import { getEmailProvider } from "@/server/integrations/email";
 import { isAttemptAllowed, recordAttempt } from "@/server/security/login-throttle";
 
+import { brandedEmail, loadEmailBrand } from "@/server/platform/branded-email";
+import { institutionBaseUrl } from "@/server/platform/domain-policy";
+
 export const RESET_TOKEN_MINUTES = 60;
 
 export const newPasswordSchema = z
@@ -18,9 +21,7 @@ export const newPasswordSchema = z
 export const hashToken = (token: string) => createHash("sha256").update(token).digest("hex");
 
 export function appUrl() {
-  const value = process.env.APP_URL ?? process.env.AUTH_URL ?? process.env.NEXTAUTH_URL;
-  if (!value) throw new Error("APP_URL es obligatorio para enviar enlaces de recuperación.");
-  return value.replace(/\/$/, "");
+  return institutionBaseUrl({});
 }
 
 /**
@@ -46,7 +47,7 @@ export async function issuePasswordToken(
  * La contraseña pertenece a la identidad: se envía un solo enlace aunque la persona esté en
  * varias instituciones, y al usarlo cambia para todas.
  */
-export async function requestPasswordReset(input: { email: string; ip: string }, now = new Date()) {
+export async function requestPasswordReset(input: { email: string; ip: string; institutionId?: string | null }, now = new Date()) {
   const email = normalizeEmail(input.email);
   const subject = { email, ip: input.ip, kind: "reset" as const };
   if (!(await isAttemptAllowed(subject, now))) return;
@@ -57,23 +58,24 @@ export async function requestPasswordReset(input: { email: string; ip: string },
   const memberships = await listActiveMemberships(identity.id);
   if (!memberships.length) return;
 
-  const token = await issuePasswordToken(db, { userId: memberships[0].id, minutes: RESET_TOKEN_MINUTES }, now);
-  const places = memberships.map((item) => item.institution.name).join(", ");
+  // Host context chooses a membership, never grants one. A foreign host gets neutral branding.
+  const member = input.institutionId
+    ? memberships.find((item) => item.institutionId === input.institutionId)
+    : memberships[0];
   try {
-    await getEmailProvider().send({
+    const brand = member ? await loadEmailBrand(member.institutionId) : null;
+    const token = await issuePasswordToken(db, { userId: (member ?? memberships[0]).id, minutes: RESET_TOKEN_MINUTES }, now);
+    await getEmailProvider().send(brandedEmail(brand, {
       to: email,
-      subject: "Restablece tu contraseña de Edukana",
+      subject: `Restablece tu contraseña de ${brand?.name ?? "Edukana"}`,
       text: [
-        `Hola, ${memberships[0].name}:`,
-        "",
-        `Recibimos una solicitud para cambiar la contraseña de tu cuenta (${places}).`,
-        `Abre este enlace para elegir una nueva. Vence en ${RESET_TOKEN_MINUTES} minutos y solo funciona una vez:`,
-        "",
-        `${appUrl()}/restablecer/${token}`,
-        "",
+        `Hola, ${(member ?? memberships[0]).name}:`, "",
+        "Recibimos una solicitud para cambiar la contraseña de tu cuenta.",
+        `Abre este enlace para elegir una nueva. Vence en ${RESET_TOKEN_MINUTES} minutos y solo funciona una vez:`, "",
+        `${institutionBaseUrl(brand ?? {})}/restablecer/${token}`, "",
         "Si no lo pediste, ignora este mensaje: tu contraseña no cambia.",
       ].join("\n"),
-    });
+    }));
   } catch (error) {
     const correlationId = crypto.randomUUID();
     console.error("requestPasswordReset: no se pudo enviar el correo", { correlationId, error });

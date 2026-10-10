@@ -1,3 +1,4 @@
+import { getRequestInstitution } from "@/server/platform/domains";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { verifyCertificateCode } from "@/server/courses/certificates";
@@ -13,7 +14,7 @@ export default async function CertificateSearchPage({ searchParams }: { searchPa
   const raw = (await searchParams).codigo;
   const code = (typeof raw === "string" ? raw : "").trim().toUpperCase().slice(0, 40);
   if (code) {
-    const result = await verifyCertificateCode(code);
+    const result = await verifyCertificateCode(code, (await getRequestInstitution())?.id);
     if (result.status !== "not_found") redirect(`/certificados/${encodeURIComponent(code)}`);
   }
 

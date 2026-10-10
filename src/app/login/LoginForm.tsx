@@ -1,5 +1,6 @@
 "use client";
 
+import { EdukanaFooter } from "@/components/platform/EdukanaFooter";
 import { Suspense, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -20,14 +21,16 @@ type LoginForm = z.infer<typeof loginSchema>;
 /** Marca de la institución cuando se entra con `?institucion=<identificador>`. */
 export type LoginBrand = { slug: string; name: string; logoUrl: string | null; color: string };
 
-export function LoginScreen({ brand, showSetup = false, notice = null }: { brand: LoginBrand | null; showSetup?: boolean; notice?: string | null }) {
-  return <Suspense fallback={<div className="min-h-screen" style={{ background: "var(--cloud)" }} />}><LoginForm brand={brand} showSetup={showSetup} notice={notice} /></Suspense>;
+export function LoginScreen({ brand, showSetup = false, notice = null, hideEdukanaBrand = false }: { brand: LoginBrand | null; showSetup?: boolean; notice?: string | null; hideEdukanaBrand?: boolean }) {
+  return <Suspense fallback={<div className="min-h-screen" style={{ background: "var(--cloud)" }} />}><LoginForm brand={brand} showSetup={showSetup} notice={notice} hideEdukanaBrand={hideEdukanaBrand} /></Suspense>;
 }
 
-function LoginForm({ brand, showSetup, notice }: { brand: LoginBrand | null; showSetup: boolean; notice: string | null }) {
+function LoginForm({ brand, showSetup, notice, hideEdukanaBrand }: { brand: LoginBrand | null; showSetup: boolean; notice: string | null; hideEdukanaBrand: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const requestedCallback = searchParams.get("callbackUrl") ?? "";
+  const callbackUrl = /^\/(?!\/)/.test(requestedCallback) && !/[\\\u0000-\u001f\u007f]/.test(requestedCallback)
+    ? requestedCallback : "/dashboard";
   const [error, setError] = useState<string | null>(null);
   const [suspended, setSuspended] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -67,13 +70,13 @@ function LoginForm({ brand, showSetup, notice }: { brand: LoginBrand | null; sho
       >
         <div>
           {/* Logo fondo oscuro */}
-          <Image
+          {brand ? <p className="text-2xl font-bold text-white">{brand.name}</p> : <Image
             src="/logos/edukana_horizontal_color_fondo_oscuro.svg"
             alt="Edukana"
             width={180}
             height={48}
             priority
-          />
+          />}
         </div>
 
         <div>
@@ -93,7 +96,7 @@ function LoginForm({ brand, showSetup, notice }: { brand: LoginBrand | null; sho
         </div>
 
         <p className="text-xs" style={{ color: "#94A6CC" }}>
-          © 2026 Edukana · Cerkana
+          {brand ? brand.name : "© 2026 Edukana · Cerkana"}
         </p>
       </div>
 
@@ -108,7 +111,7 @@ function LoginForm({ brand, showSetup, notice }: { brand: LoginBrand | null; sho
             </div>
           )}
           {/* Logo móvil */}
-          <div className="lg:hidden mb-8 flex justify-center">
+          {!brand && <div className="lg:hidden mb-8 flex justify-center">
             <Image
               src="/logos/edukana_horizontal_color.svg"
               alt="Edukana"
@@ -116,7 +119,7 @@ function LoginForm({ brand, showSetup, notice }: { brand: LoginBrand | null; sho
               height={42}
               priority
             />
-          </div>
+          </div>}
 
           <h1
             className="text-2xl font-bold mb-1"
@@ -249,6 +252,7 @@ function LoginForm({ brand, showSetup, notice }: { brand: LoginBrand | null; sho
               Escríbenos
             </a>
           </p>
+          <EdukanaFooter hidden={hideEdukanaBrand} />
         </div>
       </div>
     </div>

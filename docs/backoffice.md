@@ -1,6 +1,6 @@
 # Backoffice de Edukana
 
-Implementación del issue #101, integrada en `todo/backoffice`. Este documento describe el código; la aceptación requiere CI del SHA integrado y recorrido del Preview. Las nuevas publicaciones están pausadas pendiente de aclaración del usuario. No se han aplicado estas migraciones a Supabase ni configurado el cron remoto.
+Implementación de las piezas A–F y la ampliación G de marca blanca del issue #101, integrada en `todo/backoffice`. Este documento describe el código; la aceptación requiere CI del SHA integrado y recorrido del Preview. El usuario autorizó reanudar publicaciones de ramas y PR; la aceptación sigue dependiendo del CI y recorrido del SHA final. No se han aplicado estas migraciones a Supabase ni configurado el cron remoto.
 
 ## Entrada y permisos
 
@@ -68,3 +68,23 @@ La evidencia final debe incluir SHA integrado, resultados validate/browser-smoke
 ### Corrección BO-E tras lectura del CI
 
 El CI de E (`ef7c1fb1`, run 38005223542) detectó una colisión de clave primaria en salidas simultáneas. La corrección local sustituye el upsert Prisma por createMany con skipDuplicates: inserción atómica con conflicto ignorado, conservando el primer evento. La suite PostgreSQL prueba doce salidas simultáneas y la carrera salida/expiración; espera una nueva ejecución CI autorizada.
+
+## Marca blanca (G)
+
+La ficha y el alta permiten configurar marca. Los hosts institucionales quedan aislados de otras membresías y del backoffice central; correo y metadatos usan la marca. G no añade migración. Véase [marca-blanca.md](marca-blanca.md) para contratos, activación manual, limitaciones y revisión de seguridad.
+
+## PR por pieza
+
+- A · Tablero: https://github.com/cank3r/edukana/pull/103
+- B · Suspensión: https://github.com/cank3r/edukana/pull/105
+- C · Planes: https://github.com/cank3r/edukana/pull/104
+- D · Funciones: https://github.com/cank3r/edukana/pull/106 (depende de B+C; se prepara base técnica conjunta)
+- E · Soporte: https://github.com/cank3r/edukana/pull/107
+- F · Avisos: https://github.com/cank3r/edukana/pull/102
+- G · Marca blanca: PR pendiente de revisión final y publicación.
+
+Las ejecuciones por pieza no sustituyen el CI integrado. D requiere los campos B+C; su fallo de tipos en la primera rama aislada está identificado y no se atribuye a infraestructura. El integrado contiene ambos contratos.
+
+### Cierre local A–G — 2026-10-10 00:30 UTC
+
+Integración 4837a211: build nativo Turbopack PASS, TypeScript y lint PASS; 137/137 base y 98/98 backoffice. Descubrimiento smoke18 PASS a360px/escritorio; aún no ejecución PostgreSQL/browser del integrado. Revisión independiente de G PASS con cookies Auth.js reales y filtros públicos. G no añade migraciones. La publicación se detuvo ante autorización pendiente específica para conservar vercel.json heredado de la base; no se movió el ref remoto.

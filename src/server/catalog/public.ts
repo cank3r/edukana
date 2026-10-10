@@ -1,3 +1,4 @@
+import { getRequestInstitution } from "@/server/platform/domains";
 import { isInstitutionCatalogAvailable } from "@/server/platform/features";
 import { db } from "@/lib/db";
 
@@ -38,6 +39,8 @@ export async function findBrand(slug: string): Promise<PublicBrand | null> {
     select: { id: true, name: true, slug: true, logoUrl: true, brandColor: true, settings: true },
   });
   if (!institution || !(await isInstitutionCatalogAvailable(institution.id))) return null;
+  const hostInstitution = await getRequestInstitution();
+  if (hostInstitution && hostInstitution.id !== institution.id) return null;
   return { ...institution, logoUrl: safeImageUrl(institution.logoUrl), brandColor: safeColor(institution.brandColor) };
 }
 

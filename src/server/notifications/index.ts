@@ -1,6 +1,7 @@
 import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { getEmailProvider, type EmailProvider } from "@/server/integrations/email";
+import { brandedEmail, emailBrandSelect, emailBaseUrl, type EmailBrand } from "@/server/platform/branded-email";
 import { isEmailKind, shouldSendEmail } from "./email-policy";
 
 /**
@@ -64,7 +65,7 @@ const clean = (value: string | null | undefined, max: number) => {
 /** Solo rutas de la propia aplicación: «/dashboard/...». Nada de `//otro-sitio` ni `https://`. */
 export function safeHref(href: string | null | undefined): string | null {
   const value = href?.trim();
-  if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("\\")) return null;
+  if (!value || !value.startsWith("/") || value.startsWith("//") || value.includes("\\") || /[\u0000-\u0020\u007f]/.test(value)) return null;
   return value.slice(0, 500);
 }
 
@@ -115,18 +116,14 @@ export async function emailRecipients(institutionId: string, kind: string, userI
   return userIds.filter((userId) => shouldSendEmail({ kind, preference: choice.get(userId) }));
 }
 
-function appBaseUrl(): string | null {
-  const value = process.env.APP_URL ?? process.env.AUTH_URL ?? process.env.NEXTAUTH_URL;
-  return value ? value.replace(/\/$/, "") : null;
-}
-
-function emailText(person: { name: string; institution: string }, request: EmailRequest) {
-  const base = appBaseUrl();
+function emailText(person: { name: string; institution: EmailBrand }, request: EmailRequest) {
+  const base = emailBaseUrl(person.institution);
   const lines = [`Hola, ${person.name}:`, "", request.title];
   if (request.body) lines.push("", request.body);
-  if (base && request.href) lines.push("", "Ábrelo en Edukana:", `${base}${request.href}`);
+  const href = safeHref(request.href);
+  if (base && href) lines.push("", `Ábrelo en ${person.institution.name}:`, `${base}${href}`);
   else lines.push("", "Entra a Edukana para verlo.");
-  lines.push("", `Recibes este correo porque eres parte de ${person.institution} en Edukana.`);
+  lines.push("", `Recibes este correo porque eres parte de ${person.institution.name}.`);
   lines.push(base ? `Para elegir qué correos recibes: ${base}${PREFERENCES_PATH}` : "Puedes elegir qué correos recibes en Notificaciones › Elegir qué me llega por correo.");
   return lines.join("\n");
 }
@@ -151,7 +148,7 @@ export async function deliverEmails(request: EmailRequest | null | undefined): P
         status: "ACTIVE",
         OR: [{ identityId: null }, { identity: { status: "ACTIVE" } }],
       },
-      select: { id: true, name: true, email: true, institution: { select: { name: true } } },
+      select: { id: true, name: true, email: true, institution: { select: emailBrandSelect } },
     });
     const outcome: EmailOutcome = { sent: 0, failed: 0, skipped: request.userIds.length - people.length };
     if (!people.length) return outcome;
@@ -167,11 +164,11 @@ export async function deliverEmails(request: EmailRequest | null | undefined): P
       const chunk = people.slice(start, start + EMAIL_PARALLEL);
       const results = await Promise.allSettled(
         chunk.map((person) =>
-          provider.send({
+          provider.send(brandedEmail(person.institution, {
             to: person.email,
             subject: `${person.institution.name}: ${request.title}`.slice(0, 250),
-            text: emailText({ name: person.name, institution: person.institution.name }, request),
-          }),
+            text: emailText({ name: person.name, institution: person.institution }, request),
+          })),
         ),
       );
       results.forEach((result, index) => {

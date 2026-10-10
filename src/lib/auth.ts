@@ -1,4 +1,7 @@
+import { headers } from "next/headers";
 import { cache } from "react";
+import { getRequestInstitution, resolveInstitutionHost } from "@/server/platform/domains";
+import { institutionMatchesHost, requestOrigin } from "@/server/platform/domain-policy";
 import NextAuth, { CredentialsSignin, type Session } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { loginSchema } from "@/lib/validation";
@@ -34,7 +37,9 @@ const nextAuth = NextAuth({
       async authorize(credentials, request) {
         const parsed = loginSchema.safeParse(credentials);
         if (!parsed.success) return rejectCredentials("invalid_input");
-        const slug = typeof credentials?.institutionSlug === "string" ? credentials.institutionSlug : null;
+        const hostInstitution = await resolveInstitutionHost(request.headers.get("host"), { fresh: true });
+        const slug = hostInstitution?.slug ??
+          (typeof credentials?.institutionSlug === "string" ? credentials.institutionSlug : null);
         const outcome = await authenticateCredentialsWithStatus({
           email: parsed.data.email,
           password: parsed.data.password,
@@ -47,6 +52,16 @@ const nextAuth = NextAuth({
     }),
   ],
   callbacks: {
+    async redirect({ url, baseUrl }) {
+      const requestHeaders = await headers();
+      // Keep host-only cookies on the actual valid alias, even when AUTH_URL points to the central host.
+      const origin = requestOrigin(requestHeaders.get("host"), new URL(baseUrl).protocol);
+      if (!origin) throw new Error("Invalid request host");
+      try {
+        const target = new URL(url, origin);
+        return target.origin === origin ? target.href : origin;
+      } catch { return origin; }
+    },
     async jwt({ token, user, trigger, session }) {
       if (user) {
         token.role = user.role;
@@ -60,7 +75,8 @@ const nextAuth = NextAuth({
       const target = (session as { activeUserId?: unknown } | undefined)?.activeUserId;
       if (trigger === "update" && typeof target === "string" && typeof token.idn === "string") {
         const membership = await findOwnMembership(token.idn, target);
-        if (membership) {
+        const hostInstitution = await getRequestInstitution();
+        if (membership && institutionMatchesHost(membership.institutionId, hostInstitution)) {
           token.sub = membership.id;
           token.name = membership.name;
           token.role = membership.role;
@@ -68,6 +84,9 @@ const nextAuth = NextAuth({
           token.institutionSlug = membership.institution.slug;
         }
       }
+      // Also covers /api/auth/session and JWT updates, which do not call the live auth() guard.
+      const hostInstitution = await getRequestInstitution();
+      if (hostInstitution && token.institutionId !== hostInstitution.id) return null;
       return token;
     },
     session({ session, token }) {
@@ -89,8 +108,8 @@ export const { handlers, signIn, signOut } = nextAuth;
 export const updateSession = nextAuth.unstable_update;
 
 /**
- * Lectura del token sin consultar la base. Solo para `src/proxy.ts`, que decide
- * redirecciones de navegación anónima y no autoriza nada.
+ * Lectura del token con aislamiento de host. Solo para `src/proxy.ts`: no sustituye
+ * la membresía viva ni autoriza recursos, acciones o APIs.
  */
 export const authFromToken = nextAuth.auth;
 
@@ -108,6 +127,8 @@ export const auth = cache(async (): Promise<Session | null> => {
     sessionVersion: session.user.sessionVersion,
   });
   if (!identity) return null;
+  const hostInstitution = await getRequestInstitution();
+  if (!institutionMatchesHost(identity.institutionId, hostInstitution)) return null;
   return {
     ...session,
     user: {

@@ -25,9 +25,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { institutionSlug, courseId } = await params;
   const data = await load(institutionSlug, courseId);
   if (!data) return { title: "Curso no encontrado" };
-  const title = `${data.course.name} · ${data.brand.name}`;
+  const title = `${data.brand.name} · ${data.course.name}`;
   const description = (data.course.description ?? `Curso de ${data.brand.name} con ${data.course.teacherName}.`).replace(/\s+/g, " ").slice(0, 160);
-  return { title, description, openGraph: { title, description, type: "website", ...(data.course.imageUrl?.startsWith("https://") ? { images: [data.course.imageUrl] } : {}) } };
+  return { title: { absolute: title }, description, openGraph: { title, description, type: "website", ...(data.course.imageUrl?.startsWith("https://") ? { images: [data.course.imageUrl] } : {}) } };
 }
 
 export default async function PublicCoursePage({ params }: Props) {
