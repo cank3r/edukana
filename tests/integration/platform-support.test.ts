@@ -48,8 +48,17 @@ test("support integration: expiry is server enforced and records exit", async ()
 test("support integration: concurrent exits produce a single revocation row", async () => {
   const before = await db.auditLog.count({ where: { action: "PLATFORM_SUPPORT_EXITED", changes: { path: ["operator"], equals: OPERATOR } } });
   const { ticket } = await enter();
-  await Promise.all([stopSupportView(OPERATOR, ticket, now), stopSupportView(OPERATOR, ticket, now)]);
+  await Promise.all(Array.from({ length: 12 }, () => stopSupportView(OPERATOR, ticket, now)));
   assert.equal(await db.auditLog.count({ where: { action: "PLATFORM_SUPPORT_EXITED", changes: { path: ["operator"], equals: OPERATOR } } }), before + 1);
+});
+test("support integration: expiry and manual exit race retain one revocation and deny replay", async () => {
+  const before = await db.auditLog.count({ where: { action: "PLATFORM_SUPPORT_EXITED", changes: { path: ["operator"], equals: OPERATOR } } });
+  const { ticket, expiresAt } = await enter();
+  await Promise.all(Array.from({ length: 12 }, (_, i) => i % 2
+    ? stopSupportView(OPERATOR, ticket, expiresAt)
+    : readSupportView(OPERATOR, ticket, A.institutionId, "read", expiresAt)));
+  assert.equal(await db.auditLog.count({ where: { action: "PLATFORM_SUPPORT_EXITED", changes: { path: ["operator"], equals: OPERATOR } } }), before + 1);
+  assert.equal(await readSupportView(OPERATOR, ticket, A.institutionId, "read", expiresAt), null);
 });
 test("audit integration: stable cursor across identical timestamps, filters and no duplicated rows", async () => {
   for (let i = 0; i < AUDIT_PAGE_SIZE + 3; i++) {

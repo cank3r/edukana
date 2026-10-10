@@ -36,10 +36,12 @@ async function findGrant(operatorEmail: string | null, ticket: string | undefine
 }
 
 async function recordExit(grant: SupportGrant, reason: "exit" | "expired", now: Date) {
-  // Deterministic primary key makes parallel exits idempotent, using an existing index only.
-  await db.auditLog.upsert({
-    where: { id: `support-exit-${grant.auditId}` }, update: {},
-    create: {
+  // PostgreSQL INSERT ON CONFLICT DO NOTHING is atomic; Prisma upsert with empty update
+  // can use a read-then-create path and throw P2002 when two requests race.
+  // Keep the first revocation event unchanged and use only the existing primary index.
+  await db.auditLog.createMany({
+    skipDuplicates: true,
+    data: {
       id: `support-exit-${grant.auditId}`, institutionId: grant.institutionId,
       action: "PLATFORM_SUPPORT_EXITED", entity: "Institution", entityId: grant.institutionId, createdAt: now,
       changes: { operator: grant.operator, before: { support: true }, after: { support: false }, reason },

@@ -15,8 +15,10 @@ const service: typeof import("@/server/platform/support") = loadWithStubs("src/s
     auditLog: {
       findUnique: async ({ where }: { where: { id: string } }) => { dbCalls++; return audit.get(where.id) ?? null; },
       create: async ({ data }: { data: Row }) => { dbCalls++; audit.set(data.id, data); return data; },
-      upsert: async ({ where, create }: { where: { id: string }; create: Row }) => {
-        dbCalls++; if (!audit.has(where.id)) audit.set(where.id, create); return audit.get(where.id);
+      createMany: async ({ data, skipDuplicates }: { data: Row; skipDuplicates: boolean }) => {
+        dbCalls++; assert.equal(skipDuplicates, true);
+        if (audit.has(data.id)) return { count: 0 };
+        audit.set(data.id, data); return { count: 1 };
       },
     },
   } },
@@ -84,5 +86,19 @@ test("ticket manipulation, another operator and live allowlist removal fail clos
   assert.equal(await service.readSupportView("other@edukana.test", ticket, "a", "read", t), null);
   process.env.PLATFORM_OPERATOR_EMAILS = "";
   assert.equal(await service.readSupportView(OPERATOR, ticket, "a", "read", t), null);
+  assert.equal(readCalls, 0);
+});
+
+test("support parallel exits and expiry use atomic duplicate-safe insertion and retain first event", async () => {
+  const { ticket, expiresAt } = await enter();
+  const results = await Promise.all(Array.from({ length: 12 }, (_, i) => i % 2
+    ? service.stopSupportView(OPERATOR, ticket, expiresAt)
+    : service.readSupportView(OPERATOR, ticket, "a", "read", expiresAt)));
+  assert.ok(results.every((value) => value === null || value === "a"));
+  const exits = [...audit.values()].filter((row) => row.action === "PLATFORM_SUPPORT_EXITED");
+  assert.equal(exits.length, 1);
+  const original = JSON.stringify(exits[0]);
+  await service.stopSupportView(OPERATOR, ticket, new Date(expiresAt.getTime() + 1000));
+  assert.equal(JSON.stringify([...audit.values()].find((row) => row.action === "PLATFORM_SUPPORT_EXITED")), original);
   assert.equal(readCalls, 0);
 });
