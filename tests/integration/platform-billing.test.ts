@@ -87,7 +87,9 @@ test("billing: foreign institution invoice cannot be paid or voided", async () =
 });
 test("billing: VOID is never a payment and expired trial becomes past due without suspending", async () => {
   await reset(); const invoice = await generatePlatformInvoice(OP, a, period);
-  await voidPlatformInvoice(OP, a, invoice.id);
+  // The operator mailbox is recorded normalized, as in every other billing write.
+  const voided = await voidPlatformInvoice(` ${OP.toUpperCase()} `, a, invoice.id);
+  assert.equal(voided.recordedBy, OP);
   await assert.rejects(() => payPlatformInvoice(OP, a, invoice.id, payment, billingNow), /abierta/);
   await expirePlatformSubscriptions(new Date("2025-02-15Z"));
   assert.equal((await db.institutionSubscription.findUniqueOrThrow({ where: { institutionId: a } })).status, "PAST_DUE");

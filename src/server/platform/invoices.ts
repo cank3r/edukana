@@ -63,7 +63,7 @@ export async function voidPlatformInvoice(operator: string | null, institutionId
     await lockBilling(tx, institutionId);
     const before = await tx.platformInvoice.findFirstOrThrow({ where: { id: invoiceId, institutionId } });
     if (before.status !== "OPEN") throw new Error("Solo puedes anular una factura abierta.");
-    const after = await tx.platformInvoice.update({ where: { id: invoiceId }, data: { status: "VOID", recordedBy: operator } });
+    const after = await tx.platformInvoice.update({ where: { id: invoiceId }, data: { status: "VOID", recordedBy: operator.trim().toLowerCase() } });
     await auditPlatform(tx, operator, "PLATFORM_INVOICE_VOIDED", "PlatformInvoice", invoiceId, institutionId, before, after);
     return after;
   });
