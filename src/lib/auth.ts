@@ -1,11 +1,20 @@
 import { cache } from "react";
-import NextAuth, { type Session } from "next-auth";
+import NextAuth, { CredentialsSignin, type Session } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { loginSchema } from "@/lib/validation";
 import { findOwnMembership } from "@/server/identity";
-import { authenticateCredentials, rejectCredentials } from "@/server/login";
+import { authenticateCredentialsWithStatus, rejectCredentials } from "@/server/login";
 import { clientIpFromHeaders } from "@/server/security/login-throttle";
 import { resolveLiveIdentity } from "@/server/session";
+
+import { SUSPENDED_CREDENTIAL_CODE } from "@/server/platform/suspension-policy";
+
+class InstitutionSuspendedSignIn extends CredentialsSignin {
+  constructor(name: string) {
+    super();
+    this.code = `${SUSPENDED_CREDENTIAL_CODE}${encodeURIComponent(name)}`;
+  }
+}
 
 const SESSION_MAX_AGE_SECONDS = Number(process.env.SESSION_MAX_AGE_DAYS ?? 7) * 24 * 60 * 60;
 
@@ -26,12 +35,14 @@ const nextAuth = NextAuth({
         const parsed = loginSchema.safeParse(credentials);
         if (!parsed.success) return rejectCredentials("invalid_input");
         const slug = typeof credentials?.institutionSlug === "string" ? credentials.institutionSlug : null;
-        return authenticateCredentials({
+        const outcome = await authenticateCredentialsWithStatus({
           email: parsed.data.email,
           password: parsed.data.password,
           ip: clientIpFromHeaders(request?.headers),
           institutionSlug: slug,
         });
+        if (outcome.suspendedInstitutionName) throw new InstitutionSuspendedSignIn(outcome.suspendedInstitutionName);
+        return outcome.user;
       },
     }),
   ],
