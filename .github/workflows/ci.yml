@@ -160,6 +160,19 @@ jobs:
       - name: Sembrar el Instituto Demo
         id: seed
         run: set -o pipefail; npm run test:smoke:seed 2>&1 | tee registros/02-siembra.log
+      # Galería de la demo en uso (tests/e2e/smoke/demo-galeria.smoke.ts): «Instituto Técnico Demo» con
+      # una contraseña aleatoria de esta ejecución, que no se imprime (add-mask) y solo vive en esta base efímera.
+      - name: Cargar «Instituto Técnico Demo» para la galería
+        id: demo
+        # Si falla, el recorrido igual corre; la galería lo detecta (falta demo.json) y hace fallar el job.
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          DEMO_PASSWORD="$(openssl rand -hex 12)"
+          echo "::add-mask::$DEMO_PASSWORD"
+          echo "DEMO_PASSWORD=$DEMO_PASSWORD" >> "$GITHUB_ENV"
+          export DEMO_PASSWORD
+          node --require ./tests/integration/stub-server-only.cjs --import tsx tests/e2e/smoke/demo-load.ts 2>&1 | tee registros/02b-demo.log
       - name: Compilar producción
         id: build
         run: set -o pipefail; npm run build 2>&1 | tee registros/03-build.log
@@ -186,6 +199,7 @@ jobs:
             echo "|---|---|---|"
             fila "Preparar" "${{ steps.setup.outcome }}" 01-preparar.log
             fila "Sembrar" "${{ steps.seed.outcome }}" 02-siembra.log
+            fila "Cargar la demo" "${{ steps.demo.outcome }}" 02b-demo.log
             fila "build" "${{ steps.build.outcome }}" 03-build.log
             fila "Arrancar la aplicación" "${{ steps.start.outcome }}" 04-servidor.log
             fila "Recorrido" "${{ steps.tour.outcome }}" 05-recorrido.log
@@ -229,6 +243,16 @@ jobs:
           path: ${{ steps.capture_files.outputs.path }}/
           if-no-files-found: warn
           retention-days: 14
+      # TEMPORAL (solo rama qa/capturas-demo, se quita antes del PR): copia de revisión en qa-capturas.
+      - name: Publicar capturas para revisión (temporal)
+        if: always() && github.ref_name == 'qa/capturas-demo' && steps.capture_files.outputs.path != ''
+        run: |
+          set -e
+          cd "${{ steps.capture_files.outputs.path }}"
+          echo '{"git":{"deploymentEnabled":false}}' > vercel.json
+          git init -q -b qa-capturas && git add -A
+          git -c user.name="edukana-ci" -c user.email="ci@users.noreply.github.com" commit -q -m "capturas de ${GITHUB_REF_NAME} @ ${GITHUB_SHA::7}"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" qa-capturas
       - name: Publicar el resultado como comentario del commit
         if: always()
         run: |
