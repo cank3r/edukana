@@ -1,3 +1,4 @@
+import { withRequestHost } from "../helpers/request-host-context";
 import assert from "node:assert/strict";
 import { mkdtemp, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -33,6 +34,11 @@ const PNG = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 
 const EXE = new TextEncoder().encode("MZ\x90\x00 este no es un PDF");
 
 let root = "";
+
+function readPublicImage(assetId: string) {
+  const url = new URL(`/api/public-images/${assetId}`, process.env.APP_URL!);
+  return withRequestHost(url.host, () => publicImageGet(new Request(url), { params: Promise.resolve({ assetId }) }));
+}
 
 /** Sube como lo haría el navegador: reserva, PUT a la URL firmada y confirmación. */
 async function upload(who: UploadActor, purpose: UploadPurpose, file: { name: string; type: string; bytes: Uint8Array }, target: { assignmentId?: string; courseId?: string } = {}) {
@@ -184,7 +190,7 @@ test("al reenviar, la versión anterior conserva sus archivos", async () => {
 
 test("la ruta pública solo sirve la imagen del curso o el logo en uso", async () => {
   assert.equal(await publicImageAsset(firstFile), null, "un archivo de entrega no es público");
-  assert.equal((await publicImageGet(new Request("http://localhost/"), { params: Promise.resolve({ assetId: firstFile }) })).status, 404);
+  assert.equal((await readPublicImage(firstFile)).status, 404);
 
   const avatar = await uploaded(student, "avatar", png("yo.png"));
   assert.equal((await setAvatar(student, avatar)).ok, true);
@@ -196,11 +202,25 @@ test("la ruta pública solo sirve la imagen del curso o el logo en uso", async (
   assert.equal(await publicImageAsset(cover), null);
   assert.equal((await setCourseImage(teacher, A.courseId, cover)).ok, true);
   assert.equal((await db.course.findUniqueOrThrow({ where: { id: A.courseId }, select: { imageUrl: true } })).imageUrl, publicImageUrl(cover));
-  const response = await publicImageGet(new Request("http://localhost/"), { params: Promise.resolve({ assetId: cover }) });
+  const response = await readPublicImage(cover);
   assert.equal(response.status, 200);
   assert.equal(response.headers.get("content-type"), "image/png");
   assert.match(response.headers.get("cache-control") ?? "", /public/);
   assert.deepEqual(new Uint8Array(await response.arrayBuffer()), PNG);
+
+  const previousRoot = process.env.PLATFORM_ROOT_DOMAIN;
+  process.env.PLATFORM_ROOT_DOMAIN = "upload-host.test";
+  try {
+    const b = await db.institution.findUniqueOrThrow({ where: { id: B.institutionId }, select: { slug: true } });
+    const host = `${b.slug}.upload-host.test`;
+    const foreign = await withRequestHost(host, () => publicImageGet(new Request(`https://${host}/`), {
+      params: Promise.resolve({ assetId: cover }),
+    }));
+    assert.equal(foreign.status, 404, "el dominio de B no sirve la imagen pública de A");
+  } finally {
+    if (previousRoot === undefined) delete process.env.PLATFORM_ROOT_DOMAIN;
+    else process.env.PLATFORM_ROOT_DOMAIN = previousRoot;
+  }
 });
 
 test("permisos de imagen: solo quien edita el curso o la configuración de la institución", async () => {
