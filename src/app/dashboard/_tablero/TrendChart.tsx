@@ -71,7 +71,7 @@ function ChartSvg({ id, className, size, title, summary, weeks, series, threshol
   series: TrendSeries[];
   threshold?: { value: number; label: string };
 }) {
-  const pad = { top: 16, right: 16, bottom: 30, left: 40 };
+  const pad = { top: 16, right: 20, bottom: 30, left: 50 };
   const plotW = size.width - pad.left - pad.right;
   const plotH = size.height - pad.top - pad.bottom;
   const x = (index: number) => pad.left + (weeks.length <= 1 ? plotW / 2 : (index / (weeks.length - 1)) * plotW);
@@ -109,8 +109,9 @@ function ChartSvg({ id, className, size, title, summary, weeks, series, threshol
       )}
       {weeks.map((label, index) =>
         (last - index) % size.every === 0 ? (
-          <text key={`${label}-${index}`} x={x(index)} y={size.height - 8} textAnchor={index === last ? "end" : index === 0 ? "start" : "middle"} fontSize={size.font} fill="#475569">
-            {index === last ? "Esta semana" : label}
+          // La semana en curso va en negrita (la tabla oculta dice «esta semana»).
+          <text key={`${label}-${index}`} x={x(index)} y={size.height - 8} textAnchor="middle" fontSize={size.font} fill={index === last ? "#0F172A" : "#475569"} fontWeight={index === last ? 700 : 400}>
+            {label}
           </text>
         ) : null,
       )}

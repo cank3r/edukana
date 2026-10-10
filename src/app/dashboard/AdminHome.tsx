@@ -42,7 +42,7 @@ export async function AdminHome({ actor, capabilities, userName, query }: Props)
       query={query}
       quickActions={actions}
       firstSteps={showGuide && guide ? <FirstSteps steps={guide.steps} /> : null}
-      attention={<Attention items={alerts} />}
+      attention={<Attention items={alerts} empty={showGuide ? { title: "Empieza por los primeros pasos", detail: "Cuando la institución funcione, aquí aparecerá lo que necesite tu atención." } : undefined} />}
     />
   );
 }

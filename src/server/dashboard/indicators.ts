@@ -51,7 +51,7 @@ export async function getBoardIndicators(ctx: BoardContext): Promise<BoardIndica
 }
 
 /**
- * Estudiantes con al menos una inscripción activa (cuenta activa). «Nuevos»: su primera inscripción cae en la ventana.
+ * Estudiantes con al menos una inscripción activa (cuenta activa). «Nuevos»: activos cuya primera inscripción cae en la ventana.
  * La comparación y la tendencia cuentan quién estaba inscrito en ese momento (inscrito antes, y sin haberse retirado
  * ni terminado todavía). Consultas: 1.
  */
@@ -70,7 +70,9 @@ async function getStudents(ctx: BoardContext): Promise<StudentsIndicator> {
     SELECT
       (SELECT COUNT(DISTINCT "studentId") FROM enr WHERE status = 'ACTIVE')::int AS active,
       ${orNull(ctx, (previous) => Prisma.sql`(SELECT COUNT(DISTINCT enr."studentId") FROM enr WHERE ${activeAt(ts(previous.to))})::int`)} AS "activeBefore",
-      (SELECT COUNT(*) FROM firsts WHERE first >= ${ts(range.from)} AND first < ${ts(range.to)})::int AS "newInRange",
+      -- Nuevos que siguen activos: así «nuevos» nunca supera a «activos».
+      (SELECT COUNT(*) FROM firsts WHERE first >= ${ts(range.from)} AND first < ${ts(range.to)}
+        AND "studentId" IN (SELECT "studentId" FROM enr WHERE status = 'ACTIVE'))::int AS "newInRange",
       ${orNull(ctx, (previous) => Prisma.sql`(SELECT COUNT(*) FROM firsts WHERE first >= ${ts(previous.from)} AND first < ${ts(previous.to)})::int`)} AS "newBefore",
       ARRAY(
         SELECT COUNT(DISTINCT enr."studentId")::int

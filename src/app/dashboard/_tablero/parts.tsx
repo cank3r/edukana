@@ -37,10 +37,10 @@ export function WhenFilled({ children }: { children: ReactNode }) {
 }
 
 export function Delta({ change, fallback }: { change: Change | null; fallback: string }) {
-  if (!change) return <p className="text-sm text-slate-500">{fallback}</p>;
+  if (!change) return <p className="text-xs text-slate-500 sm:text-sm">{fallback}</p>;
   const Icon = change.direction === "up" ? ArrowUpRight : change.direction === "down" ? ArrowDownRight : Minus;
   return (
-    <p className={`flex items-start gap-1 text-sm font-medium ${TONE_CLASS[change.tone]}`}>
+    <p className={`flex items-start gap-1 text-xs font-medium sm:text-sm ${TONE_CLASS[change.tone]}`}>
       <Icon className="mt-0.5 shrink-0" size={16} aria-hidden="true" />
       <span>{change.text}</span>
     </p>
@@ -78,13 +78,14 @@ export function Sparkline({ values }: { values: Array<number | null> }) {
   return (
     <svg aria-hidden="true" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" className="h-8 w-full overflow-visible">
       {segments.map((path) => <path key={path} d={path} fill="none" stroke="#94A3B8" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />)}
-      {last && <circle cx={last.x} cy={last.y} r="3" fill={NAVY} />}
+      {/* Punto final como trazo de largo cero: con el dibujo estirado, un círculo saldría ovalado. */}
+      {last && <path d={`M${last.x.toFixed(1)},${last.y.toFixed(1)}h0`} stroke={NAVY} strokeWidth="7" strokeLinecap="round" vectorEffect="non-scaling-stroke" />}
     </svg>
   );
 }
 
 /** Una cifra grande del tablero: toda la tarjeta es el enlace a la pantalla que la explica. */
-export function Indicator({ href, label, value, detail, change, fallback, trend }: {
+export function Indicator({ href, label, value, detail, change, fallback, trend, compact = false }: {
   href: string;
   label: string;
   value: string;
@@ -92,12 +93,14 @@ export function Indicator({ href, label, value, detail, change, fallback, trend 
   change: Change | null;
   fallback: string;
   trend: Array<number | null>;
+  /** Cifras largas (dinero): un tamaño menor para que no se salgan de la tarjeta. */
+  compact?: boolean;
 }) {
   return (
-    <Link href={href} className="group flex min-w-0 flex-col gap-1 bg-white p-4 hover:bg-slate-50 sm:p-5">
+    <Link href={href} className="group flex min-w-0 flex-col gap-1 bg-white p-3 hover:bg-slate-50 sm:p-5">
       <span className="text-sm font-semibold text-slate-700 group-hover:underline">{label}</span>
-      <span className="text-3xl font-bold tabular-nums tracking-tight sm:text-4xl" style={{ color: NAVY }}>{value}</span>
-      <span className="text-sm text-slate-600">{detail}</span>
+      <span className={`break-words font-bold tabular-nums tracking-tight ${compact ? "text-2xl sm:text-3xl" : "text-2xl sm:text-4xl"}`} style={{ color: NAVY }}>{value}</span>
+      <span className="text-xs text-slate-600 sm:text-sm">{detail}</span>
       <span className="mt-auto pt-2"><Delta change={change} fallback={fallback} /></span>
       <span className="pt-2"><Sparkline values={trend} /></span>
     </Link>
@@ -124,7 +127,7 @@ export function RangeSwitch({ options, current }: { options: Array<{ key: string
             key={option.key}
             href={option.href}
             aria-current={active ? "page" : undefined}
-            className={`flex min-h-11 flex-1 items-center justify-center rounded-lg px-4 text-sm font-semibold sm:flex-none ${active ? "text-white" : "text-slate-700 hover:bg-slate-100"}`}
+            className={`flex min-h-11 flex-1 items-center justify-center whitespace-nowrap rounded-lg px-2 text-sm font-semibold sm:flex-none sm:px-4 ${active ? "text-white" : "text-slate-700 hover:bg-slate-100"}`}
             style={active ? { background: "var(--brand)" } : undefined}
           >
             {option.label}

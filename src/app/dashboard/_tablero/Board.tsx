@@ -52,23 +52,21 @@ export function Board({ ctx, userName, query, quickActions, firstSteps, attentio
   return (
     <div className="mx-auto max-w-7xl space-y-5 p-4 sm:p-8">
       <header className="space-y-4">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="min-w-0">
-            <p className="text-sm text-slate-600">Hola{firstName ? `, ${firstName}` : ""}</p>
-            <h1 className="break-words text-2xl font-bold sm:text-3xl" style={{ color: NAVY }}>{ctx.institutionName || "Tu institución"}</h1>
-            <PeriodLine ctx={ctx} />
-          </div>
-          {quickActions.length > 0 && (
-            <nav aria-label="Acciones frecuentes" className="flex flex-wrap gap-2">
-              {quickActions.map((action) => (
-                <Link key={action.label} href={action.href} className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 hover:border-slate-400 hover:bg-slate-50">
-                  <span className="text-slate-500">{action.icon}</span>
-                  {action.label}
-                </Link>
-              ))}
-            </nav>
-          )}
+        <div className="min-w-0">
+          <p className="text-sm text-slate-600">Hola{firstName ? `, ${firstName}` : ""}</p>
+          <h1 className="break-words text-2xl font-bold sm:text-3xl" style={{ color: NAVY }}>{ctx.institutionName || "Tu institución"}</h1>
+          <PeriodLine ctx={ctx} />
         </div>
+        {quickActions.length > 0 && (
+          <nav aria-label="Acciones frecuentes" className="flex flex-wrap gap-2">
+            {quickActions.map((action) => (
+              <Link key={action.label} href={action.href} className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 hover:border-slate-400 hover:bg-slate-50">
+                <span className="text-slate-500">{action.icon}</span>
+                {action.label}
+              </Link>
+            ))}
+          </nav>
+        )}
       </header>
 
       {firstSteps}
@@ -152,7 +150,7 @@ async function IndicatorsBlock({ ctx, indicators }: { ctx: BoardContext; indicat
   const { students, attendance, progress, onTime, finance } = await indicators;
   const { range } = ctx;
   const windowText = range.label.toLowerCase();
-  const fallback = range.previous ? `Sin datos de ${range.previousLabel} para comparar` : "No hay un período anterior para comparar";
+  const fallback = range.previous ? "Todavía sin datos anteriores para comparar" : "No hay un período anterior para comparar";
   const resultsHref = ctx.can.reports ? "/dashboard/analitica" : "#cursos";
   const cells: ReactNode[] = [];
 
@@ -192,7 +190,7 @@ async function IndicatorsBlock({ ctx, indicators }: { ctx: BoardContext; indicat
       <Indicator
         key="progress"
         href={resultsHref}
-        label="Avance promedio de los cursos"
+        label="Avance promedio"
         value={formatPercent(empty ? null : progress.percent)}
         detail={empty ? "Se llenará cuando haya estudiantes inscritos que completen lecciones." : `${formatCount(progress.lessonsInRange)} ${progress.lessonsInRange === 1 ? "lección completada" : "lecciones completadas"} ${windowText}`}
         change={empty ? null : compare(progress.lessonsInRange, progress.lessonsBefore, range.previousLabel, { kind: "count", higherIsBetter: true, unit: ["lección", "lecciones"] })}
@@ -237,17 +235,18 @@ async function IndicatorsBlock({ ctx, indicators }: { ctx: BoardContext; indicat
         change={empty ? null : compare(finance.collectedCents, finance.collectedBeforeCents, range.previousLabel, { kind: "money", higherIsBetter: true, currency: finance.currency })}
         fallback={empty ? "" : fallback}
         trend={finance.trend}
+        compact
       />,
     );
   }
   if (cells.length === 0) return null;
   const columns = cells.length >= 5 ? "lg:grid-cols-5" : cells.length === 4 ? "lg:grid-cols-4" : cells.length === 3 ? "lg:grid-cols-3" : "lg:grid-cols-2";
   // Con un número impar de cifras, la última ocupa el ancho completo en la vista de dos columnas.
-  const oddLast = cells.length % 2 === 1 ? "sm:[&>*:last-child]:col-span-2 lg:[&>*:last-child]:col-span-1" : "";
+  const oddLast = cells.length % 2 === 1 ? "[&>*:last-child]:col-span-2 lg:[&>*:last-child]:col-span-1" : "";
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
       {/* Una sola franja dividida: las cifras se leen juntas, como en un tablero. */}
-      <div className={`grid grid-cols-1 gap-px bg-slate-200 sm:grid-cols-2 ${columns} ${oddLast}`}>
+      <div className={`grid grid-cols-2 gap-px bg-slate-200 ${columns} ${oddLast}`}>
         {cells}
       </div>
     </div>
@@ -373,7 +372,7 @@ async function TeachersBlock({ ctx, wide }: { ctx: BoardContext; wide: boolean }
                 </div>
                 <p className="mt-0.5 text-sm text-slate-600">
                   {teacher.courses === 1 ? "1 curso" : `${teacher.courses} cursos`}
-                  {teacher.pendingGrading > 0 && (days >= 7 ? <span className="font-semibold text-red-700">, la más antigua espera {days} días</span> : `, la más antigua espera ${days === 1 ? "1 día" : `${days} días`}`)}
+                  {teacher.pendingGrading > 0 && (days >= 7 ? <span className="font-semibold text-red-700">, la más antigua espera {days} días</span> : days === 0 ? ", la más antigua llegó hoy" : `, la más antigua espera ${days === 1 ? "1 día" : `${days} días`}`)}
                 </p>
                 {teacher.quiet.length > 0 && (
                   <p className="mt-1 text-sm text-amber-800">
