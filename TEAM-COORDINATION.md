@@ -196,3 +196,7 @@ G-host incluye guard DAL catálogo/certificados y contexto host para recuperaci�
 ### Estado integrado A–G — 2026-10-10 00:30 UTC
 
 G b417536 integrado localmente en 4837a211, baseactual 8e1580a. Revisión independiente PASS;137 base+98backoffice, tipos/lint/buildPASS;18smokediscovery. PG/browser/CIintegrado pendientes. Publicación del último lote de árbol (vercel.json heredado) requiere confirmación específica; ningún ref remoto actualizado. Continuar solo tras confirmación y comprobar lease del ref.
+
+### Integración publicada y corrección de harness — 2026-10-10 00:38 UTC
+
+El usuario confirmó conservar vercel.json heredado. Base A–F publicada en a540932; G PR #108 e integración final PR #109, SHA e9c9ca7. CI 38009779593 en curso; aún no aceptación visual ni runtime final. El integrador conserva la escritura de documentos y publicación con lease. G-host retoma exclusivamente tests/integration/catalog.test.ts y helper de contexto si hace falta: el catálogo ahora exige headers de request y el harness Node anterior no los proveía. Mantener intacto el guard de Host de producción. Revisor G valida esta corrección antes de publicar; no se toca schema ni migraciones.

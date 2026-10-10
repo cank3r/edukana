@@ -1,13 +1,24 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
-import { test } from "node:test";
+import { after, test } from "node:test";
 import { NextRequest } from "next/server";
 import { encode } from "next-auth/jwt";
 const require = createRequire(import.meta.url);
 const { loadWithStubs } = require("./helpers/load-with-stubs.cjs");
 // Synthetic signing key scoped to this test process; never a deployment credential.
 const secret = "host-isolation-test-key-not-a-deployment-secret";
+const savedAuthEnv = { AUTH_SECRET: process.env.AUTH_SECRET, AUTH_URL: process.env.AUTH_URL, NEXTAUTH_URL: process.env.NEXTAUTH_URL };
 process.env.AUTH_SECRET = secret;
+// CI runs its app over HTTP. This fixture intentionally signs HTTPS secure
+// cookies, so do not let an inherited URL silently change the cookie policy.
+delete process.env.AUTH_URL;
+delete process.env.NEXTAUTH_URL;
+after(() => {
+  for (const [key, value] of Object.entries(savedAuthEnv)) {
+    if (value === undefined) delete process.env[key];
+    else process.env[key] = value;
+  }
+});
 let host = "a.test";
 const { handlers }: typeof import("@/lib/auth") = loadWithStubs("src/lib/auth.ts", {
   "next/headers": { headers: async () => new Headers({ host }) },
