@@ -96,3 +96,15 @@ Integración 4837a211: build nativo Turbopack PASS, TypeScript y lint PASS; 137/
 - El navegador de ese SHA completó 16/18 recorridos. Las etiquetas Plan/Marca/Avisos y la retención del motivo de suspensión ya pasan. El selector final de login suspendido confundía el anuncio de ruta de Next con el error del formulario; se acotó al formulario sin cambiar el texto esperado. Una regresión HTTP con Auth.js real cubre el rechazo de credenciales suspendidas.
 - Se añadió protección de sesión nula en el render paralelo del inicio; la redirección y el aviso siguen a cargo del layout.
 - La aceptación final depende del run del último SHA y de sus capturas. El PR registra el resultado terminal; no se infiere de estas verificaciones históricas ni del Preview.
+
+
+## Instituciones creadas antes de los planes
+
+Las instituciones que ya existían cuando se agregaron los planes quedan sin suscripción. Para darles la misma prueba de 30 días que reciben las nuevas (con el plan de su campo `plan`, FREE si nunca se tocó):
+
+```
+DATABASE_URL="<DIRECT_URL>" npm run plataforma:asignar-planes                                  # solo muestra cuáles
+DATABASE_URL="<DIRECT_URL>" PLANES_CONFIRM=asignar-planes npm run plataforma:asignar-planes    # las asigna
+```
+
+Las que ya tienen suscripción no se tocan, así que se puede correr varias veces. Cada asignación queda en la bitácora (`PLATFORM_SUBSCRIPTION_TRIAL_CREATED`, motivo `backfill`). Después el operador ajusta el plan de cada una en su ficha.
