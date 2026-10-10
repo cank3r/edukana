@@ -1,0 +1,97 @@
+http://127.0.0.1:3000/dashboard/admisiones
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+Admisiones
+Cobros
+Ventas
+Calendario
+Reportes
+Configuración
+Notificaciones
+Cerrar sesión
+C
+
+Carla Méndez
+
+admin@instituto-demo.test
+
+Inicio
+Admisiones
+Admisiones
+
+Las personas que quieren entrar a la institución, ordenadas por la etapa en que van. Abre una solicitud para avanzarla o convertirla en estudiante.
+
+Registrar solicitud
+
+3
+
+Solicitudes abiertas
+
+1
+
+Admitidas este mes
+
+25 %
+
+Terminan inscritas
+
+1 de 4
+
+Buscar por nombre o correo
+Programa
+Todos los programas
+Bachillerato Técnico
+Buscar
+Interesado
+1
+
+Preguntó o dejó sus datos.
+
+Carmen Báez
+Bachillerato Técnico
+Llegó hace 3 minutos · Redes sociales
+Documentos
+1
+
+Está entregando sus papeles.
+
+Miguel Ortiz
+Bachillerato Técnico
+Llegó hace 3 minutos · Recomendación
+En revisión
+1
+
+La institución revisa su caso.
+
+Laura Peña
+Sin programa indicado
+Llegó hace 3 minutos · Visita a la institución
+Admitido
+0
+
+Aprobado; falta convertirlo en estudiante.
+
+Nadie en esta etapa.
+
+Inscrito
+1
+
+Ya es estudiante.
+
+Lucía Fernández (movil)
+Bachillerato Técnico
+Llegó hace 2 minutos
+No continúa
+0
+
+Se retiró o no fue aceptado.
+
+Nadie en esta etapa.

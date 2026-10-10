@@ -1,0 +1,491 @@
+http://127.0.0.1:3000/dashboard/configuracion/institucion
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+Admisiones
+Cobros
+Ventas
+Calendario
+Reportes
+Configuración
+Notificaciones
+Cerrar sesión
+C
+
+Carla Méndez
+
+admin@instituto-demo.test
+
+Inicio
+Configuración
+Datos de la institución
+Datos de la institución
+
+Lo básico de tu institución. Puedes cambiarlo cuando quieras.
+
+Nombre de la institución
+Es el nombre que ven todas las personas al entrar y en los correos de invitación.
+Tipo de institución
+Colegio o escuela
+Universidad
+Instituto
+Academia
+Otro
+Zona horaria
+República Dominicana
+Puerto Rico
+Cuba
+México (Ciudad de México)
+México (Monterrey)
+México (Cancún)
+México (Tijuana)
+Guatemala
+El Salvador
+Honduras
+Nicaragua
+Costa Rica
+Panamá
+Colombia
+Venezuela
+Ecuador
+Perú
+Bolivia
+Paraguay
+Chile
+Argentina
+Uruguay
+Brasil (São Paulo)
+Brasil (Manaos)
+Africa / Abidjan
+Africa / Accra
+Africa / Addis Ababa
+Africa / Algiers
+Africa / Asmera
+Africa / Bamako
+Africa / Bangui
+Africa / Banjul
+Africa / Bissau
+Africa / Blantyre
+Africa / Brazzaville
+Africa / Bujumbura
+Africa / Cairo
+Africa / Casablanca
+Africa / Ceuta
+Africa / Conakry
+Africa / Dakar
+Africa / Dar es Salaam
+Africa / Djibouti
+Africa / Douala
+Africa / El Aaiun
+Africa / Freetown
+Africa / Gaborone
+Africa / Harare
+Africa / Johannesburg
+Africa / Juba
+Africa / Kampala
+Africa / Khartoum
+Africa / Kigali
+Africa / Kinshasa
+Africa / Lagos
+Africa / Libreville
+Africa / Lome
+Africa / Luanda
+Africa / Lubumbashi
+Africa / Lusaka
+Africa / Malabo
+Africa / Maputo
+Africa / Maseru
+Africa / Mbabane
+Africa / Mogadishu
+Africa / Monrovia
+Africa / Nairobi
+Africa / Ndjamena
+Africa / Niamey
+Africa / Nouakchott
+Africa / Ouagadougou
+Africa / Porto-Novo
+Africa / Sao Tome
+Africa / Tripoli
+Africa / Tunis
+Africa / Windhoek
+America / Adak
+America / Anchorage
+America / Anguilla
+America / Antigua
+America / Araguaina
+America / Argentina / La Rioja
+America / Argentina / Rio Gallegos
+America / Argentina / Salta
+America / Argentina / San Juan
+America / Argentina / San Luis
+America / Argentina / Tucuman
+America / Argentina / Ushuaia
+America / Aruba
+America / Bahia
+America / Bahia Banderas
+America / Barbados
+America / Belem
+America / Belize
+America / Blanc-Sablon
+America / Boa Vista
+America / Boise
+America / Cambridge Bay
+America / Campo Grande
+America / Catamarca
+America / Cayenne
+America / Cayman
+America / Chicago
+America / Chihuahua
+America / Ciudad Juarez
+America / Coral Harbour
+America / Cordoba
+America / Coyhaique
+America / Creston
+America / Cuiaba
+America / Curacao
+America / Danmarkshavn
+America / Dawson
+America / Dawson Creek
+America / Denver
+America / Detroit
+America / Dominica
+America / Edmonton
+America / Eirunepe
+America / Fort Nelson
+America / Fortaleza
+America / Glace Bay
+America / Godthab
+America / Goose Bay
+America / Grand Turk
+America / Grenada
+America / Guadeloupe
+America / Guyana
+America / Halifax
+America / Hermosillo
+America / Indiana / Knox
+America / Indiana / Marengo
+America / Indiana / Petersburg
+America / Indiana / Tell City
+America / Indiana / Vevay
+America / Indiana / Vincennes
+America / Indiana / Winamac
+America / Indianapolis
+America / Inuvik
+America / Iqaluit
+America / Jamaica
+America / Jujuy
+America / Juneau
+America / Kentucky / Monticello
+America / Kralendijk
+America / Los Angeles
+America / Louisville
+America / Lower Princes
+America / Maceio
+America / Marigot
+America / Martinique
+America / Matamoros
+America / Mazatlan
+America / Mendoza
+America / Menominee
+America / Merida
+America / Metlakatla
+America / Miquelon
+America / Moncton
+America / Montserrat
+America / Nassau
+America / New York
+America / Nome
+America / Noronha
+America / North Dakota / Beulah
+America / North Dakota / Center
+America / North Dakota / New Salem
+America / Ojinaga
+America / Paramaribo
+America / Phoenix
+America / Port-au-Prince
+America / Port of Spain
+America / Porto Velho
+America / Punta Arenas
+America / Rankin Inlet
+America / Recife
+America / Regina
+America / Resolute
+America / Rio Branco
+America / Santarem
+America / Scoresbysund
+America / Sitka
+America / St Barthelemy
+America / St Johns
+America / St Kitts
+America / St Lucia
+America / St Thomas
+America / St Vincent
+America / Swift Current
+America / Thule
+America / Toronto
+America / Tortola
+America / Vancouver
+America / Whitehorse
+America / Winnipeg
+America / Yakutat
+Antarctica / Casey
+Antarctica / Davis
+Antarctica / DumontDUrville
+Antarctica / Macquarie
+Antarctica / Mawson
+Antarctica / McMurdo
+Antarctica / Palmer
+Antarctica / Rothera
+Antarctica / Syowa
+Antarctica / Troll
+Antarctica / Vostok
+Arctic / Longyearbyen
+Asia / Aden
+Asia / Almaty
+Asia / Amman
+Asia / Anadyr
+Asia / Aqtau
+Asia / Aqtobe
+Asia / Ashgabat
+Asia / Atyrau
+Asia / Baghdad
+Asia / Bahrain
+Asia / Baku
+Asia / Bangkok
+Asia / Barnaul
+Asia / Beirut
+Asia / Bishkek
+Asia / Brunei
+Asia / Calcutta
+Asia / Chita
+Asia / Colombo
+Asia / Damascus
+Asia / Dhaka
+Asia / Dili
+Asia / Dubai
+Asia / Dushanbe
+Asia / Famagusta
+Asia / Gaza
+Asia / Hebron
+Asia / Hong Kong
+Asia / Hovd
+Asia / Irkutsk
+Asia / Jakarta
+Asia / Jayapura
+Asia / Jerusalem
+Asia / Kabul
+Asia / Kamchatka
+Asia / Karachi
+Asia / Katmandu
+Asia / Khandyga
+Asia / Krasnoyarsk
+Asia / Kuala Lumpur
+Asia / Kuching
+Asia / Kuwait
+Asia / Macau
+Asia / Magadan
+Asia / Makassar
+Asia / Manila
+Asia / Muscat
+Asia / Nicosia
+Asia / Novokuznetsk
+Asia / Novosibirsk
+Asia / Omsk
+Asia / Oral
+Asia / Phnom Penh
+Asia / Pontianak
+Asia / Pyongyang
+Asia / Qatar
+Asia / Qostanay
+Asia / Qyzylorda
+Asia / Rangoon
+Asia / Riyadh
+Asia / Saigon
+Asia / Sakhalin
+Asia / Samarkand
+Asia / Seoul
+Asia / Shanghai
+Asia / Singapore
+Asia / Srednekolymsk
+Asia / Taipei
+Asia / Tashkent
+Asia / Tbilisi
+Asia / Tehran
+Asia / Thimphu
+Asia / Tokyo
+Asia / Tomsk
+Asia / Ulaanbaatar
+Asia / Urumqi
+Asia / Ust-Nera
+Asia / Vientiane
+Asia / Vladivostok
+Asia / Yakutsk
+Asia / Yekaterinburg
+Asia / Yerevan
+Atlantic / Azores
+Atlantic / Bermuda
+Atlantic / Canary
+Atlantic / Cape Verde
+Atlantic / Faeroe
+Atlantic / Madeira
+Atlantic / Reykjavik
+Atlantic / South Georgia
+Atlantic / St Helena
+Atlantic / Stanley
+Australia / Adelaide
+Australia / Brisbane
+Australia / Broken Hill
+Australia / Darwin
+Australia / Eucla
+Australia / Hobart
+Australia / Lindeman
+Australia / Lord Howe
+Australia / Melbourne
+Australia / Perth
+Australia / Sydney
+Europe / Amsterdam
+Europe / Andorra
+Europe / Astrakhan
+Europe / Athens
+Europe / Belgrade
+Europe / Berlin
+Europe / Bratislava
+Europe / Brussels
+Europe / Bucharest
+Europe / Budapest
+Europe / Busingen
+Europe / Chisinau
+Europe / Copenhagen
+Europe / Dublin
+Europe / Gibraltar
+Europe / Guernsey
+Europe / Helsinki
+Europe / Isle of Man
+Europe / Istanbul
+Europe / Jersey
+Europe / Kaliningrad
+Europe / Kiev
+Europe / Kirov
+Europe / Lisbon
+Europe / Ljubljana
+Europe / London
+Europe / Luxembourg
+Europe / Madrid
+Europe / Malta
+Europe / Mariehamn
+Europe / Minsk
+Europe / Monaco
+Europe / Moscow
+Europe / Oslo
+Europe / Paris
+Europe / Podgorica
+Europe / Prague
+Europe / Riga
+Europe / Rome
+Europe / Samara
+Europe / San Marino
+Europe / Sarajevo
+Europe / Saratov
+Europe / Simferopol
+Europe / Skopje
+Europe / Sofia
+Europe / Stockholm
+Europe / Tallinn
+Europe / Tirane
+Europe / Ulyanovsk
+Europe / Vaduz
+Europe / Vatican
+Europe / Vienna
+Europe / Vilnius
+Europe / Volgograd
+Europe / Warsaw
+Europe / Zagreb
+Europe / Zurich
+Indian / Antananarivo
+Indian / Chagos
+Indian / Christmas
+Indian / Cocos
+Indian / Comoro
+Indian / Kerguelen
+Indian / Mahe
+Indian / Maldives
+Indian / Mauritius
+Indian / Mayotte
+Indian / Reunion
+Pacific / Apia
+Pacific / Auckland
+Pacific / Bougainville
+Pacific / Chatham
+Pacific / Easter
+Pacific / Efate
+Pacific / Enderbury
+Pacific / Fakaofo
+Pacific / Fiji
+Pacific / Funafuti
+Pacific / Galapagos
+Pacific / Gambier
+Pacific / Guadalcanal
+Pacific / Guam
+Pacific / Honolulu
+Pacific / Kiritimati
+Pacific / Kosrae
+Pacific / Kwajalein
+Pacific / Majuro
+Pacific / Marquesas
+Pacific / Midway
+Pacific / Nauru
+Pacific / Niue
+Pacific / Norfolk
+Pacific / Noumea
+Pacific / Pago Pago
+Pacific / Palau
+Pacific / Pitcairn
+Pacific / Ponape
+Pacific / Port Moresby
+Pacific / Rarotonga
+Pacific / Saipan
+Pacific / Tahiti
+Pacific / Tarawa
+Pacific / Tongatapu
+Pacific / Truk
+Pacific / Wake
+Pacific / Wallis
+UTC (hora universal)
+Elige el lugar donde está tu institución. Con esa hora se muestran las clases y las fechas límite.
+Idioma
+Español
+Inglés
+Guardar cambios
+Logo
+
+Tu institución todavía no tiene logo.
+
+JPG, PNG o WebP de hasta 5 MB. Cualquier persona podrá verla, también sin iniciar sesión.
+
+Subir logo
+Color principal
+
+Se usa en el menú, en el encabezado del celular y en los botones principales. Todas las personas de tu institución lo verán.
+
+Colores sugeridos
+Elegir
+O escribe el código del color
+Así se verá:
+Botón principal
+Guardar color
+Asistente de IA
+
+Ayuda a los docentes a proponer preguntas a partir de sus lecciones (siempre las revisan antes de guardarlas) y responde dudas de los estudiantes usando solo el contenido de sus cursos.
+
+Estado: Encendido en tu institución, pero todavía no disponible
+
+La plataforma todavía no tiene el asistente activado. Hasta que se active, nadie lo verá en los cursos.
+
+Apagar el asistente

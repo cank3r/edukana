@@ -1,0 +1,86 @@
+http://127.0.0.1:3000/dashboard/gestion/grupos/cmv2k6mdx003gbgt9ohcixhge
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+Notificaciones
+Cerrar sesión
+C
+
+Carla Méndez
+
+admin@instituto-demo.test
+
+Inicio
+Personas
+Grupos
+Grupo
+Grupo A – Mañana
+
+Programa: Bachillerato Técnico · Desde el 10 oct 2026 · 2 de 30 estudiantes
+
+Estudiantes del turno de la mañana.
+
+Editar datos del grupo
+1. Estudiantes
+
+2 de 30 estudiantes. Quedan 28 cupos.
+
+Ana Rodríguez
+
+ana@instituto-demo.test
+
+Quitar
+
+Pedro Jiménez
+
+pedro@instituto-demo.test
+
+Quitar
+Agregar estudiantes
+Buscar estudiante por nombre o correo
+Buscar
+
+Estudiantes activos que aún no están en este grupo.
+
+Juan Castillo
+juan@instituto-demo.test
+Lucía Fernández (movil)
+lucia.movil@correo.test
+Marta Prueba escritorio
+marta.escritorio@instituto-demo.test
+Marta Prueba movil
+marta.movil@instituto-demo.test
+Rosa Almonte
+rosa@instituto-demo.test
+Agregar estudiante al grupo
+2. Cursos del grupo
+
+Los cursos que este grupo toma. Agregar un curso aquí todavía no inscribe a nadie: eso se hace en el paso 3.
+
+Matemática BásicaMAT-101
+
+Quitar
+Agregar cursos
+Agregar todos los cursos del programa (1)
+Taller de Lectura
+LEC-100
+Agregar curso al grupo
+3. Inscribir al grupo en sus cursos
+
+Inscribe a cada estudiante del grupo en cada curso del grupo. Puedes repetirlo cuando agregues personas o cursos: solo se hace lo que falte.
+
+No hay inscripciones nuevas por hacer.
+
+Matemática Básica: nadie por inscribir; 2 ya estaban inscritos.
+Borrar este grupo
+
+Úsalo solo si el grupo se creó por error o ya terminó y no lo necesitas.
+
+Borrar grupo

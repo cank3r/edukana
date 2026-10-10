@@ -1,0 +1,52 @@
+http://127.0.0.1:3000/dashboard/aula/cmv2k6m8w000obgt9i4bww0mb/preguntas/nueva
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Mis cursos
+Avisos
+Calendario
+4
+Notificaciones
+Cerrar sesión
+L
+
+Luis Peralta
+
+docente@instituto-demo.test
+
+Inicio
+Cursos
+Curso
+Banco de preguntas
+Nueva
+Agregar pregunta
+
+Curso: Matemática Básica
+
+Tipo de pregunta
+Selección múltiple
+El estudiante elige una entre varias opciones. Se califica sola.
+Verdadero o falso
+El estudiante marca Verdadero o Falso. Se califica sola.
+Respuesta corta
+El estudiante escribe su respuesta. La revisas y le pones los puntos tú.
+Pregunta
+Opciones
+
+Escribe de 2 a 6 opciones y marca el círculo de la correcta.
+
+Quitar
+Quitar
+Quitar
+Agregar otra opción
+
+Aún no has marcado la respuesta correcta.
+
+Puntos que vale
+Puedes cambiarlos en cada examen.
+Explicación (opcional)
+Agregar pregunta
+Cancelar

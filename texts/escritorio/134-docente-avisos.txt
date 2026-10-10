@@ -1,0 +1,34 @@
+http://127.0.0.1:3000/dashboard/comunidad
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Mis cursos
+Avisos
+Calendario
+4
+Notificaciones
+Cerrar sesión
+L
+
+Luis Peralta
+
+docente@instituto-demo.test
+
+Inicio
+Avisos
+Avisos
+
+Mensajes de tu institución para ti.
+
+Bienvenidos al nuevo período
+
+Las clases comienzan esta semana. Revisen su horario y sus cursos.
+
+10 de octubre de 2026
+·
+Carla Méndez
+·
+Para ti

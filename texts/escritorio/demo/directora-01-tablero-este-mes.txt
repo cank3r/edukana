@@ -1,0 +1,235 @@
+http://127.0.0.1:3000/dashboard?rango=mes
+
+Saltar al contenido principal
+
+Instituto Técnico Demo
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+Notificaciones
+Cerrar sesión
+M
+
+Margarita Rosario Díaz
+
+directora@demo.edukana.do
+
+Hola, Margarita
+
+Instituto Técnico Demo
+
+Cuatrimestre Agosto–Diciembre 2026, semana 9 de 18
+
+Agregar personas
+Crear un curso
+Publicar un aviso
+Registrar un pago
+Ver reportes
+Cómo va la institución
+
+Este mes, comparado con el mes pasado a esta misma altura.
+
+Esta semana
+Este mes
+Este período
+Estudiantes activos
+117
+0 nuevos este mes
+
+3 menos que el mes pasado
+
+Asistencia promedio
+98 %
+1,276 de 1,297 registros
+
+10 puntos más que el mes pasado
+
+Avance promedio
+68 %
+621 lecciones completadas este mes
+
+111 lecciones más que el mes pasado
+
+Entregas a tiempo
+86 %
+852 de 986 entregas esperadas
+
+1 punto menos que el mes pasado
+
+Cobrado este mes
+RD$240,000
+Por cobrar RD$306,900, vencido RD$73,100
+
+RD$209,900 más que el mes pasado
+
+Requiere tu atención
+
+Todo al día
+
+No hay pendientes que requieran tu atención ahora.
+
+Últimas 8 semanas
+Asistencia
+Entregas a tiempo
+0 %
+50 %
+100 %
+80 %
+17 ago
+24 ago
+31 ago
+7 sept
+14 sept
+21 sept
+28 sept
+5 oct
+Asistencia y entregas a tiempo por semana, semana por semana
+Semana que empieza	Asistencia	Entregas a tiempo
+17 ago	74 % (696 de 944 registros)	85 % (417 de 493 entregas)
+24 ago	80 % (766 de 960 registros)	86 % (424 de 493 entregas)
+31 ago	86 % (836 de 970 registros)	87 % (427 de 493 entregas)
+7 sept	90 % (877 de 978 registros)	87 % (431 de 493 entregas)
+14 sept	94 % (923 de 978 registros)	84 % (416 de 493 entregas)
+21 sept	96 % (935 de 978 registros)	85 % (418 de 493 entregas)
+28 sept	97 % (953 de 985 registros)	86 % (426 de 493 entregas)
+5 oct (esta semana)	99 % (881 de 890 registros)	86 % (426 de 493 entregas)
+Estudiantes en riesgo
+Ver todos (31)
+
+31 estudiantes reúnen al menos una señal: asistencia menor de 80 %, 2 o más tareas vencidas, nota por debajo de 70, avance muy por debajo de su grupo o cargos vencidos.
+
+Yesica Durán Espaillat
+
+5 cursos
+
+Asistencia 69 %
+20 tareas vencidas
+Nota 46 de 100 en Electricidad Residencial
+Avance 20 %, muy por debajo de su grupo
+2 cargos vencidos
+Kelvin Arias Matos
+
+4 cursos
+
+11 tareas vencidas
+Nota 48 de 100 en Electricidad Residencial
+Avance 17 %, muy por debajo de su grupo
+1 cargo vencido
+Cristian Ventura Pérez
+
+4 cursos
+
+11 tareas vencidas
+Nota 50 de 100 en Legislación Tributaria Dominicana
+Avance 11 %, muy por debajo de su grupo
+2 cargos vencidos
+Omar Mota Agramonte
+
+4 cursos
+
+12 tareas vencidas
+Nota 50 de 100 en Primeros Auxilios
+Avance 11 %, muy por debajo de su grupo
+1 cargo vencido
+Yaritza Mejía Lora
+
+4 cursos
+
+11 tareas vencidas
+Nota 48 de 100 en Fundamentos de Enfermería
+Avance 8.3 %, muy por debajo de su grupo
+1 cargo vencido
+Rafael Antonio Guzmán
+
+4 cursos
+
+13 tareas vencidas
+Nota 48 de 100 en Matemática Financiera
+Avance 17 %, muy por debajo de su grupo
+2 cargos vencidos
+Docentes
+Ver todos
+
+Lo que espera calificación y los cursos sin lecciones nuevas, asistencia ni notas en 14 días.
+
+Ramón Peña Castillo
+169 por calificar
+
+2 cursos, la más antigua espera 4 días
+
+Yokasta Féliz Matos
+87 por calificar
+
+2 cursos, la más antigua espera 4 días
+
+Rosa Almonte Guzmán
+86 por calificar
+
+1 curso, la más antigua espera 4 días
+
+Julio César Ventura
+76 por calificar
+
+1 curso, la más antigua espera 4 días
+
+Milagros Concepción Abreu
+68 por calificar
+
+1 curso, la más antigua espera 4 días
+
+Cursos
+Ver los 12 cursos
+
+Primero los que necesitan atención. La asistencia es de este mes; en rojo lo que está por debajo de lo esperado.
+
+Cursos con inscritos, avance, asistencia, nota promedio y pendientes por calificar
+Curso	Inscritos	Avance	Asistencia	Nota promedio	Por calificar
+Contabilidad Básica
+Ramón Peña Castillo
+	56	69 %	100 %	81 de 100	88
+Anatomía y Fisiología Básica
+Rosa Almonte Guzmán
+	58	67 %	98 %	81 de 100	86
+Legislación Tributaria Dominicana
+Ramón Peña Castillo
+	56	68 %	97 %	81 de 100	81
+Primeros Auxilios
+Julio César Ventura
+	58	67 %	99 %	81 de 100	76
+Matemática Financiera
+Yokasta Féliz Matos
+	55	68 %	98 %	81 de 100	74
+Fundamentos de Enfermería
+Milagros Concepción Abreu
+	58	67 %	97 %	81 de 100	68
+Mercadeo Digital para Emprendedores
+Lissette Marte Cabral
+	28	69 %	100 %	82 de 100	49
+Instalaciones Solares Fotovoltaicas
+Fausto Rafael Then
+	29	67 %	100 %	81 de 100	45
+Admisiones este mes
+Ver admisiones
+
+Solicitudes nuevas
+
+5
+
+5 sin atender todavía
+
+En proceso
+
+0
+
+Con documentos, en revisión o admitidas
+
+Inscritas
+
+0
+
+Ya son estudiantes
+
+1 solicitud más que el mes pasado.

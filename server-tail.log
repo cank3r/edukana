@@ -1,0 +1,71 @@
+
+> edukana@0.1.0 start
+> next start -H 127.0.0.1 -p 3000
+
+▲ Next.js 16.4.0
+- Local:         http://127.0.0.1:3000
+- Network:       http://127.0.0.1:3000
+✓ Ready in 154ms
+✓ Running next.config.ts took 49ms
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'announcement',
+  count: 8,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+[auth][credentials-rejected] {
+  reason: 'institution_suspended',
+  deploymentSha: 'local',
+  institutionCount: 0
+}
+[31m[auth][error][0m CredentialsSignin: Read more at https://errors.authjs.dev#credentialssignin
+    at Object.authorize (/home/runner/work/edukana/edukana/.next/server/chunks/_0qo-lerwhep_r._.js:404:65797)
+    at async oG (/home/runner/work/edukana/edukana/.next/server/chunks/_0qo-lerwhep_r._.js:404:40892)
+    at async o3 (/home/runner/work/edukana/edukana/.next/server/chunks/_0qo-lerwhep_r._.js:404:50629)
+    at async o6 (/home/runner/work/edukana/edukana/.next/server/chunks/_0qo-lerwhep_r._.js:404:54882)
+    at async r0.renderToResponse (/home/runner/work/edukana/edukana/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.prod.js:5:14352)
+    at async r0.executeRequest (/home/runner/work/edukana/edukana/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.prod.js:5:17509)
+    at async z (/home/runner/work/edukana/edukana/.next/server/chunks/_1tjis3pqfxk7_._.js:1:2901)
+    at async r0.handleResponse (/home/runner/work/edukana/edukana/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.prod.js:1:132981)
+    at async X (/home/runner/work/edukana/edukana/.next/server/chunks/_1tjis3pqfxk7_._.js:1:3895)
+    at async Module.y [as handler] (/home/runner/work/edukana/edukana/.next/server/chunks/_1tjis3pqfxk7_._.js:1:6002)
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'announcement',
+  count: 9,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'charge',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+deliverEmails: correo no configurado; las notificaciones quedan solo en la aplicación {
+  kind: 'grade',
+  count: 1,
+  error: 'Error: Correo no configurado: faltan RESEND_API_KEY o EMAIL_FROM.'
+}
+[auth][credentials-rejected] {
+  reason: 'institution_suspended',
+  deploymentSha: 'local',
+  institutionCount: 0
+}
+[31m[auth][error][0m CredentialsSignin: Read more at https://errors.authjs.dev#credentialssignin
+    at Object.authorize (/home/runner/work/edukana/edukana/.next/server/chunks/_0qo-lerwhep_r._.js:404:65797)
+    at async oG (/home/runner/work/edukana/edukana/.next/server/chunks/_0qo-lerwhep_r._.js:404:40892)
+    at async o3 (/home/runner/work/edukana/edukana/.next/server/chunks/_0qo-lerwhep_r._.js:404:50629)
+    at async o6 (/home/runner/work/edukana/edukana/.next/server/chunks/_0qo-lerwhep_r._.js:404:54882)
+    at async r0.renderToResponse (/home/runner/work/edukana/edukana/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.prod.js:5:14352)
+    at async r0.executeRequest (/home/runner/work/edukana/edukana/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.prod.js:5:17509)
+    at async z (/home/runner/work/edukana/edukana/.next/server/chunks/_1tjis3pqfxk7_._.js:1:2901)
+    at async r0.handleResponse (/home/runner/work/edukana/edukana/node_modules/next/dist/compiled/next-server/app-route-turbo.runtime.prod.js:1:132981)
+    at async X (/home/runner/work/edukana/edukana/.next/server/chunks/_1tjis3pqfxk7_._.js:1:3895)
+    at async Module.y [as handler] (/home/runner/work/edukana/edukana/.next/server/chunks/_1tjis3pqfxk7_._.js:1:6002)

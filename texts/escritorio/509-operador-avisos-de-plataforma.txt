@@ -1,0 +1,35 @@
+http://127.0.0.1:3000/operador/avisos
+
+Saltar al contenido principal
+Panel de la plataforma
+Volver a mi institución
+Tablero
+Instituciones
+Planes
+Facturación
+Más opciones
+Avisos de Edukana
+
+Mensajes de la plataforma que aparecen al entrar al panel. Las horas son de Santo Domingo.
+
+Crear aviso
+Aviso Edukana escritorio-1791647014037
+
+Todas las personas · Terminado
+
+Mensaje corregido de la plataforma.
+
+Desde el 1 de enero de 2026, 12:00 a. m. hasta el 10 de octubre de 2026, 11:43 a. m.
+
+Editar o terminar
+Aviso Edukana escritorio-1791647014037
+Aviso Edukana movil-1791646859334
+
+Todas las personas · Terminado
+
+Mensaje corregido de la plataforma.
+
+Desde el 1 de enero de 2026, 12:00 a. m. hasta el 10 de octubre de 2026, 11:41 a. m.
+
+Editar o terminar
+Aviso Edukana movil-1791646859334

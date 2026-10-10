@@ -1,0 +1,8 @@
+http://127.0.0.1:3000/certificados
+
+Comprobar un certificado
+
+Escribe el código de verificación que aparece en el certificado para ver si es auténtico y está vigente.
+
+Código del certificado
+Comprobar

@@ -1,0 +1,140 @@
+http://127.0.0.1:3000/dashboard
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+2
+Notificaciones
+Cerrar sesión
+S
+
+Sofía Batista
+
+coordinacion@instituto-demo.test
+
+Hola, Sofía
+
+Instituto Demo
+
+Año 2026, semana 41 de 78
+
+Ver cursos
+Publicar un aviso
+Ver personas
+Admisiones
+Cómo va la institución
+
+Este mes, comparado con el mes pasado a esta misma altura.
+
+Esta semana
+Este mes
+Este período
+Estudiantes activos
+2
+2 nuevos este mes
+
+2 más que el mes pasado
+
+Asistencia promedio
+63 %
+5 de 8 registros
+
+Todavía sin datos anteriores para comparar
+
+Avance promedio
+5.6 %
+2 lecciones completadas este mes
+
+2 lecciones más que el mes pasado
+
+Entregas a tiempo
+—
+Se llenará cuando venza una tarea publicada este mes.
+
+Requiere tu atención
+
+1 curso no tiene estudiantes inscritos
+
+Un estudiante solo ve los cursos en los que está inscrito.
+
+Inscribir estudiantes
+Últimas 8 semanas
+Asistencia
+Entregas a tiempo
+0 %
+50 %
+100 %
+80 %
+17 ago
+24 ago
+31 ago
+7 sept
+14 sept
+21 sept
+28 sept
+5 oct
+Asistencia y entregas a tiempo por semana, semana por semana
+Semana que empieza	Asistencia	Entregas a tiempo
+17 ago	Sin datos	Sin datos
+24 ago	Sin datos	Sin datos
+31 ago	Sin datos	Sin datos
+7 sept	Sin datos	Sin datos
+14 sept	Sin datos	Sin datos
+21 sept	Sin datos	Sin datos
+28 sept	Sin datos	Sin datos
+5 oct (esta semana)	63 % (5 de 8 registros)	Sin datos
+Estudiantes en riesgo
+
+Aquí aparecen quienes tienen asistencia menor de 80 %, 2 o más tareas vencidas, nota por debajo de 70 o un avance muy por debajo de su grupo.
+
+Ningún estudiante tiene señales de alerta por ahora. La lista se llena sola con la asistencia, las tareas y las notas.
+
+Docentes
+
+Lo que espera calificación y los cursos sin lecciones nuevas, asistencia ni notas en 14 días.
+
+Luis Peralta
+4 por calificar
+
+2 cursos, la más antigua llegó hoy
+
+Cursos
+
+Primero los que necesitan atención. La asistencia es de este mes; en rojo lo que está por debajo de lo esperado.
+
+Cursos con inscritos, avance, asistencia, nota promedio y pendientes por calificar
+Curso	Inscritos	Avance	Asistencia	Nota promedio	Por calificar
+Matemática Básica
+Luis Peralta
+	4	8.3 %	63 %	92 de 100	4
+Taller de Lectura
+Luis Peralta
+	2	0 %	—	—	Al día
+Admisiones este mes
+Ver admisiones
+
+Solicitudes nuevas
+
+5
+
+1 sin atender todavía
+
+En proceso
+
+2
+
+Con documentos, en revisión o admitidas
+
+Inscritas
+
+2
+
+Ya son estudiantes
+
+5 solicitudes más que el mes pasado.

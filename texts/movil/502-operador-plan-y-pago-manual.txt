@@ -1,0 +1,30 @@
+http://127.0.0.1:3000/operador/facturacion?estado=PAID
+
+Saltar al contenido principal
+Volver a mi institución
+Tablero
+Instituciones
+Planes
+Facturación
+Más opciones
+Facturación
+
+Facturas de las instituciones por su plan. El cobro se registra a mano desde la ficha de cada institución.
+
+Por cobrar este mes
+
+No hay cobros abiertos con vencimiento este mes.
+
+Mostrar
+Abiertas
+Vencidas
+Pagadas
+Anuladas
+Todas
+Filtrar
+Instituto Backoffice movil
+Pagada
+
+RD$50.00
+
+Vence el 9 de noviembre de 2026

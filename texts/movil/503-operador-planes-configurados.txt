@@ -1,0 +1,69 @@
+http://127.0.0.1:3000/operador/planes
+
+Saltar al contenido principal
+Volver a mi institución
+Tablero
+Instituciones
+Planes
+Facturación
+Más opciones
+Planes
+
+El precio se escribe en centavos: 450000 son RD$4,500.00. Deja un límite vacío si no tiene máximo. Cambiar un precio no altera acuerdos existentes.
+
+Gratis
+
+RD$0.00 al mes · hasta 30 estudiantes · 500 MB de almacenamiento
+
+Nombre
+Precio mensual en centavos
+Moneda (por ejemplo DOP)
+Máximo de estudiantes
+Almacenamiento máximo (MB)
+Pedidos de IA al mes
+Catálogo
+Asistente de IA
+Disponible para nuevas suscripciones
+Guardar plan
+Inicial
+
+RD$1,500.00 al mes · hasta 150 estudiantes · 5 GB de almacenamiento
+
+Nombre
+Precio mensual en centavos
+Moneda (por ejemplo DOP)
+Máximo de estudiantes
+Almacenamiento máximo (MB)
+Pedidos de IA al mes
+Catálogo
+Asistente de IA
+Disponible para nuevas suscripciones
+Guardar plan
+Profesional
+
+RD$4,500.00 al mes · hasta 1,600 estudiantes · 25 GB de almacenamiento
+
+Nombre
+Precio mensual en centavos
+Moneda (por ejemplo DOP)
+Máximo de estudiantes
+Almacenamiento máximo (MB)
+Pedidos de IA al mes
+Catálogo
+Asistente de IA
+Disponible para nuevas suscripciones
+Guardar plan
+Empresa
+
+RD$9,000.00 al mes · estudiantes sin límite · almacenamiento sin límite
+
+Nombre
+Precio mensual en centavos
+Moneda (por ejemplo DOP)
+Máximo de estudiantes
+Almacenamiento máximo (MB)
+Pedidos de IA al mes
+Catálogo
+Asistente de IA
+Disponible para nuevas suscripciones
+Guardar plan

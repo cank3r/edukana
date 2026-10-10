@@ -1,0 +1,89 @@
+http://127.0.0.1:3000/dashboard/notificaciones
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Mis cursos
+Avisos
+Calendario
+Más
+15
+Notificaciones
+Cerrar sesión
+P
+
+Pedro Jiménez
+
+pedro@instituto-demo.test
+
+Inicio
+Notificaciones
+Notificaciones
+
+Tienes 15 sin leer. Toca una para abrirla.
+
+Elegir qué me llega por correo
+Marcar todas como leídas
+HOY
+Sin leer:
+Clase en vivo en Matemática Básica: Clase de dudas (escritorio)
+11:42 a. m.
+Es el lunes, 12 de octubre a las 5:30 p. m.. El enlace para entrar está en la página de clases del curso.
+Sin leer:
+Nueva tarea en Matemática Básica: Ejercicios de repaso (escritorio)
+11:42 a. m.
+Entrégala antes del jueves, 15 de octubre a las 5:00 p. m..
+Sin leer:
+Nuevo cargo: Uniforme escolar (escritorio)
+11:42 a. m.
+RD$2,500.00, vence el 25 de octubre de 2026.
+Sin leer:
+Nuevo aviso: Reunión de familias (escritorio)
+11:42 a. m.
+Los esperamos el viernes a las 6 de la tarde en el salón principal.
+Sin leer:
+Clase en vivo en Matemática Básica: Clase de dudas (movil)
+11:40 a. m.
+Es el lunes, 12 de octubre a las 3:00 p. m.. El enlace para entrar está en la página de clases del curso.
+Sin leer:
+Nueva tarea en Matemática Básica: Ejercicios de repaso (movil)
+11:39 a. m.
+Entrégala antes del jueves, 15 de octubre a las 5:00 p. m..
+Sin leer:
+Nuevo aviso: Reunión de familias (movil)
+11:39 a. m.
+Los esperamos el viernes a las 6 de la tarde en el salón principal.
+Sin leer:
+Nuevo cargo: Mensualidad
+11:38 a. m.
+RD$3,500.00, vence el 20 de octubre de 2026.
+Sin leer:
+Tu certificado de «Taller de Lectura» está listo
+11:38 a. m.
+Puedes abrirlo, imprimirlo o compartir su enlace desde Mis certificados.
+Sin leer:
+Te inscribieron en Taller de Lectura
+11:38 a. m.
+Ya puedes entrar al curso y ver su contenido.
+Sin leer:
+Nuevo cargo: Mensualidad de prueba
+11:38 a. m.
+RD$3,500.00, vence el 20 de octubre de 2026.
+Sin leer:
+Clase en vivo en Matemática Básica: Repaso de la unidad 1
+11:38 a. m.
+Es el domingo, 11 de octubre a las 10:00 a. m.. El enlace para entrar está en la página de clases del curso.
+Sin leer:
+Nuevo examen en Matemática Básica: Prueba corta: suma y resta
+11:38 a. m.
+Ya puedes presentarlo.
+Sin leer:
+Nueva tarea en Matemática Básica: Problemas de suma y resta
+11:38 a. m.
+Entrégala antes del sábado, 17 de octubre a las 6:00 p. m..
+Sin leer:
+Te inscribieron en Matemática Básica
+11:38 a. m.
+Ya puedes entrar al curso y ver su contenido.

@@ -1,0 +1,34 @@
+http://127.0.0.1:3000/dashboard/mis-certificados
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Mis cursos
+Avisos
+Calendario
+Más
+Mi estado de cuenta
+Mis certificados
+15
+Notificaciones
+Cerrar sesión
+P
+
+Pedro Jiménez
+
+pedro@instituto-demo.test
+
+Inicio
+Mis certificados
+Mis certificados
+
+Los certificados de los cursos que terminaste. Ábrelos para imprimirlos o comparte su enlace.
+
+Taller de Lectura
+
+Emitido el 10 de octubre de 2026
+
+Ver certificado
+Copiar enlace para compartir

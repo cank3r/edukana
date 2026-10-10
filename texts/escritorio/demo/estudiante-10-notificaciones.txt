@@ -1,0 +1,71 @@
+http://127.0.0.1:3000/dashboard/notificaciones
+
+Saltar al contenido principal
+
+Instituto Técnico Demo
+
+Inicio
+Mis cursos
+Avisos
+Calendario
+Más
+4
+Notificaciones
+Cerrar sesión
+A
+
+Ana Mercedes Reyes
+
+ana.reyes@demo.edukana.do
+
+Inicio
+Notificaciones
+Notificaciones
+
+Tienes 4 sin leer. Toca una para abrirla.
+
+Elegir qué me llega por correo
+Marcar todas como leídas
+JUEVES, 8 DE OCTUBRE
+Nueva tarea en Servicio al Turista y Hospitalidad: Guion de bienvenida en inglés
+8:45 a. m.
+Revisa la fecha límite en la tarea.
+Sin leer:
+Nueva tarea en Primeros Auxilios: Análisis de un caso de RCP
+8:45 a. m.
+Revisa la fecha límite en la tarea.
+Sin leer:
+Nueva tarea en Fundamentos de Enfermería: Guía de bioseguridad para tu área de práctica
+8:45 a. m.
+Revisa la fecha límite en la tarea.
+Sin leer:
+Nueva tarea en Anatomía y Fisiología Básica: Caso clínico: el recorrido de la sangre
+8:45 a. m.
+Revisa la fecha límite en la tarea.
+DOMINGO, 4 DE OCTUBRE
+Ya tienes nota en «Práctica semana 7: Frases para recibir al huésped»
+3:32 p. m.
+Curso: Servicio al Turista y Hospitalidad. Abre la tarea para ver tu nota y los comentarios.
+Ya tienes nota en «Práctica semana 7: Hemorragias y heridas»
+3:32 p. m.
+Curso: Primeros Auxilios. Abre la tarea para ver tu nota y los comentarios.
+Ya tienes nota en «Práctica semana 7: Valores normales en el adulto»
+3:32 p. m.
+Curso: Fundamentos de Enfermería. Abre la tarea para ver tu nota y los comentarios.
+Sin leer:
+Ya tienes nota en «Práctica semana 7: La respiración: ventilación e intercambio»
+3:32 p. m.
+Curso: Anatomía y Fisiología Básica. Abre la tarea para ver tu nota y los comentarios.
+SÁBADO, 26 DE SEPTIEMBRE
+Nuevo examen en Servicio al Turista y Hospitalidad: Prueba de servicio al cliente
+7:00 a. m.
+Tienes 30 minutos y dos intentos.
+Nuevo examen en Primeros Auxilios: Evaluación: emergencias y RCP
+7:00 a. m.
+Tienes 30 minutos y dos intentos.
+Nuevo examen en Fundamentos de Enfermería: Prueba: bioseguridad y signos vitales
+7:00 a. m.
+Tienes 30 minutos y dos intentos.
+Nuevo examen en Anatomía y Fisiología Básica: Examen parcial: organización del cuerpo y circulación
+7:00 a. m.
+Tienes 30 minutos y dos intentos.

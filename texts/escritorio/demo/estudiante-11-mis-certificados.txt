@@ -1,0 +1,34 @@
+http://127.0.0.1:3000/dashboard/mis-certificados
+
+Saltar al contenido principal
+
+Instituto Técnico Demo
+
+Inicio
+Mis cursos
+Avisos
+Calendario
+Más
+Mi estado de cuenta
+Mis certificados
+4
+Notificaciones
+Cerrar sesión
+A
+
+Ana Mercedes Reyes
+
+ana.reyes@demo.edukana.do
+
+Inicio
+Mis certificados
+Mis certificados
+
+Los certificados de los cursos que terminaste. Ábrelos para imprimirlos o comparte su enlace.
+
+Excel para la Oficina
+
+Emitido el 8 de octubre de 2026
+
+Ver certificado
+Copiar enlace para compartir

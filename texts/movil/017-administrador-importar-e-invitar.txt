@@ -1,0 +1,31 @@
+http://127.0.0.1:3000/dashboard/gestion/accesos
+
+Saltar al contenido principal
+Menú
+Volver a Personas
+Importar e invitar
+
+Agrega personas desde una lista, envíales su invitación y controla quién puede entrar.
+
+1. Agregar personas desde un archivo
+
+Usa una hoja de cálculo guardada como CSV con las columnas Nombre y Correo. Puedes añadir Rol (estudiante, docente o tutor) y Teléfono. Antes de crear nada verás un resumen.
+
+Descargar plantilla de ejemplo
+Archivo CSV
+Revisar archivo
+2. Enviar invitaciones
+
+1 persona aún no puede entrar. Cada una recibirá un correo con un enlace para crear su contraseña, válido por 7 días.
+
+Enviar invitaciones
+3. Corregir, suspender o reactivar a una persona
+
+Suspender impide entrar de inmediato y no borra nada: cursos, notas y entregas se conservan.
+
+Buscar persona por nombre o correo
+Buscar
+
+Personas suspendidas (0)
+
+No hay personas suspendidas. Para corregir o suspender a alguien, búscalo por nombre o correo.

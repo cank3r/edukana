@@ -1,0 +1,31 @@
+http://127.0.0.1:3000/dashboard/aula
+
+Saltar al contenido principal
+1
+Menú
+Volver a Inicio
+Cursos
+
+Crea cursos, entra a trabajar en ellos y archiva los que ya terminaron.
+
+Crear curso
+Buscar curso por nombre
+Buscar
+Activos
+Archivados
+Publicado
+LEC-100
+Taller de Lectura
+
+Luis Peralta · Año 2026
+
+2 estudiantes
+Abrir
+Publicado
+MAT-101
+Matemática Básica
+
+Luis Peralta · Año 2026
+
+4 estudiantes
+Abrir

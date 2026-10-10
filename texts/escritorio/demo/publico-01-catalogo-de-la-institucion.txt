@@ -1,0 +1,47 @@
+http://127.0.0.1:3000/catalogo/instituto-tecnico-demo
+
+I
+Instituto Técnico Demo
+Entrar
+Cursos de Instituto Técnico Demo
+
+Elige un curso, mira de qué trata e inscríbete en línea.
+
+Buscar curso
+Buscar
+E
+Excel para la Oficina
+
+Con Yokasta Féliz Matos
+
+9 lecciones
+
+★
+4,5
+(2)
+
+RD$2,500.00
+
+M
+Mercadeo Digital para Emprendedores
+
+Con Lissette Marte Cabral
+
+9 lecciones
+
+Sin reseñas todavía
+
+RD$2,800.00
+
+P
+Primeros Auxilios
+
+Con Julio César Ventura
+
+9 lecciones
+
+Sin reseñas todavía
+
+RD$3,500.00
+
+Hecho con Edukana

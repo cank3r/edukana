@@ -1,0 +1,36 @@
+http://127.0.0.1:3000/dashboard/aula/cmv2k6ne80085fd8f63347d1e/generar-preguntas
+
+Saltar al contenido principal
+
+Instituto Técnico Demo
+
+Inicio
+Mis cursos
+Avisos
+Calendario
+3
+Notificaciones
+Cerrar sesión
+R
+
+Rosa Almonte Guzmán
+
+rosa.almonte@demo.edukana.do
+
+Inicio
+Cursos
+Curso
+Generar preguntas
+
+Anatomía y Fisiología Básica
+
+Generar preguntas con IA
+
+Elige una lección o un capítulo y la IA te propone preguntas sobre su texto. Tú las revisas, corriges o descartas; solo las que guardes entran al banco de preguntas del curso.
+
+Ver banco de preguntas
+El asistente de IA no está disponible
+
+El asistente de IA no está activado en esta plataforma. Mientras tanto puedes escribir tus preguntas a mano en el banco.
+
+Escribir una pregunta

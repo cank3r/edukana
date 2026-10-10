@@ -1,0 +1,58 @@
+http://127.0.0.1:3000/dashboard/analitica/riesgo
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+Admisiones
+Cobros
+Ventas
+Calendario
+Reportes
+Configuración
+Notificaciones
+Cerrar sesión
+C
+
+Carla Méndez
+
+admin@instituto-demo.test
+
+Inicio
+Reportes
+Estudiantes en riesgo
+Estudiantes en riesgo
+
+Quienes reúnen señales de alerta en sus cursos activos. La asistencia se cuenta en este mes; las tareas vencidas, las notas y el avance, en todo el curso.
+
+Esta semana
+Este mes
+Este período
+Todas las señales
+Asistencia menor de 80 % (1)
+2 o más tareas vencidas (0)
+Nota por debajo de 70 (0)
+Avance muy bajo (2)
+Cargos vencidos (1)
+3 estudiantes
+Juan Castillo
+
+1 curso, asistencia 50 % (1 de 2), avance 0 %
+
+Asistencia 50 %
+Avance 0 %, muy por debajo de su grupo
+Ana Rodríguez
+
+1 curso, asistencia 100 % (2 de 2), avance 20 %
+
+1 cargo vencido
+Pedro Jiménez
+
+1 curso, asistencia 100 % (2 de 2), avance 0 %
+
+Avance 0 %, muy por debajo de su grupo

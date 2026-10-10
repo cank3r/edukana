@@ -1,0 +1,43 @@
+
+> edukana@0.1.0 test:smoke
+> playwright test --config=playwright.smoke.config.ts
+
+
+Running 34 tests using 1 worker
+
+[1/34] [movil] › tests/e2e/smoke/demo-galeria.smoke.ts:189:5 › galeria demo cargada
+[2/34] [movil] › tests/e2e/smoke/demo-galeria.smoke.ts:199:7 › galeria demo › directora
+[3/34] [movil] › tests/e2e/smoke/demo-galeria.smoke.ts:216:7 › galeria demo › coordinador
+[4/34] [movil] › tests/e2e/smoke/demo-galeria.smoke.ts:224:7 › galeria demo › docente
+[5/34] [movil] › tests/e2e/smoke/demo-galeria.smoke.ts:242:7 › galeria demo › estudiante
+[6/34] [movil] › tests/e2e/smoke/demo-galeria.smoke.ts:262:7 › galeria demo › tutor
+[7/34] [movil] › tests/e2e/smoke/demo-galeria.smoke.ts:272:7 › galeria demo › publico
+[8/34] [movil] › tests/e2e/smoke/demo-galeria.smoke.ts:279:7 › galeria demo › operador
+[9/34] [movil] › tests/e2e/smoke/recorrido.smoke.ts:48:5 › administrador institucion nueva
+[10/34] [movil] › tests/e2e/smoke/recorrido.smoke.ts:70:5 › administrador
+[11/34] [movil] › tests/e2e/smoke/recorrido.smoke.ts:273:5 › docente
+[12/34] [movil] › tests/e2e/smoke/recorrido.smoke.ts:473:5 › estudiante
+[13/34] [movil] › tests/e2e/smoke/recorrido.smoke.ts:599:5 › tutor
+[14/34] [movil] › tests/e2e/smoke/recorrido.smoke.ts:630:5 › coordinador
+[15/34] [movil] › tests/e2e/smoke/recorrido.smoke.ts:660:5 › publico
+[16/34] [movil] › tests/e2e/smoke/recorrido.smoke.ts:697:5 › operador backoffice A-G
+[17/34] [movil] › tests/e2e/smoke/recorrido.smoke.ts:748:5 › administrador sin permiso operador
+[18/34] [escritorio] › tests/e2e/smoke/demo-galeria.smoke.ts:189:5 › galeria demo cargada
+[19/34] [escritorio] › tests/e2e/smoke/demo-galeria.smoke.ts:199:7 › galeria demo › directora
+[20/34] [escritorio] › tests/e2e/smoke/demo-galeria.smoke.ts:216:7 › galeria demo › coordinador
+[21/34] [escritorio] › tests/e2e/smoke/demo-galeria.smoke.ts:224:7 › galeria demo › docente
+[22/34] [escritorio] › tests/e2e/smoke/demo-galeria.smoke.ts:242:7 › galeria demo › estudiante
+[23/34] [escritorio] › tests/e2e/smoke/demo-galeria.smoke.ts:262:7 › galeria demo › tutor
+[24/34] [escritorio] › tests/e2e/smoke/demo-galeria.smoke.ts:272:7 › galeria demo › publico
+[25/34] [escritorio] › tests/e2e/smoke/demo-galeria.smoke.ts:279:7 › galeria demo › operador
+[26/34] [escritorio] › tests/e2e/smoke/recorrido.smoke.ts:48:5 › administrador institucion nueva
+[27/34] [escritorio] › tests/e2e/smoke/recorrido.smoke.ts:70:5 › administrador
+[28/34] [escritorio] › tests/e2e/smoke/recorrido.smoke.ts:273:5 › docente
+[29/34] [escritorio] › tests/e2e/smoke/recorrido.smoke.ts:473:5 › estudiante
+[30/34] [escritorio] › tests/e2e/smoke/recorrido.smoke.ts:599:5 › tutor
+[31/34] [escritorio] › tests/e2e/smoke/recorrido.smoke.ts:630:5 › coordinador
+[32/34] [escritorio] › tests/e2e/smoke/recorrido.smoke.ts:660:5 › publico
+[33/34] [escritorio] › tests/e2e/smoke/recorrido.smoke.ts:697:5 › operador backoffice A-G
+[34/34] [escritorio] › tests/e2e/smoke/recorrido.smoke.ts:748:5 › administrador sin permiso operador
+Recorrido: 356 pantallas, 0 con defectos, 5 con advertencias.
+  34 passed (4.7m)

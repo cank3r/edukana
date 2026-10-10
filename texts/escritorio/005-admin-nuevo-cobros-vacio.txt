@@ -1,0 +1,59 @@
+http://127.0.0.1:3000/dashboard/pagos
+
+Saltar al contenido principal
+
+Colegio Nuevo Amanecer
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+Admisiones
+Cobros
+Ventas
+Calendario
+Reportes
+Configuración
+Notificaciones
+Panel de la plataforma
+Cerrar sesión
+R
+
+Rafael Núñez
+
+direccion@colegio-nuevo.test
+
+Inicio
+Cobros
+Cobros
+
+Crea cargos, registra los pagos que recibes y mira quién debe.
+
+Vencido
+RD$0.00
+Ya pasó su fecha de vencimiento
+Por cobrar
+RD$0.00
+Todo lo que aún se debe, con lo vencido
+Cobrado este mes
+RD$0.00
+Pagos recibidos en el mes
+Crear cargo
+Cerrar
+A un estudiante
+A un grupo o curso completo
+Estudiante
+
+Aún no hay estudiantes. Agrégalos en Personas.
+
+Concepto
+Monto
+Fecha de vencimiento
+Crear cargo
+
+Primero elige al estudiante.
+
+Cargos
+
+Todavía no hay cargos. Un cargo es lo que un estudiante debe pagar, por ejemplo una mensualidad. Empieza con «Crear cargo».

@@ -1,0 +1,60 @@
+http://127.0.0.1:3000/dashboard/pagos/recibo/cmv2k6mpd00brbgt9gh8hn7hn
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+Admisiones
+Cobros
+Ventas
+Calendario
+Reportes
+Configuración
+Notificaciones
+Cerrar sesión
+C
+
+Carla Méndez
+
+admin@instituto-demo.test
+
+Inicio
+Cobros
+Recibo
+Detalle
+Volver a Cobros
+Imprimir o guardar como PDF
+
+Instituto Demo
+
+RECIBO DE PAGO
+
+Recibo n.º
+
+GH8HN7HN
+
+Monto recibido
+
+RD$2,000.00
+
+Dos mil pesos dominicanos con 00/100
+
+Estudiante
+Ana Rodríguez
+Concepto
+Inscripción del período · Año 2026
+Forma de pago
+Transferencia
+Fecha del pago
+5 oct 2026
+Registró
+Carla Méndez, el 10 oct 2026
+Nota
+Transferencia 4521
+
+Comprobante emitido por Instituto Demo con Edukana. Consérvalo para cualquier aclaración.

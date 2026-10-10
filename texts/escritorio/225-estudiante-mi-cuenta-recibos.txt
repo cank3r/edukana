@@ -1,0 +1,78 @@
+http://127.0.0.1:3000/dashboard/mi-cuenta
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Mis cursos
+Avisos
+Calendario
+Más
+Mi estado de cuenta
+Mis certificados
+15
+Notificaciones
+Cerrar sesión
+P
+
+Pedro Jiménez
+
+pedro@instituto-demo.test
+
+Inicio
+Mi estado de cuenta
+Mi estado de cuenta
+
+Lo que se debe, lo que ya venció y los pagos recibidos. Para pagar, acércate a la administración.
+
+Debes
+RD$4,000.00
+Vencido
+RD$0.00
+Pagado
+RD$5,500.00
+Por pagar (2)
+
+Mensualidad de prueba
+
+Pago parcial
+Vence el 20 oct 2026
+
+RD$2,500.00
+
+de RD$3,500.00
+
+Uniforme escolar (escritorio)
+
+Pago parcial
+Vence el 25 oct 2026
+
+RD$1,500.00
+
+de RD$2,500.00
+
+Historial
+Pagos recibidos
+Mensualidad
+10 oct 2026 · Efectivo
+RD$3,500.00
+Ver recibo
+Mensualidad de prueba
+10 oct 2026 · Efectivo
+RD$1,000.00
+Ver recibo
+Uniforme escolar (escritorio)
+10 oct 2026 · Efectivo
+RD$1,000.00
+Ver recibo
+Todos los cargos
+Mensualidad
+Pagado · Vencimiento: 20 oct 2026
+RD$3,500.00
+Mensualidad de prueba
+Pago parcial · Vencimiento: 20 oct 2026
+RD$3,500.00
+Uniforme escolar (escritorio)
+Pago parcial · Vencimiento: 25 oct 2026
+RD$2,500.00

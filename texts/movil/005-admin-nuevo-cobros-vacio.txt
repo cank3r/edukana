@@ -1,0 +1,33 @@
+http://127.0.0.1:3000/dashboard/pagos
+
+Saltar al contenido principal
+Menú
+Volver a Inicio
+Cobros
+
+Crea cargos, registra los pagos que recibes y mira quién debe.
+
+Vencido
+RD$0.00
+Por cobrar
+RD$0.00
+Cobrado este mes
+RD$0.00
+Crear cargo
+Cerrar
+A un estudiante
+A un grupo o curso completo
+Estudiante
+
+Aún no hay estudiantes. Agrégalos en Personas.
+
+Concepto
+Monto
+Fecha de vencimiento
+Crear cargo
+
+Primero elige al estudiante.
+
+Cargos
+
+Todavía no hay cargos. Un cargo es lo que un estudiante debe pagar, por ejemplo una mensualidad. Empieza con «Crear cargo».

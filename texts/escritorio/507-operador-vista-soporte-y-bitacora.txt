@@ -1,0 +1,139 @@
+http://127.0.0.1:3000/operador/bitacora?institutionId=cmv2k6mhe006vbgt9m1vgvt4e&operator=direccion%40colegio-nuevo.test
+
+Saltar al contenido principal
+Panel de la plataforma
+Volver a mi institución
+Tablero
+Instituciones
+Planes
+Facturación
+Más opciones
+Bitácora
+
+Consulta quién hizo cada cambio. Las horas se muestran en hora de Santo Domingo; el filtro «Desde» y «Hasta» cuenta días completos en UTC.
+
+Institución
+Todas las instituciones
+Colegio Nuevo Amanecer
+Cursos de Elena Docente
+Cursos de Elena Docente
+Instituto Backoffice escritorio
+Instituto Backoffice movil
+Instituto Demo
+Instituto Técnico Demo
+AcciónPLATFORM_* para plataforma, all para todas o el nombre exacto.
+Correo del operador
+Desde
+Hasta
+Filtrar
+Limpiar filtros
+
+10 de octubre de 2026, 11:43 a. m.
+
+direccion@colegio-nuevo.test
+
+PLATFORM_SUPPORT_EXITED
+
+Instituto Backoffice escritorio · Institution
+
+Ver institución
+
+10 de octubre de 2026, 11:43 a. m.
+
+direccion@colegio-nuevo.test
+
+PLATFORM_SUPPORT_ENTERED
+
+Instituto Backoffice escritorio · Institution
+
+Ver institución
+
+10 de octubre de 2026, 11:43 a. m.
+
+direccion@colegio-nuevo.test
+
+PLATFORM_BRANDING_UPDATED
+
+Instituto Backoffice escritorio · Institution
+
+Ver institución
+
+10 de octubre de 2026, 11:43 a. m.
+
+direccion@colegio-nuevo.test
+
+PLATFORM_FEATURES_UPDATED
+
+Instituto Backoffice escritorio · Institution
+
+Ver institución
+
+10 de octubre de 2026, 11:43 a. m.
+
+direccion@colegio-nuevo.test
+
+PLATFORM_FEATURES_UPDATED
+
+Instituto Backoffice escritorio · Institution
+
+Ver institución
+
+10 de octubre de 2026, 11:43 a. m.
+
+direccion@colegio-nuevo.test
+
+PLATFORM_INVOICE_PAID
+
+Instituto Backoffice escritorio · PlatformInvoice
+
+Ver registro relacionado
+
+10 de octubre de 2026, 11:43 a. m.
+
+direccion@colegio-nuevo.test
+
+PLATFORM_SUBSCRIPTION_PAYMENT_APPLIED
+
+Instituto Backoffice escritorio · InstitutionSubscription
+
+Ver registro relacionado
+
+10 de octubre de 2026, 11:43 a. m.
+
+direccion@colegio-nuevo.test
+
+PLATFORM_INVOICE_CREATED
+
+Instituto Backoffice escritorio · PlatformInvoice
+
+Ver registro relacionado
+
+10 de octubre de 2026, 11:43 a. m.
+
+direccion@colegio-nuevo.test
+
+PLATFORM_SUBSCRIPTION_PLAN_CHANGED
+
+Instituto Backoffice escritorio · InstitutionSubscription
+
+Ver registro relacionado
+
+10 de octubre de 2026, 11:43 a. m.
+
+direccion@colegio-nuevo.test
+
+PLATFORM_INSTITUTION_REACTIVATED
+
+Instituto Backoffice escritorio · Institution
+
+Ver institución
+
+10 de octubre de 2026, 11:43 a. m.
+
+direccion@colegio-nuevo.test
+
+PLATFORM_INSTITUTION_SUSPENDED
+
+Instituto Backoffice escritorio · Institution
+
+Ver institución

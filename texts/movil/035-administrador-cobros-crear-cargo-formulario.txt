@@ -1,0 +1,106 @@
+http://127.0.0.1:3000/dashboard/pagos
+
+Saltar al contenido principal
+Menú
+Volver a Inicio
+Cobros
+
+Crea cargos, registra los pagos que recibes y mira quién debe.
+
+Vencido
+RD$3,000.00
+Por cobrar
+RD$8,000.00
+Cobrado este mes
+RD$7,500.00
+Crear cargo
+Cerrar
+A un estudiante
+A un grupo o curso completo
+
+Estudiante
+
+Ana Rodríguez
+
+ana@instituto-demo.test
+
+Cambiar
+Concepto
+Monto
+Fecha de vencimiento
+Período (opcional)
+Sin período
+Período de verano (movil)
+Año 2026
+Crear cargo
+Cargos
+Vencidos
+1
+Por cobrar
+3
+Pagados
+1
+Todos
+4
+Buscar por estudiante
+Período
+Todos los períodos
+Período de verano (movil)
+Año 2026
+Buscar
+
+Mostrando 1–3 de 3. Primero lo vencido, luego lo que vence antes.
+
+Ana Rodríguez
+
+Inscripción del período · Año 2026
+
+Vencido
+Venció el 30 sept 2026
+
+Monto
+RD$5,000.00
+Pagado
+RD$2,000.00
+Debe
+RD$3,000.00
+Registrar pago
+Editar
+Anular
+Historial de pagos (1)
+
+Pedro Jiménez
+
+Mensualidad de prueba
+
+Pago parcial
+Vence el 20 oct 2026
+
+Monto
+RD$3,500.00
+Pagado
+RD$1,000.00
+Debe
+RD$2,500.00
+Registrar pago
+Editar
+Anular
+Historial de pagos (1)
+
+Ana Rodríguez
+
+Mensualidad de prueba
+
+Pago parcial
+Vence el 20 oct 2026
+
+Monto
+RD$3,500.00
+Pagado
+RD$1,000.00
+Debe
+RD$2,500.00
+Registrar pago
+Editar
+Anular
+Historial de pagos (1)

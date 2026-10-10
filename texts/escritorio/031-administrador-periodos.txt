@@ -1,0 +1,55 @@
+http://127.0.0.1:3000/dashboard/configuracion/periodos
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+Admisiones
+Cobros
+Ventas
+Calendario
+Reportes
+Configuración
+Notificaciones
+Cerrar sesión
+C
+
+Carla Méndez
+
+admin@instituto-demo.test
+
+Inicio
+Configuración
+Períodos
+Períodos académicos
+
+Un período es el tramo del año en que se dan las clases, por ejemplo «Enero–Abril 2027» o «Año 2026–2027». Cada curso pertenece a un período.
+
+Crear período
+Período de verano (movil)
+
+Del 1 de julio de 2027 al 15 de agosto de 2027
+
+Sin cursos todavía
+
+Próximo
+
+Todavía no empieza.
+
+Editar nombre y fechas
+Marcar como período actual
+Borrar
+Año 2026
+
+Del 1 de enero de 2026 al 30 de junio de 2027
+
+2 cursos · 2 cobros
+
+Actual
+Editar nombre y fechas
+¿Por qué no puedo borrarlo?

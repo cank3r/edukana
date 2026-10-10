@@ -1,0 +1,45 @@
+http://127.0.0.1:3000/dashboard/aula/cmv2k6m8w000obgt9i4bww0mb/asistencia
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Mis cursos
+Avisos
+Calendario
+Más
+15
+Notificaciones
+Cerrar sesión
+P
+
+Pedro Jiménez
+
+pedro@instituto-demo.test
+
+Inicio
+Cursos
+Curso
+Asistencia
+Mi asistencia
+
+Mi asistencia
+
+100 %
+
+1 presente · 0 ausentes · 1 tarde
+
+Llegar tarde cuenta como asistencia. Las faltas justificadas no suman ni restan.
+
+Día por día
+
+Sábado, 10 de octubre de 2026
+
+Presente
+
+Viernes, 9 de octubre de 2026
+
+Clase de números naturales
+
+Tarde

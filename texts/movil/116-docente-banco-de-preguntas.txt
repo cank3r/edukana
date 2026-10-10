@@ -1,0 +1,49 @@
+http://127.0.0.1:3000/dashboard/aula/cmv2k6m8w000obgt9i4bww0mb/preguntas
+
+Saltar al contenido principal
+3
+Menú
+Volver al curso
+Banco de preguntas
+
+Aquí guardas las preguntas del curso. Después las eliges para armar tus exámenes, y puedes usar la misma en varios.
+
+Agregar pregunta
+Ir a exámenes
+Buscar
+Tipo
+Todos los tipos
+Selección múltiple
+Verdadero o falso
+Respuesta corta
+Buscar
+
+3 preguntas.
+
+RESPUESTA CORTA · 3 PUNTOS · EN 1 EXAMEN
+
+Explica con tus palabras qué es una llevada.
+
+Respuesta esperada (la revisas tú): Cuando la suma de una columna pasa de 9 y se lleva una decena a la siguiente.
+
+Editar
+Borrar
+
+VERDADERO O FALSO · 3 PUNTOS · EN 1 EXAMEN
+
+El número 10 es mayor que el 9.
+
+Respuesta correcta: Verdadero
+
+Editar
+Borrar
+
+SELECCIÓN MÚLTIPLE · 4 PUNTOS · EN 1 EXAMEN
+
+¿Cuánto es 27 + 15?
+
+○ 32
+✓ 42 (correcta)
+○ 52
+Editar
+Borrar

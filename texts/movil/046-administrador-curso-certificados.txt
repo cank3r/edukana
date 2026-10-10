@@ -1,0 +1,77 @@
+http://127.0.0.1:3000/dashboard/aula/cmv2k6m8w000obgt9i4bww0mb/certificados
+
+Saltar al contenido principal
+Menú
+Volver al curso
+Certificados
+
+Entrega el certificado a quienes terminaron el curso. Cada uno tiene un enlace público para comprobar que es auténtico.
+
+Requisitos para recibir el certificado
+Completar todas las lecciones del curso (100% de avance).
+O que tú marques el curso como completado para ese estudiante.
+
+La nota actual de cada estudiante aparece en la lista para que la tengas en cuenta. El curso no tiene una nota mínima: tú decides a quién emitirlo. El avance mínimo se cambia en Editar curso.
+
+Certificados emitidos
+0
+Cumplen y aún no lo tienen
+0
+Aún no cumplen
+4
+
+Por ahora nadie está pendiente de certificado. Cuando un estudiante cumpla los requisitos, aquí podrás emitirlo.
+
+Estudiantes (4)
+
+Ana Rodríguez
+
+Le falta avance: 100 %
+
+Avance
+0%
+Nota actual
+Sin notas
+
+Lleva 0% del curso y necesita 100%.
+
+Marcar curso como completado
+
+Juan Castillo
+
+Le falta avance: 100 %
+
+Avance
+0%
+Nota actual
+Sin notas
+
+Lleva 0% del curso y necesita 100%.
+
+Marcar curso como completado
+
+Pedro Jiménez
+
+Le falta avance: 100 %
+
+Avance
+0%
+Nota actual
+Sin notas
+
+Lleva 0% del curso y necesita 100%.
+
+Marcar curso como completado
+
+Rosa Almonte
+
+Le falta avance: 100 %
+
+Avance
+0%
+Nota actual
+Sin notas
+
+Lleva 0% del curso y necesita 100%.
+
+Marcar curso como completado

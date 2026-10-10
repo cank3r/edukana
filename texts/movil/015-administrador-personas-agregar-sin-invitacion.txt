@@ -1,0 +1,118 @@
+http://127.0.0.1:3000/dashboard/gestion
+
+Saltar al contenido principal
+Menú
+Volver a Inicio
+Personas
+
+Todas las personas de tu institución: estudiantes, docentes, tutores y equipo. Desde aquí puedes agregar, corregir, invitar y suspender.
+
+Agregar persona
+
+Persona agregada. Todavía no recibió su invitación: envíasela desde su fila cuando quieras.
+
+Importar e invitar
+Programas
+Grupos
+Buscar
+Rol
+Todos
+Estudiantes
+Docentes
+Coordinadores
+Tutores
+Administradores
+Estado
+Activos
+Suspendidos
+Buscar
+
+9 personas
+
+Ana Rodríguez
+
+ana@instituto-demo.test · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Carla Méndez
+
+admin@instituto-demo.test · Administrador
+
+Puede entrar
+
+Editar
+
+Juan Castillo
+
+juan@instituto-demo.test · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Luis Peralta
+
+docente@instituto-demo.test · Docente
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Marisol Rodríguez
+
+marisol@instituto-demo.test · Tutor
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Marta Prueba movil
+
+marta.movil@instituto-demo.test · Estudiante
+
+Aún no crea su contraseña
+
+Editar
+Enviar invitación
+Suspender
+
+Pedro Jiménez
+
+pedro@instituto-demo.test · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Rosa Almonte
+
+rosa@instituto-demo.test · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Sofía Batista
+
+coordinacion@instituto-demo.test · Coordinador
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender

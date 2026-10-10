@@ -1,0 +1,960 @@
+http://127.0.0.1:3000/dashboard/pagos
+
+Saltar al contenido principal
+
+Instituto Técnico Demo
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+Admisiones
+Cobros
+Ventas
+Calendario
+Reportes
+Configuración
+Notificaciones
+Cerrar sesión
+M
+
+Margarita Rosario Díaz
+
+directora@demo.edukana.do
+
+Inicio
+Cobros
+Cobros
+
+Crea cargos, registra los pagos que recibes y mira quién debe.
+
+Vencido
+RD$73,100.00
+Ya pasó su fecha de vencimiento
+Por cobrar
+RD$306,900.00
+Todo lo que aún se debe, con lo vencido
+Cobrado este mes
+RD$240,000.00
+Pagos recibidos en el mes
+Crear cargo
+Cargos
+Vencidos
+27
+Por cobrar
+83
+Pagados
+375
+Todos
+458
+Buscar por estudiante
+Período
+Todos los períodos
+Cuatrimestre Agosto–Diciembre 2026
+Cuatrimestre Abril–Agosto 2026
+Buscar
+
+Mostrando 1–50 de 83. Primero lo vencido, luego lo que vence antes.
+
+Rafael Antonio Guzmán
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Vencido
+Venció el 15 ago 2026
+
+Monto
+RD$3,800.00
+Pagado
+RD$1,900.00
+Debe
+RD$1,900.00
+Registrar pago
+Editar
+Anular
+Historial de pagos (1)
+
+Yesica Durán Espaillat
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería
+
+Vencido
+Venció el 16 ago 2026
+
+Monto
+RD$2,500.00
+Pagado
+RD$1,250.00
+Debe
+RD$1,250.00
+Registrar pago
+Editar
+Anular
+Historial de pagos (1)
+
+Cristian Ventura Pérez
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Contabilidad
+
+Vencido
+Venció el 16 ago 2026
+
+Monto
+RD$2,000.00
+Pagado
+RD$1,000.00
+Debe
+RD$1,000.00
+Registrar pago
+Editar
+Anular
+Historial de pagos (1)
+
+Félix Antonio Germán
+
+Curso Excel para la Oficina · Cuatrimestre Agosto–Diciembre 2026
+
+Vencido
+Venció el 20 ago 2026
+
+Monto
+RD$2,500.00
+Pagado
+RD$1,000.00
+Debe
+RD$1,500.00
+Registrar pago
+Editar
+Anular
+Historial de pagos (1)
+
+Yulissa Rodríguez Peña
+
+Mensualidad de septiembre · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Vencido
+Venció el 15 sept 2026
+
+Monto
+RD$4,500.00
+Pagado
+RD$2,250.00
+Debe
+RD$2,250.00
+Registrar pago
+Editar
+Anular
+Historial de pagos (1)
+
+Wilkin Santana Mota
+
+Mensualidad de septiembre · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Vencido
+Venció el 15 sept 2026
+
+Monto
+RD$4,500.00
+Pagado
+RD$2,250.00
+Debe
+RD$2,250.00
+Registrar pago
+Editar
+Anular
+Historial de pagos (1)
+
+Yaritza Mejía Lora
+
+Mensualidad de septiembre · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Vencido
+Venció el 15 sept 2026
+
+Monto
+RD$4,500.00
+Pagado
+RD$0.00
+Debe
+RD$4,500.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Keila Familia Rosario
+
+Mensualidad de septiembre · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Vencido
+Venció el 15 sept 2026
+
+Monto
+RD$4,500.00
+Pagado
+RD$0.00
+Debe
+RD$4,500.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Yohanna Disla Vargas
+
+Mensualidad de septiembre · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Vencido
+Venció el 15 sept 2026
+
+Monto
+RD$4,500.00
+Pagado
+RD$0.00
+Debe
+RD$4,500.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Rafael Antonio Guzmán
+
+Mensualidad de septiembre · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Vencido
+Venció el 15 sept 2026
+
+Monto
+RD$3,800.00
+Pagado
+RD$0.00
+Debe
+RD$3,800.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Kelvin Arias Matos
+
+Mensualidad de septiembre · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Vencido
+Venció el 15 sept 2026
+
+Monto
+RD$3,800.00
+Pagado
+RD$1,900.00
+Debe
+RD$1,900.00
+Registrar pago
+Editar
+Anular
+Historial de pagos (1)
+
+Frailin Santos Vásquez
+
+Mensualidad de septiembre · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Vencido
+Venció el 15 sept 2026
+
+Monto
+RD$4,500.00
+Pagado
+RD$2,250.00
+Debe
+RD$2,250.00
+Registrar pago
+Editar
+Anular
+Historial de pagos (1)
+
+Mildred Luciano Infante
+
+Mensualidad de septiembre · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Vencido
+Venció el 15 sept 2026
+
+Monto
+RD$4,500.00
+Pagado
+RD$2,250.00
+Debe
+RD$2,250.00
+Registrar pago
+Editar
+Anular
+Historial de pagos (1)
+
+Crismeily Hidalgo Mota
+
+Mensualidad de septiembre · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Vencido
+Venció el 15 sept 2026
+
+Monto
+RD$4,500.00
+Pagado
+RD$0.00
+Debe
+RD$4,500.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Rafael Herrera Medina
+
+Mensualidad de septiembre · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Vencido
+Venció el 15 sept 2026
+
+Monto
+RD$4,500.00
+Pagado
+RD$2,250.00
+Debe
+RD$2,250.00
+Registrar pago
+Editar
+Anular
+Historial de pagos (1)
+
+Darling Severino Florentino
+
+Mensualidad de septiembre · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Vencido
+Venció el 15 sept 2026
+
+Monto
+RD$4,500.00
+Pagado
+RD$0.00
+Debe
+RD$4,500.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Omar Mota Agramonte
+
+Mensualidad de septiembre · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Vencido
+Venció el 15 sept 2026
+
+Monto
+RD$4,500.00
+Pagado
+RD$0.00
+Debe
+RD$4,500.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Cristian Agramonte Mercedes
+
+Mensualidad de septiembre · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Vencido
+Venció el 15 sept 2026
+
+Monto
+RD$4,500.00
+Pagado
+RD$2,250.00
+Debe
+RD$2,250.00
+Registrar pago
+Editar
+Anular
+Historial de pagos (1)
+
+Yesica Durán Espaillat
+
+Mensualidad de septiembre · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Vencido
+Venció el 15 sept 2026
+
+Monto
+RD$4,500.00
+Pagado
+RD$2,250.00
+Debe
+RD$2,250.00
+Registrar pago
+Editar
+Anular
+Historial de pagos (1)
+
+Crismeily Gómez Quezada
+
+Mensualidad de septiembre · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Vencido
+Venció el 15 sept 2026
+
+Monto
+RD$3,800.00
+Pagado
+RD$1,900.00
+Debe
+RD$1,900.00
+Registrar pago
+Editar
+Anular
+Historial de pagos (1)
+
+Anyelina Pujols Ozuna
+
+Mensualidad de septiembre · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Vencido
+Venció el 15 sept 2026
+
+Monto
+RD$3,800.00
+Pagado
+RD$1,900.00
+Debe
+RD$1,900.00
+Registrar pago
+Editar
+Anular
+Historial de pagos (1)
+
+Fiordaliza Pérez Gómez
+
+Mensualidad de septiembre · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Vencido
+Venció el 15 sept 2026
+
+Monto
+RD$3,800.00
+Pagado
+RD$0.00
+Debe
+RD$3,800.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Gabriel Lora Reynoso
+
+Mensualidad de septiembre · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Vencido
+Venció el 15 sept 2026
+
+Monto
+RD$3,800.00
+Pagado
+RD$1,900.00
+Debe
+RD$1,900.00
+Registrar pago
+Editar
+Anular
+Historial de pagos (1)
+
+Johanna Hidalgo Mota
+
+Mensualidad de septiembre · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Vencido
+Venció el 15 sept 2026
+
+Monto
+RD$3,800.00
+Pagado
+RD$1,900.00
+Debe
+RD$1,900.00
+Registrar pago
+Editar
+Anular
+Historial de pagos (1)
+
+Starling Beltré Espaillat
+
+Mensualidad de septiembre · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Vencido
+Venció el 15 sept 2026
+
+Monto
+RD$3,800.00
+Pagado
+RD$1,900.00
+Debe
+RD$1,900.00
+Registrar pago
+Editar
+Anular
+Historial de pagos (1)
+
+Yomaira Castillo Cabral
+
+Mensualidad de septiembre · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Vencido
+Venció el 15 sept 2026
+
+Monto
+RD$3,800.00
+Pagado
+RD$1,900.00
+Debe
+RD$1,900.00
+Registrar pago
+Editar
+Anular
+Historial de pagos (1)
+
+Cristian Ventura Pérez
+
+Mensualidad de septiembre · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Vencido
+Venció el 15 sept 2026
+
+Monto
+RD$3,800.00
+Pagado
+RD$0.00
+Debe
+RD$3,800.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Wilkin Santana Mota
+
+Mensualidad de octubre · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pendiente
+Vence el 15 oct 2026
+
+Monto
+RD$4,500.00
+Pagado
+RD$0.00
+Debe
+RD$4,500.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Carolina Méndez Tejada
+
+Mensualidad de octubre · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pendiente
+Vence el 15 oct 2026
+
+Monto
+RD$4,500.00
+Pagado
+RD$0.00
+Debe
+RD$4,500.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Yaritza Mejía Lora
+
+Mensualidad de octubre · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pendiente
+Vence el 15 oct 2026
+
+Monto
+RD$4,500.00
+Pagado
+RD$0.00
+Debe
+RD$4,500.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Starlin De los Santos
+
+Mensualidad de octubre · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pendiente
+Vence el 15 oct 2026
+
+Monto
+RD$4,500.00
+Pagado
+RD$0.00
+Debe
+RD$4,500.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Joel Antonio Batista
+
+Mensualidad de octubre · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pendiente
+Vence el 15 oct 2026
+
+Monto
+RD$4,500.00
+Pagado
+RD$0.00
+Debe
+RD$4,500.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Nathalie Guerrero Polanco
+
+Mensualidad de octubre · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pendiente
+Vence el 15 oct 2026
+
+Monto
+RD$4,500.00
+Pagado
+RD$0.00
+Debe
+RD$4,500.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Luz Marina Encarnación
+
+Mensualidad de octubre · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pendiente
+Vence el 15 oct 2026
+
+Monto
+RD$4,500.00
+Pagado
+RD$0.00
+Debe
+RD$4,500.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Keila Familia Rosario
+
+Mensualidad de octubre · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pendiente
+Vence el 15 oct 2026
+
+Monto
+RD$4,500.00
+Pagado
+RD$0.00
+Debe
+RD$4,500.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Brayan Ramírez Ozuna
+
+Mensualidad de octubre · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pendiente
+Vence el 15 oct 2026
+
+Monto
+RD$4,500.00
+Pagado
+RD$0.00
+Debe
+RD$4,500.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Franklin Medina Soto
+
+Mensualidad de octubre · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pendiente
+Vence el 15 oct 2026
+
+Monto
+RD$3,800.00
+Pagado
+RD$0.00
+Debe
+RD$3,800.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Edwin Alcántara Luna
+
+Mensualidad de octubre · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pendiente
+Vence el 15 oct 2026
+
+Monto
+RD$3,800.00
+Pagado
+RD$0.00
+Debe
+RD$3,800.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Rafael Antonio Guzmán
+
+Mensualidad de octubre · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pendiente
+Vence el 15 oct 2026
+
+Monto
+RD$3,800.00
+Pagado
+RD$0.00
+Debe
+RD$3,800.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Héctor Manuel Pimentel
+
+Mensualidad de octubre · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pendiente
+Vence el 15 oct 2026
+
+Monto
+RD$3,800.00
+Pagado
+RD$0.00
+Debe
+RD$3,800.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Ángel Luis Morillo
+
+Mensualidad de octubre · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pendiente
+Vence el 15 oct 2026
+
+Monto
+RD$3,800.00
+Pagado
+RD$0.00
+Debe
+RD$3,800.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Claribel Tavárez Paulino
+
+Mensualidad de octubre · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pendiente
+Vence el 15 oct 2026
+
+Monto
+RD$3,800.00
+Pagado
+RD$0.00
+Debe
+RD$3,800.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Wander Castillo Feliz
+
+Mensualidad de octubre · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pendiente
+Vence el 15 oct 2026
+
+Monto
+RD$3,800.00
+Pagado
+RD$0.00
+Debe
+RD$3,800.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Kelvin Arias Matos
+
+Mensualidad de octubre · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pendiente
+Vence el 15 oct 2026
+
+Monto
+RD$3,800.00
+Pagado
+RD$0.00
+Debe
+RD$3,800.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Yanelis Peralta Ogando
+
+Mensualidad de octubre · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pendiente
+Vence el 15 oct 2026
+
+Monto
+RD$4,500.00
+Pagado
+RD$0.00
+Debe
+RD$4,500.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Yoselin Cabral Lora
+
+Mensualidad de octubre · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pendiente
+Vence el 15 oct 2026
+
+Monto
+RD$4,500.00
+Pagado
+RD$0.00
+Debe
+RD$4,500.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Frailin Santos Vásquez
+
+Mensualidad de octubre · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pendiente
+Vence el 15 oct 2026
+
+Monto
+RD$4,500.00
+Pagado
+RD$0.00
+Debe
+RD$4,500.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Mildred Luciano Infante
+
+Mensualidad de octubre · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pendiente
+Vence el 15 oct 2026
+
+Monto
+RD$4,500.00
+Pagado
+RD$0.00
+Debe
+RD$4,500.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Leonel Pichardo García
+
+Mensualidad de octubre · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pendiente
+Vence el 15 oct 2026
+
+Monto
+RD$4,500.00
+Pagado
+RD$0.00
+Debe
+RD$4,500.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Crismeily Hidalgo Mota
+
+Mensualidad de octubre · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pendiente
+Vence el 15 oct 2026
+
+Monto
+RD$4,500.00
+Pagado
+RD$0.00
+Debe
+RD$4,500.00
+Registrar pago
+Editar
+Anular
+Borrar
+Página 1 de 2
+Siguiente

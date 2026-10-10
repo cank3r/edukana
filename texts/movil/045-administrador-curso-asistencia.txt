@@ -1,0 +1,44 @@
+http://127.0.0.1:3000/dashboard/aula/cmv2k6m8w000obgt9i4bww0mb/asistencia
+
+Saltar al contenido principal
+Menú
+Volver al curso
+Asistencia
+Tomar asistencia
+Historial
+Resumen por estudiante
+Tomar asistencia de hoy
+
+Sábado, 10 de octubre de 2026
+
+Día
+Título de la clase (opcional)
+
+Todos empiezan en Presente. Toca solo a quien faltó, llegó tarde o tiene justificación.
+
+Ana Rodríguez
+Presente
+Ausente
+Tarde
+Justificado
+Juan Castillo
+Presente
+Ausente
+Tarde
+Justificado
+Pedro Jiménez
+Presente
+Ausente
+Tarde
+Justificado
+Rosa Almonte
+Presente
+Ausente
+Tarde
+Justificado
+
+4 presentes · 0 ausentes
+
+Asistencia del sábado, 10 de octubre de 2026
+
+Guardar asistencia
