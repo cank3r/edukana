@@ -1,0 +1,34 @@
+http://127.0.0.1:3000/dashboard
+
+Saltar al contenido principal
+
+Instituto Técnico Demo
+
+Inicio
+Mis hijos
+Avisos
+Notificaciones
+Cerrar sesión
+M
+
+María Altagracia Reyes
+
+maria.reyes@demo.edukana.do
+
+Hola, María
+
+¿Cómo van mis hijos?
+
+1 hijo vinculado
+
+Requiere tu atención
+
+Todo al día
+
+No hay tareas vencidas, asistencia baja ni cargos vencidos.
+
+Mis hijos
+Ana Mercedes Reyes
+4 cursos en marcha · avance promedio 59 %
+Próxima clase: Práctica en vivo: check-in en inglés · Mañana, 6:30 p. m.
+Ver su resumen

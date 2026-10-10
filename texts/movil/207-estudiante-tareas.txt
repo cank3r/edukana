@@ -1,0 +1,22 @@
+http://127.0.0.1:3000/dashboard/aula/cmv2kb0h0000o6h3zcxfdcp8l/tareas
+
+Saltar al contenido principal
+12
+Menú
+Volver al curso
+Mis tareas
+
+Abre una tarea para leer las instrucciones y entregarla.
+
+Pendientes (2)
+Ejercicios de repaso (movil)
+Vence el jueves a las 5:00 p. m.
+Problemas de suma y resta
+Vence el 17 de octubre a las 6:00 p. m.
+Entregadas (0)
+
+Aquí verás las tareas que entregaste y esperan nota.
+
+Calificadas (0)
+
+Aquí verás tus tareas con nota.

@@ -1,0 +1,94 @@
+http://127.0.0.1:3000/dashboard/analitica/riesgo
+
+Saltar al contenido principal
+
+Instituto Técnico Demo
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+Admisiones
+Cobros
+Ventas
+Calendario
+Reportes
+Configuración
+Notificaciones
+Cerrar sesión
+M
+
+Margarita Rosario Díaz
+
+directora@demo.edukana.do
+
+Inicio
+Reportes
+Estudiantes en riesgo
+Estudiantes en riesgo
+
+Quienes reúnen señales de alerta en sus cursos activos. La asistencia se cuenta en este mes; las tareas vencidas, las notas y el avance, en todo el curso.
+
+Esta semana
+Este mes
+Este período
+Todas las señales
+Asistencia menor de 80 % (1)
+2 o más tareas vencidas (4)
+Nota por debajo de 70 (5)
+Avance muy bajo (3)
+Cargos vencidos (3)
+9 estudiantes
+Omar Mota Agramonte
+
+4 cursos, asistencia 91 % (10 de 11), avance 11 %
+
+4 tareas vencidas
+Avance 11 %, muy por debajo de su grupo
+3 cargos vencidos
+Yesica Durán Espaillat
+
+5 cursos, asistencia 69 % (9 de 13), avance 33 %
+
+Asistencia 69 %
+Nota 51 de 100 en Primeros Auxilios
+Yaritza Mejía Lora
+
+4 cursos, asistencia 80 % (8 de 10), avance 33 %
+
+3 tareas vencidas
+Nota 49 de 100 en Fundamentos de Enfermería
+Cristian Ventura Pérez
+
+4 cursos, asistencia 90 % (9 de 10), avance 31 %
+
+Nota 52 de 100 en Matemática Financiera
+3 cargos vencidos
+Rafael Antonio Guzmán
+
+4 cursos, asistencia 91 % (10 de 11), avance 34 %
+
+4 tareas vencidas
+2 cargos vencidos
+Keila Familia Rosario
+
+4 cursos, asistencia 91 % (10 de 11), avance 5.6 %
+
+Nota 48 de 100 en Anatomía y Fisiología Básica
+Avance 5.6 %, muy por debajo de su grupo
+Wilkin Santana Mota
+
+4 cursos, asistencia 90 % (9 de 10), avance 36 %
+
+2 tareas vencidas
+Fiordaliza Pérez Gómez
+
+4 cursos, asistencia 91 % (10 de 11), avance 11 %
+
+Avance 11 %, muy por debajo de su grupo
+Crismeily Hidalgo Mota
+
+4 cursos, asistencia 100 % (9 de 9), avance 33 %
+
+Nota 49 de 100 en Instalaciones Solares Fotovoltaicas

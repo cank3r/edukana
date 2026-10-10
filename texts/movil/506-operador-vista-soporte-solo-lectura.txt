@@ -1,0 +1,43 @@
+http://127.0.0.1:3000/operador/cmv2kb0la00466h3zlvz01h7w/vista
+
+Saltar al contenido principal
+Volver a mi institución
+Tablero
+Instituciones
+Planes
+Facturación
+Más opciones
+
+Estás viendo Instituto Backoffice movil como soporte. Solo lectura.
+
+Salir
+Instituto Backoffice movil
+
+30
+
+Estudiantes activos
+
+0
+
+Docentes activos
+
+0
+
+Cursos
+
+0
+
+Inscripciones activas
+
+0
+
+Personas pendientes de invitación
+
+0
+
+Personas suspendidas
+
+Requiere tu atención
+No hay un período académico en curso
+
+Los cursos se crean dentro de un período, por ejemplo «Enero–Abril 2027».

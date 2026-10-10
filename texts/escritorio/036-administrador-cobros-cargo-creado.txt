@@ -1,0 +1,165 @@
+http://127.0.0.1:3000/dashboard/pagos
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+Admisiones
+Cobros
+Ventas
+Calendario
+Reportes
+Configuración
+Notificaciones
+Cerrar sesión
+C
+
+Carla Méndez
+
+admin@instituto-demo.test
+
+Inicio
+Cobros
+Cobros
+
+Crea cargos, registra los pagos que recibes y mira quién debe.
+
+Por cobrar
+RD$12,000.00
+Todo lo que aún se debe
+Vencido
+RD$3,000.00
+Ya pasó su fecha de vencimiento
+Cobrado este mes
+RD$8,500.00
+Pagos recibidos en el mes
+Crear cargo
+
+Cargo creado para Pedro Jiménez.
+
+Cargos (6)
+Buscar por estudiante
+Estado
+Todos los estados
+Pendiente
+Pago parcial
+Vencido
+Pagado
+Anulado
+Período
+Todos los períodos
+Período de verano (escritorio)
+Período de verano (movil)
+Año 2026
+Buscar
+
+Ana Rodríguez
+
+Inscripción del período · Año 2026
+
+Vencido
+Venció el 30 sept 2026
+
+Monto
+RD$5,000.00
+Pagado
+RD$2,000.00
+Debe
+RD$3,000.00
+Registrar pago
+Editar
+Anular
+Historial de pagos (1)
+
+Pedro Jiménez
+
+Mensualidad · Año 2026
+
+Pagado
+
+Monto
+RD$3,500.00
+Pagado
+RD$3,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Pedro Jiménez
+
+Mensualidad de prueba
+
+Pago parcial
+Vence el 20 oct 2026
+
+Monto
+RD$3,500.00
+Pagado
+RD$1,000.00
+Debe
+RD$2,500.00
+Registrar pago
+Editar
+Anular
+Historial de pagos (1)
+
+Ana Rodríguez
+
+Mensualidad de prueba
+
+Pago parcial
+Vence el 20 oct 2026
+
+Monto
+RD$3,500.00
+Pagado
+RD$1,000.00
+Debe
+RD$2,500.00
+Registrar pago
+Editar
+Anular
+Historial de pagos (1)
+
+Pedro Jiménez
+
+Uniforme escolar (escritorio)
+
+Pendiente
+Vence el 25 oct 2026
+
+Monto
+RD$2,500.00
+Pagado
+RD$0.00
+Debe
+RD$2,500.00
+Registrar pago
+Editar
+Anular
+Borrar
+
+Ana Rodríguez
+
+Uniforme escolar (movil)
+
+Pago parcial
+Vence el 25 oct 2026
+
+Monto
+RD$2,500.00
+Pagado
+RD$1,000.00
+Debe
+RD$1,500.00
+Registrar pago
+Editar
+Anular
+Historial de pagos (1)

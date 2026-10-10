@@ -1,0 +1,205 @@
+http://127.0.0.1:3000/dashboard
+
+Saltar al contenido principal
+
+Instituto Técnico Demo
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+Notificaciones
+Cerrar sesión
+F
+
+Francisco Taveras Gil
+
+coordinacion@demo.edukana.do
+
+Hola, Francisco
+
+Instituto Técnico Demo
+
+Cuatrimestre Agosto–Diciembre 2026, semana 9 de 18
+
+Ver cursos
+Publicar un aviso
+Ver personas
+Admisiones
+Cómo va la institución
+
+Este mes, comparado con el mes pasado a esta misma altura.
+
+Esta semana
+Este mes
+Este período
+Estudiantes activos
+120
+3 nuevos este mes
+
+Igual que el mes pasado
+
+Asistencia promedio
+92 %
+1,185 de 1,287 registros
+
+1 punto más que el mes pasado
+
+Avance promedio
+47 %
+504 lecciones completadas este mes
+
+178 lecciones más que el mes pasado
+
+Entregas a tiempo
+88 %
+875 de 989 entregas esperadas
+
+1 punto menos que el mes pasado
+
+Requiere tu atención
+9 estudiantes en riesgo
+5 con nota baja, 4 con tareas vencidas.
+Ver estudiantes en riesgo
+6 solicitudes de ingreso sin atender
+La más antigua llegó hace 12 días.
+Ver admisiones
+Últimas 8 semanas
+Asistencia
+Entregas a tiempo
+0 %
+50 %
+100 %
+80 %
+17 ago
+24 ago
+31 ago
+7 sept
+14 sept
+21 sept
+28 sept
+5 oct
+Asistencia y entregas a tiempo por semana, semana por semana
+Semana que empieza	Asistencia	Entregas a tiempo
+17 ago	88 % (857 de 972 registros)	88 % (433 de 493 entregas)
+24 ago	91 % (877 de 967 registros)	89 % (441 de 493 entregas)
+31 ago	91 % (889 de 973 registros)	89 % (438 de 493 entregas)
+7 sept	91 % (888 de 979 registros)	89 % (441 de 493 entregas)
+14 sept	91 % (892 de 976 registros)	86 % (425 de 493 entregas)
+21 sept	92 % (894 de 977 registros)	87 % (428 de 493 entregas)
+28 sept	93 % (905 de 975 registros)	88 % (434 de 493 entregas)
+5 oct (esta semana)	92 % (813 de 886 registros)	89 % (441 de 496 entregas)
+Estudiantes en riesgo
+
+9 estudiantes reúnen al menos una señal: asistencia menor de 80 %, 2 o más tareas vencidas, nota por debajo de 70, avance muy por debajo de su grupo.
+
+Yesica Durán Espaillat
+
+Asistencia 69 %
+Nota 51
+
+Yaritza Mejía Lora
+
+3 tareas vencidas
+Nota 49
+
+Omar Mota Agramonte
+
+4 tareas vencidas
+Avance 11 %
+
+Keila Familia Rosario
+
+Nota 48
+Avance 6 %
+
+Wilkin Santana Mota
+
+2 tareas vencidas
+
+Cristian Ventura Pérez
+
+Nota 52
+Docentes
+
+Lo que espera calificación y los cursos sin lecciones nuevas, asistencia ni notas en 14 días.
+
+Ramón Peña Castillo
+16 por calificar
+
+2 cursos, la más antigua espera 1 día
+
+Rosa Almonte Guzmán
+13 por calificar
+
+1 curso, la más antigua espera 1 día
+
+Julio César Ventura
+12 por calificar
+
+1 curso, la más antigua espera 1 día
+
+Milagros Concepción Abreu
+11 por calificar
+
+1 curso, la más antigua espera 1 día
+
+Lissette Marte Cabral
+10 por calificar
+
+1 curso, la más antigua espera 2 días
+
+Cursos
+Ver los 12 cursos
+
+Primero los que necesitan atención. La asistencia es de este mes; en rojo lo que está por debajo de lo esperado.
+
+Cursos con inscritos, avance, asistencia, nota promedio y pendientes por calificar
+Curso	Inscritos	Avance	Asistencia	Nota promedio	Por calificar
+Anatomía y Fisiología Básica
+Rosa Almonte Guzmán
+	58	46 %	89 %	82 de 100	13
+Primeros Auxilios
+Julio César Ventura
+	58	47 %	93 %	82 de 100	12
+Fundamentos de Enfermería
+Milagros Concepción Abreu
+	58	46 %	94 %	83 de 100	11
+Contabilidad Básica
+Ramón Peña Castillo
+	56	48 %	92 %	84 de 100	10
+Mercadeo Digital para Emprendedores
+Lissette Marte Cabral
+	28	47 %	94 %	83 de 100	10
+Electricidad Residencial
+Domingo Antonio Severino
+	28	49 %	91 %	83 de 100	9
+Instalaciones Solares Fotovoltaicas
+Fausto Rafael Then
+	29	46 %	89 %	83 de 100	7
+Mantenimiento de Computadoras
+Víctor Manuel Liriano
+	28	46 %	94 %	83 de 100	7
+Admisiones este mes
+Ver admisiones
+
+Solicitudes nuevas
+
+6
+
+5 sin atender todavía
+
+En proceso
+
+0
+
+Con documentos, en revisión o admitidas
+
+Inscritas
+
+1
+
+Ya son estudiantes
+
+2 solicitudes más que el mes pasado.

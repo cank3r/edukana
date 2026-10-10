@@ -1,0 +1,32 @@
+http://127.0.0.1:3000/dashboard/gestion/grupos
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+Notificaciones
+Cerrar sesión
+C
+
+Carla Méndez
+
+admin@instituto-demo.test
+
+Inicio
+Personas
+Grupos
+Grupos
+
+Un grupo es un conjunto de estudiantes que cursan juntos, con fechas; por ejemplo «Enfermería 2027 — Noche». Sirve para inscribirlos a todos en sus cursos de una vez. Es opcional.
+
+Crear grupo
+Grupo A – Mañana
+Bachillerato Técnico · Desde el 10 oct 2026
+2 de 30 estudiantes · 1 curso
+
+¿Quieres ordenar los cursos de una carrera? Ver programas

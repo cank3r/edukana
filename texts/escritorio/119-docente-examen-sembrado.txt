@@ -1,0 +1,83 @@
+http://127.0.0.1:3000/dashboard/aula/cmv2kb0h0000o6h3zcxfdcp8l/examenes/cmv2kb0jg002o6h3zr58d59ft
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Mis cursos
+Avisos
+Calendario
+4
+Notificaciones
+Cerrar sesión
+L
+
+Luis Peralta
+
+docente@instituto-demo.test
+
+Inicio
+Cursos
+Curso
+Exámenes
+Examen
+Prueba corta: suma y resta
+
+Publicado: los estudiantes pueden verlo.
+
+Publicación y resultados
+Ocultar examen
+Ver resultados (3)
+
+Este examen ya tiene 3 intentos de estudiantes. Para que todos sean evaluados con las mismas reglas, ya no se pueden cambiar las preguntas, los puntos, el tiempo, los intentos permitidos ni si se muestran las respuestas. Sí puedes cambiar el título, las instrucciones, las fechas y el porcentaje para aprobar, y publicarlo u ocultarlo.
+
+1. Datos del examen
+Título
+Instrucciones (opcional)
+2. Preguntas
+
+PREGUNTA 1 · SELECCIÓN MÚLTIPLE
+
+¿Cuánto es 27 + 15?
+
+Puntos
+
+PREGUNTA 2 · VERDADERO O FALSO
+
+El número 10 es mayor que el 9.
+
+Puntos
+
+PREGUNTA 3 · RESPUESTA CORTA
+
+Explica con tus palabras qué es una llevada.
+
+Puntos
+
+3 preguntas · 10 puntos en total
+
+Este examen tiene preguntas de respuesta corta: la nota de cada estudiante queda pendiente hasta que revises sus respuestas en «Resultados».
+
+3. Reglas
+Tiempo límite en minutos (opcional)
+Si lo dejas vacío, el estudiante tiene hasta la fecha de cierre; si tampoco hay cierre, 24 horas desde que empieza.
+Intentos permitidos
+Porcentaje para aprobar (opcional)
+Con él, cada nota dice «Aprobado» o «No aprobado». Si lo dejas vacío, solo se muestra la nota.
+Se abre (opcional)
+Se cierra (opcional)
+
+Las fechas usan la hora de la institución (hora de Santo Domingo). Sin fechas, el examen está disponible mientras esté publicado.
+
+Mostrar respuestas correctas cuando el estudiante ya no tenga intentos o el examen cierre
+
+La nota de este examen pasa al libro de calificaciones, en «General».
+
+Guardar cambios
+Volver a exámenes
+Borrar examen
+
+Las preguntas siguen en el banco. Lo que sí se borra son los intentos y respuestas de este examen.
+
+Borrar examen

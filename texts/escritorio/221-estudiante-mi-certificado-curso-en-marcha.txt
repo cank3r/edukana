@@ -1,0 +1,39 @@
+http://127.0.0.1:3000/dashboard/aula/cmv2kb0h0000o6h3zcxfdcp8l/certificados
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Mis cursos
+Avisos
+Calendario
+Más
+15
+Notificaciones
+Cerrar sesión
+P
+
+Pedro Jiménez
+
+pedro@instituto-demo.test
+
+Inicio
+Cursos
+Curso
+Certificados
+Mi certificado
+Todavía no tienes el certificado de este curso
+
+Llevas 17% del curso y necesitas llegar a 100%. Completa las lecciones que te faltan.
+
+Seguir con el curso
+Cómo vas
+Tu avance
+17%
+Se pide 100%
+Tu nota actual
+—
+Aún sin notas publicadas
+
+Todos tus certificados están en Mis certificados.

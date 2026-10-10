@@ -1,0 +1,53 @@
+http://127.0.0.1:3000/dashboard/aula/cmv2kb0h0000o6h3zcxfdcp8l/mis-notas
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Mis cursos
+Avisos
+Calendario
+Más
+15
+Notificaciones
+Cerrar sesión
+P
+
+Pedro Jiménez
+
+pedro@instituto-demo.test
+
+Inicio
+Cursos
+Curso
+Mis notas
+Mis notas
+Mi promedio hasta ahora
+
+—
+
+Aparecerá cuando tu docente publique tu primera nota.
+
+Falta por calificar (4)
+Problemas de suma y resta
+Participación escritorio
+Participación movil
+Prueba corta: suma y resta
+General
+
+Problemas de suma y resta
+
+Sin calificar
+
+Participación escritorio
+
+Sin calificar
+
+Participación movil
+
+Sin calificar
+
+Prueba corta: suma y resta
+
+Sin calificar

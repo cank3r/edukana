@@ -1,0 +1,235 @@
+http://127.0.0.1:3000/dashboard/aula/cmv2kb17m008b0be055a6b88f/calificaciones
+
+Saltar al contenido principal
+3
+Menú
+Volver al curso
+Calificaciones
+
+Toca una nota para ponerla o corregirla. Los estudiantes solo ven las actividades que publiques.
+
+Agregar actividad calificable
+Notas de 58 estudiantes
+Descargar en CSV
+Ambar Hernández Jiménez
+Promedio: 72.75
+Ana Mercedes Reyes
+Promedio: 89.05
+Anderson Ventura Pérez
+Promedio: 80.33
+Anyelina De la Cruz Almonte
+Promedio: 89.62
+Brayan Ramírez Ozuna
+Promedio: 71.7
+Carolina Méndez Tejada
+Promedio: 91.16
+Crismeily Hidalgo Mota
+Promedio: 54.63
+Cristian Agramonte Mercedes
+Promedio: 72.02
+Daniela Sánchez Ogando
+Promedio: 95.7
+Darling Severino Florentino
+Promedio: 84
+Dilenia Tejada Then
+Promedio: 97.28
+Elizabeth Rosario Núñez
+Promedio: 84.35
+Esmeralda Pujols Báez
+Promedio: 97.22
+Euclides Lantigua Almonte
+Promedio: 85.85
+Fiordaliza Marte Jáquez
+Promedio: 74.2
+Frailin Santos Vásquez
+Promedio: 86.2
+Gabriel Polanco Pichardo
+Promedio: 79.35
+Isamar Cuevas Herrera
+Promedio: 97.77
+Joel Antonio Batista
+Promedio: 82.97
+Johanna Jáquez Santos
+Promedio: 87.92
+Juana Valdez Herrera
+Promedio: 89.58
+Juan Carlos Beltré Espaillat
+Promedio: 78.08
+Keila Familia Rosario
+Promedio: 33.73
+Kelvin Jiménez Tejada
+Promedio: 95.85
+Leonela Castillo Cabral
+Promedio: 77.48
+Leonel Pichardo García
+Promedio: 85.05
+Luz Marina Encarnación
+Promedio: 65.22
+Mabel Bautista Valdez
+Promedio: 89.52
+Mariela Abreu Núñez
+Promedio: 92.88
+Massiel Ogando Acosta
+Promedio: 62.05
+Mildred Luciano Infante
+Promedio: 51.3
+Moisés Guerrero Peralta
+Promedio: 86.37
+Nairoby Then Frías
+Promedio: 95.3
+Nathalie Guerrero Polanco
+Promedio: 87.07
+Nicol Mercedes Hidalgo
+Promedio: 84.91
+Omar Mota Agramonte
+Promedio: 71.32
+Paola Andrea Cabrera
+Promedio: 89.18
+Patria Toribio Ureña
+Promedio: 58.75
+Rafael Herrera Medina
+Promedio: 63.22
+Ramón Emilio Reynoso Castillo
+Promedio: 87.66
+Rosalía Martínez Liriano
+Promedio: 65.23
+Rosanna Valdez Ureña
+Promedio: 79.03
+Rubén Javier Cuello
+Promedio: 97.9
+Starlin De los Santos
+Promedio: 85.5
+Starling Liriano Nolasco
+Promedio: 87.02
+Wanda Encarnación Lantigua
+Promedio: 71.98
+Wilkin Santana Mota
+Promedio: 76.88
+Yamilet Ureña Toribio
+Promedio: 80.52
+Yanelis Peralta Ogando
+Promedio: 85.35
+Yaritza Mejía Lora
+Promedio: 51.57
+Yeremi Espaillat Rosario
+Promedio: 84.52
+Yesica Durán Espaillat
+Promedio: 48.04
+Yohanna Disla Vargas
+Promedio: 60.37
+Yomaira García Paulino
+Promedio: 80.22
+Yoselin Cabral Lora
+Promedio: 86.45
+Yudelka Ozuna Pujols
+Promedio: 96.78
+Yulissa Rodríguez Peña
+Promedio: 86.7
+Yunior Báez Javier
+Promedio: 96.52
+
+El promedio va de 0 a 100. Cada nota cuenta según su puntaje máximo y el peso de su categoría; lo exonerado («Exon.») y lo que aún no tiene nota no cuentan. Incluye también las actividades ocultas.
+
+Actividades calificables
+
+Examen parcial: organización del cuerpo y circulación
+
+Exámenes · máximo 90 · 57 de 58 con nota
+
+Los estudiantes ven esta nota
+
+Ocultar notas
+
+Viene de un examen: su título y puntaje se cambian allí. Abrir los exámenes
+
+Práctica semana 1: De la célula al organismo
+
+Tareas · máximo 100 · 58 de 58 con nota
+
+Los estudiantes ven esta nota
+
+Ocultar notas
+
+Viene de una tarea: su título y puntaje se cambian allí. Abrir la tarea
+
+Práctica semana 2: Posición anatómica y planos del cuerpo
+
+Tareas · máximo 100 · 58 de 58 con nota
+
+Los estudiantes ven esta nota
+
+Ocultar notas
+
+Viene de una tarea: su título y puntaje se cambian allí. Abrir la tarea
+
+Práctica semana 3: Actividad: describe la ubicación
+
+Tareas · máximo 100 · 58 de 58 con nota
+
+Los estudiantes ven esta nota
+
+Ocultar notas
+
+Viene de una tarea: su título y puntaje se cambian allí. Abrir la tarea
+
+Práctica semana 4: Circulación mayor y menor
+
+Tareas · máximo 100 · 58 de 58 con nota
+
+Los estudiantes ven esta nota
+
+Ocultar notas
+
+Viene de una tarea: su título y puntaje se cambian allí. Abrir la tarea
+
+Mapa conceptual de los niveles de organización
+
+Tareas · máximo 100 · 57 de 58 con nota
+
+Los estudiantes ven esta nota
+
+Ocultar notas
+
+Viene de una tarea: su título y puntaje se cambian allí. Abrir la tarea
+
+Práctica semana 6: Vías respiratorias altas y bajas
+
+Tareas · máximo 100 · 58 de 58 con nota
+
+Los estudiantes ven esta nota
+
+Ocultar notas
+
+Viene de una tarea: su título y puntaje se cambian allí. Abrir la tarea
+
+Práctica semana 7: La respiración: ventilación e intercambio
+
+Tareas · máximo 100 · 58 de 58 con nota
+
+Los estudiantes ven esta nota
+
+Ocultar notas
+
+Viene de una tarea: su título y puntaje se cambian allí. Abrir la tarea
+
+Práctica semana 8: Guía de repaso para el examen
+
+Tareas · máximo 100 · 47 de 58 con nota
+
+Los estudiantes ven esta nota
+
+Ocultar notas
+
+Viene de una tarea: su título y puntaje se cambian allí. Abrir la tarea
+
+Caso clínico: el recorrido de la sangre
+
+Tareas · máximo 100 · 0 de 58 con nota
+
+Los estudiantes ven esta nota
+
+Ocultar notas
+
+Viene de una tarea: su título y puntaje se cambian allí. Abrir la tarea
+
+Opciones avanzadas

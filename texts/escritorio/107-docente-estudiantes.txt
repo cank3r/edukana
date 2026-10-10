@@ -1,0 +1,100 @@
+http://127.0.0.1:3000/dashboard/aula/cmv2kb0h0000o6h3zcxfdcp8l/estudiantes
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Mis cursos
+Avisos
+Calendario
+4
+Notificaciones
+Cerrar sesión
+L
+
+Luis Peralta
+
+docente@instituto-demo.test
+
+Inicio
+Cursos
+Curso
+Estudiantes
+Estudiantes
+
+Mira quién está inscrito, cuánto ha avanzado cada uno y quién necesita atención.
+
+Inscritos activos
+3
+Sin límite de cupos
+Avance promedio
+6%
+6 lecciones publicadas
+Se están quedando atrás
+2
+Aparecen marcados en la lista
+Retirados
+0
+Conservan su historial
+Inscribir estudiantes
+Inscritos (4)
+Buscar estudiante por nombre
+Solo quienes se quedan atrás (2)
+Ana Rodríguez
+
+ana@instituto-demo.test
+
+Activo
+
+17%
+Lecciones
+1 de 6
+Tareas
+1 de 2
+Última actividad
+10 oct 2026
+Retirar del curso
+Juan Castillo
+
+juan@instituto-demo.test
+
+Activo
+Se está quedando atrás
+
+0%
+Lecciones
+0 de 6
+Tareas
+1 de 2
+Última actividad
+10 oct 2026
+Retirar del curso
+Pedro Jiménez
+
+pedro@instituto-demo.test
+
+Activo
+Se está quedando atrás
+
+0%
+Lecciones
+0 de 6
+Tareas
+0 de 2
+Última actividad
+Sin actividad
+Retirar del curso
+Rosa Almonte
+
+rosa@instituto-demo.test
+
+Terminó el curso
+
+0%
+Lecciones
+0 de 6
+Tareas
+1 de 2
+Última actividad
+10 oct 2026

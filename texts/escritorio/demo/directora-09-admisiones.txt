@@ -1,0 +1,166 @@
+http://127.0.0.1:3000/dashboard/admisiones
+
+Saltar al contenido principal
+
+Instituto Técnico Demo
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+Admisiones
+Cobros
+Ventas
+Calendario
+Reportes
+Configuración
+Notificaciones
+Cerrar sesión
+M
+
+Margarita Rosario Díaz
+
+directora@demo.edukana.do
+
+Inicio
+Admisiones
+Admisiones
+
+Las personas que quieren entrar a la institución, ordenadas por la etapa en que van. Abre una solicitud para avanzarla o convertirla en estudiante.
+
+Registrar solicitud
+
+18
+
+Solicitudes abiertas
+
+1
+
+Admitidas este mes
+
+27 %
+
+Terminan inscritas
+
+7 de 26
+
+Buscar por nombre o correo
+Programa
+Todos los programas
+Técnico en Contabilidad
+Técnico en Enfermería
+Electricidad
+Excel para la Oficina
+Informática
+Mercadeo
+Turismo
+Buscar
+Interesado
+6
+
+Preguntó o dejó sus datos.
+
+Genesis Paulino Marte
+Técnico en Enfermería
+Llegó hace 2 días · Instagram
+Brenda Lisbeth Mateo
+Informática
+Llegó hace 3 días · Página web
+Yunior Alexander Peña
+Electricidad
+Llegó hace 5 días · Feria vocacional
+Mabel Cristina Ortiz
+Turismo
+Llegó hace 6 días · WhatsApp
+Darwin Encarnación Mejía
+Técnico en Contabilidad
+Llegó hace 9 días · Facebook
+Rosmery Abreu Taveras
+Mercadeo
+Llegó hace 12 días · Instagram
+Documentos
+5
+
+Está entregando sus papeles.
+
+Eddy Rafael Montero
+Técnico en Contabilidad
+Llegó hace 15 días · Referido por estudiante
+Yesenia Marlenis Cruz
+Técnico en Enfermería
+Llegó hace 18 días · Página web
+Kelvin José Durán
+Informática
+Llegó hace 20 días · Feria vocacional
+Nairobi Santos Frías
+Técnico en Enfermería
+Llegó hace 22 días · Llamada telefónica
+Raúl Antonio Ventura
+Electricidad
+Llegó hace 25 días · Referido por docente
+En revisión
+4
+
+La institución revisa su caso.
+
+Arelis Contreras Vólquez
+Técnico en Enfermería
+Llegó hace 27 días · Feria vocacional
+Gabriel Antonio Rosario
+Técnico en Contabilidad
+Llegó hace 30 días · Página web
+Lisbeth Carolina Núñez
+Turismo
+Llegó hace 1 mes · Instagram
+Omar Ernesto Polanco
+Informática
+Llegó hace 1 mes · WhatsApp
+Admitido
+3
+
+Aprobado; falta convertirlo en estudiante.
+
+Luis Alberto Frías
+Técnico en Contabilidad
+Llegó hace 1 mes · Página web
+Crismeily Batista Reyes
+Técnico en Enfermería
+Llegó hace 1 mes · Referido por estudiante
+Anderson Mota Liriano
+Electricidad
+Llegó hace 1 mes · Feria vocacional
+Inscrito
+7
+
+Ya es estudiante.
+
+Rocío Almánzar Peña
+Excel para la Oficina
+Llegó hace 7 días · WhatsApp
+Massiel Ogando Acosta
+Técnico en Enfermería
+Llegó hace 2 meses · Instagram
+Juana Valdez Herrera
+Técnico en Enfermería
+Llegó hace 2 meses · Feria vocacional
+Omar Mota Agramonte
+Técnico en Enfermería
+Llegó hace 2 meses · Referido por estudiante
+Yeremi Nolasco Tavárez
+Técnico en Contabilidad
+Llegó hace 2 meses · Página web
+Omar Santos Vásquez
+Técnico en Contabilidad
+Llegó hace 2 meses · Facebook
+Yomaira Castillo Cabral
+Técnico en Contabilidad
+Llegó hace 3 meses · Llamada telefónica
+No continúa
+1
+
+Se retiró o no fue aceptado.
+
+Yiraldy Cordero Silverio
+Técnico en Enfermería
+Llegó hace 1 mes · Llamada telefónica

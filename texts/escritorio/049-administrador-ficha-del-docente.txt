@@ -1,0 +1,51 @@
+http://127.0.0.1:3000/dashboard/gestion/personas/cmv2kb0gh00076h3z9xc05g05
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+Notificaciones
+Cerrar sesión
+C
+
+Carla Méndez
+
+admin@instituto-demo.test
+
+Inicio
+Personas
+Persona
+Luis Peralta
+
+Docente
+Puede entrar
+
+Datos
+Correo
+docente@instituto-demo.test
+Teléfono
+No indicado
+Rol
+Docente
+En la institución desde
+10 oct 2026
+Acceso
+
+Ya creó su contraseña.
+
+Editar
+Enviar aviso de acceso
+Suspender
+Cursos que enseña
+Matemática Básica
+
+3 estudiantes cursándolo ahora
+
+Taller de Lectura
+
+0 estudiantes cursándolo ahora

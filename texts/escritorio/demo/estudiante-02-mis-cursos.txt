@@ -1,0 +1,67 @@
+http://127.0.0.1:3000/dashboard/aula
+
+Saltar al contenido principal
+
+Instituto Técnico Demo
+
+Inicio
+Mis cursos
+Avisos
+Calendario
+Más
+4
+Notificaciones
+Cerrar sesión
+A
+
+Ana Mercedes Reyes
+
+ana.reyes@demo.edukana.do
+
+Inicio
+Cursos
+Mis cursos
+
+Entra a un curso para seguir estudiando. Los que terminaste siguen aquí, con tu nota final.
+
+Buscar curso por nombre
+Buscar
+ENF-101
+Anatomía y Fisiología Básica
+
+Rosa Almonte Guzmán · Cuatrimestre Agosto–Diciembre 2026
+
+56% completado
+
+Entrar
+ENF-102
+Fundamentos de Enfermería
+
+Milagros Concepción Abreu · Cuatrimestre Agosto–Diciembre 2026
+
+67% completado
+
+Entrar
+ENF-103
+Primeros Auxilios
+
+Julio César Ventura · Cuatrimestre Agosto–Diciembre 2026
+
+56% completado
+
+Entrar
+Completado
+EXC-100
+Excel para la Oficina
+
+Yokasta Féliz Matos · Cuatrimestre Agosto–Diciembre 2026
+
+Entrar
+TUR-101
+Servicio al Turista y Hospitalidad
+
+Yahaira Nolasco Durán · Cuatrimestre Agosto–Diciembre 2026
+
+56% completado
+
+Entrar

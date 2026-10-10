@@ -1,0 +1,9 @@
+http://127.0.0.1:3000/recuperar
+
+¿Olvidaste tu contraseña?
+
+Escribe tu correo y te enviamos un enlace para crear una nueva. También sirve si es tu primera vez y aún no tienes contraseña.
+
+Correo electrónico
+Enviarme el enlace
+Volver a iniciar sesión

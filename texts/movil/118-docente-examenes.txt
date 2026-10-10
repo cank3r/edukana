@@ -1,0 +1,22 @@
+http://127.0.0.1:3000/dashboard/aula/cmv2kb0h0000o6h3zcxfdcp8l/examenes
+
+Saltar al contenido principal
+3
+Menú
+Volver al curso
+Exámenes
+
+Arma exámenes con las preguntas del banco, publícalos y revisa cómo les fue a tus estudiantes.
+
+Crear examen
+Banco de preguntas (3)
+Publicado
+Los estudiantes pueden verlo.
+Prueba corta: suma y resta
+
+3 preguntas · 10 puntos · 5 minutos
+
+2 intentos presentados. 2 por revisar.
+
+Editar
+Resultados

@@ -1,0 +1,137 @@
+http://127.0.0.1:3000/operador/bitacora?institutionId=cmv2kb0la00466h3zlvz01h7w&operator=direccion%40colegio-nuevo.test
+
+Saltar al contenido principal
+Volver a mi institución
+Tablero
+Instituciones
+Planes
+Facturación
+Más opciones
+Bitácora
+
+Consulta quién hizo cada cambio. Las fechas usan UTC.
+
+Institución
+Todas las instituciones
+Colegio Nuevo Amanecer
+Cursos de Elena Docente
+Instituto Backoffice escritorio
+Instituto Backoffice movil
+Instituto Demo
+Instituto Técnico Demo
+AcciónPLATFORM_* para plataforma, all para todas o el nombre exacto.
+Correo del operador
+Desde
+Hasta
+Filtrar
+Limpiar filtros
+
+10 oct 2026, 15:43 UTC
+
+direccion@colegio-nuevo.test
+
+PLATFORM_SUPPORT_EXITED
+
+Instituto Backoffice movil · Institution
+
+Ver institución
+
+10 oct 2026, 15:43 UTC
+
+direccion@colegio-nuevo.test
+
+PLATFORM_SUPPORT_ENTERED
+
+Instituto Backoffice movil · Institution
+
+Ver institución
+
+10 oct 2026, 15:43 UTC
+
+direccion@colegio-nuevo.test
+
+PLATFORM_BRANDING_UPDATED
+
+Instituto Backoffice movil · Institution
+
+Ver institución
+
+10 oct 2026, 15:43 UTC
+
+direccion@colegio-nuevo.test
+
+PLATFORM_FEATURES_UPDATED
+
+Instituto Backoffice movil · Institution
+
+Ver institución
+
+10 oct 2026, 15:43 UTC
+
+direccion@colegio-nuevo.test
+
+PLATFORM_FEATURES_UPDATED
+
+Instituto Backoffice movil · Institution
+
+Ver institución
+
+10 oct 2026, 15:43 UTC
+
+direccion@colegio-nuevo.test
+
+PLATFORM_INVOICE_PAID
+
+Instituto Backoffice movil · PlatformInvoice
+
+Ver registro relacionado
+
+10 oct 2026, 15:43 UTC
+
+direccion@colegio-nuevo.test
+
+PLATFORM_SUBSCRIPTION_PAYMENT_APPLIED
+
+Instituto Backoffice movil · InstitutionSubscription
+
+Ver registro relacionado
+
+10 oct 2026, 15:43 UTC
+
+direccion@colegio-nuevo.test
+
+PLATFORM_INVOICE_CREATED
+
+Instituto Backoffice movil · PlatformInvoice
+
+Ver registro relacionado
+
+10 oct 2026, 15:43 UTC
+
+direccion@colegio-nuevo.test
+
+PLATFORM_SUBSCRIPTION_PLAN_CHANGED
+
+Instituto Backoffice movil · InstitutionSubscription
+
+Ver registro relacionado
+
+10 oct 2026, 15:43 UTC
+
+direccion@colegio-nuevo.test
+
+PLATFORM_INSTITUTION_REACTIVATED
+
+Instituto Backoffice movil · Institution
+
+Ver institución
+
+10 oct 2026, 15:43 UTC
+
+direccion@colegio-nuevo.test
+
+PLATFORM_INSTITUTION_SUSPENDED
+
+Instituto Backoffice movil · Institution
+
+Ver institución

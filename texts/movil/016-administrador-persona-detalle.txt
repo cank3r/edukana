@@ -1,0 +1,42 @@
+http://127.0.0.1:3000/dashboard/gestion/personas/cmv2kb0gi000a6h3z4a2nrrfx
+
+Saltar al contenido principal
+Menú
+Volver a Personas
+Ana Rodríguez
+
+Estudiante
+Puede entrar
+
+Datos
+Correo
+ana@instituto-demo.test
+Teléfono
+No indicado
+Rol
+Estudiante
+En la institución desde
+10 oct 2026
+Acceso
+
+Ya creó su contraseña.
+
+Editar
+Enviar aviso de acceso
+Suspender
+Cursos en los que está inscrito
+Taller de Lectura
+
+Completado · 0 % de avance
+
+Matemática Básica
+
+Activo · 0 % de avance
+
+Ver notas, asistencia y cuenta
+Tutores
+Marisol Rodríguez
+
+Madre · Vínculo activo
+
+Gestionar vínculos de tutores

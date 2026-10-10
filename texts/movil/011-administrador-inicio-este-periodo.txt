@@ -1,0 +1,157 @@
+http://127.0.0.1:3000/dashboard?rango=periodo
+
+Saltar al contenido principal
+Menú
+
+Hola, Carla
+
+Instituto Demo
+
+Año 2026, Período 2025–2027
+
+Agregar personas
+Crear un curso
+Publicar un aviso
+Registrar un pago
+Ver reportes
+Cómo va la institución
+
+Este período.
+
+Esta semana
+Este mes
+Este período
+Estudiantes activos
+4
+4 nuevos este período
+
+No hay un período anterior para comparar
+
+Asistencia promedio
+75 %
+3 de 4 registros
+
+No hay un período anterior para comparar
+
+Avance promedio
+0 %
+0 lecciones completadas este período
+
+No hay un período anterior para comparar
+
+Entregas a tiempo
+—
+Se llenará cuando venza una tarea publicada este período.
+
+Cobrado este período
+RD$7,500
+Por cobrar RD$8,000, vencido RD$3,000
+
+No hay un período anterior para comparar
+
+Requiere tu atención
+2 estudiantes en riesgo
+1 con asistencia baja, 1 con cargos vencidos.
+Ver estudiantes en riesgo
+1 cargo vencido sin pagar
+De 1 estudiante.
+Ver cobros
+1 solicitud de ingreso sin atender
+Llegaron hoy.
+Ver admisiones
+Últimas 8 semanas
+Asistencia
+Entregas a tiempo
+0 %
+50 %
+100 %
+80 %
+24 ago
+7 sept
+21 sept
+5 oct
+Asistencia y entregas a tiempo por semana, semana por semana
+Semana que empieza	Asistencia	Entregas a tiempo
+17 ago	Sin datos	Sin datos
+24 ago	Sin datos	Sin datos
+31 ago	Sin datos	Sin datos
+7 sept	Sin datos	Sin datos
+14 sept	Sin datos	Sin datos
+21 sept	Sin datos	Sin datos
+28 sept	Sin datos	Sin datos
+5 oct (esta semana)	75 % (3 de 4 registros)	Sin datos
+Estudiantes en riesgo
+Ver todos (2)
+
+2 estudiantes reúnen al menos una señal: asistencia menor de 80 %, 2 o más tareas vencidas, nota por debajo de 70, avance muy por debajo de su grupo o cargos vencidos.
+
+Juan Castillo
+
+Asistencia 0 %
+
+Ana Rodríguez
+
+1 cargo vencido
+Docentes
+
+Lo que espera calificación y los cursos sin lecciones nuevas, asistencia ni notas en 14 días.
+
+Luis Peralta
+4 por calificar
+
+2 cursos, la más antigua llegó hoy
+
+Cursos
+
+Primero los que necesitan atención. La asistencia es de este período; en rojo lo que está por debajo de lo esperado.
+
+Necesitan atención
+Inscritos
+Avance
+Asistencia
+Nota promedio
+Por calificar
+Matemática Básica
+
+Luis Peralta, 4 inscritos
+
+Avance
+0 %
+Asistencia
+75 %
+Nota promedio
+—
+Por calificar
+4
+Taller de Lectura
+
+Luis Peralta, 2 inscritos
+
+Avance
+0 %
+Asistencia
+—
+Nota promedio
+—
+Por calificar
+Al día
+Admisiones este período
+Ver admisiones
+
+Solicitudes nuevas
+
+3
+
+1 sin atender todavía
+
+En proceso
+
+2
+
+Con documentos, en revisión o admitidas
+
+Inscritas
+
+0
+
+Ya son estudiantes

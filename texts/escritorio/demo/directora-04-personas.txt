@@ -1,0 +1,545 @@
+http://127.0.0.1:3000/dashboard/gestion
+
+Saltar al contenido principal
+
+Instituto Técnico Demo
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+Notificaciones
+Cerrar sesión
+M
+
+Margarita Rosario Díaz
+
+directora@demo.edukana.do
+
+Inicio
+Personas
+Personas
+
+Todas las personas de tu institución: estudiantes, docentes, tutores y equipo. Desde aquí puedes agregar, corregir, invitar y suspender.
+
+Agregar persona
+Importar e invitar
+Programas
+Grupos
+Buscar
+Rol
+Todos
+Estudiantes
+Docentes
+Coordinadores
+Tutores
+Administradores
+Estado
+Activos
+Suspendidos
+Buscar
+
+1–50 de 150 personas
+
+Altagracia Disla Vargas
+
+altagracia.disla@demo.edukana.do · Tutor
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Altagracia Henríquez Sosa
+
+altagracia.henriquez@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Ambar Hernández Jiménez
+
+ambar.hernandez@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Ambar Luciano Infante
+
+ambar.luciano@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Ana Julia Familia
+
+anajulia.familia@demo.edukana.do · Tutor
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Ana Mercedes Reyes
+
+ana.reyes@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Anderson Vásquez Marte
+
+anderson.vasquez@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Anderson Ventura Pérez
+
+anderson.ventura@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Andrés Jiménez Cruz
+
+andres.jimenez@demo.edukana.do · Tutor
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Ángel Luis Morillo
+
+angel.morillo@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Anyelina De la Cruz Almonte
+
+anyelina.delacruz@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Anyelina Pujols Ozuna
+
+anyelina.pujols@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Bienvenido Pujols Báez
+
+bienvenido.pujols@demo.edukana.do · Tutor
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Brayan Ramírez Ozuna
+
+brayan.ramirez@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Carmen Arias Matos
+
+carmen.arias@demo.edukana.do · Tutor
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Carolina Méndez Tejada
+
+carolina.mendez@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Claribel Tavárez Paulino
+
+claribel.tavarez@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Crismeily Gómez Quezada
+
+crismeily.gomez@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Crismeily Hidalgo Mota
+
+crismeily.hidalgo@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Cristian Agramonte Mercedes
+
+cristian.agramonte@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Cristian Ventura Pérez
+
+cristian.ventura@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Daniela Sánchez Ogando
+
+daniela.sanchez@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Darling Florentino Severino
+
+darling.florentino@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Darling Severino Florentino
+
+darling.severino@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Dilenia Cuello Sosa
+
+dilenia.cuello@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Dilenia Tejada Then
+
+dilenia.tejada@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Domingo Antonio Severino
+
+domingo.severino@demo.edukana.do · Docente
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Dulce María Cuevas
+
+dulce.cuevas@demo.edukana.do · Tutor
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Edwin Alcántara Luna
+
+edwin.alcantara@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Elizabeth Peralta Ogando
+
+elizabeth.peralta@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Elizabeth Rosario Núñez
+
+elizabeth.rosario@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Esmeralda Pujols Báez
+
+esmeralda.pujols@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Euclides Lantigua Almonte
+
+euclides.lantigua@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Euclides Polanco Pichardo
+
+euclides.polanco@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Fausto Rafael Then
+
+fausto.then@demo.edukana.do · Docente
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Félix Antonio Germán
+
+felix.german@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Fiordaliza Marte Jáquez
+
+fiordaliza.marte@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Fiordaliza Pérez Gómez
+
+fiordaliza.perez@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Frailin Quezada Ventura
+
+frailin.quezada@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Frailin Santos Vásquez
+
+frailin.santos@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Francisco Taveras Gil
+
+coordinacion@demo.edukana.do · Coordinador
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Franklin Medina Soto
+
+franklin.medina@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Gabriel Lora Reynoso
+
+gabriel.lora@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Gabriel Polanco Pichardo
+
+gabriel.polanco@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Gisela Moreno Antigua
+
+gisela.moreno@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Héctor Manuel Pimentel
+
+hector.pimentel@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Indhira Vásquez Lantigua
+
+indhira.vasquez@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Isamar Cuevas Herrera
+
+isamar.cuevas@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Joel Antonio Batista
+
+joel.batista@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+
+Johanna Hidalgo Mota
+
+johanna.hidalgo@demo.edukana.do · Estudiante
+
+Puede entrar
+
+Editar
+Enviar aviso de acceso
+Suspender
+Página 1 de 3
+Siguiente

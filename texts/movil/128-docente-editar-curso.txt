@@ -1,0 +1,45 @@
+http://127.0.0.1:3000/dashboard/aula/cmv2kb0h0000o6h3zcxfdcp8l/editar
+
+Saltar al contenido principal
+3
+Menú
+Volver al curso
+Editar curso
+
+Matemática Básica
+
+Datos del curso
+Nombre del curso
+Descripción (opcional)
+Período
+Elige un período
+Período de verano (movil)
+Año 2026
+Opciones avanzadas
+Código (opcional)
+Una clave corta para reconocer el curso. Letras, números y guiones.
+Cupo (opcional)
+Cuántos estudiantes caben como máximo. Vacío: sin límite.
+Guardar cambios
+Volver al curso
+Imagen del curso
+
+Este curso todavía no tiene imagen. Se mostrará en la lista de cursos y en la portada.
+
+JPG, PNG o WebP de hasta 5 MB. Cualquier persona podrá verla, también sin iniciar sesión.
+
+Subir imagen del curso
+Quién ve el curso
+Publicado
+
+Los estudiantes inscritos ven este curso.
+
+Pasar a borrador
+Archivar
+
+Para cursos que ya terminaron. Salen de las listas de todos, no se borra nada y se pueden restaurar.
+
+Archivar curso
+Borrar definitivamente
+
+Este curso ya tiene estudiantes inscritos, entregas o exámenes presentados, así que no se puede borrar. Si ya no lo usas, archívalo: sale de las listas y no se pierde nada.

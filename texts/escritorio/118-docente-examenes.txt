@@ -1,0 +1,39 @@
+http://127.0.0.1:3000/dashboard/aula/cmv2kb0h0000o6h3zcxfdcp8l/examenes
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Mis cursos
+Avisos
+Calendario
+4
+Notificaciones
+Cerrar sesión
+L
+
+Luis Peralta
+
+docente@instituto-demo.test
+
+Inicio
+Cursos
+Curso
+Exámenes
+Exámenes
+
+Arma exámenes con las preguntas del banco, publícalos y revisa cómo les fue a tus estudiantes.
+
+Crear examen
+Banco de preguntas (3)
+Publicado
+Los estudiantes pueden verlo.
+Prueba corta: suma y resta
+
+3 preguntas · 10 puntos · 5 minutos
+
+3 intentos presentados. 2 por revisar.
+
+Editar
+Resultados

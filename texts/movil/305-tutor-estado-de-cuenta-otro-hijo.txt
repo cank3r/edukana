@@ -1,0 +1,46 @@
+http://127.0.0.1:3000/dashboard/mi-cuenta?estudiante=cmv2kb0gk000d6h3z4r5j0571
+
+Saltar al contenido principal
+1
+Menú
+Volver a Inicio
+Estado de cuenta de Pedro Jiménez
+
+Lo que se debe, lo que ya venció y los pagos recibidos. Para pagar, acércate a la administración.
+
+Ana Rodríguez
+Pedro Jiménez
+Debe
+RD$2,500.00
+Vencido
+RD$0.00
+Pagado
+RD$4,500.00
+Por pagar (1)
+
+Mensualidad de prueba
+
+Pago parcial
+Vence el 20 oct 2026
+
+RD$2,500.00
+
+de RD$3,500.00
+
+Historial
+Pagos recibidos
+Mensualidad
+10 oct 2026 · Efectivo
+RD$3,500.00
+Ver recibo
+Mensualidad de prueba
+10 oct 2026 · Efectivo
+RD$1,000.00
+Ver recibo
+Todos los cargos
+Mensualidad
+Pagado · Vencimiento: 20 oct 2026
+RD$3,500.00
+Mensualidad de prueba
+Pago parcial · Vencimiento: 20 oct 2026
+RD$3,500.00

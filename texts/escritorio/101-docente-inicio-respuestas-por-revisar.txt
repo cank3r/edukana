@@ -1,0 +1,59 @@
+http://127.0.0.1:3000/dashboard
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Mis cursos
+Avisos
+Calendario
+4
+Notificaciones
+Cerrar sesión
+L
+
+Luis Peralta
+
+docente@instituto-demo.test
+
+Hola, Luis
+
+¿Qué tengo hoy?
+Por calificar
+Matemática Básica
+2 entregas esperan nota
+Prueba corta: suma y resta
+Matemática Básica · 2 intentos tienen respuestas por revisar
+Mis próximas clases en vivo
+
+Repaso de la unidad 1
+
+Matemática Básica
+
+Mañana, 10:00 a. m. · 60 min
+
+Entrar a clase
+(se abre en otra pestaña)
+
+Clase de dudas (movil)
+
+Matemática Básica
+
+lun, 12 oct, 3:00 p. m. · 60 min
+
+Entrar a clase
+(se abre en otra pestaña)
+Mis cursos
+Matemática Básica
+
+4 estudiantes
+
+Contenido
+Estudiantes
+Taller de Lectura
+
+2 estudiantes
+
+Contenido
+Estudiantes

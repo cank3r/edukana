@@ -1,0 +1,254 @@
+http://127.0.0.1:3000/dashboard/analitica
+
+Saltar al contenido principal
+
+Instituto Técnico Demo
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+Admisiones
+Cobros
+Ventas
+Calendario
+Reportes
+Configuración
+Notificaciones
+Cerrar sesión
+M
+
+Margarita Rosario Díaz
+
+directora@demo.edukana.do
+
+Inicio
+Reportes
+Reportes
+
+Cómo va la institución hoy: quiénes estudian, cuánto avanzan y dónde hace falta actuar.
+
+Período
+Todos los períodos
+Cuatrimestre Agosto–Diciembre 2026 (actual)
+Cuatrimestre Abril–Agosto 2026
+Programa
+Todos los programas
+Técnico en Contabilidad
+Técnico en Enfermería
+Ver reportes
+
+Estudiantes con cursos activos
+
+120
+
+Personas inscritas hoy en al menos un curso.
+
+Igual que hace un mes.
+
+Cursos en marcha
+
+12
+
+Cursos visibles para los estudiantes y sin archivar.
+
+Igual que hace un mes.
+
+Avance promedio
+
+47 %
+
+De cada 100 lecciones, cuántas han completado en promedio los estudiantes activos.
+
+No se compara con el mes anterior: el avance pasado no se guarda.
+
+Tareas entregadas a tiempo
+
+88 %
+
+De las 2468 entregas que se esperaban en los últimos 30 días.
+
+1 punto menos que en los 30 días anteriores.
+
+Asistencia promedio
+
+92 %
+
+Clases a las que sí asistieron en los últimos 30 días (las ausencias justificadas no cuentan).
+
+2 puntos más que en los 30 días anteriores.
+
+Cobrado y por cobrar
+
+RD$1,431,050
+
+Ya cobrado. Falta por cobrar RD$254,850, de los cuales RD$17,250 ya vencieron.
+
+En los últimos 30 días se cobró RD$702,650; en los 30 anteriores, RD$569,100.
+
+Descargar cobros en CSV
+
+Cursos
+
+Cuánta gente tiene cada curso y cómo avanza. Se resaltan los cursos con avance promedio menor de 40 %.
+
+Descargar en CSV
+Avance promedio por curso
+Anatomía y Fisiología Básica
+46 %
+Instalaciones Solares Fotovoltaicas
+46 %
+Mantenimiento de Computadoras
+46 %
+Fundamentos de Enfermería
+46 %
+Primeros Auxilios
+47 %
+Mercadeo Digital para Emprendedores
+47 %
+Matemática Financiera
+47 %
+Legislación Tributaria Dominicana
+48 %
+Contabilidad Básica
+48 %
+Servicio al Turista y Hospitalidad
+48 %
+Cursos: inscritos, retirados, avance, entregas por calificar y nota promedio
+Curso	Inscritos	Retirados	Avance promedio ↑	Por calificar	Nota promedio
+Anatomía y Fisiología Básica
+Rosa Almonte Guzmán
+	58	0	46 %	12	82 de 100
+Instalaciones Solares Fotovoltaicas
+Fausto Rafael Then
+	29	0	46 %	4	83 de 100
+Mantenimiento de Computadoras
+Víctor Manuel Liriano
+	28	0	46 %	5	83 de 100
+Fundamentos de Enfermería
+Milagros Concepción Abreu
+	58	0	46 %	10	83 de 100
+Primeros Auxilios
+Julio César Ventura
+	58	0	47 %	9	82 de 100
+Mercadeo Digital para Emprendedores
+Lissette Marte Cabral
+	28	0	47 %	7	83 de 100
+Matemática Financiera
+Yokasta Féliz Matos
+	55	1	47 %	5	83 de 100
+Legislación Tributaria Dominicana
+Ramón Peña Castillo
+	56	0	48 %	5	83 de 100
+Contabilidad Básica
+Ramón Peña Castillo
+	56	0	48 %	6	84 de 100
+Servicio al Turista y Hospitalidad
+Yahaira Nolasco Durán
+	28	0	48 %	3	82 de 100
+Electricidad Residencial
+Domingo Antonio Severino
+	28	0	49 %	8	83 de 100
+Excel para la Oficina
+Yokasta Féliz Matos
+	14	0	59 %	1	87 de 100
+Estudiantes en riesgo
+
+Estudiantes que conviene contactar: llevan 14 días sin actividad, avanzan mucho menos que su grupo, asisten a menos del 80 % de las clases o tienen tareas vencidas.
+
+Descargar en CSV
+Motivos (8 estudiantes en total; uno puede tener varios)
+Sin actividad en 14 días
+0
+Tareas vencidas sin entregar
+4
+Asistencia menor de 80 %
+3
+Avance bajo
+3
+Estudiantes en riesgo y el motivo
+Estudiante	Motivo ↓	Avance	Asistencia	Tareas vencidas
+Omar Mota Agramonte	Avance bajo (11 %), muy por debajo de su grupo. 4 tareas vencidas sin entregar	11 %	90 %	4
+Yaritza Mejía Lora	Asistencia de 71 % (44 de 62 clases). 3 tareas vencidas sin entregar	33 %	71 %	3
+Fiordaliza Pérez Gómez	Avance bajo (11 %), muy por debajo de su grupo	11 %	89 %	0
+Keila Familia Rosario	Avance bajo (6 %), muy por debajo de su grupo	6 %	88 %	0
+Kelvin Arias Matos	Asistencia de 73 % (45 de 62 clases)	34 %	73 %	0
+Rafael Antonio Guzmán	4 tareas vencidas sin entregar	34 %	89 %	4
+Wilkin Santana Mota	2 tareas vencidas sin entregar	36 %	89 %	2
+Yesica Durán Espaillat	Asistencia de 66 % (51 de 77 clases)	33 %	66 %	0
+Docentes
+
+Carga de cada docente y cuánto llevan esperando los estudiantes por una calificación.
+
+Descargar en CSV
+Entregas por calificar
+Lissette Marte Cabral
+7
+Rosa Almonte Guzmán
+12
+Milagros Concepción Abreu
+10
+Domingo Antonio Severino
+8
+Yahaira Nolasco Durán
+3
+Yokasta Féliz Matos
+6
+Julio César Ventura
+9
+Víctor Manuel Liriano
+5
+Ramón Peña Castillo
+11
+Fausto Rafael Then
+4
+Docentes: cursos, estudiantes y entregas por calificar
+Docente	Cursos	Estudiantes	Por calificar	La más antigua espera ↑
+Lissette Marte Cabral	1	28	7	Hace 2 días
+Rosa Almonte Guzmán	1	58	12	Hace 1 día
+Milagros Concepción Abreu	1	58	10	Hace 1 día
+Domingo Antonio Severino	1	28	8	Hace 1 día
+Yahaira Nolasco Durán	1	28	3	Hace 1 día
+Yokasta Féliz Matos	2	63	6	Hace 1 día
+Julio César Ventura	1	58	9	Hace 1 día
+Víctor Manuel Liriano	1	28	5	Hace 1 día
+Ramón Peña Castillo	2	56	11	Desde hoy
+Fausto Rafael Then	1	29	4	Desde hoy
+Acceso
+
+Personas que todavía no pueden entrar porque no han creado su contraseña. El archivo trae sus nombres y correos para invitarlas.
+
+Todas las personas activas ya pueden entrar.
+
+Grupos y programas
+
+Tamaño y avance promedio de cada grupo y de cada programa.
+
+Descargar en CSV
+Avance promedio por grupo
+Enfermería 2026 — Mañana
+46 %
+Enfermería 2026 — Tarde
+47 %
+Contabilidad 2026 — Sábados
+47 %
+Contabilidad 2026 — Noche
+48 %
+Grupos: estudiantes y avance promedio
+Grupo	Programa	Estudiantes	Avance promedio ↑
+Enfermería 2026 — Mañana	Técnico en Enfermería	30 de 30	46 %
+Enfermería 2026 — Tarde	Técnico en Enfermería	28 de 30	47 %
+Contabilidad 2026 — Sábados	Técnico en Contabilidad	26 de 30	47 %
+Contabilidad 2026 — Noche	Técnico en Contabilidad	30 de 30	48 %
+Avance promedio por programa
+Técnico en Enfermería
+46 %
+Técnico en Contabilidad
+48 %
+Programas: cursos, estudiantes y avance promedio
+Programa	Cursos	Estudiantes	Avance promedio ↑
+Técnico en Enfermería	3	58	46 %
+Técnico en Contabilidad	3	56	48 %
+
+Descargar programas en CSV
