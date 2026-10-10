@@ -175,3 +175,24 @@ Al pasar trabajo a otro agente, añadir bajo su claim:
 ### Corrección local BO-E — 2026-10-10 00:10 UTC
 
 El integrador retoma exclusivamente support.ts y sus regresiones por fallo verificado en CI ef7c1fb1: upsert de revocación concurrente termina en P2002 audit_logs_pkey. Sustituir por inserción atómica con conflicto ignorado; preservar evidencia del primer evento. Publicaciones siguen pausadas, base no cambia. Pieza G y dominios fuera de implementación pendiente de confirmación.
+
+## BO-G: marca blanca aprobada — 2026-10-10 00:17 UTC
+
+Carlos aprobó añadir G a las seis piezas. Base local fija `6cba9ad`, rama `bo/g-marca-blanca`; no se adopta silenciosamente tanda-4 posterior. Alcance código/pruebas/documentación; no DNS, configuración Vercel, secretos, envío real de correo ni migraciones externas.
+
+| Subalcance | Único escritor | Archivos/contratos |
+|---|---|---|
+| Host y aislamiento | G-host | server/platform/domains.ts, domain-policy.ts, lib/auth.ts, proxy.ts, server/actions/institutions.ts, operator-session.ts, server/actions/password-reset.ts (contexto host), guard público de certificados, pruebas host/auth propias |
+| Marca y UI | G-ui | server/platform/white-label.ts, components/platform/BrandingSection*, operador ficha/nueva y server/actions/platform.ts (retorno institutionId para segundo paso), login páginas/layout, dashboard layout, catálogo layout, metadatos, footer, pruebas UI propias |
+| Correos | G-mail | server/password-reset.ts, server/people/invitations.ts, server/notifications/**, server/integrations/email/**, helper branded-email.ts y pruebas correo propias |
+| Integración/contratos | Integrador | schema (solo si necesario), TEAM, scripts CI/package, docs/marca-blanca.md, ensamblaje smoke y revisión final |
+
+Contrato domains.ts: normalizeInstitutionDomain(value) valida host canónico sin esquema/ruta/puerto; resolveInstitutionHost(host) devuelve institución o null; getRequestInstitution() lee host del request en servidor; institutionBaseUrl(institution) construye URL canónica solo desde configuración/datos validados. Institución resuelta incluye id, slug, name, logoUrl, brandColor, domain y settings. Política whiteLabel sale de PlatformPlan.features con fallback settings.platform.hideEdukanaBrand. Revisar host desconocido, headers suplantados, caché obsoleta y sesión B bajo dominio A. Revisión independiente obligatoria antes de publicar G.
+
+### Handoff BO-G ampliado
+
+G-host incluye guard DAL catálogo/certificados y contexto host para recuperación; G-ui incluye operator-branding/actions/helpers metadata y segundo paso de alta. El integrador agrega smoke de color persistido en la ficha. Publicaciones reautorizadas por Carlos; A–F a cargo de publisher separado, G e integrado después de QA. La base técnica actual a79b5b7 fue inspeccionada: solo política Vercel y cambios sobre publishers antiguos. Integración 8e1580a conserva artifacts seguros y elimina publishers force-push; el permiso contents:write heredado se conserva para comentarios de CI, sin ampliarlo.
+
+### Estado integrado A–G — 2026-10-10 00:30 UTC
+
+G b417536 integrado localmente en 4837a211, baseactual 8e1580a. Revisión independiente PASS;137 base+98backoffice, tipos/lint/buildPASS;18smokediscovery. PG/browser/CIintegrado pendientes. Publicación del último lote de árbol (vercel.json heredado) requiere confirmación específica; ningún ref remoto actualizado. Continuar solo tras confirmación y comprobar lease del ref.

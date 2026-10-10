@@ -1,13 +1,15 @@
 "use server";
 
+import { getRequestInstitution } from "@/server/platform/domains";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { createInstitution, isPlatformOperator } from "@/server/platform/institutions";
 
-export type PlatformActionState = { ok: boolean; message: string };
+export type PlatformActionState = { ok: boolean; message: string; institutionId?: string };
 
 /** Correo de la cuenta en sesión, leído de la base y no del token. */
 async function sessionEmail() {
+  if (await getRequestInstitution()) return null;
   const identityId = (await auth())?.user?.identityId;
   if (!identityId) return null;
   return (await db.identity.findUnique({ where: { id: identityId }, select: { email: true } }))?.email ?? null;
@@ -34,6 +36,7 @@ export async function createInstitutionAction(_state: PlatformActionState, formD
     if (!result.ok) return result;
     return {
       ok: true,
+      institutionId: result.institutionId,
       message: result.invited
         ? "Institución creada. El administrador recibió su invitación por correo."
         : "Institución creada, pero el correo de invitación falló. El administrador puede pedir su enlace en «Olvidé mi contraseña».",

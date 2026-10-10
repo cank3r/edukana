@@ -1,3 +1,4 @@
+import { BrandingSection } from "@/components/platform/BrandingSection";
 import { FeatureSection } from "@/components/platform/FeatureSection";
 import { PublicCoursesSection } from "@/components/platform/PublicCoursesSection";
 import { SuspensionSection } from "./SuspensionSection";
@@ -71,6 +72,7 @@ export default async function OperatorInstitutionPage({ params }: { params: Prom
         {institution.pendingInvitations > 0 && <p className="text-sm text-slate-600">La administración de la institución puede invitarlas desde Personas → Importar e invitar.</p>}
       </section>
 
+      <BrandingSection institutionId={institutionId} />
       <BillingSection institutionId={institutionId} />
       <FeatureSection institutionId={institutionId} />
       <PublicCoursesSection institutionId={institutionId} />

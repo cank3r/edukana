@@ -1,3 +1,4 @@
+import { institutionMetadata } from "@/server/platform/brand-metadata";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { PlatformAnnouncementBanner } from "@/components/platform/PlatformAnnouncementBanner";
@@ -10,6 +11,11 @@ import { brandCssVariables } from "@/server/platform/brand-color";
 import { getInstitutionBranding } from "@/server/platform/branding";
 import { isIndependentInstitution } from "@/server/platform/independent-kind";
 import { getOperatorEmail } from "@/server/platform/operator-session";
+
+export async function generateMetadata() {
+  const user = (await auth())?.user;
+  return institutionMetadata(user ? await getInstitutionBranding(user.institutionId) : null, "Inicio");
+}
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();

@@ -663,7 +663,7 @@ test("publico", async ({ page }, info) => {
 // --- fin qa ---
 
 // Backoffice A: seeded newAdmin is the dedicated platform operator in CI.
-test("operador backoffice A-F", async ({ page, browser }, info) => {
+test("operador backoffice A-G", async ({ page, browser }, info) => {
   const tour = new Tour(page, info, "operador", 500);
   if (!(await start(tour, SMOKE_ACCOUNTS.newAdmin))) return;
   await tour.open("tablero del negocio", "/operador/tablero", async () => {
@@ -695,6 +695,15 @@ test("operador backoffice A-F", async ({ page, browser }, info) => {
     await tour.step("plan y pago manual", () => backofficeBillingSmoke(page, target));
     await tour.open("planes configurados", "/operador/planes", () => heading(page, "Planes"));
     await tour.step("interruptores y comision", () => checkPlatformFeatures(page, target.institutionId, target.institutionSlug));
+    await tour.step("marca de la institucion", async () => {
+      await page.goto(`/operador/${target.institutionId}`);
+      const brand = page.locator("section").filter({ has: page.getByRole("heading", { name: "Marca", exact: true }) });
+      await brand.getByLabel("Color principal", { exact: true }).fill("#123456");
+      await brand.getByRole("button", { name: "Guardar marca", exact: true }).click();
+      await expect(brand.getByRole("status")).toContainText("Marca guardada");
+      await page.reload();
+      await expect(brand.getByLabel("Color principal", { exact: true })).toHaveValue("#123456");
+    });
     await tour.step("vista soporte y bitacora", () => supportSmoke(page, target.institutionId, target.institutionName, SMOKE_ACCOUNTS.newAdmin,
       () => tour.step("vista soporte solo lectura", async () => {})));
     await tour.step("avisos crear editar cerrar terminar", () => platformAnnouncementsSmoke(page, `${info.project.name}-${Date.now()}`));

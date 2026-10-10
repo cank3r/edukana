@@ -1,3 +1,4 @@
+import { getRequestInstitution } from "@/server/platform/domains";
 import { readPrivateAsset } from "@/lib/storage";
 import { publicImageAsset } from "@/server/courses/uploads";
 
@@ -14,7 +15,8 @@ export const dynamic = "force-dynamic";
 export async function GET(_request: Request, context: { params: Promise<{ assetId: string }> }) {
   const { assetId } = await context.params;
   try {
-    const asset = await publicImageAsset(assetId);
+    const institution = await getRequestInstitution();
+    const asset = await publicImageAsset(assetId, institution?.id);
     if (!asset) return new Response("No encontrado", { status: 404, headers: { "cache-control": "public, max-age=60", "content-type": "text/plain; charset=utf-8" } });
     const bytes = await readPrivateAsset(asset.bucket, asset.objectPath);
     const body = new Uint8Array(bytes.length);
@@ -22,7 +24,7 @@ export async function GET(_request: Request, context: { params: Promise<{ assetI
     return new Response(body, {
       status: 200,
       headers: {
-        "cache-control": "public, max-age=3600, stale-while-revalidate=86400",
+        "cache-control": institution ? "private, no-store" : "public, max-age=3600, stale-while-revalidate=86400",
         "content-length": String(bytes.length),
         "content-type": asset.mimeType,
         "content-disposition": "inline",
