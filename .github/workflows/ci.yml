@@ -202,6 +202,7 @@ jobs:
           tail -n 200 smoke-artifacts/server.log > /tmp/pub/server-tail.log 2>/dev/null || true
           tail -n 150 smoke.log > /tmp/pub/recorrido-tail.log 2>/dev/null || true
           printf '# Capturas del recorrido\n\nRama: `%s`\nCommit: `%s`\nResultado: %s\n' "$GITHUB_REF_NAME" "$GITHUB_SHA" "${{ steps.tour.outcome }}" > /tmp/pub/README.md
+          echo '{"git":{"deploymentEnabled":false}}' > /tmp/pub/vercel.json
           cd /tmp/pub && git init -q -b qa-capturas && git add -A
           git -c user.name="edukana-ci" -c user.email="ci@users.noreply.github.com" commit -q -m "capturas de ${GITHUB_REF_NAME} @ ${GITHUB_SHA::7}"
           git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" qa-capturas

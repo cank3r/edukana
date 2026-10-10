@@ -57,6 +57,8 @@ Leer desde una copia del repo:
 EOF
 
   git checkout -q --orphan publicar
+  # Que Vercel no despliegue esta rama de registros.
+  echo '{"git":{"deploymentEnabled":false}}' > vercel.json
   git add -A
   git -c user.name="edukana-ci" -c user.email="ci@users.noreply.github.com" \
     commit -q -m "registros de ${GITHUB_REF_NAME} @ ${SHA::7} (${JOB})"
