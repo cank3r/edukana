@@ -64,7 +64,7 @@ jobs:
         continue-on-error: true
         run: |
           set -o pipefail
-          { npm test && node --require ./tests/integration/stub-server-only.cjs --import tsx --test tests/exam-submit-enrollment.test.ts; } 2>&1 | tee registros/05-npm-test.log
+          { npm test && npm run test:backoffice && node --require ./tests/integration/stub-server-only.cjs --import tsx --test tests/exam-submit-enrollment.test.ts; } 2>&1 | tee registros/05-npm-test.log
       - name: Pruebas de integración con dos instituciones
         id: integration
         continue-on-error: true
@@ -139,6 +139,7 @@ jobs:
       LOCAL_STORAGE_SECRET: ci-local-storage-secret-at-least-32-characters
       SMOKE_BASE_URL: http://127.0.0.1:3000
       INDEPENDENT_SIGNUP_ENABLED: "true"
+      PLATFORM_OPERATOR_EMAILS: "direccion@colegio-nuevo.test"
     services:
       postgres:
         image: postgres:16

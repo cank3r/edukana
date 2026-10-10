@@ -1,3 +1,6 @@
+import { authFromToken } from "@/lib/auth";
+import { resolveSessionAccess } from "@/server/session";
+import { institutionPausedMessage } from "@/server/platform/suspension-policy";
 import { db } from "@/lib/db";
 import { EDUKANA_BLUE, ensureReadableOnWhite, normalizeHexColor } from "@/server/platform/brand-color";
 import { getPublicBrandingBySlug } from "@/server/platform/branding";
@@ -20,5 +23,10 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const brand: LoginBrand | null = institution
     ? { slug: institution.slug, name: institution.name, logoUrl: institution.logoUrl, color: normalized ? ensureReadableOnWhite(normalized).color : EDUKANA_BLUE }
     : null;
-  return <LoginScreen brand={brand} showSetup={!anyInstitution} />;
+  const tokenSession = await authFromToken();
+  const access = tokenSession?.user?.id ? await resolveSessionAccess({
+    userId: tokenSession.user.id, identityId: tokenSession.user.identityId, sessionVersion: tokenSession.user.sessionVersion,
+  }) : null;
+  const notice = access?.suspendedInstitutionName ? institutionPausedMessage(access.suspendedInstitutionName) : null;
+  return <LoginScreen brand={brand} showSetup={!anyInstitution} notice={notice} />;
 }

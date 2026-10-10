@@ -2,7 +2,12 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { Tour } from "./harness";
-import { demoDayKey, loadSeed, SMOKE_ACCOUNTS } from "./shared";
+import { exerciseInstitutionSuspension } from "./fragments/backoffice-suspension";
+import { supportSmoke } from "./fragments/support";
+import { backofficeBillingSmoke } from "./fragments/backoffice-billing";
+import { checkPlatformFeatures } from "./fragments/platform-features";
+import { platformAnnouncementsSmoke, platformAnnouncementsDeniedSmoke } from "./platform-announcements.fragment";
+import { demoDayKey, loadSeed, SMOKE_ACCOUNTS, SMOKE_PASSWORD } from "./shared";
 
 /**
  * Recorrido en navegador de toda la plataforma, con la semilla de `seed.ts`.
@@ -656,3 +661,58 @@ test("publico", async ({ page }, info) => {
   tour.finish();
 });
 // --- fin qa ---
+
+// Backoffice A: seeded newAdmin is the dedicated platform operator in CI.
+test("operador backoffice A-F", async ({ page, browser }, info) => {
+  const tour = new Tour(page, info, "operador", 500);
+  if (!(await start(tour, SMOKE_ACCOUNTS.newAdmin))) return;
+  await tour.open("tablero del negocio", "/operador/tablero", async () => {
+    await heading(page, "Tablero del negocio");
+    await heading(page, "Ventas del catálogo este mes");
+    await heading(page, "Instituciones que requieren atención");
+  });
+  const target = seed.backofficeTargets[info.project.name === "movil" ? "movil" : "escritorio"];
+  const memberContext = await browser.newContext({
+    baseURL: info.project.use.baseURL,
+    viewport: info.project.use.viewport,
+    locale: "es-DO",
+    timezoneId: "America/Santo_Domingo",
+  });
+  const memberPage = await memberContext.newPage();
+  const memberTour = new Tour(memberPage, info, "miembro backoffice", 530);
+  try {
+    // The billing limit and live-session checks must precede mutation of this isolated target.
+    await memberTour.login(target.memberEmail);
+    await memberTour.open("limite informativo del plan", "/dashboard", async () => {
+      await expect(memberPage.getByRole("status").filter({ hasText: "Llegaste al límite de tu plan" })).toContainText("30/30 estudiantes");
+    });
+    await memberTour.open("cursos disponibles al alcanzar limite", "/dashboard/aula", async () => {
+      await expect(memberPage.getByRole("heading", { name: "Cursos", exact: true })).toBeVisible();
+    });
+    await tour.step("suspender y reactivar institucion", () => exerciseInstitutionSuspension({
+      operatorPage: page, memberPage, ...target, password: SMOKE_PASSWORD,
+    }));
+    await tour.step("plan y pago manual", () => backofficeBillingSmoke(page, target));
+    await tour.open("planes configurados", "/operador/planes", () => heading(page, "Planes"));
+    await tour.step("interruptores y comision", () => checkPlatformFeatures(page, target.institutionId, target.institutionSlug));
+    await tour.step("vista soporte y bitacora", () => supportSmoke(page, target.institutionId, target.institutionName, SMOKE_ACCOUNTS.newAdmin,
+      () => tour.step("vista soporte solo lectura", async () => {})));
+    await tour.step("avisos crear editar cerrar terminar", () => platformAnnouncementsSmoke(page, `${info.project.name}-${Date.now()}`));
+    await tour.open("avisos de plataforma", "/operador/avisos", () => heading(page, "Avisos de Edukana"));
+  } finally {
+    await memberContext.close();
+  }
+  memberTour.finish();
+  tour.finish();
+});
+test("administrador sin permiso operador", async ({ page }, info) => {
+  const tour = new Tour(page, info, "sin permiso operador", 510);
+  if (!(await start(tour, SMOKE_ACCOUNTS.admin))) return;
+  const target = seed.backofficeTargets[info.project.name === "movil" ? "movil" : "escritorio"];
+  for (const path of ["/operador", "/operador/tablero", "/operador/planes", "/operador/facturacion",
+    "/operador/bitacora", "/operador/ventas", `/operador/${target.institutionId}`, `/operador/${target.institutionId}/vista`]) {
+    const response = await page.goto(path);
+    expect(response?.status(), path).toBe(404);
+  }
+  await platformAnnouncementsDeniedSmoke(page);
+});

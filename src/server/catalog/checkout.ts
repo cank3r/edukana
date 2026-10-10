@@ -1,3 +1,4 @@
+import { isInstitutionCatalogAvailable, lockInstitutionSettings } from "@/server/platform/features";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { formatMoney } from "@/server/finance/money";
@@ -71,6 +72,8 @@ async function enrollFree(brand: PublicBrand, course: { id: string; name: string
   }
 
   const outcome = await db.$transaction(async (tx) => {
+    await lockInstitutionSettings(tx, brand.id);
+    if (!(await isInstitutionCatalogAvailable(brand.id, tx))) return { ok: false as const, message: UNAVAILABLE };
     const seat = await checkSeat(tx, brand.id, course.id, buyer.id);
     if (!seat.ok) return seat;
     // INACTIVE solo nace de un pedido sin pagar: al entrar a un curso gratis ya puede usar su cuenta.
@@ -105,6 +108,7 @@ async function createOrder(brand: PublicBrand, course: PaidCourse, data: { name:
   const amountCents = coupon ? discountedCents(course.priceCents, coupon.percentOff) : course.priceCents;
   const { buyer } = await ensureBuyer(brand.id, data, "INACTIVE");
   const order = await upsertPendingOrder(brand.id, course, buyer, { couponId: coupon?.id ?? null, amountCents });
+  if (!order) return { ok: false, message: UNAVAILABLE };
   const instructions = paymentInstructionsOf(brand.settings, brand.name);
   const number = orderNumber(order.id);
   const total = formatMoney(amountCents, course.currency);
@@ -133,14 +137,18 @@ async function createOrder(brand: PublicBrand, course: PaidCourse, data: { name:
 
 /** Un pedido pendiente por persona y curso: si ya había uno, se actualiza con el cupón nuevo. */
 async function upsertPendingOrder(institutionId: string, course: PaidCourse, buyer: Buyer, values: { couponId: string | null; amountCents: number }) {
-  const pending = await db.courseOrder.findFirst({ where: { institutionId, courseId: course.id, buyerId: buyer.id, status: "PENDING" }, select: { id: true } });
-  if (pending) return db.courseOrder.update({ where: { id: pending.id }, data: { ...values, currency: course.currency }, select: { id: true } });
-  const order = await db.courseOrder.create({
-    data: { institutionId, courseId: course.id, buyerId: buyer.id, currency: course.currency, status: "PENDING", ...values },
-    select: { id: true },
-  });
-  await db.auditLog.create({
-    data: { institutionId, userId: buyer.id, action: "COURSE_ORDER_CREATED", entity: "CourseOrder", entityId: order.id, changes: { courseId: course.id, amountCents: values.amountCents } },
-  });
-  return order;
+  return db.$transaction(async (tx) => {
+    await lockInstitutionSettings(tx, institutionId);
+    if (!(await isInstitutionCatalogAvailable(institutionId, tx))) return null;
+    const pending = await tx.courseOrder.findFirst({ where: { institutionId, courseId: course.id, buyerId: buyer.id, status: "PENDING" }, select: { id: true } });
+    if (pending) return tx.courseOrder.update({ where: { id: pending.id }, data: { ...values, currency: course.currency }, select: { id: true } });
+    const order = await tx.courseOrder.create({
+      data: { institutionId, courseId: course.id, buyerId: buyer.id, currency: course.currency, status: "PENDING", ...values },
+      select: { id: true },
+    });
+    await tx.auditLog.create({
+      data: { institutionId, userId: buyer.id, action: "COURSE_ORDER_CREATED", entity: "CourseOrder", entityId: order.id, changes: { courseId: course.id, amountCents: values.amountCents } },
+    });
+    return order;
+  }, rowLocked);
 }

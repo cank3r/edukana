@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
+import { PlatformAnnouncementBanner } from "@/components/platform/PlatformAnnouncementBanner";
+import { PlanLimitBanner } from "@/components/platform/PlanLimitBanner";
 import Sidebar from "@/components/dashboard/Sidebar";
 import DashboardBreadcrumbs from "@/components/dashboard/DashboardBreadcrumbs";
 import { getEffectiveCapabilities } from "@/lib/authorization";
@@ -25,6 +27,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
         institution={branding ? { name: branding.name, logoUrl: branding.logoUrl } : undefined} isPlatformOperator={isPlatformOperator} independent={independent} />
       <div className="min-h-0 min-w-0 flex-1 overflow-y-auto">
         <DashboardBreadcrumbs />
+        <div className="space-y-3 px-4 pt-3 sm:px-8">
+          <PlatformAnnouncementBanner institutionId={session.user.institutionId} userId={session.user.id} role={session.user.role} />
+          <PlanLimitBanner institutionId={session.user.institutionId} />
+        </div>
         <main id="contenido-principal" tabIndex={-1}>{children}</main>
       </div>
     </div>

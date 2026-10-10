@@ -1,3 +1,4 @@
+import { createTrialSubscription } from "./plan-defaults";
 import bcrypt from "bcryptjs";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
@@ -95,6 +96,7 @@ export async function registerIndependentTeacher(input: IndependentSignupInput, 
           data: { name: spaceName, slug, type: "OTHER", settings: { kind: INDEPENDENT_KIND } },
           select: { id: true },
         });
+        await createTrialSubscription(tx, institution.id, now);
         const user = await tx.user.create({
           data: { identityId, institutionId: institution.id, name: data.name, email, role: "ADMIN", status: "ACTIVE" },
           select: { id: true },

@@ -23,7 +23,8 @@
     "db:studio": "prisma studio",
     "db:seed": "prisma db seed",
     "demo:seed": "tsx scripts/demo/seed-demo.ts",
-    "demo:remove": "tsx scripts/demo/seed-demo.ts --remove"
+    "demo:remove": "tsx scripts/demo/seed-demo.ts --remove",
+    "test:backoffice": "node --require ./tests/integration/stub-server-only.cjs --import tsx --test --test-concurrency=1 --test-reporter=spec tests/platform-*.test.ts tests/backoffice-suspension*.test.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

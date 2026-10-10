@@ -1,3 +1,8 @@
+import { FeatureSection } from "@/components/platform/FeatureSection";
+import { PublicCoursesSection } from "@/components/platform/PublicCoursesSection";
+import { SuspensionSection } from "./SuspensionSection";
+import { SupportSection } from "./SupportSection";
+import { BillingSection } from "@/components/platform/BillingSection";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { INSTITUTION_TYPE_OPTIONS } from "@/server/platform/institution-settings";
@@ -65,6 +70,12 @@ export default async function OperatorInstitutionPage({ params }: { params: Prom
         </p>
         {institution.pendingInvitations > 0 && <p className="text-sm text-slate-600">La administración de la institución puede invitarlas desde Personas → Importar e invitar.</p>}
       </section>
+
+      <BillingSection institutionId={institutionId} />
+      <FeatureSection institutionId={institutionId} />
+      <PublicCoursesSection institutionId={institutionId} />
+      <SuspensionSection institutionId={institutionId} />
+      <SupportSection institutionId={institutionId} />
 
       <section className="space-y-1 rounded-xl border border-slate-200 bg-white p-4">
         <h2 className="text-lg font-semibold" style={{ color: "var(--navy)" }}>Identificador</h2>

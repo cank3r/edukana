@@ -31,6 +31,7 @@ import { createChapter, createLesson, setChapterPublished, setLessonPublished } 
 import { createCourse, setCoursePublished } from "@/server/courses/course";
 import { enrollStudents } from "@/server/courses/enrollment";
 import { createLiveClasses } from "@/server/courses/live-classes";
+import { createTrialSubscription, seedPlatformPlans } from "@/server/platform/plan-defaults";
 import { SMOKE_ACCOUNTS, SMOKE_PASSWORD, SMOKE_SEED_FILE, type SmokeSeed } from "./shared";
 
 const TIME_ZONE = "America/Santo_Domingo";
@@ -55,6 +56,7 @@ async function main() {
     throw new Error("«Instituto Demo» ya existe. La semilla se carga una sola vez sobre una base recién migrada.");
   }
 
+  await db.$transaction((tx) => seedPlatformPlans(tx));
   const passwordHash = await bcrypt.hash(SMOKE_PASSWORD, 10);
   const institution = await db.institution.create({
     data: { name: "Instituto Demo", slug: "instituto-demo", type: "INSTITUTE", timezone: TIME_ZONE },
@@ -201,7 +203,26 @@ async function main() {
   }
   // --- fin M5 ---
 
+  const backofficeTargets = {} as SmokeSeed["backofficeTargets"];
+  for (const project of ["movil", "escritorio"] as const) {
+    const institutionName = `Instituto Backoffice ${project}`;
+    const institutionSlug = `backoffice-${project}`;
+    const memberEmail = `admin@${institutionSlug}.test`;
+    const target = await db.institution.create({
+      data: { name: institutionName, slug: institutionSlug, type: "INSTITUTE", timezone: TIME_ZONE,
+        settings: { platform: { catalogEnabled: true } } }, select: { id: true },
+    });
+    await person(`Administrador ${project}`, memberEmail, "ADMIN", target.id);
+    // Reach FREE's student limit without changing the plans used by other browser roles.
+    for (let index = 1; index <= 30; index++) {
+      await person(`Estudiante ${project} ${index}`, `student-${index}@${institutionSlug}.test`, "STUDENT", target.id);
+    }
+    await db.$transaction((tx) => createTrialSubscription(tx, target.id));
+    backofficeTargets[project] = { institutionId: target.id, institutionName, institutionSlug, memberEmail };
+  }
+
   const seed: SmokeSeed = {
+    backofficeTargets,
     institutionId,
     courseId,
     lessonIds,
