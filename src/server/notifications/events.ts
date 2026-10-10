@@ -3,12 +3,15 @@ import { db } from "@/lib/db";
 import { formatZonedDay, formatZonedTime, isValidTimeZone } from "@/lib/timezone";
 import { studentAssignmentGrade } from "@/server/assessment/assignment-policies";
 import { formatMoney } from "@/server/finance/money";
-import { notify, notifySafely, notifyWithinTransaction, withSavepoint } from "./index";
+import { notify, notifySafely, notifyWithinTransaction, withSavepoint, type EmailRequest } from "./index";
 
 /**
  * Una función por evento. Todas se llaman DESPUÉS de que la acción principal quedó guardada
  * (o, las que reciben `tx`, dentro de su transacción con un punto de guardado) y ninguna lanza:
  * un fallo al notificar se registra y la acción sigue siendo un éxito.
+ *
+ * El correo sigue las preferencias de cada persona (`email-policy.ts`): por omisión llegan por
+ * correo los avisos, las notas y los cargos; el resto solo si la persona lo activa.
  */
 
 const DEFAULT_TIME_ZONE = "America/Santo_Domingo";
@@ -78,7 +81,7 @@ export async function announcementAudienceUserIds(institutionId: string, audienc
   return [...ids];
 }
 
-/** Aviso publicado: a sus destinatarios, salvo quien lo escribió. Por correo solo si son 200 personas o menos. */
+/** Aviso publicado: a sus destinatarios, salvo quien lo escribió. Por correo solo si son 200 personas o menos (y según preferencias). */
 export function notifyAnnouncementPublished(actor: { id: string; institutionId: string }, input: { title: string; content: string; audience: AnnouncementAudience }) {
   return safely("aviso publicado", async () => {
     const userIds = (await announcementAudienceUserIds(actor.institutionId, input.audience)).filter((id) => id !== actor.id);
@@ -100,7 +103,7 @@ export function notifyAnnouncementPublished(actor: { id: string; institutionId: 
 // Tareas
 // ---------------------------------------------------------------------------
 
-/** Tarea publicada: a los estudiantes activos del curso (solo en la aplicación). */
+/** Tarea publicada: a los estudiantes activos del curso (por correo solo a quien lo activó). */
 export function notifyAssignmentPublished(institutionId: string, assignmentId: string) {
   return safely("tarea publicada", async () => {
     const assignment = await db.assignment.findFirst({
@@ -121,7 +124,7 @@ export function notifyAssignmentPublished(institutionId: string, assignmentId: s
   });
 }
 
-/** Entrega recibida: al docente del curso (solo en la aplicación). */
+/** Entrega recibida: al docente del curso (por correo solo si lo activó). */
 export function notifySubmissionReceived(institutionId: string, input: { assignmentId: string; studentId: string; resubmitted: boolean }) {
   return safely("entrega recibida", async () => {
     const [assignment, student] = await Promise.all([
@@ -144,7 +147,7 @@ export function notifySubmissionReceived(institutionId: string, input: { assignm
 }
 
 /**
- * Nota puesta o corregida: al estudiante, en la aplicación y por correo. No incluye la nota
+ * Nota puesta o corregida: al estudiante, en la aplicación y por correo (según su preferencia). No incluye la nota
  * (el correo no es un canal privado) y no se envía mientras la nota siga oculta para el
  * estudiante porque su período de calificaciones no se ha publicado.
  */
@@ -189,7 +192,6 @@ export function notifyGradePosted(institutionId: string, input: { submissionId: 
       title: input.corrected ? `Se corrigió tu nota en «${assignment.title}»` : `Ya tienes nota en «${assignment.title}»`,
       body: `Curso: ${assignment.course.name}. Abre la tarea para ver tu nota y los comentarios.`,
       href: `/dashboard/aula/${assignment.courseId}/tareas/${assignment.id}`,
-      email: true,
     });
   });
 }
@@ -198,7 +200,7 @@ export function notifyGradePosted(institutionId: string, input: { submissionId: 
 // Exámenes y clases en vivo
 // ---------------------------------------------------------------------------
 
-/** Examen publicado: a los estudiantes activos del curso (solo en la aplicación). */
+/** Examen publicado: a los estudiantes activos del curso (por correo solo a quien lo activó). */
 export function notifyExamPublished(institutionId: string, examId: string) {
   return safely("examen publicado", async () => {
     const exam = await db.exam.findFirst({
@@ -222,7 +224,7 @@ export function notifyExamPublished(institutionId: string, examId: string) {
   });
 }
 
-/** Clase en vivo programada: a los estudiantes activos, en la aplicación y por correo, con la hora de la institución. */
+/** Clase en vivo programada: a los estudiantes activos, con la hora de la institución (por correo solo a quien lo activó). */
 export function notifyLiveClassScheduled(institutionId: string, input: { courseId: string; title: string; starts: Date[] }) {
   return safely("clase en vivo programada", async () => {
     if (!input.starts.length) return;
@@ -237,7 +239,6 @@ export function notifyLiveClassScheduled(institutionId: string, input: { courseI
       title: `Clase en vivo en ${course.name}: ${input.title}`,
       body: `Es el ${when(first, course.timeZone)}.${repeats} El enlace para entrar está en la página de clases del curso.`,
       href: `/dashboard/aula/${input.courseId}/clases`,
-      email: true,
     });
   });
 }
@@ -246,7 +247,7 @@ export function notifyLiveClassScheduled(institutionId: string, input: { courseI
 // Certificados, inscripciones y cobros
 // ---------------------------------------------------------------------------
 
-/** Certificado emitido: al estudiante, en la aplicación y por correo. */
+/** Certificado emitido: al estudiante (por correo solo si lo activó). */
 export function notifyCertificatesIssued(institutionId: string, input: { courseId: string; enrollmentIds: string[] }) {
   return safely("certificado emitido", async () => {
     if (!input.enrollmentIds.length) return;
@@ -262,12 +263,11 @@ export function notifyCertificatesIssued(institutionId: string, input: { courseI
       title: `Tu certificado de «${enrollments[0].course.name}» está listo`,
       body: "Puedes abrirlo, imprimirlo o compartir su enlace desde Mis certificados.",
       href: "/dashboard/mis-certificados",
-      email: true,
     });
   });
 }
 
-/** Inscripción a un curso: al estudiante, solo en la aplicación. Va dentro de la transacción que inscribe. */
+/** Inscripción a un curso: al estudiante, solo en la aplicación (no es un tipo de correo). Va dentro de la transacción que inscribe. */
 export function notifyEnrolledWithinTransaction(tx: Prisma.TransactionClient, institutionId: string, input: { courseId: string; studentIds: string[] }) {
   if (!input.studentIds.length) return Promise.resolve();
   return safely("inscripción", () =>
@@ -285,6 +285,7 @@ export function notifyEnrolledWithinTransaction(tx: Prisma.TransactionClient, in
         title: `Te inscribieron en ${course.name}`,
         body: "Ya puedes entrar al curso y ver su contenido.",
         href: `/dashboard/aula/${course.id}`,
+        email: false,
       });
     }),
   );
@@ -310,12 +311,20 @@ function chargeInput(institutionId: string, input: ChargeNotice) {
   };
 }
 
-/** Cargo creado: al estudiante, solo en la aplicación. */
+/** Cargo creado: al estudiante, en la aplicación y por correo (según su preferencia). */
 export function notifyChargeCreated(institutionId: string, input: ChargeNotice) {
   return safely("cargo creado", () => notifySafely(chargeInput(institutionId, input)));
 }
 
-/** Cargos creados en grupo: dentro de la transacción que los crea. */
-export function notifyChargesWithinTransaction(tx: Prisma.TransactionClient, institutionId: string, input: ChargeNotice) {
-  return safely("cargos creados", () => notifyWithinTransaction(tx, chargeInput(institutionId, input)));
+/**
+ * Cargos creados en grupo: dentro de la transacción que los crea. Devuelve el correo pendiente,
+ * que quien llama entrega con `deliverEmails` DESPUÉS de confirmar la transacción. Nunca lanza.
+ */
+export async function notifyChargesWithinTransaction(tx: Prisma.TransactionClient, institutionId: string, input: ChargeNotice): Promise<EmailRequest | null> {
+  try {
+    return (await notifyWithinTransaction(tx, chargeInput(institutionId, input))).email;
+  } catch (error) {
+    console.error("notificación «cargos creados» falló", { correlationId: crypto.randomUUID(), error });
+    return null;
+  }
 }

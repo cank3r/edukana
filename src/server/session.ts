@@ -23,6 +23,13 @@ export type LiveIdentity = {
  * Un token sin versión (anterior a S1) se trata como versión 0.
  */
 export async function resolveLiveIdentity(claims: SessionClaims): Promise<LiveIdentity | null> {
+  return (await resolveSessionAccess(claims))?.identity ?? null;
+}
+
+/** A rejected but otherwise valid session can explain a paused institution on the login page. */
+export async function resolveSessionAccess(claims: SessionClaims): Promise<{
+  identity: LiveIdentity | null; suspendedInstitutionName?: string;
+} | null> {
   if (!claims.userId) return null;
   const user = await db.user.findUnique({
     where: { id: claims.userId },
@@ -32,7 +39,7 @@ export async function resolveLiveIdentity(claims: SessionClaims): Promise<LiveId
       status: true,
       institutionId: true,
       sessionVersion: true,
-      institution: { select: { slug: true } },
+      institution: { select: { slug: true, status: true, name: true } },
       identity: { select: { id: true, status: true, sessionVersion: true } },
     },
   });
@@ -45,14 +52,17 @@ export async function resolveLiveIdentity(claims: SessionClaims): Promise<LiveId
     // Cuenta sin identidad: solo puede ocurrir entre el despliegue y la migración s2_identity.
     return null;
   }
-  return {
+  if (user.institution.status === "SUSPENDED") {
+    return { identity: null, suspendedInstitutionName: user.institution.name };
+  }
+  return { identity: {
     id: user.id,
     identityId: user.identity?.id ?? null,
     role: user.role,
     institutionId: user.institutionId,
     institutionSlug: user.institution.slug,
     sessionVersion: user.identity?.sessionVersion ?? user.sessionVersion,
-  };
+  } };
 }
 
 /**

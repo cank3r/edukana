@@ -1,3 +1,4 @@
+import { withRequestHost } from "../helpers/request-host-context";
 import assert from "node:assert/strict";
 import { after, before, beforeEach, test } from "node:test";
 import { db } from "@/lib/db";
@@ -18,7 +19,10 @@ const startedAt = new Date();
 let ipCounter = 0;
 const ip = () => `10.77.0.${++ipCounter}`;
 const ask = (courseId: string, email: string, extra: { coupon?: string; website?: string; name?: string; slug?: string } = {}) =>
-  requestCourse({ slug: extra.slug ?? SLUG_A, courseId, name: extra.name ?? "Persona de Prueba", email, coupon: extra.coupon, website: extra.website, ip: ip() });
+  withRequestHost("edukana.test", () => requestCourse({
+    slug: extra.slug ?? SLUG_A, courseId, name: extra.name ?? "Persona de Prueba", email,
+    coupon: extra.coupon, website: extra.website, ip: ip(),
+  }));
 const memberOfA = (email: string) => db.user.findFirst({ where: { institutionId: A.institutionId, email } });
 
 async function cleanup() {
@@ -258,4 +262,25 @@ test("reseñas: solo quien está inscrito, de 1 a 5, y la suya se corrige sin du
   assert.deepEqual([detail?.rating, detail?.reviewCount, detail?.reviews[0].author, detail?.reviews[0].comment], [3, 1, "student A.", null]);
   const card = (await listPublicCourses(A.institutionId)).find((item) => item.id === "cat_free");
   assert.deepEqual([card?.rating, card?.reviews], [3, 1]);
+});
+
+// Real tenant lookup and all checkout writes remain on disposable PostgreSQL in CI.
+test("catálogo: host de B no puede inscribir en A aunque el formulario envíe el slug de A", async () => {
+  const previousRoot = process.env.PLATFORM_ROOT_DOMAIN;
+  process.env.PLATFORM_ROOT_DOMAIN = "catalog-host.test";
+  try {
+    const b = await db.institution.findUniqueOrThrow({ where: { id: B.institutionId }, select: { slug: true } });
+    const beforeEnrollments = await db.enrollment.count({ where: { courseId: "cat_free" } });
+    const beforeOrders = await db.courseOrder.count({ where: { courseId: "cat_free" } });
+    const result = await withRequestHost(`${b.slug}.catalog-host.test`, () => requestCourse({
+      slug: SLUG_A, courseId: "cat_free", name: "Persona de Prueba", email: "nueva@catalogo.test", ip: ip(),
+    }));
+    assert.deepEqual(result, { ok: false, message: "Este curso ya no está disponible." });
+    assert.equal(await db.enrollment.count({ where: { courseId: "cat_free" } }), beforeEnrollments);
+    assert.equal(await db.courseOrder.count({ where: { courseId: "cat_free" } }), beforeOrders);
+    assert.equal(mail.sent.length, 0);
+  } finally {
+    if (previousRoot === undefined) delete process.env.PLATFORM_ROOT_DOMAIN;
+    else process.env.PLATFORM_ROOT_DOMAIN = previousRoot;
+  }
 });

@@ -1,3 +1,5 @@
+import { getRequestInstitution } from "@/server/platform/domains";
+import { isInstitutionCatalogAvailable } from "@/server/platform/features";
 import { db } from "@/lib/db";
 
 /** Lo que se muestra de la institución en sus páginas públicas. */
@@ -36,7 +38,9 @@ export async function findBrand(slug: string): Promise<PublicBrand | null> {
     where: { slug },
     select: { id: true, name: true, slug: true, logoUrl: true, brandColor: true, settings: true },
   });
-  if (!institution) return null;
+  if (!institution || !(await isInstitutionCatalogAvailable(institution.id))) return null;
+  const hostInstitution = await getRequestInstitution();
+  if (hostInstitution && hostInstitution.id !== institution.id) return null;
   return { ...institution, logoUrl: safeImageUrl(institution.logoUrl), brandColor: safeColor(institution.brandColor) };
 }
 
@@ -48,6 +52,7 @@ async function ratingsFor(courseIds: string[]) {
 
 /** Cursos del catálogo de una institución, con búsqueda por nombre o descripción. */
 export async function listPublicCourses(institutionId: string, query = ""): Promise<PublicCourseCard[]> {
+  if (!(await isInstitutionCatalogAvailable(institutionId))) return [];
   const q = query.trim().slice(0, 100);
   const courses = await db.course.findMany({
     where: {
@@ -91,6 +96,7 @@ export function publicName(name: string) {
 
 /** Portada pública de un curso: temario (solo títulos), reseñas y precio. null si no está en el catálogo. */
 export async function getPublicCourse(institutionId: string, courseId: string) {
+  if (!(await isInstitutionCatalogAvailable(institutionId))) return null;
   if (!courseId || courseId.length > 64) return null;
   const course = await db.course.findFirst({
     where: { ...publicCourseWhere(institutionId), id: courseId },

@@ -48,6 +48,8 @@ export type MyCourseCertificate = {
   /** Cumple los requisitos pero su docente aún no lo ha emitido. */
   eligible: boolean;
   missing: string;
+  /** La matrícula figura como curso completado. */
+  completed: boolean;
 };
 export type MyCertificate = { code: string; issuedAt: Date; courseId: string; courseName: string };
 
@@ -355,6 +357,7 @@ export async function getMyCourseCertificate(actor: Actor, courseId: string): Pr
     certificate: certificate ? { code: certificate.verificationCode, issuedAt: certificate.issuedAt } : null,
     eligible: !certificate && !missing,
     missing,
+    completed: status === "COMPLETED",
   };
 }
 
@@ -379,11 +382,11 @@ export async function listMyCertificates(actor: Actor): Promise<{ timezone: stri
  * Verificación pública de un código. Solo un certificado vigente y con firma correcta devuelve
  * el nombre de la persona; uno anulado o alterado no expone a nadie.
  */
-export async function verifyCertificateCode(rawCode: string): Promise<CertificateVerification> {
+export async function verifyCertificateCode(rawCode: string, institutionId?: string): Promise<CertificateVerification> {
   const code = String(rawCode ?? "").trim().toUpperCase();
   if (!code || code.length > 40) return { status: "not_found" };
   const certificate = await db.certificate.findUnique({
-    where: { verificationCode: code },
+    where: { verificationCode: code, ...(institutionId ? { institutionId } : {}) },
     select: {
       verificationCode: true,
       verificationHash: true,

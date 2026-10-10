@@ -98,7 +98,8 @@ test("recuperación: una contraseña débil se rechaza sin consumir el enlace", 
 test("recuperación: el mismo correo en dos instituciones recibe un solo enlace y la contraseña vale en ambas", async () => {
   await requestPasswordReset({ email: "compartido@prueba.test", ip: nextIp() });
   assert.equal(mail.sent.length, 1);
-  assert.match(mail.sent[0].text, /Instituto A, Instituto B/);
+  assert.doesNotMatch(mail.sent[0].text, /Instituto A, Instituto B/);
+  assert.doesNotMatch(mail.sent[0].text, /Instituto B/);
   assert.equal((await resetPasswordWithToken({ token: tokenFrom(mail.sent[0].text), password: NEW_PASSWORD })).ok, true);
   const inA = await authenticateCredentials({ email: "compartido@prueba.test", password: NEW_PASSWORD, ip: nextIp() });
   const inB = await authenticateCredentials({

@@ -1,3 +1,9 @@
+import { BrandingSection } from "@/components/platform/BrandingSection";
+import { FeatureSection } from "@/components/platform/FeatureSection";
+import { PublicCoursesSection } from "@/components/platform/PublicCoursesSection";
+import { SuspensionSection } from "./SuspensionSection";
+import { SupportSection } from "./SupportSection";
+import { BillingSection } from "@/components/platform/BillingSection";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { INSTITUTION_TYPE_OPTIONS } from "@/server/platform/institution-settings";
@@ -63,8 +69,15 @@ export default async function OperatorInstitutionPage({ params }: { params: Prom
             ? "Todas las personas activas ya crearon su contraseña."
             : `${institution.withoutPassword} ${institution.withoutPassword === 1 ? "persona no ha" : "personas no han"} creado su contraseña. ${institution.pendingInvitations} de ellas no tiene${institution.pendingInvitations === 1 ? "" : "n"} un enlace vigente.`}
         </p>
-        {institution.pendingInvitations > 0 && <p className="text-sm text-slate-600">La administración de la institución puede invitarlas desde Personas → Importar desde archivo e invitar.</p>}
+        {institution.pendingInvitations > 0 && <p className="text-sm text-slate-600">La administración de la institución puede invitarlas desde Personas → Importar e invitar.</p>}
       </section>
+
+      <BrandingSection institutionId={institutionId} />
+      <BillingSection institutionId={institutionId} />
+      <FeatureSection institutionId={institutionId} />
+      <PublicCoursesSection institutionId={institutionId} />
+      <SuspensionSection institutionId={institutionId} />
+      <SupportSection institutionId={institutionId} />
 
       <section className="space-y-1 rounded-xl border border-slate-200 bg-white p-4">
         <h2 className="text-lg font-semibold" style={{ color: "var(--navy)" }}>Identificador</h2>

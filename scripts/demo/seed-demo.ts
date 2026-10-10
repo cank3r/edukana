@@ -1,18 +1,18 @@
 /**
  * Carga o quita la institución de demostración «Instituto Técnico Demo».
  *
- *   Crear:  DEMO_CONFIRM=crear-demo npm run demo:seed
+ *   Crear:  DEMO_PASSWORD=… DEMO_CONFIRM=crear-demo npm run demo:seed
  *   Quitar: DEMO_CONFIRM=borrar-demo npm run demo:remove
  *
  * Variables:
  *   DATABASE_URL   base donde se carga (también se lee del archivo .env).
- *   DEMO_PASSWORD  contraseña de todas las cuentas de demostración; si falta, se genera una.
+ *   DEMO_PASSWORD  contraseña de todas las cuentas de demostración (obligatoria al crear, 8+ caracteres).
+ *                  Nunca se muestra en pantalla ni se guarda en el repositorio.
  *   DEMO_RESET=1   si la demostración ya existe, la borra y la vuelve a crear.
  *
  * Solo crea o borra la institución con el identificador fijo `instituto-tecnico-demo` y las
  * cuentas `@demo.edukana.do` que no pertenezcan a otra institución. Ver docs/demo.md.
  */
-import { randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
 import Module from "node:module";
 import { join } from "node:path";
@@ -38,24 +38,6 @@ function describeDatabase(raw: string): string | null {
   } catch {
     return null;
   }
-}
-
-/** Operaciones simultáneas: nunca más que las conexiones que permite la dirección de la base. */
-function concurrencyFor(raw: string): number {
-  const wanted = Number(process.env.DEMO_CONCURRENCY ?? 3);
-  let limit = Number.POSITIVE_INFINITY;
-  try {
-    const value = new URL(raw).searchParams.get("connection_limit");
-    if (value) limit = Number(value);
-  } catch {
-    // La dirección ya se validó antes.
-  }
-  const result = Math.min(Number.isFinite(wanted) ? wanted : 3, Number.isFinite(limit) ? limit : 3);
-  return Math.max(1, Math.floor(result));
-}
-
-function generatedPassword() {
-  return `Demo${new Date().getFullYear()}-${randomBytes(3).toString("hex")}`;
 }
 
 async function countdown(seconds: number) {
@@ -95,9 +77,10 @@ async function main() {
   }
   // El esquema declara también DIRECT_URL; aquí basta con la misma base.
   process.env.DIRECT_URL ||= url;
-  const password = process.env.DEMO_PASSWORD?.trim() || generatedPassword();
+  const password = process.env.DEMO_PASSWORD?.trim() ?? "";
   if (!removing && password.length < 8) {
-    console.error("DEMO_PASSWORD debe tener al menos 8 caracteres.");
+    console.error("Falta DEMO_PASSWORD (al menos 8 caracteres): es la contraseña de todas las cuentas de demostración.");
+    console.error(`Ejemplo: DEMO_PASSWORD="UnaClaveLarga2026" DEMO_CONFIRM=${expected} npm run demo:seed`);
     process.exitCode = 1;
     return;
   }
@@ -132,16 +115,18 @@ async function main() {
     }
 
     const started = Date.now();
-    const result = await demo.createDemo({ password, concurrency: concurrencyFor(url), log: (message) => console.log(`· ${message}`) });
+    const result = await demo.createDemo({ password, log: (message) => console.log(`· ${message}`) });
     if (!result.created) {
       console.log(`«${demo.DEMO_NAME}» ya existe en esta base. No se creó nada.`);
       return;
     }
     console.log(`\nListo en ${Math.round((Date.now() - started) / 1000)} segundos: «${demo.DEMO_NAME}» quedó cargada.`);
     for (const warning of result.warnings) console.log(`Aviso: ${warning}`);
-    console.log(`\nContraseña de TODAS las cuentas: ${password}\n`);
+    console.log("\nQué se creó:");
+    console.log(table([["Qué", "Cuántos"], ...Object.entries(result.counts).map(([label, total]) => [label, String(total)])]));
+    console.log("\nTodas las cuentas entran con la contraseña que pusiste en DEMO_PASSWORD (no se muestra aquí).\n");
     console.log(table([["Rol", "Nombre", "Correo"], ...result.accounts.map((account) => [account.role, account.name, account.email])]));
-    console.log("\nTodas las demás personas (40 estudiantes, 4 docentes, 6 tutores) usan la misma contraseña.");
+    console.log("\nLas demás personas (120 estudiantes, 10 docentes, 15 tutores) usan la misma contraseña. Lista completa en docs/demo.md.");
     console.log("Para quitar la demostración: DEMO_CONFIRM=borrar-demo npm run demo:remove");
   } finally {
     await db.$disconnect();

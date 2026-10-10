@@ -2,7 +2,12 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { Tour } from "./harness";
-import { demoDayKey, loadSeed, SMOKE_ACCOUNTS } from "./shared";
+import { exerciseInstitutionSuspension } from "./fragments/backoffice-suspension";
+import { supportSmoke } from "./fragments/support";
+import { backofficeBillingSmoke } from "./fragments/backoffice-billing";
+import { checkPlatformFeatures } from "./fragments/platform-features";
+import { platformAnnouncementsSmoke, platformAnnouncementsDeniedSmoke } from "./platform-announcements.fragment";
+import { demoDayKey, loadSeed, SMOKE_ACCOUNTS, SMOKE_PASSWORD } from "./shared";
 
 /**
  * Recorrido en navegador de toda la plataforma, con la semilla de `seed.ts`.
@@ -47,6 +52,11 @@ test("administrador institucion nueva", async ({ page }, info) => {
   await tour.open("inicio primeros pasos", "/dashboard", async () => {
     await heading(page, "Primeros pasos");
     await heading(page, "Colegio Nuevo Amanecer");
+    // Institución vacía: el tablero se ve completo, con «—» y cuándo se llena cada bloque.
+    await heading(page, "Cómo va la institución");
+    await visible(page, "Se llenará cuando los docentes registren asistencia.");
+    await heading(page, "Estudiantes en riesgo");
+    await heading(page, "Cursos");
   });
   await tour.open("personas vacio", "/dashboard/gestion", () => heading(page, "Personas"));
   await tour.open("cursos vacio", "/dashboard/aula", () => heading(page, "Cursos"));
@@ -62,7 +72,25 @@ test("administrador", async ({ page }, info) => {
   const tour = new Tour(page, info, "administrador", 10);
   if (!(await start(tour, SMOKE_ACCOUNTS.admin))) return;
 
-  await tour.open("inicio", "/dashboard", () => heading(page, /Primeros pasos|Tu institución en números/));
+  await tour.open("inicio", "/dashboard", async () => {
+    await heading(page, "Cómo va la institución");
+    await visible(page, "Asistencia promedio");
+    await heading(page, "Requiere tu atención");
+    await heading(page, "Estudiantes en riesgo");
+    await heading(page, "Últimas 8 semanas");
+    await heading(page, "Cursos");
+    await heading(page, "Docentes");
+  });
+  await tour.step("inicio este periodo", async () => {
+    await page.getByRole("link", { name: "Este período" }).filter({ visible: true }).first().click();
+    await page.waitForURL(/rango=periodo/);
+    await expect(page.getByRole("link", { name: "Este período" }).filter({ visible: true }).first()).toHaveAttribute("aria-current", "page");
+    await visible(page, /comparado con el período anterior|Este período\./);
+  });
+  await tour.open("estudiantes en riesgo", "/dashboard/analitica/riesgo", async () => {
+    await heading(page, "Estudiantes en riesgo");
+    await visible(page, "Todas las señales");
+  });
   await tour.open("personas", "/dashboard/gestion", () => visible(page, "Ana Rodríguez"));
   await tour.step("personas agregar formulario", async () => {
     await page.getByRole("button", { name: "Agregar persona" }).click();
@@ -80,10 +108,10 @@ test("administrador", async ({ page }, info) => {
   await tour.step("persona detalle", async () => {
     await page.goto("/dashboard/gestion");
     await page.getByRole("link", { name: "Ana Rodríguez" }).click();
-    await page.waitForURL(new RegExp(`/gestion/estudiantes/${seed.studentIds[0]}`));
+    await page.waitForURL(new RegExp(`/gestion/personas/${seed.studentIds[0]}`));
     await visible(page, "Ana Rodríguez");
   });
-  await tour.open("importar e invitar", "/dashboard/gestion/accesos", () => heading(page, "Personas y acceso"));
+  await tour.open("importar e invitar", "/dashboard/gestion/accesos", () => heading(page, "Importar e invitar"));
   await tour.open("programas", "/dashboard/gestion/programas", () => visible(page, "Bachillerato Técnico"));
   await tour.step("programa detalle", async () => {
     await page.getByRole("link", { name: /Bachillerato Técnico/ }).first().click();
@@ -205,7 +233,7 @@ test("administrador", async ({ page }, info) => {
   });
   await tour.step("admisiones convertida", async () => {
     await page.getByRole("button", { name: "Sí, convertir en estudiante" }).click();
-    await visible(page, "Ya es estudiante de la institución.");
+    await heading(page, "Ya es estudiante");
   });
 
   await tour.open("reportes", "/dashboard/analitica", () => heading(page, "Reportes"));
@@ -227,6 +255,18 @@ test("administrador", async ({ page }, info) => {
     await heading(page, "Recibo de pago");
   });
   // --- fin M5 ---
+  // --- tanda 4 (QA): ficha del docente, IA en la institución y verificar certificados ---
+  await tour.open("ficha del docente", `/dashboard/gestion/personas/${seed.teacherId ?? ""}`, async () => {
+    await heading(page, "Luis Peralta");
+    await heading(page, "Cursos que enseña");
+    await visible(page, "Matemática Básica");
+  });
+  await tour.open("institucion asistente de ia", "/dashboard/configuracion/institucion", async () => {
+    await heading(page, "Datos de la institución");
+    await heading(page, "Asistente de IA");
+  });
+  await tour.open("verificar certificado", "/certificados", () => expect(page.getByLabel("Código del certificado")).toBeVisible());
+  // --- fin tanda 4 ---
   tour.finish();
 });
 
@@ -240,6 +280,12 @@ test("docente", async ({ page }, info) => {
     await heading(page, "¿Qué tengo hoy?");
     await visible(page, "Matemática Básica");
   });
+  // --- tanda 4 (QA): el examen sembrado tiene respuestas cortas de Rosa y Juan sin revisar ---
+  await tour.step("inicio respuestas por revisar", async () => {
+    await heading(page, "Por calificar");
+    await visible(page, /respuestas por revisar/);
+  });
+  // --- fin tanda 4 ---
   await tour.open("mis cursos", "/dashboard/aula", () => visible(page, "Matemática Básica"));
   await tour.step("curso portada", async () => {
     await page.getByRole("link", { name: /Matemática Básica/ }).first().click();
@@ -263,8 +309,11 @@ test("docente", async ({ page }, info) => {
     await card.getByLabel("Título de la lección").fill(lesson);
     await card.getByLabel("Contenido").fill("Repasa las unidades 1 y 2 antes de la prueba corta.");
     await card.getByRole("button", { name: "Guardar lección" }).click();
+    // Publicar/Ocultar está dentro de «Más» de cada elemento.
+    await page.getByLabel(`Más acciones de la lección ${lesson}`).click();
     await page.getByRole("button", { name: `Publicar lección ${lesson}` }).click();
     await expect(page.getByRole("button", { name: `Ocultar lección ${lesson}` })).toBeVisible();
+    await page.getByLabel(`Más acciones del capítulo ${chapter}`).click();
     await page.getByRole("button", { name: `Publicar capítulo ${chapter}` }).click();
     await expect(page.getByRole("button", { name: `Ocultar capítulo ${chapter}` })).toBeVisible();
   });
@@ -411,6 +460,13 @@ test("docente", async ({ page }, info) => {
     await heading(page, "Mi perfil");
     await visible(page, SMOKE_ACCOUNTS.teacher);
   });
+  // --- tanda 4 (QA): IA en el curso (en CI no hay clave: debe decir que está desactivada) ---
+  await tour.open("generar preguntas con ia", `${course}/generar-preguntas`, async () => {
+    await heading(page, "Generar preguntas con IA");
+    await heading(page, "El asistente de IA no está disponible");
+    await visible(page, /no está activado en esta plataforma/);
+  });
+  // --- fin tanda 4 ---
   tour.finish();
 });
 
@@ -495,18 +551,47 @@ test("estudiante", async ({ page }, info) => {
     await visible(page, "Taller de Lectura");
   });
   await tour.open("mi estado de cuenta", "/dashboard/mi-cuenta", async () => {
-    await heading(page, "Mi cuenta");
+    await heading(page, "Mi estado de cuenta");
     await visible(page, mobile ? "Inscripción del período" : "Mensualidad");
   });
   // --- fin qa ---
   // --- M5 · pagos y recibos ---
-  await tour.open("mi cuenta recibos", "/dashboard/mi-cuenta", () => heading(page, "Mi cuenta"));
+  await tour.open("mi cuenta recibos", "/dashboard/mi-cuenta", () => heading(page, "Mi estado de cuenta"));
   await tour.step("mi recibo", async () => {
     await page.getByRole("link", { name: "Ver recibo" }).filter({ visible: true }).first().click();
     await page.waitForURL(/\/dashboard\/mi-cuenta\/recibo\//);
     await heading(page, "Recibo de pago");
   });
   // --- fin M5 ---
+  // --- M9 · video en lecciones ---
+  await tour.open("leccion con video", `${course}/leccion/${seed.lessonIds[1]}`, async () => {
+    await heading(page, "Video: contar de diez en diez");
+    await expect(page.locator('iframe[title^="Video:"][src^="https://www.youtube-nocookie.com/embed/"]')).toBeVisible();
+    await expect(page.getByRole("button", { name: /Marcar como (no )?completada|Terminar/ }).first()).toBeVisible();
+  });
+  // --- fin M9 ---
+  // --- tanda 4 (QA): Pregúntale al curso, Mi asistencia y preferencias de correo ---
+  await tour.open("leccion preguntale al curso", `${course}/leccion/${seed.lessonIds[2]}`, async () => {
+    await heading(page, "Sumar con llevadas");
+    await heading(page, "Pregúntale al curso");
+    await visible(page, /no está activado en esta plataforma/);
+  });
+  await tour.open("curso portada mi asistencia", course, async () => {
+    await heading(page, "Matemática Básica");
+    await visible(page, "Mi asistencia");
+  });
+  await tour.open("notificaciones", "/dashboard/notificaciones", () => heading(page, "Notificaciones"));
+  await tour.step("preferencias de correo", async () => {
+    await page.getByRole("link", { name: "Elegir qué me llega por correo" }).filter({ visible: true }).first().click();
+    await page.waitForURL(/\/notificaciones\/preferencias$/);
+    await heading(page, "Qué me llega por correo");
+  });
+  await tour.step("preferencias de correo guardadas", async () => {
+    await page.getByRole("checkbox").first().setChecked(false);
+    await page.getByRole("button", { name: "Guardar mis preferencias" }).click();
+    await done(page, /^Listo\./);
+  });
+  // --- fin tanda 4 ---
   tour.finish();
 });
 
@@ -515,7 +600,14 @@ test("tutor", async ({ page }, info) => {
   const tour = new Tour(page, info, "tutor", 300);
   if (!(await start(tour, SMOKE_ACCOUNTS.parent))) return;
 
-  await tour.open("inicio", "/dashboard", () => heading(page, "¿Qué necesitas hacer hoy?"));
+  await tour.open("inicio", "/dashboard", () => heading(page, "¿Cómo van mis hijos?"));
+  // --- tanda 4 (QA): Ana tiene sembrada la «Inscripción del período» vencida con un abono ---
+  await tour.step("inicio hijo con alerta", async () => {
+    await heading(page, "Requiere tu atención");
+    await expect(page.getByRole("link").filter({ hasText: "Ana Rodríguez" }).filter({ hasText: /cargos? vencidos? por pagar/ }).first()).toBeVisible();
+    await heading(page, "Mis hijos");
+  });
+  // --- fin tanda 4 ---
   await tour.open("mis hijos", "/dashboard/hijos", async () => {
     await heading(page, "Mis hijos");
     await visible(page, "Pedro Jiménez");
@@ -526,10 +618,10 @@ test("tutor", async ({ page }, info) => {
     await heading(page, "Ana Rodríguez");
   });
   await tour.open("estado de cuenta", "/dashboard/mi-cuenta", async () => {
-    await heading(page, /Cuenta de Ana Rodríguez/);
+    await heading(page, /Estado de cuenta de Ana Rodríguez/);
     await visible(page, "Inscripción del período");
   });
-  await tour.open("estado de cuenta otro hijo", `/dashboard/mi-cuenta?estudiante=${seed.studentIds[1]}`, () => heading(page, /Cuenta de Pedro Jiménez/));
+  await tour.open("estado de cuenta otro hijo", `/dashboard/mi-cuenta?estudiante=${seed.studentIds[1]}`, () => heading(page, /Estado de cuenta de Pedro Jiménez/));
   // El tutor no tiene «Calendario» en su menú (las fechas de cada hijo están en su resumen): no se visita.
   await tour.open("avisos", "/dashboard/comunidad", () => heading(page, "Avisos"));
   tour.finish();
@@ -539,7 +631,20 @@ test("coordinador", async ({ page }, info) => {
   const tour = new Tour(page, info, "coordinador", 350);
   if (!(await start(tour, SMOKE_ACCOUNTS.coordinator))) return;
 
-  await tour.open("inicio", "/dashboard", () => heading(page, "¿Qué necesitas hacer hoy?"));
+  // Inicio de coordinación: el tablero de la dirección sin cobros (no tiene ese permiso).
+  await tour.open("inicio", "/dashboard", async () => {
+    await heading(page, "Instituto Demo");
+    await heading(page, "Cómo va la institución");
+    await heading(page, "Requiere tu atención");
+    await heading(page, "Estudiantes en riesgo");
+    await heading(page, "Docentes");
+    await expect(page.getByText(/^Cobrado /).filter({ visible: true })).toHaveCount(0);
+  });
+  await tour.step("inicio esta semana", async () => {
+    await page.getByRole("link", { name: "Esta semana" }).filter({ visible: true }).first().click();
+    await page.waitForURL(/rango=semana/);
+    await visible(page, /comparado con la semana pasada/);
+  });
   await tour.open("personas", "/dashboard/gestion", async () => {
     await heading(page, "Personas");
     await visible(page, "Ana Rodríguez");
@@ -563,6 +668,91 @@ test("publico", async ({ page }, info) => {
   // Pantallas públicas que otras piezas están construyendo: se recorren cuando existan en la rama.
   if (existsSync(join(process.cwd(), "src/app/solicitud"))) await tour.open("solicitud de admision", "/solicitud");
   if (existsSync(join(process.cwd(), "src/app/cursos"))) await tour.open("catalogo de cursos", "/cursos");
+  // --- tanda 4 (QA): alta de un docente independiente y su primer curso (al final: deja la sesión iniciada) ---
+  const stamp = Date.now();
+  const independentCourse = `Guitarra para principiantes (${info.project.name})`;
+  await tour.open("ensena en edukana", "/ensenar", () => heading(page, "Enseña tus cursos en Edukana"));
+  await tour.step("ensena espacio creado", async () => {
+    await page.getByLabel("Tu nombre").fill("Elena Docente");
+    await page.getByLabel("Correo electrónico").fill(`docente-${stamp}@demo.test`);
+    await page.getByLabel("Contraseña").fill("ClaseLibre2026");
+    await page.getByRole("button", { name: "Crear mi espacio de docente" }).click();
+    await page.waitForURL(/\/dashboard\/?$/, { timeout: 30_000 });
+    await visible(page, "Crear un curso");
+  });
+  await tour.step("docente independiente crea curso", async () => {
+    await page.getByRole("link", { name: /Crear un curso/ }).filter({ visible: true }).first().click();
+    await page.waitForURL(/\/dashboard\/aula\/nuevo$/);
+    await page.getByLabel("Nombre del curso").fill(independentCourse);
+    await page.getByRole("button", { name: "Crear curso", exact: true }).click();
+    await page.waitForURL(/\/dashboard\/aula\/(?!nuevo)[^/?#]+$/, { timeout: 20_000 });
+    await heading(page, independentCourse);
+  });
+  // --- fin tanda 4 ---
   tour.finish();
 });
 // --- fin qa ---
+
+// Backoffice A: seeded newAdmin is the dedicated platform operator in CI.
+test("operador backoffice A-G", async ({ page, browser }, info) => {
+  const tour = new Tour(page, info, "operador", 500);
+  if (!(await start(tour, SMOKE_ACCOUNTS.newAdmin))) return;
+  await tour.open("tablero del negocio", "/operador/tablero", async () => {
+    await heading(page, "Tablero del negocio");
+    await heading(page, "Ventas del catálogo este mes");
+    await heading(page, "Instituciones que requieren atención");
+  });
+  const target = seed.backofficeTargets[info.project.name === "movil" ? "movil" : "escritorio"];
+  const memberContext = await browser.newContext({
+    baseURL: info.project.use.baseURL,
+    viewport: info.project.use.viewport,
+    locale: "es-DO",
+    timezoneId: "America/Santo_Domingo",
+  });
+  const memberPage = await memberContext.newPage();
+  const memberTour = new Tour(memberPage, info, "miembro backoffice", 530);
+  try {
+    // The billing limit and live-session checks must precede mutation of this isolated target.
+    await memberTour.login(target.memberEmail);
+    await memberTour.open("limite informativo del plan", "/dashboard", async () => {
+      await expect(memberPage.getByRole("status").filter({ hasText: "Llegaste al límite de tu plan" })).toContainText("30/30 estudiantes");
+    });
+    await memberTour.open("cursos disponibles al alcanzar limite", "/dashboard/aula", async () => {
+      await expect(memberPage.getByRole("heading", { name: "Cursos", exact: true })).toBeVisible();
+    });
+    await tour.step("suspender y reactivar institucion", () => exerciseInstitutionSuspension({
+      operatorPage: page, memberPage, ...target, password: SMOKE_PASSWORD,
+    }));
+    await tour.step("plan y pago manual", () => backofficeBillingSmoke(page, target));
+    await tour.open("planes configurados", "/operador/planes", () => heading(page, "Planes"));
+    await tour.step("interruptores y comision", () => checkPlatformFeatures(page, target.institutionId, target.institutionSlug));
+    await tour.step("marca de la institucion", async () => {
+      await page.goto(`/operador/${target.institutionId}`);
+      const brand = page.locator("section").filter({ has: page.getByRole("heading", { name: "Marca", exact: true }) });
+      await brand.getByLabel("Color principal", { exact: true }).fill("#123456");
+      await brand.getByRole("button", { name: "Guardar marca", exact: true }).click();
+      await expect(brand.getByRole("status")).toContainText("Marca guardada");
+      await page.reload();
+      await expect(brand.getByLabel("Color principal", { exact: true })).toHaveValue("#123456");
+    });
+    await tour.step("vista soporte y bitacora", () => supportSmoke(page, target.institutionId, target.institutionName, SMOKE_ACCOUNTS.newAdmin,
+      () => tour.step("vista soporte solo lectura", async () => {})));
+    await tour.step("avisos crear editar cerrar terminar", () => platformAnnouncementsSmoke(page, `${info.project.name}-${Date.now()}`));
+    await tour.open("avisos de plataforma", "/operador/avisos", () => heading(page, "Avisos de Edukana"));
+  } finally {
+    await memberContext.close();
+  }
+  memberTour.finish();
+  tour.finish();
+});
+test("administrador sin permiso operador", async ({ page }, info) => {
+  const tour = new Tour(page, info, "sin permiso operador", 510);
+  if (!(await start(tour, SMOKE_ACCOUNTS.admin))) return;
+  const target = seed.backofficeTargets[info.project.name === "movil" ? "movil" : "escritorio"];
+  for (const path of ["/operador", "/operador/tablero", "/operador/planes", "/operador/facturacion",
+    "/operador/bitacora", "/operador/ventas", `/operador/${target.institutionId}`, `/operador/${target.institutionId}/vista`]) {
+    const response = await page.goto(path);
+    expect(response?.status(), path).toBe(404);
+  }
+  await platformAnnouncementsDeniedSmoke(page);
+});

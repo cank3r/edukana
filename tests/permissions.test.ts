@@ -75,7 +75,7 @@ test("PARENT solo obtiene capacidades child seguras y no acepta capacidades inst
   const effective = resolveEffectiveCapabilities("PARENT", [{ capability: "student.portal.view", enabled: true }, { capability: "course.view", enabled: true }]);
   assert.equal(effective.has("child.portal.view"), true);
   assert.equal(effective.has("child.academics.view"), true);
-  assert.equal(effective.has("child.finance.view"), false);
+  assert.equal(effective.has("child.finance.view"), true, "por omisión; cada vínculo decide si de verdad ve cobros");
   assert.equal(effective.has("student.portal.view"), false);
   assert.equal(effective.has("course.view"), false);
 });
@@ -151,9 +151,9 @@ test("defaults de permisos permanecen exactos y manage no llega a TEACHER", () =
     SUPER_ADMIN: [...CAPABILITIES],
     ADMIN: [...CAPABILITIES],
     COORDINATOR: ["course.view", "course.view.all", "course.manage", "course.roster.view", "schedule.view", "people.view", "admissions.manage", "announcement.publish", "announcement.manage"],
-    TEACHER: ["course.view", "course.manage", "course.roster.view", "schedule.view"],
-    STUDENT: ["student.portal.view", "course.view", "course.participate", "schedule.view"],
-    PARENT: ["child.portal.view", "child.academics.view", "child.attendance.view", "child.schedule.view", "child.announcements.view"],
+    TEACHER: ["course.view", "course.manage", "course.roster.view", "schedule.view", "ai.use"],
+    STUDENT: ["student.portal.view", "course.view", "course.participate", "schedule.view", "ai.use"],
+    PARENT: ["child.portal.view", "child.academics.view", "child.attendance.view", "child.schedule.view", "child.announcements.view", "child.finance.view"],
   };
   for (const role of Object.keys(expected) as EdukanaRole[]) {
     assert.deepEqual([...SYSTEM_ROLE_CAPABILITIES[role]].sort(), expected[role].sort(), role);

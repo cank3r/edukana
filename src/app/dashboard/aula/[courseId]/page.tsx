@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import type { ReactNode } from "react";
-import { BarChart3, BookOpen, CalendarDays, CheckCircle2, ChevronRight, Circle, ClipboardCheck, GraduationCap, HelpCircle, Pencil, PlayCircle, Users, Video } from "lucide-react";
+import { BarChart3, BookOpen, CalendarDays, CheckCircle2, ChevronRight, Circle, ClipboardCheck, GraduationCap, HelpCircle, ListChecks, MessageSquare, Pencil, PlayCircle, Users, Video } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { getEffectiveCapabilities } from "@/lib/authorization";
 import { canManageCourse, courseWhereForScope, resolveCourseReadScope, resolveCourseWriteScope } from "@/lib/course-scope";
@@ -39,6 +39,8 @@ export default async function CourseHomePage({ params }: { params: Promise<{ cou
       archivedAt: true,
       imageUrl: true,
       completionThreshold: true,
+      isPublic: true,
+      institution: { select: { slug: true } },
       teacher: { select: { name: true } },
       period: { select: { name: true } },
       _count: { select: { lessons: true, assignments: true, exams: true, questionBank: true, liveClasses: true } },
@@ -127,7 +129,17 @@ export default async function CourseHomePage({ params }: { params: Promise<{ cou
             <AreaCard href={`${base}/presentar`} icon={<GraduationCap />} title="Exámenes" text="Presenta tus exámenes y revisa los resultados." />
             <AreaCard href={`${base}/mis-notas`} icon={<BarChart3 />} title="Mis notas" text="Consulta cómo vas en el curso." />
             <AreaCard href={`${base}/clases`} icon={<Video />} title="Clases en vivo" text="Entra a la próxima clase." />
+            <AreaCard href={`${base}/asistencia`} icon={<ListChecks />} title="Mi asistencia" text="Mira los días que viniste y cómo vas." />
           </nav>
+
+          {/* Solo los cursos que están en el catálogo público reciben reseñas. */}
+          {course.isPublic && (
+            <p className="mb-8">
+              <Link className="inline-flex min-h-11 items-center gap-2 font-semibold text-blue-700 underline" href={`/catalogo/${encodeURIComponent(course.institution.slug)}/${course.id}#resena`}>
+                <MessageSquare size={18} aria-hidden="true" />Opinar sobre este curso
+              </Link>
+            </p>
+          )}
 
           <section aria-labelledby="temario" className="mb-8">
             <h2 id="temario" className="mb-3 text-xl font-bold text-slate-950">Temario</h2>
@@ -165,6 +177,7 @@ export default async function CourseHomePage({ params }: { params: Promise<{ cou
         <nav aria-label="Áreas del curso" className="mb-8 grid gap-3 sm:grid-cols-2">
           <AreaCard href={`${base}/contenido`} icon={<BookOpen />} title={canManage ? "Armar el contenido" : "Ver el contenido"} text={`Capítulos y lecciones · ${count(course._count.lessons, "lección", "lecciones")}`} />
           {canViewRoster && <AreaCard href={`${base}/estudiantes`} icon={<Users />} title={canManage ? "Inscribir estudiantes" : "Ver estudiantes"} text={`Quién está en el curso y cómo avanza · ${count(activeStudents, "inscrito", "inscritos")}`} />}
+          <AreaCard href={`${base}/asistencia`} icon={<ListChecks />} title={canManage ? "Tomar asistencia" : "Ver asistencia"} text="Marca quién vino hoy y revisa el historial." />
           <AreaCard href={`${base}/tareas`} icon={<ClipboardCheck />} title={canManage ? "Crear y revisar tareas" : "Ver tareas"} text={count(course._count.assignments, "tarea", "tareas")} />
           {canManage && <AreaCard href={`${base}/preguntas`} icon={<HelpCircle />} title="Preparar preguntas" text={`Banco de preguntas para tus exámenes · ${count(course._count.questionBank, "pregunta", "preguntas")}`} />}
           <AreaCard href={`${base}/examenes`} icon={<GraduationCap />} title={canManage ? "Crear y revisar exámenes" : "Ver exámenes"} text={count(course._count.exams, "examen", "exámenes")} />
@@ -177,8 +190,6 @@ export default async function CourseHomePage({ params }: { params: Promise<{ cou
       <section aria-labelledby="mas-herramientas">
         <h2 id="mas-herramientas" className="mb-3 text-xl font-bold text-slate-950">Más herramientas</h2>
         <div className="space-y-3">
-          <Link className={`${tool} flex min-h-11 items-center gap-2 p-4 font-semibold text-slate-900`} href={`${base}/asistencia`}><Users size={18} aria-hidden="true" />{isStudent ? "Mi asistencia" : "Tomar y revisar asistencia"}</Link>
-
           <Link className={`${tool} flex min-h-11 items-center gap-2 p-4 font-semibold text-slate-900`} href={`${base}/horario`}><CalendarDays size={18} aria-hidden="true" />{canManage ? "Organizar el horario" : "Horario del curso"}</Link>
 
           <Link className={`${tool} flex min-h-11 items-center gap-2 p-4 font-semibold text-slate-900`} href={`${base}/certificados`}><GraduationCap size={18} aria-hidden="true" />{isStudent ? "Mi certificado" : "Certificados del curso"}</Link>
