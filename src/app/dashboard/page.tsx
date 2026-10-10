@@ -20,7 +20,9 @@ type Summary = { label: string; value: number; href: string };
 
 export default async function DashboardPage() {
   const session = await auth();
-  const user = session!.user;
+  // Layout and page render in parallel. Let the layout redirect when live access is revoked.
+  if (!session?.user) return null;
+  const user = session.user;
   const iid = user.institutionId;
   const capabilities = await getEffectiveCapabilities(iid, user.role);
   if (capabilities.has("tenant.settings.manage")) {

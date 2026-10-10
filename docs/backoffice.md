@@ -88,3 +88,11 @@ Las ejecuciones por pieza no sustituyen el CI integrado. D requiere los campos B
 ### Cierre local A–G — 2026-10-10 00:30 UTC
 
 Integración 4837a211: build nativo Turbopack PASS, TypeScript y lint PASS; 137/137 base y 98/98 backoffice. Descubrimiento smoke18 PASS a360px/escritorio; aún no ejecución PostgreSQL/browser del integrado. Revisión independiente de G PASS con cookies Auth.js reales y filtros públicos. G no añade migraciones. La autorización específica para conservar vercel.json heredado fue confirmada el 2026-10-10; la base A–F se publicó en a540932 y G en el PR #108. CI integrado y aceptación visual siguen pendientes.
+
+## Evidencia de CI y ajustes de navegador
+
+- PR final: [#109](https://github.com/cank3r/edukana/pull/109), hacia `todo/tanda-4`; no fusionado a main.
+- Run [38010797140](https://github.com/cank3r/edukana/actions/runs/38010797140), SHA 0a68f4d: validate real PASS con 137 pruebas base, 101 backoffice y 522 PostgreSQL; incluye las cinco pruebas de marca y aislamiento de catálogo por Host. Migraciones desde cero y comparación de schema pasan sobre PostgreSQL efímero de CI.
+- El navegador de ese SHA completó 16/18 recorridos. Las etiquetas Plan/Marca/Avisos y la retención del motivo de suspensión ya pasan. El selector final de login suspendido confundía el anuncio de ruta de Next con el error del formulario; se acotó al formulario sin cambiar el texto esperado. Una regresión HTTP con Auth.js real cubre el rechazo de credenciales suspendidas.
+- Se añadió protección de sesión nula en el render paralelo del inicio; la redirección y el aviso siguen a cargo del layout.
+- La aceptación final depende del run del último SHA y de sus capturas. El PR registra el resultado terminal; no se infiere de estas verificaciones históricas ni del Preview.

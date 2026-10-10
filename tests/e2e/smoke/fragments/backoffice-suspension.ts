@@ -38,7 +38,16 @@ export async function exerciseInstitutionSuspension(input: {
     await memberPage.getByLabel("Correo electrónico").fill(input.memberEmail);
     await memberPage.getByLabel("Contraseña", { exact: true }).fill(input.password);
     await memberPage.getByRole("button", { name: "Ingresar", exact: true }).click();
-    await expect(memberPage.getByRole("alert").last()).toContainText(`El acceso de ${institutionName} está pausado`);
+    // Scope to the credential form: Next also mounts an unrelated route-announcer alert.
+    const credentialAlert = memberPage.locator("form").getByRole("alert");
+    try {
+      await expect(credentialAlert).toContainText(`El acceso de ${institutionName} está pausado`);
+    } catch {
+      const alerts = await credentialAlert.allTextContents().catch(() => []);
+      const actual = alerts.join(" | ").split(input.password).join("[redacted]")
+        .split(input.memberEmail).join("[redacted]").replace(/\s+/g, " ").trim().slice(0, 250);
+      throw new Error(`El ingreso suspendido no mostró el aviso esperado. Alertas actuales: ${actual || "(sin alertas)"}`);
+    }
     // Public route enforcement is connected by piece D in the integrated branch.
     const catalog = await memberPage.request.get(`/catalogo/${encodeURIComponent(institutionSlug)}`);
     expect(catalog.status()).toBe(404);
