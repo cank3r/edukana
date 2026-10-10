@@ -8,9 +8,7 @@ export const OPERATOR_TIME_ZONE = "America/Santo_Domingo";
 
 const longDay = new Intl.DateTimeFormat("es-DO", { timeZone: OPERATOR_TIME_ZONE, day: "numeric", month: "long", year: "numeric" });
 const longDayUtc = new Intl.DateTimeFormat("es-DO", { timeZone: "UTC", day: "numeric", month: "long", year: "numeric" });
-const dayAndTime = new Intl.DateTimeFormat("es-DO", {
-  timeZone: OPERATOR_TIME_ZONE, day: "numeric", month: "long", year: "numeric", hour: "numeric", minute: "2-digit",
-});
+const time = new Intl.DateTimeFormat("es-DO", { timeZone: OPERATOR_TIME_ZONE, hour: "numeric", minute: "2-digit", hour12: true });
 const integer = new Intl.NumberFormat("es-DO", { maximumFractionDigits: 0 });
 const oneDecimal = new Intl.NumberFormat("es-DO", { maximumFractionDigits: 1 });
 
@@ -29,7 +27,8 @@ export function formatOperatorDay(day: Date) {
 
 /** «10 de octubre de 2026, 2:30 p. m.» en hora de Santo Domingo. */
 export function formatOperatorDateTime(instant: Date) {
-  return dayAndTime.format(instant).replace(/ /g, " ");
+  // Día y hora por separado: según la versión de ICU, el formato combinado usa «, » o « a las ».
+  return `${longDay.format(instant)}, ${time.format(instant).replace(/[\u00a0\u202f]/g, " ")}`;
 }
 
 /** «1,234» */

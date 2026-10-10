@@ -57,16 +57,16 @@ export default async function PagosPage({ searchParams }: { searchParams: Promis
         <p className="mt-1 text-sm text-slate-600">Crea cargos, registra los pagos que recibes y mira quién debe.</p>
       </header>
 
-      <dl className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-3">
+      <dl className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-3 min-[420px]:gap-3">
         {[
           { label: "Vencido", value: money(data.summary.overdueCents), note: "Ya pasó su fecha de vencimiento", tone: data.summary.overdueCents > 0 ? "text-red-700" : "text-slate-950" },
           { label: "Por cobrar", value: money(data.summary.receivableCents), note: "Todo lo que aún se debe, con lo vencido", tone: "text-slate-950" },
           { label: "Cobrado este mes", value: money(data.summary.collectedThisMonthCents), note: "Pagos recibidos en el mes", tone: "text-emerald-700" },
         ].map((item) => (
-          <div key={item.label} className="rounded-xl border border-slate-200 bg-white p-4">
-            <dt className="text-xs font-medium text-slate-600">{item.label}</dt>
-            <dd className={`mt-1 text-2xl font-bold ${item.tone}`}>{item.value}</dd>
-            <dd className="text-xs text-slate-500">{item.note}</dd>
+          <div key={item.label} className="flex flex-wrap items-baseline justify-between gap-x-3 rounded-xl border border-slate-200 bg-white px-4 py-3 min-[420px]:block min-[420px]:p-4">
+            <dt className="text-sm font-medium text-slate-600 min-[420px]:text-xs">{item.label}</dt>
+            <dd className={`text-xl font-bold min-[420px]:mt-1 min-[420px]:text-2xl ${item.tone}`}>{item.value}</dd>
+            <dd className="hidden text-xs text-slate-500 min-[420px]:block">{item.note}</dd>
           </div>
         ))}
       </dl>
@@ -82,13 +82,13 @@ export default async function PagosPage({ searchParams }: { searchParams: Promis
           </p>
         ) : (
           <>
-            <nav aria-label="Qué cargos ver" className="mt-3 flex flex-wrap gap-2">
+            <nav aria-label="Qué cargos ver" className="mt-3 grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
               {CHARGE_VIEWS.map((item) => (
                 <Link
                   key={item}
                   href={href({ estado: item })}
                   aria-current={data.view === item ? "page" : undefined}
-                  className={`inline-flex min-h-11 items-center gap-2 rounded-full border px-4 text-sm font-semibold ${data.view === item ? "border-blue-600 bg-blue-600 text-white" : "border-slate-300 bg-white text-slate-800 hover:border-blue-500"}`}
+                  className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-full border px-4 text-sm font-semibold ${data.view === item ? "border-blue-600 bg-blue-600 text-white" : "border-slate-300 bg-white text-slate-800 hover:border-blue-500"}`}
                 >
                   {VIEW_LABEL[item]}
                   <span className={`rounded-full px-2 text-xs ${data.view === item ? "bg-white/20" : item === "vencidos" && data.counts.vencidos > 0 ? "bg-red-50 text-red-800" : "bg-slate-100 text-slate-700"}`}>{data.counts[item].toLocaleString("es-DO")}</span>

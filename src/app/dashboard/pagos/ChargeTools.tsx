@@ -321,23 +321,23 @@ export function ChargeItem({ charge, todayKey }: { charge: ChargeView; todayKey:
   return (
     <li className={`rounded-xl border p-4 md:rounded-none md:border-0 md:px-0 md:py-4 ${charge.status === "OVERDUE" ? "border-red-200 bg-red-50/40 md:bg-transparent" : "border-slate-200"}`}>
       {/* Los montos nunca se encogen: si no caben junto a los botones, los botones pasan abajo. */}
-      <div className="md:grid md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-4 xl:grid-cols-[minmax(0,1fr)_auto_auto]">
+      <div className="md:grid md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-x-4 2xl:grid-cols-[minmax(0,1fr)_auto_auto]">
         <div className="min-w-0">
           <p className="truncate font-semibold text-slate-950">{charge.studentName}</p>
-          <p className="text-sm text-slate-700">{charge.concept}{charge.periodName ? ` · ${charge.periodName}` : ""}</p>
+          <p className="text-sm text-slate-700">{charge.concept}{charge.periodName && !charge.concept.includes(charge.periodName) ? ` · ${charge.periodName}` : ""}</p>
           <p className="mt-1 flex flex-wrap items-center gap-2 text-xs font-semibold">
             <span className={`rounded-full px-2 py-1 ${status.className}`}>{status.label}</span>
             {charge.dueKey && charge.status !== "PAID" && !cancelled && <span className="font-normal text-slate-600">{charge.status === "OVERDUE" ? "Venció el" : "Vence el"} {formatDateKey(charge.dueKey)}</span>}
           </p>
         </div>
-        <dl className="mt-3 grid grid-cols-3 gap-2 text-sm md:mt-0 md:grid-cols-[repeat(3,max-content)] md:gap-x-6">
+        <dl className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm md:mt-0 md:grid md:grid-cols-[repeat(3,max-content)] md:gap-x-6">
           <div><dt className="text-xs text-slate-500">Monto</dt><dd className="font-semibold text-slate-950">{money(charge.amountCents)}</dd></div>
           <div><dt className="text-xs text-slate-500">Pagado</dt><dd className="font-medium text-slate-900">{money(charge.paidCents)}</dd></div>
           <div><dt className="text-xs text-slate-500">Debe</dt><dd className="font-semibold text-slate-950">{money(charge.balanceCents)}</dd></div>
         </dl>
         {!panel && (
-          <div className="mt-3 flex flex-wrap gap-2 md:col-span-2 md:justify-end xl:col-span-1 xl:mt-0">
-            {!cancelled && charge.balanceCents > 0 && <button type="button" className={primary} onClick={() => open("pay")}>Registrar pago</button>}
+          <div className="mt-3 grid grid-cols-2 gap-2 md:col-span-2 md:flex md:flex-wrap md:justify-end 2xl:col-span-1 2xl:mt-0">
+            {!cancelled && charge.balanceCents > 0 && <button type="button" className={`${primary} col-span-2`} onClick={() => open("pay")}>Registrar pago</button>}
             {!cancelled && <button type="button" className={secondary} onClick={() => open("edit")}>Editar</button>}
             {!cancelled && <button type="button" className={secondary} onClick={() => open("cancel")}>Anular</button>}
             {!hasPayments && <button type="button" className={secondary} onClick={() => open("delete")}>Borrar</button>}
