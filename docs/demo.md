@@ -1,10 +1,10 @@
 # Institución de demostración
 
-Para mostrar Edukana sin usar datos reales hay una institución de demostración, **«Instituto Técnico Demo»**, que se carga en la base de staging con un solo comando y se quita con otro.
+Para mostrar Edukana sin usar datos reales hay una institución de demostración, **«Instituto Técnico Demo»**, preparada para una base de pruebas aislada, cuyo destino debe verificarse antes de cargarla.
 
-- Crea **una sola institución nueva**. No cambia ni borra nada de las demás instituciones que ya están en staging.
-- Todas las cuentas usan correos `@demo.edukana.do` y **la misma contraseña**, la que tú pones en `DEMO_PASSWORD`. El comando nunca la muestra ni la guarda.
-- Las fechas se calculan desde el día en que se carga: el cuatrimestre «va por la semana 9», con ocho semanas de clases, tareas, notas y asistencia ya tomadas, un examen abierto y clases en vivo en los próximos días. Si la demo se muestra semanas después, recárgala con `DEMO_RESET=1` para que vuelva a verse actual.
+- Crea **una institución de demostración**. Usarla únicamente en una base ficticia dedicada verificada; también inserta planes globales faltantes y gestiona identidades demo.
+- Las cuentas nuevas usan correos `@demo.edukana.do` y una contraseña de demo suministrada de forma segura. Identidades preexistentes compartidas conservan su contraseña; no reutilizar esta demo en una base con datos reales. El comando no muestra la contraseña ni la guarda en Git.
+- Las fechas se calculan desde el día en que se carga: el cuatrimestre «va por la semana 9», con ocho semanas de clases, tareas, notas y asistencia ya tomadas, un examen abierto y clases en vivo en los próximos días. Si la demo se muestra semanas después, planificar su renovación en la base desechable; un reset destruye la demo anterior y requiere autorización explícita.
 - Tarda menos de un minuto: todo se escribe por lotes.
 
 ## Qué crea
@@ -29,7 +29,7 @@ Para mostrar Edukana sin usar datos reales hay una institución de demostración
 
 ## Cuentas para entrar
 
-Todas con la contraseña que pusiste en `DEMO_PASSWORD`.
+Las cuentas creadas en una base ficticia nueva usan la contraseña de demo configurada mediante el mecanismo seguro del entorno. No compartirla por chat.
 
 | Rol | Nombre | Correo | Para mostrar |
 |---|---|---|---|
@@ -76,58 +76,36 @@ Los otros docentes son `julio.ventura`, `milagros.concepcion`, `victor.liriano`,
 **5. Familia — 1 minuto** (`maria.reyes@…`)
 1. Notas, asistencia y estado de cuenta de su hija, sin poder cambiar nada.
 
-## Cómo cargarla en staging, paso a paso
+## Destino seguro antes de cargarla
 
-Necesitas una computadora con el proyecto descargado y Node.js 22. Si nunca has usado la terminal, pide ayuda solo para los pasos 1 y 2; el resto es copiar y pegar.
+El cargador público ahora falla cerrado antes de importar Prisma, conectarse o iniciar la cuenta regresiva. El nombre «Preview» no demuestra aislamiento: primero se debe comprobar que ese entorno apunta a una base dedicada exclusivamente a la demo, distinta de cualquier base con datos reales.
 
-1. **Abre la terminal en la carpeta del proyecto** (la carpeta `edukana`).
-2. **Instala lo necesario** (solo la primera vez):
-   ```
-   npm install
-   ```
-3. **Busca la dirección de la base de staging.** En Vercel: proyecto Edukana → *Settings* → *Environment Variables* → entorno de staging/Preview → copia el valor de `DIRECT_URL` (si no existe, el de `DATABASE_URL`). Empieza con `postgresql://`. Copia también `CERTIFICATE_SECRET` (o, si no existe, `AUTH_SECRET`) del mismo entorno: sin ella los certificados no se emiten.
-4. **Elige la contraseña de la demo** (al menos 8 caracteres). No la escribas en ningún archivo del proyecto.
-5. **Ejecuta el comando**, cambiando lo que está entre comillas por lo que copiaste:
+### Preview de Vercel
 
-   En Mac o Linux:
-   ```
-   DATABASE_URL="postgresql://…" CERTIFICATE_SECRET="…" DEMO_PASSWORD="…" DEMO_CONFIRM=crear-demo npm run demo:seed
-   ```
-   En Windows (PowerShell):
-   ```
-   $env:DATABASE_URL="postgresql://…"; $env:CERTIFICATE_SECRET="…"; $env:DEMO_PASSWORD="…"; $env:DEMO_CONFIRM="crear-demo"; npm run demo:seed
-   ```
-6. **Revisa la línea «Base de datos: …»** que aparece en pantalla. Debe ser el servidor de staging. Tienes 5 segundos: si no es la correcta, pulsa **Ctrl + C** y no se hace nada.
-7. **Espera a que diga «Listo».** Muestra cuánto tardó, cuántos registros creó de cada tipo y la tabla de cuentas (sin contraseña).
+Es el destino solicitado. Por ahora **ninguna base remota está aprobada**: `scripts/demo/approved-targets.ts` está vacío y el cargador rechazará todos los destinos remotos.
 
-### Si ya estaba cargada
+Antes de autorizar una entrada se debe verificar, sin compartir contraseñas ni URLs de conexión:
 
-Volver a ejecutar el comando no duplica nada: dice que ya existe y termina. Para borrarla y crearla de nuevo con fechas de hoy, agrega `DEMO_RESET=1`:
+1. Proyecto o rama de base de datos dedicado a datos ficticios, con referencia no secreta y responsable identificado.
+2. Asociación explícita del entorno Preview correcto a esa base; comprobar que no hereda la conexión de producción.
+3. Identidad de cada conexión de Prisma: host, puerto, nombre de base, usuario/rol y schema. Un pooler compartido requiere identificar también el tenant mediante su usuario. DATABASE_URL y DIRECT_URL pueden tener endpoints distintos, pero ambos deben figurar en la misma entrada aprobada.
+4. Migraciones requeridas y permiso específico de carga. La aprobación del guard no aplica migraciones ni carga datos.
 
-```
-DATABASE_URL="postgresql://…" CERTIFICATE_SECRET="…" DEMO_PASSWORD="…" DEMO_CONFIRM=crear-demo DEMO_RESET=1 npm run demo:seed
-```
+La entrada revisada contiene solo esos identificadores, nunca contraseñas, claves o URLs. El CLI exige `DEMO_TARGET=isolated-preview`, `DEMO_TARGET_ID` de una entrada aprobada, TLS y coincidencia exacta de ambos endpoints. Ninguna variable de entorno puede agregar una entrada a la allowlist. No cambiar variables Vercel ni crear credenciales como parte de este paso de código.
 
-## Cómo quitarla
+### Base local desechable
 
-```
-DATABASE_URL="postgresql://…" DEMO_CONFIRM=borrar-demo npm run demo:remove
-```
+Se admite `DEMO_TARGET=isolated-local` únicamente con host localhost, 127.0.0.1 o ::1 y nombre `edukana_demo_*`; ambas conexiones deben coincidir. Esto es una barrera contra accidentes, **no prueba de aislamiento físico**: un puerto local podría ser un túnel. Verificar su origen antes de cualquier carga. No se ha instalado ni creado una base local en esta entrega.
 
-En Windows: `$env:DATABASE_URL="postgresql://…"; $env:DEMO_CONFIRM="borrar-demo"; npm run demo:remove`
+Ambos modos rechazan NODE_ENV=production o VERCEL_ENV=production, protocolos ajenos a PostgreSQL y parámetros que alteren el host/ruta. Se conserva DEMO_CONFIRM para crear o quitar, y una contraseña de demo suministrada por el mecanismo seguro del entorno; nunca enviarla por chat o guardarla en Git. No se ejecutó ninguna carga o reset.
 
-Borra en una sola operación «Instituto Técnico Demo» con todo su contenido y las cuentas `@demo.edukana.do` que no pertenezcan a ninguna otra institución. Si alguien agregó una de esas cuentas a otra institución, esa cuenta se queda. Si algo falla, no se borra nada.
+### Repetición, alcance y borrado
 
-## Problemas frecuentes
-
-| Mensaje | Qué hacer |
-|---|---|
-| «Para crear la institución de demostración escribe DEMO_CONFIRM=crear-demo…» | Falta `DEMO_CONFIRM=crear-demo` (o `borrar-demo` para quitarla) en el comando. Es a propósito: evita cargarla por accidente. |
-| «Falta DEMO_PASSWORD…» | Agrega `DEMO_PASSWORD="…"` con al menos 8 caracteres. |
-| «Falta DATABASE_URL o no es una dirección válida» | Revisa que copiaste la dirección completa, entre comillas. También puedes escribirla en el archivo `.env` de la carpeta del proyecto. |
-| «… ya existe en esta base. No se creó nada» | Ya estaba cargada. Úsala, o agrega `DEMO_RESET=1` para recrearla con fechas de hoy. |
-| «No se emitieron los certificados porque falta CERTIFICATE_SECRET» | Todo lo demás quedó cargado. Recárgala con `DEMO_RESET=1` y la clave del paso 3, o emite los certificados desde la pantalla de certificados del curso de Excel. |
-| «No se pudo completar» | Lo que se alcanzó a crear se borró solo y las demás instituciones no se tocaron. Copia el mensaje y compártelo con el equipo técnico. |
+- Repetir el CLI sin reset no duplica la demo. Una demo antigua sin suscripción requiere revisión aparte: el retorno temprano del CLI no ejecuta la reparación idempotente disponible en la función interna.
+- Reset y remove son destructivos y requieren autorización separada. Reset borra antes de recrear; no ofrece recuperación si la nueva carga falla.
+- El seed inserta planes globales faltantes, reutiliza identidades del dominio demo y puede actualizar identidades exclusivas de esa demo. La limpieza también contempla identidades huérfanas del dominio demo. Por ello este código solo debe ejecutarse en la base ficticia dedicada verificada, nunca como aislamiento suficiente dentro de una base real compartida.
+- El guard protege el **CLI público**. Las funciones internas createDemo/removeDemo utilizadas por pruebas de integración no incorporan este guard y no son una ruta alternativa para saltarlo.
+- Si algo falla, revisar el estado real antes de repetir: el error no garantiza que la limpieza haya terminado.
 
 ## Para el equipo técnico
 
