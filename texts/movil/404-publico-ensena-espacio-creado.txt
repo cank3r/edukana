@@ -1,0 +1,24 @@
+http://127.0.0.1:3000/dashboard
+
+Saltar al contenido principal
+Menú
+
+Hola, Elena
+
+Cursos de Elena Docente
+Empieza por tu primer curso
+
+Crea el curso, agrega lecciones, ponle precio en «Ventas» y compártelo con tu página pública.
+
+Crear mi primer curso
+Qué quieres hacer
+Crear un curso
+Ponle nombre y empieza a agregar lecciones.
+Mis cursos
+Aún no tienes cursos.
+Ventas
+Pedidos, cupones y precios.
+Mi página pública
+Todavía no hay cursos a la venta.
+
+0 estudiantes inscritos en tus cursos.

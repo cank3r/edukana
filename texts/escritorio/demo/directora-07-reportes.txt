@@ -1,0 +1,265 @@
+http://127.0.0.1:3000/dashboard/analitica
+
+Saltar al contenido principal
+
+Instituto Técnico Demo
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+Admisiones
+Cobros
+Ventas
+Calendario
+Reportes
+Configuración
+Notificaciones
+Cerrar sesión
+M
+
+Margarita Rosario Díaz
+
+directora@demo.edukana.do
+
+Inicio
+Reportes
+Reportes
+
+Cómo va la institución hoy: quiénes estudian, cuánto avanzan y dónde hace falta actuar.
+
+Período
+Todos los períodos
+Cuatrimestre Agosto–Diciembre 2026 (actual)
+Cuatrimestre Abril–Agosto 2026
+Programa
+Todos los programas
+Técnico en Contabilidad
+Técnico en Enfermería
+Ver reportes
+
+Estudiantes con cursos activos
+
+117
+
+Personas inscritas hoy en al menos un curso.
+
+3 menos que hace un mes.
+
+Cursos en marcha
+
+12
+
+Cursos visibles para los estudiantes y sin archivar.
+
+Igual que hace un mes.
+
+Avance promedio
+
+68 %
+
+De cada 100 lecciones, cuántas han completado en promedio los estudiantes activos.
+
+No se compara con el mes anterior: el avance pasado no se guarda.
+
+Tareas entregadas a tiempo
+
+86 %
+
+De las 2465 entregas que se esperaban en los últimos 30 días.
+
+Igual que en los 30 días anteriores.
+
+Asistencia promedio
+
+96 %
+
+Clases a las que sí asistieron en los últimos 30 días (las ausencias justificadas no cuentan).
+
+15 puntos más que en los 30 días anteriores.
+
+Cobrado y por cobrar
+
+RD$1,376,500
+
+Ya cobrado. Falta por cobrar RD$306,900, de los cuales RD$73,100 ya vencieron.
+
+En los últimos 30 días se cobró RD$646,350; en los 30 anteriores, RD$569,850.
+
+Descargar cobros en CSV
+
+Cursos
+
+Cuánta gente tiene cada curso y cómo avanza. Se resaltan los cursos con avance promedio menor de 40 %.
+
+Descargar en CSV
+Avance promedio por curso
+Anatomía y Fisiología Básica
+67 %
+Mantenimiento de Computadoras
+67 %
+Instalaciones Solares Fotovoltaicas
+67 %
+Fundamentos de Enfermería
+67 %
+Primeros Auxilios
+67 %
+Legislación Tributaria Dominicana
+68 %
+Matemática Financiera
+68 %
+Contabilidad Básica
+69 %
+Mercadeo Digital para Emprendedores
+69 %
+Servicio al Turista y Hospitalidad
+71 %
+Cursos: inscritos, retirados, avance, entregas por calificar y nota promedio
+Curso	Inscritos	Retirados	Avance promedio ↑	Por calificar	Nota promedio
+Anatomía y Fisiología Básica
+Rosa Almonte Guzmán
+	58	0	67 %	62	81 de 100
+Mantenimiento de Computadoras
+Víctor Manuel Liriano
+	28	0	67 %	23	82 de 100
+Instalaciones Solares Fotovoltaicas
+Fausto Rafael Then
+	29	0	67 %	31	81 de 100
+Fundamentos de Enfermería
+Milagros Concepción Abreu
+	58	0	67 %	53	81 de 100
+Primeros Auxilios
+Julio César Ventura
+	58	0	67 %	63	81 de 100
+Legislación Tributaria Dominicana
+Ramón Peña Castillo
+	56	0	68 %	62	81 de 100
+Matemática Financiera
+Yokasta Féliz Matos
+	55	1	68 %	60	81 de 100
+Contabilidad Básica
+Ramón Peña Castillo
+	56	0	69 %	64	81 de 100
+Mercadeo Digital para Emprendedores
+Lissette Marte Cabral
+	28	0	69 %	31	82 de 100
+Servicio al Turista y Hospitalidad
+Yahaira Nolasco Durán
+	28	0	71 %	21	81 de 100
+Electricidad Residencial
+Domingo Antonio Severino
+	28	0	72 %	28	82 de 100
+Excel para la Oficina
+Yokasta Féliz Matos
+	11	0	78 %	10	87 de 100
+Estudiantes en riesgo
+
+Estudiantes que conviene contactar: llevan 14 días sin actividad, avanzan mucho menos que su grupo, asisten a menos del 80 % de las clases o tienen tareas vencidas.
+
+Descargar en CSV
+Motivos (19 estudiantes en total; uno puede tener varios)
+Sin actividad en 14 días
+0
+Tareas vencidas sin entregar
+10
+Asistencia menor de 80 %
+9
+Avance bajo
+19
+Estudiantes en riesgo y el motivo
+Estudiante	Motivo ↓	Avance	Asistencia	Tareas vencidas
+Crismeily Hidalgo Mota	Avance bajo (19 %), muy por debajo de su grupo. Asistencia de 71 % (44 de 62 clases). 11 tareas vencidas sin entregar	19 %	71 %	11
+Cristian Ventura Pérez	Avance bajo (11 %), muy por debajo de su grupo. Asistencia de 66 % (40 de 61 clases). 11 tareas vencidas sin entregar	11 %	66 %	11
+Fiordaliza Pérez Gómez	Avance bajo (11 %), muy por debajo de su grupo. Asistencia de 66 % (40 de 61 clases). 9 tareas vencidas sin entregar	11 %	66 %	9
+Keila Familia Rosario	Avance bajo (11 %), muy por debajo de su grupo. Asistencia de 70 % (44 de 63 clases). 9 tareas vencidas sin entregar	11 %	70 %	9
+Kelvin Arias Matos	Avance bajo (17 %), muy por debajo de su grupo. Asistencia de 75 % (44 de 59 clases). 11 tareas vencidas sin entregar	17 %	75 %	11
+Omar Mota Agramonte	Avance bajo (11 %), muy por debajo de su grupo. Asistencia de 70 % (44 de 63 clases). 12 tareas vencidas sin entregar	11 %	70 %	12
+Rafael Antonio Guzmán	Avance bajo (17 %), muy por debajo de su grupo. Asistencia de 72 % (44 de 61 clases). 13 tareas vencidas sin entregar	17 %	72 %	13
+Yaritza Mejía Lora	Avance bajo (8 %), muy por debajo de su grupo. Asistencia de 73 % (44 de 60 clases). 11 tareas vencidas sin entregar	8 %	73 %	11
+Yesica Durán Espaillat	Avance bajo (20 %), muy por debajo de su grupo. Asistencia de 63 % (50 de 79 clases). 20 tareas vencidas sin entregar	20 %	63 %	20
+Wilkin Santana Mota	Avance bajo (36 %), muy por debajo de su grupo. 1 tarea vencida sin entregar	36 %	85 %	1
+Ángel Luis Morillo	Avance bajo (39 %), muy por debajo de su grupo	39 %	85 %	0
+Anyelina Pujols Ozuna	Avance bajo (37 %), muy por debajo de su grupo	37 %	81 %	0
+Brayan Ramírez Ozuna	Avance bajo (42 %), muy por debajo de su grupo	42 %	88 %	0
+Cristian Agramonte Mercedes	Avance bajo (42 %), muy por debajo de su grupo	42 %	88 %	0
+Joel Antonio Batista	Avance bajo (39 %), muy por debajo de su grupo	39 %	88 %	0
+Johanna Hidalgo Mota	Avance bajo (40 %), muy por debajo de su grupo	40 %	84 %	0
+Mildred Luciano Infante	Avance bajo (36 %), muy por debajo de su grupo	36 %	88 %	0
+Rafael Herrera Medina	Avance bajo (39 %), muy por debajo de su grupo	39 %	84 %	0
+Wanda Encarnación Lantigua	Avance bajo (42 %), muy por debajo de su grupo	42 %	83 %	0
+Docentes
+
+Carga de cada docente y cuánto llevan esperando los estudiantes por una calificación.
+
+Descargar en CSV
+Entregas por calificar
+Ramón Peña Castillo
+126
+Rosa Almonte Guzmán
+62
+Yokasta Féliz Matos
+70
+Fausto Rafael Then
+31
+Milagros Concepción Abreu
+53
+Julio César Ventura
+63
+Domingo Antonio Severino
+28
+Víctor Manuel Liriano
+23
+Lissette Marte Cabral
+31
+Yahaira Nolasco Durán
+21
+Docentes: cursos, estudiantes y entregas por calificar
+Docente	Cursos	Estudiantes	Por calificar	La más antigua espera ↑
+Ramón Peña Castillo	2	56	126	Hace 4 días
+Rosa Almonte Guzmán	1	58	62	Hace 4 días
+Yokasta Féliz Matos	2	60	70	Hace 4 días
+Fausto Rafael Then	1	29	31	Hace 4 días
+Milagros Concepción Abreu	1	58	53	Hace 4 días
+Julio César Ventura	1	58	63	Hace 4 días
+Domingo Antonio Severino	1	28	28	Hace 4 días
+Víctor Manuel Liriano	1	28	23	Hace 4 días
+Lissette Marte Cabral	1	28	31	Hace 3 días
+Yahaira Nolasco Durán	1	28	21	Hace 3 días
+Acceso
+
+Personas que todavía no pueden entrar porque no han creado su contraseña. El archivo trae sus nombres y correos para invitarlas.
+
+Todas las personas activas ya pueden entrar.
+
+Grupos y programas
+
+Tamaño y avance promedio de cada grupo y de cada programa.
+
+Descargar en CSV
+Avance promedio por grupo
+Enfermería 2026 — Mañana
+66 %
+Contabilidad 2026 — Sábados
+68 %
+Enfermería 2026 — Tarde
+69 %
+Contabilidad 2026 — Noche
+69 %
+Grupos: estudiantes y avance promedio
+Grupo	Programa	Estudiantes	Avance promedio ↑
+Enfermería 2026 — Mañana	Técnico en Enfermería	30 de 30	66 %
+Contabilidad 2026 — Sábados	Técnico en Contabilidad	26 de 30	68 %
+Enfermería 2026 — Tarde	Técnico en Enfermería	28 de 30	69 %
+Contabilidad 2026 — Noche	Técnico en Contabilidad	30 de 30	69 %
+Avance promedio por programa
+Técnico en Enfermería
+67 %
+Técnico en Contabilidad
+68 %
+Programas: cursos, estudiantes y avance promedio
+Programa	Cursos	Estudiantes	Avance promedio ↑
+Técnico en Enfermería	3	58	67 %
+Técnico en Contabilidad	3	56	68 %
+
+Descargar programas en CSV

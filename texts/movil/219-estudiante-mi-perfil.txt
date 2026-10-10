@@ -1,0 +1,38 @@
+http://127.0.0.1:3000/dashboard/perfil
+
+Saltar al contenido principal
+12
+Menú
+Volver a Inicio
+Mi perfil
+
+Revisa tus datos, corrígelos y cambia tu contraseña cuando lo necesites.
+
+Mi acceso
+Correo
+ana@instituto-demo.test
+Es la cuenta con la que entras a Edukana. Si necesitas cambiarlo, pídelo a la administración de tu institución.
+Rol
+Estudiante
+Institución
+Instituto Demo
+Mi foto
+
+Todavía no tienes foto. Mientras tanto, el menú muestra tu inicial.
+
+JPG, PNG o WebP de hasta 5 MB.
+
+Subir foto
+Mis datos
+Nombre completo
+Teléfono (opcional)
+Guardar mis datos
+Cambiar contraseña
+
+Al cambiarla se cerrará tu sesión en todos tus dispositivos y tendrás que entrar de nuevo con la contraseña nueva.
+
+Contraseña actual
+Contraseña nueva
+Al menos 10 caracteres, con una letra y un número.
+Repite la contraseña nueva
+Cambiar contraseña

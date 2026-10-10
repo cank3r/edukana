@@ -1,0 +1,86 @@
+http://127.0.0.1:3000/dashboard/aula/cmv2i55ei000ody4hi8jockm0/calificaciones?nota=cmv2i6tbr002nd6bc8j1579rk~cmv2i55g4001vdy4h7nmohn5x
+
+Saltar al contenido principal
+3
+Menú
+Volver al curso
+Calificaciones
+
+Toca una nota para ponerla o corregirla. Los estudiantes solo ven las actividades que publiques.
+
+Agregar actividad calificable
+
+Para algo que no es una tarea ni un examen del curso: una exposición, la participación, un trabajo en clase.
+
+Título
+Puntaje máximo
+Mostrar la nota a los estudiantes
+Agregar actividad
+
+Actividad agregada. Ya puedes poner sus notas: los estudiantes las verán.
+
+Notas de 4 estudiantes
+Descargar en CSV
+Ana Rodríguez
+Promedio: —
+Juan Castillo
+Promedio: —
+Pedro Jiménez
+Promedio: —
+Rosa Almonte
+Promedio: 92.5
+Problemas de suma y resta
+85 / 100
+Participación movil
+— / 10
+Prueba corta: suma y resta
+10 / 10
+
+El promedio va de 0 a 100. Cada nota cuenta según su puntaje máximo y el peso de su categoría; lo exonerado («Exon.») y lo que aún no tiene nota no cuentan. Incluye también las actividades ocultas.
+
+Actividades calificables
+
+Problemas de suma y resta
+
+General · máximo 100 · 1 de 4 con nota
+
+Los estudiantes ven esta nota
+
+Ocultar notas
+
+Viene de una tarea: su título y puntaje se cambian allí. Abrir la tarea
+
+Participación movil
+
+General · máximo 10 · 0 de 4 con nota
+
+Los estudiantes ven esta nota
+
+Ocultar notas
+Editar
+Borrar
+
+Prueba corta: suma y resta
+
+General · máximo 10 · 1 de 4 con nota
+
+Los estudiantes ven esta nota
+
+Ocultar notas
+
+Viene de un examen: su título y puntaje se cambian allí. Abrir los exámenes
+
+Opciones avanzadas
+Rosa Almonte
+
+Participación movil
+
+Cerrar
+Nota (de 0 a 10)
+
+Puedes usar decimales, por ejemplo 8,5.
+
+Exonerado (esta actividad no cuenta en su promedio)
+Comentario para el estudiante (opcional)
+Guardar nota
+Cancelar

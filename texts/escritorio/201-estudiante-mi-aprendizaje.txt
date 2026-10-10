@@ -1,0 +1,43 @@
+http://127.0.0.1:3000/dashboard/aula
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Mis cursos
+Avisos
+Calendario
+Más
+15
+Notificaciones
+Cerrar sesión
+P
+
+Pedro Jiménez
+
+pedro@instituto-demo.test
+
+Inicio
+Cursos
+Mis cursos
+
+Entra a un curso para seguir estudiando. Los que terminaste siguen aquí, con tu nota final.
+
+Buscar curso por nombre
+Buscar
+Completado
+LEC-100
+Taller de Lectura
+
+Luis Peralta · Año 2026
+
+Entrar
+MAT-101
+Matemática Básica
+
+Luis Peralta · Año 2026
+
+0% completado
+
+Entrar

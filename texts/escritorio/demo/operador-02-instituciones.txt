@@ -1,0 +1,48 @@
+http://127.0.0.1:3000/operador
+
+Saltar al contenido principal
+Panel de la plataforma
+Volver a mi institución
+Tablero
+Instituciones
+Planes
+Facturación
+Más opciones
+Instituciones
+
+Todas las instituciones de la plataforma. Crea una nueva y su administrador recibe la invitación por correo.
+
+Crear institución
+Buscar institución
+Tipo
+Todas las instituciones
+Docentes independientes
+Estado
+Todos los estados
+Activas
+Suspendidas
+Buscar
+Cursos de Elena Docente
+Otro
+1 persona activa · 1 curso
+Alta: 10 de octubre de 2026
+Instituto Técnico Demo
+Instituto
+147 personas activas · 12 cursos
+Alta: 10 de octubre de 2026
+Colegio Nuevo Amanecer
+Colegio o escuela
+1 persona activa · 0 cursos
+Alta: 10 de octubre de 2026
+Instituto Backoffice escritorio
+Instituto
+31 personas activas · 0 cursos
+Alta: 10 de octubre de 2026
+Instituto Backoffice movil
+Instituto
+31 personas activas · 0 cursos
+Alta: 10 de octubre de 2026
+Instituto Demo
+Instituto
+10 personas activas · 2 cursos
+Alta: 10 de octubre de 2026

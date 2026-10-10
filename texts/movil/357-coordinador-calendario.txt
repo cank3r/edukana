@@ -1,0 +1,41 @@
+http://127.0.0.1:3000/dashboard/calendario
+
+Saltar al contenido principal
+1
+Menú
+Volver a Inicio
+Calendario
+
+Tus clases en vivo y entregas de los próximos 14 días.
+
+Próximos 14 días
+Mañana, domingo, 11 de octubre
+
+Clase en vivo · 10:00 a. m. · 60 minutos
+
+Repaso de la unidad 1
+Matemática Básica
+
+Empieza el domingo, 11 de octubre a las 10:00 a. m.
+
+Lunes, 12 de octubre
+
+Clase en vivo · 3:00 p. m. · 60 minutos
+
+Clase de dudas (movil)
+Matemática Básica
+
+Empieza el lunes, 12 de octubre a las 3:00 p. m.
+
+Jueves, 15 de octubre
+
+Entrega de tarea · hasta las 5:00 p. m.
+
+Ejercicios de repaso (movil)
+Matemática Básica
+Sábado, 17 de octubre
+
+Entrega de tarea · hasta las 6:00 p. m.
+
+Problemas de suma y resta
+Matemática Básica

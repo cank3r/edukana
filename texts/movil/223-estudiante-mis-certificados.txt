@@ -1,0 +1,16 @@
+http://127.0.0.1:3000/dashboard/mis-certificados
+
+Saltar al contenido principal
+12
+Menú
+Volver a Inicio
+Mis certificados
+
+Los certificados de los cursos que terminaste. Ábrelos para imprimirlos o comparte su enlace.
+
+Taller de Lectura
+
+Emitido el 10 de octubre de 2026
+
+Ver certificado
+Copiar enlace para compartir

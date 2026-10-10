@@ -1,0 +1,20 @@
+http://127.0.0.1:3000/dashboard/aula
+
+Saltar al contenido principal
+Menú
+Volver a Inicio
+Cursos
+
+Crea cursos, entra a trabajar en ellos y archiva los que ya terminaron.
+
+Crear curso
+Buscar curso por nombre
+Buscar
+Activos
+Archivados
+
+Todavía no hay cursos.
+
+Un curso reúne las lecciones, las tareas, los exámenes y las notas de un grupo de estudiantes. Crea el primero: nace como borrador y lo publicas cuando esté listo.
+
+Crear curso

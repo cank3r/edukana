@@ -1,0 +1,94 @@
+http://127.0.0.1:3000/dashboard/aula/cmv2i55ei000ody4hi8jockm0/certificados
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+Notificaciones
+Cerrar sesión
+C
+
+Carla Méndez
+
+admin@instituto-demo.test
+
+Inicio
+Cursos
+Curso
+Certificados
+Certificados
+
+Entrega el certificado a quienes terminaron el curso. Cada uno tiene un enlace público para comprobar que es auténtico.
+
+Requisitos para recibir el certificado
+Completar todas las lecciones del curso (100% de avance).
+O que tú marques el curso como completado para ese estudiante.
+
+La nota actual de cada estudiante aparece en la lista para que la tengas en cuenta. El curso no tiene una nota mínima: tú decides a quién emitirlo. El avance mínimo se cambia en Editar curso.
+
+Certificados emitidos
+1
+Cumplen y aún no lo tienen
+0
+Aún no cumplen
+3
+
+Por ahora nadie está pendiente de certificado. Cuando un estudiante cumpla los requisitos, aquí podrás emitirlo.
+
+Estudiantes (4)
+
+Ana Rodríguez
+
+Le falta avance: 80 %
+
+Avance
+20%
+Nota actual
+Sin notas
+
+Lleva 20% del curso y necesita 100%.
+
+Marcar curso como completado
+
+Juan Castillo
+
+Le falta avance: 100 %
+
+Avance
+0%
+Nota actual
+Sin notas
+
+Lleva 0% del curso y necesita 100%.
+
+Marcar curso como completado
+
+Pedro Jiménez
+
+Le falta avance: 100 %
+
+Avance
+0%
+Nota actual
+Sin notas
+
+Lleva 0% del curso y necesita 100%.
+
+Marcar curso como completado
+
+Rosa Almonte
+
+Certificado emitido el 10 de octubre de 2026
+Curso completado
+
+Avance
+0%
+Nota actual
+91.67 de 100
+Ver certificado
+Anular certificado

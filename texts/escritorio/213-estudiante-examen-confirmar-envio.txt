@@ -1,0 +1,47 @@
+http://127.0.0.1:3000/dashboard/aula/cmv2i55ei000ody4hi8jockm0/presentar/cmv2i55gz002ody4h8wbpxoz9
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Mis cursos
+Avisos
+Calendario
+Más
+15
+Notificaciones
+Cerrar sesión
+P
+
+Pedro Jiménez
+
+pedro@instituto-demo.test
+
+Inicio
+Cursos
+Curso
+Exámenes
+Examen
+
+Respondidas 3 de 3
+
+Tiempo restante:
+5:00
+
+Prueba corta: suma y resta
+1. ¿Cuánto es 27 + 15?
+32
+42
+52
+2. El número 10 es mayor que el 9.
+Verdadero
+Falso
+3. Explica con tus palabras qué es una llevada.
+Escribe tu respuesta. La revisa tu docente.
+¿Enviar el examen ahora?
+
+Respondiste todas las preguntas. Después de enviar no podrás cambiar tus respuestas.
+
+Sí, enviar examen
+Seguir respondiendo

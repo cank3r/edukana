@@ -1,0 +1,52 @@
+http://127.0.0.1:3000/dashboard/aula/cmv2i55ei000ody4hi8jockm0
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+2
+Notificaciones
+Cerrar sesión
+S
+
+Sofía Batista
+
+coordinacion@instituto-demo.test
+
+Inicio
+Cursos
+Curso
+Publicado
+MAT-101
+Matemática Básica
+
+Números, operaciones y problemas de la vida diaria.
+
+Docente: Luis Peralta · Año 2026 · 4 estudiantes
+
+Armar el contenido
+Capítulos y lecciones · 6 lecciones
+Inscribir estudiantes
+Quién está en el curso y cómo avanza · 4 inscritos
+Tomar asistencia
+Marca quién vino hoy y revisa el historial.
+Crear y revisar tareas
+3 tareas
+Preparar preguntas
+Banco de preguntas para tus exámenes · 3 preguntas
+Crear y revisar exámenes
+1 examen
+Poner calificaciones
+El libro de notas del curso.
+Programar clases en vivo
+3 clases programadas
+Editar curso
+Corregir datos, publicar o archivar.
+Más herramientas
+Organizar el horario
+Certificados del curso

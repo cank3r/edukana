@@ -1,0 +1,30 @@
+http://127.0.0.1:3000/dashboard/gestion/programas/cmv2i55hj003ady4h4669324d
+
+Saltar al contenido principal
+Menú
+Volver a Programas
+Bachillerato Técnico
+
+Programa de dos años.
+
+1 grupo sigue este programa.
+
+Editar nombre y descripción
+Cursos del programa
+
+En el orden en que se cursan. Usa Subir y Bajar para cambiarlo.
+
+1.Matemática BásicaMAT-101
+
+Subir
+Bajar
+Quitar
+Agregar cursos
+Taller de Lectura
+LEC-100
+Agregar curso al programa
+Borrar este programa
+
+Úsalo solo si el programa se creó por error o ya no se ofrece.
+
+Borrar programa

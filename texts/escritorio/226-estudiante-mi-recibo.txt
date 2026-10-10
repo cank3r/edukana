@@ -1,0 +1,55 @@
+http://127.0.0.1:3000/dashboard/mi-cuenta/recibo/cmv2i55po00c0dy4h4s3iy4j9
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Mis cursos
+Avisos
+Calendario
+Más
+Mi estado de cuenta
+Mis certificados
+15
+Notificaciones
+Cerrar sesión
+P
+
+Pedro Jiménez
+
+pedro@instituto-demo.test
+
+Inicio
+Mi estado de cuenta
+Recibo
+Detalle
+Volver a mi cuenta
+Imprimir o guardar como PDF
+
+Instituto Demo
+
+RECIBO DE PAGO
+
+Recibo n.º
+
+4S3IY4J9
+
+Monto recibido
+
+RD$3,500.00
+
+Tres mil quinientos pesos dominicanos con 00/100
+
+Estudiante
+Pedro Jiménez
+Concepto
+Mensualidad · Año 2026
+Forma de pago
+Efectivo
+Fecha del pago
+10 oct 2026
+Registró
+Carla Méndez, el 10 oct 2026
+
+Comprobante emitido por Instituto Demo con Edukana. Consérvalo para cualquier aclaración.

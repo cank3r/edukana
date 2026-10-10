@@ -1,0 +1,34 @@
+http://127.0.0.1:3000/dashboard/gestion/personas/cmv2i55dw0007dy4hzijr3v7g
+
+Saltar al contenido principal
+Menú
+Volver a Personas
+Luis Peralta
+
+Docente
+Puede entrar
+
+Datos
+Correo
+docente@instituto-demo.test
+Teléfono
+No indicado
+Rol
+Docente
+En la institución desde
+10 oct 2026
+Acceso
+
+Ya creó su contraseña.
+
+Editar
+Enviar aviso de acceso
+Suspender
+Cursos que enseña
+Matemática Básica
+
+4 estudiantes cursándolo ahora
+
+Taller de Lectura
+
+0 estudiantes cursándolo ahora

@@ -1,0 +1,39 @@
+http://127.0.0.1:3000/dashboard/aula/cmv2i55ei000ody4hi8jockm0/clases
+
+Saltar al contenido principal
+3
+Menú
+Volver al curso
+Clases en vivo
+
+Programa las clases por videollamada del curso. Los estudiantes inscritos las ven aquí y en su calendario.
+
+Programar clase
+
+Listo: la clase quedó programada.
+
+Próximas clases
+
+Domingo, 11 de octubre
+
+Repaso de la unidad 1
+
+10:00 a. m. · 60 minutos
+
+Traigan sus dudas de la unidad 1.
+
+Entrar a clase
+Editar
+Borrar
+
+Lunes, 12 de octubre
+
+Clase de dudas (movil)
+
+3:00 p. m. · 60 minutos
+
+Entrar a clase
+Editar
+Borrar
+
+Las horas se muestran en hora de Santo Domingo.

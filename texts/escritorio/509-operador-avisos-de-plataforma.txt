@@ -1,0 +1,35 @@
+http://127.0.0.1:3000/operador/avisos
+
+Saltar al contenido principal
+Panel de la plataforma
+Volver a mi institución
+Tablero
+Instituciones
+Planes
+Facturación
+Más opciones
+Avisos de Edukana
+
+Mensajes de la plataforma que aparecen al entrar al panel.
+
+Crear aviso
+Aviso Edukana escritorio-1791643521390
+
+Todas las personas · Terminado
+
+Mensaje corregido de la plataforma.
+
+Desde 2026-01-01 00:00 UTC hasta 2026-10-10 14:45 UTC
+
+Editar o terminar
+Aviso Edukana escritorio-1791643521390
+Aviso Edukana movil-1791643394740
+
+Todas las personas · Terminado
+
+Mensaje corregido de la plataforma.
+
+Desde 2026-01-01 00:00 UTC hasta 2026-10-10 14:43 UTC
+
+Editar o terminar
+Aviso Edukana movil-1791643394740

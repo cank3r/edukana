@@ -1,0 +1,45 @@
+http://127.0.0.1:3000/dashboard/configuracion
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+Admisiones
+Cobros
+Ventas
+Calendario
+Reportes
+Configuración
+Notificaciones
+Cerrar sesión
+C
+
+Carla Méndez
+
+admin@instituto-demo.test
+
+Inicio
+Configuración
+Configuración
+
+Aquí preparas tu institución. Elige qué quieres hacer.
+
+Datos de la institución
+Cambia el nombre, el tipo, la zona horaria y el idioma.
+Cambiar datos
+Períodos académicos
+Crea los tramos del año en que se dan las clases y elige cuál es el actual.
+Ver períodos
+Programas y grupos
+Arma carreras o diplomados con sus cursos, y grupos de estudiantes que los cursan juntos.
+Ver programas
+Ver grupos
+Personas
+Agrega docentes y estudiantes, invítalos a entrar y controla quién tiene acceso.
+Ver personas
+Opciones avanzadas

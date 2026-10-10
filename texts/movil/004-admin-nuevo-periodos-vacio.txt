@@ -1,0 +1,20 @@
+http://127.0.0.1:3000/dashboard/configuracion/periodos
+
+Saltar al contenido principal
+Menú
+Volver a Configuración
+Períodos académicos
+
+Un período es el tramo del año en que se dan las clases, por ejemplo «Enero–Abril 2027» o «Año 2026–2027». Cada curso pertenece a un período.
+
+Todavía no hay períodos
+
+Crea el primero para poder abrir cursos. Solo necesitas un nombre y las fechas en que empieza y termina.
+
+Nuevo período
+
+Nombre del período
+Empieza el
+Termina el
+Crear período
+Cancelar

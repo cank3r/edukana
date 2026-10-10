@@ -1,0 +1,34 @@
+http://127.0.0.1:3000/dashboard/aula/cmv2i55ei000ody4hi8jockm0/preguntas/nueva
+
+Saltar al contenido principal
+3
+Menú
+Volver a Banco de preguntas
+Agregar pregunta
+
+Curso: Matemática Básica
+
+Tipo de pregunta
+Selección múltiple
+El estudiante elige una entre varias opciones. Se califica sola.
+Verdadero o falso
+El estudiante marca Verdadero o Falso. Se califica sola.
+Respuesta corta
+El estudiante escribe su respuesta. La revisas y le pones los puntos tú.
+Pregunta
+Opciones
+
+Escribe de 2 a 6 opciones y marca el círculo de la correcta.
+
+Quitar
+Quitar
+Quitar
+Agregar otra opción
+
+Aún no has marcado la respuesta correcta.
+
+Puntos que vale
+Puedes cambiarlos en cada examen.
+Explicación (opcional)
+Agregar pregunta
+Cancelar

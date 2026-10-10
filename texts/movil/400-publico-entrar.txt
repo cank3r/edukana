@@ -1,0 +1,15 @@
+http://127.0.0.1:3000/login
+
+Bienvenido
+
+Ingresa a tu institución
+
+Correo electrónico
+Contraseña
+Ingresar
+
+¿Olvidaste tu contraseña o es tu primera vez?
+
+¿Problemas para ingresar? Escríbenos
+
+Hecho con Edukana

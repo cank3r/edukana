@@ -1,0 +1,3261 @@
+http://127.0.0.1:3000/dashboard/pagos
+
+Saltar al contenido principal
+
+Instituto Técnico Demo
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+Admisiones
+Cobros
+Ventas
+Calendario
+Reportes
+Configuración
+Notificaciones
+Cerrar sesión
+M
+
+Margarita Rosario Díaz
+
+directora@demo.edukana.do
+
+Inicio
+Cobros
+Cobros
+
+Crea cargos, registra los pagos que recibes y mira quién debe.
+
+Por cobrar
+RD$306,900.00
+Todo lo que aún se debe
+Vencido
+RD$73,100.00
+Ya pasó su fecha de vencimiento
+Cobrado este mes
+RD$240,000.00
+Pagos recibidos en el mes
+Crear cargo
+Cargos (458)
+Buscar por estudiante
+Estado
+Todos los estados
+Pendiente
+Pago parcial
+Vencido
+Pagado
+Anulado
+Período
+Todos los períodos
+Cuatrimestre Agosto–Diciembre 2026
+Cuatrimestre Abril–Agosto 2026
+Buscar
+
+Omar Mota Agramonte
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Wanda Encarnación Lantigua
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Paola Andrea Cabrera
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Wander Castillo Feliz
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Rubén Javier Cuello
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Elizabeth Rosario Núñez
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Mabel Tejada Then
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Gisela Moreno Antigua
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Darling Severino Florentino
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Gabriel Polanco Pichardo
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Ambar Luciano Infante
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Kelvin Arias Matos
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Juana Valdez Herrera
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yeremi Espaillat Rosario
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yesica Severino Florentino
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Sugeidy Peralta Hiciano
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Fiordaliza Marte Jáquez
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yamilet Ureña Toribio
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Rosanna Valdez Ureña
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Robert Espinal Cepeda
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Rafael Herrera Medina
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Massiel Ogando Acosta
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Omar Santos Vásquez
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yanelis Peralta Ogando
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Anderson Ventura Pérez
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Leonela Castillo Cabral
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Wanda Cabral Lora
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Kelvin Jiménez Tejada
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Anyelina De la Cruz Almonte
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Juan Carlos Beltré Espaillat
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Wilkin Santana Mota
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yoselin Cabral Lora
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Crismeily Hidalgo Mota
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Leonel Pichardo García
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Joel Antonio Batista
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Frailin Santos Vásquez
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Dilenia Tejada Then
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Mildred Luciano Infante
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Rubén Jiménez Tejada
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Elizabeth Peralta Ogando
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Nicol Marte Jáquez
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Nathalie Guerrero Polanco
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Darling Florentino Severino
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Gabriel Lora Reynoso
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Patria Ureña Toribio
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Daniela Sánchez Ogando
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Juana Sosa Báez
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yeremi Nolasco Tavárez
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Euclides Polanco Pichardo
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Luz Marina Encarnación
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Fiordaliza Pérez Gómez
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yamilet Zapata Agramonte
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Esmeralda Pujols Báez
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Keila Familia Rosario
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Rafael Frías Jiménez
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Massiel Núñez Beltré
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yunior Herrera Medina
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Mariela Abreu Núñez
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Anderson Vásquez Marte
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Leonela Inoa Encarnación
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Rosalía Ogando Acosta
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Brayan Ramírez Ozuna
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Anyelina Pujols Ozuna
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Juan Carlos Acosta Guerrero
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Ana Mercedes Reyes
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Isamar Cuevas Herrera
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Crismeily Gómez Quezada
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Leonel Almonte Inoa
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Carolina Méndez Tejada
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yohanna Disla Vargas
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Dilenia Cuello Sosa
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Mildred Infante Luciano
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Cristian Ventura Pérez
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+José Miguel Fernández
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Frailin Quezada Ventura
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yoselin Paulino Polanco
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yomaira Castillo Cabral
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Ruth Esther Polanco
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Kelvin Medina Bautista
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yanelis Tavárez Martínez
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yulissa Rodríguez Peña
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Franklin Medina Soto
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yesica Durán Espaillat
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Euclides Lantigua Almonte
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yaritza Mejía Lora
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Marisol Jiménez Cruz
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Nairoby Then Frías
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Moisés Guerrero Peralta
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yudelka De la Cruz Almonte
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Edwin Alcántara Luna
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Nicol Mercedes Hidalgo
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Patria Toribio Ureña
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Starling Beltré Espaillat
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Rafael Antonio Guzmán
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Vencido
+Venció el 15 ago 2026
+
+Monto
+RD$3,800.00
+Pagado
+RD$1,900.00
+Debe
+RD$1,900.00
+Registrar pago
+Editar
+Anular
+Historial de pagos (1)
+
+Yunior Báez Javier
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Rosalía Martínez Liriano
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Nairoby Valdez Herrera
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Leidy Laura Taveras
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Cristian Agramonte Mercedes
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yomaira García Paulino
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Starlin De los Santos
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Héctor Manuel Pimentel
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yudelka Ozuna Pujols
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Starling Liriano Nolasco
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Johanna Hidalgo Mota
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yesenia Brito Ramos
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Johanna Jáquez Santos
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Ramón Emilio Reynoso Castillo
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Ramón Emilio Pichardo García
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Ángel Luis Morillo
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Mabel Bautista Valdez
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Ambar Hernández Jiménez
+
+Mensualidad de agosto · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$4,500.00
+Pagado
+RD$4,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Moisés Espaillat Rosario
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Claribel Tavárez Paulino
+
+Mensualidad de agosto · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$3,800.00
+Pagado
+RD$3,800.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Ana Mercedes Reyes
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yulissa Rodríguez Peña
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Wilkin Santana Mota
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Esmeralda Pujols Báez
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Carolina Méndez Tejada
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yaritza Mejía Lora
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Starlin De los Santos
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Paola Andrea Cabrera
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Rosanna Valdez Ureña
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Joel Antonio Batista
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Nathalie Guerrero Polanco
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Daniela Sánchez Ogando
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Luz Marina Encarnación
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Keila Familia Rosario
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Mariela Abreu Núñez
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Brayan Ramírez Ozuna
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Isamar Cuevas Herrera
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yohanna Disla Vargas
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+José Miguel Fernández
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,000.00
+Pagado
+RD$2,000.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Ruth Esther Polanco
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,000.00
+Pagado
+RD$2,000.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Franklin Medina Soto
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,000.00
+Pagado
+RD$2,000.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Marisol Jiménez Cruz
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,000.00
+Pagado
+RD$2,000.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Edwin Alcántara Luna
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,000.00
+Pagado
+RD$2,000.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Rafael Antonio Guzmán
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,000.00
+Pagado
+RD$2,000.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Leidy Laura Taveras
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,000.00
+Pagado
+RD$2,000.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Héctor Manuel Pimentel
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,000.00
+Pagado
+RD$2,000.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yesenia Brito Ramos
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,000.00
+Pagado
+RD$2,000.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Ángel Luis Morillo
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,000.00
+Pagado
+RD$2,000.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Claribel Tavárez Paulino
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,000.00
+Pagado
+RD$2,000.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Wander Castillo Feliz
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,000.00
+Pagado
+RD$2,000.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Gisela Moreno Antigua
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,000.00
+Pagado
+RD$2,000.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Kelvin Arias Matos
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,000.00
+Pagado
+RD$2,000.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Sugeidy Peralta Hiciano
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,000.00
+Pagado
+RD$2,000.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Robert Espinal Cepeda
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,000.00
+Pagado
+RD$2,000.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yanelis Peralta Ogando
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Kelvin Jiménez Tejada
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yoselin Cabral Lora
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Frailin Santos Vásquez
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Mildred Luciano Infante
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Dilenia Tejada Then
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Leonel Pichardo García
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Crismeily Hidalgo Mota
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Juan Carlos Beltré Espaillat
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Anyelina De la Cruz Almonte
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Leonela Castillo Cabral
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Anderson Ventura Pérez
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Massiel Ogando Acosta
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Rafael Herrera Medina
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yamilet Ureña Toribio
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Fiordaliza Marte Jáquez
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yeremi Espaillat Rosario
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Juana Valdez Herrera
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Gabriel Polanco Pichardo
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Darling Severino Florentino
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Elizabeth Rosario Núñez
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Rubén Javier Cuello
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Wanda Encarnación Lantigua
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Omar Mota Agramonte
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Ambar Hernández Jiménez
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Mabel Bautista Valdez
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Ramón Emilio Reynoso Castillo
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Johanna Jáquez Santos
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Starling Liriano Nolasco
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yudelka Ozuna Pujols
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yomaira García Paulino
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Cristian Agramonte Mercedes
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Rosalía Martínez Liriano
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yunior Báez Javier
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Patria Toribio Ureña
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Nicol Mercedes Hidalgo
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Moisés Guerrero Peralta
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Nairoby Then Frías
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Euclides Lantigua Almonte
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,500.00
+Pagado
+RD$2,500.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yesica Durán Espaillat
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Enfermería · Cuatrimestre Agosto–Diciembre 2026
+
+Vencido
+Venció el 16 ago 2026
+
+Monto
+RD$2,500.00
+Pagado
+RD$1,250.00
+Debe
+RD$1,250.00
+Registrar pago
+Editar
+Anular
+Historial de pagos (1)
+
+Yanelis Tavárez Martínez
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,000.00
+Pagado
+RD$2,000.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Kelvin Medina Bautista
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,000.00
+Pagado
+RD$2,000.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Yoselin Paulino Polanco
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,000.00
+Pagado
+RD$2,000.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Frailin Quezada Ventura
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,000.00
+Pagado
+RD$2,000.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Mildred Infante Luciano
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,000.00
+Pagado
+RD$2,000.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Dilenia Cuello Sosa
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,000.00
+Pagado
+RD$2,000.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Leonel Almonte Inoa
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,000.00
+Pagado
+RD$2,000.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Crismeily Gómez Quezada
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,000.00
+Pagado
+RD$2,000.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Juan Carlos Acosta Guerrero
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,000.00
+Pagado
+RD$2,000.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Anyelina Pujols Ozuna
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,000.00
+Pagado
+RD$2,000.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Leonela Inoa Encarnación
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,000.00
+Pagado
+RD$2,000.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Anderson Vásquez Marte
+
+Inscripción Cuatrimestre Agosto–Diciembre 2026 · Técnico en Contabilidad · Cuatrimestre Agosto–Diciembre 2026
+
+Pagado
+
+Monto
+RD$2,000.00
+Pagado
+RD$2,000.00
+Debe
+RD$0.00
+Editar
+Anular
+Historial de pagos (1)
+
+Se muestran los primeros 200. Usa la búsqueda o los filtros para ver los demás.

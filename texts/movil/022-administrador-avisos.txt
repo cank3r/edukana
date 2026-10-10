@@ -1,0 +1,21 @@
+http://127.0.0.1:3000/dashboard/comunidad
+
+Saltar al contenido principal
+Menú
+Volver a Inicio
+Avisos
+
+Mensajes para las personas de tu institución. Aquí los publicas y los lees.
+
+Publicar un aviso
+Bienvenidos al nuevo período
+
+Las clases comienzan esta semana. Revisen su horario y sus cursos.
+
+10 de octubre de 2026
+·
+Carla Méndez
+·
+Toda la institución
+Editar
+Borrar

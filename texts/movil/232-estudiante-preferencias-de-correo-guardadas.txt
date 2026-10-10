@@ -1,0 +1,23 @@
+http://127.0.0.1:3000/dashboard/notificaciones/preferencias
+
+Saltar al contenido principal
+12
+Menú
+Volver a Notificaciones
+Qué me llega por correo
+
+Todo te sigue apareciendo en Notificaciones. Aquí eliges qué quieres recibir también en tu correo (ana@instituto-demo.test).
+
+Avísame por correo…
+Cuando publiquen un aviso para ti o para tu curso
+Cuando califiquen una tarea
+Cuando tengas un cargo nuevo por pagar
+Cuando haya una tarea nueva
+Cuando haya un examen nuevo
+Cuando programen una clase en vivo
+Cuando tu certificado esté listo
+Guardar mis preferencias
+
+Listo. Te avisaremos por correo de 2 tipos de notificación.
+
+Volver a Notificaciones

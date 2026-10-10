@@ -1,0 +1,153 @@
+http://127.0.0.1:3000/dashboard?rango=semana
+
+Saltar al contenido principal
+1
+Menú
+
+Hola, Sofía
+
+Instituto Demo
+
+Año 2026, semana 41 de 78
+
+Ver cursos
+Publicar un aviso
+Ver personas
+Admisiones
+Cómo va la institución
+
+Esta semana, comparado con la semana pasada a esta misma altura.
+
+Esta semana
+Este mes
+Este período
+Estudiantes activos
+3
+3 nuevos esta semana
+
+3 más que la semana pasada
+
+Asistencia promedio
+75 %
+6 de 8 registros
+
+Todavía sin datos anteriores para comparar
+
+Avance promedio
+3.3 %
+1 lección completada esta semana
+
+1 lección más que la semana pasada
+
+Entregas a tiempo
+—
+Se llenará cuando venza una tarea publicada esta semana.
+
+Requiere tu atención
+
+1 curso no tiene estudiantes inscritos
+
+Un estudiante solo ve los cursos en los que está inscrito.
+
+Inscribir estudiantes
+Últimas 8 semanas
+Asistencia
+Entregas a tiempo
+0 %
+50 %
+100 %
+80 %
+24 ago
+7 sept
+21 sept
+5 oct
+Asistencia y entregas a tiempo por semana, semana por semana
+Semana que empieza	Asistencia	Entregas a tiempo
+17 ago	Sin datos	Sin datos
+24 ago	Sin datos	Sin datos
+31 ago	Sin datos	Sin datos
+7 sept	Sin datos	Sin datos
+14 sept	Sin datos	Sin datos
+21 sept	Sin datos	Sin datos
+28 sept	Sin datos	Sin datos
+5 oct (esta semana)	75 % (6 de 8 registros)	Sin datos
+Estudiantes en riesgo
+
+2 estudiantes reúnen al menos una señal: asistencia menor de 80 %, 2 o más tareas vencidas, nota por debajo de 70, avance muy por debajo de su grupo.
+
+Juan Castillo
+
+1 curso
+
+Asistencia 50 %
+Avance 0 %, muy por debajo de su grupo
+Pedro Jiménez
+
+1 curso
+
+Avance 0 %, muy por debajo de su grupo
+Docentes
+
+Lo que espera calificación y los cursos sin lecciones nuevas, asistencia ni notas en 14 días.
+
+Luis Peralta
+4 por calificar
+
+2 cursos, la más antigua llegó hoy
+
+Cursos
+
+Primero los que necesitan atención. La asistencia es de esta semana; en rojo lo que está por debajo de lo esperado.
+
+Necesitan atención
+Inscritos
+Avance
+Asistencia
+Nota promedio
+Por calificar
+Matemática Básica
+
+Luis Peralta, 4 inscritos
+
+Avance
+5 %
+Asistencia
+75 %
+Nota promedio
+92 de 100
+Por calificar
+4
+Taller de Lectura
+
+Luis Peralta, 2 inscritos
+
+Avance
+0 %
+Asistencia
+—
+Nota promedio
+—
+Por calificar
+Al día
+Admisiones esta semana
+Ver admisiones
+
+Solicitudes nuevas
+
+4
+
+1 sin atender todavía
+
+En proceso
+
+2
+
+Con documentos, en revisión o admitidas
+
+Inscritas
+
+1
+
+Ya son estudiantes
+
+4 solicitudes más que la semana pasada.

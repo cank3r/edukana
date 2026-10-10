@@ -1,0 +1,25 @@
+http://127.0.0.1:3000/dashboard/hijos
+
+Saltar al contenido principal
+1
+Menú
+Volver a Inicio
+Mis hijos
+
+Elige a quién quieres ver. Aquí solo se consulta: no se cambia nada.
+
+Ana Rodríguez
+
+1 curso en marcha · avance promedio 20 %
+
+Próxima clase: Repaso de la unidad 1 (Matemática Básica) · Mañana, 10:00 a. m.
+
+Ver su resumen
+
+Pedro Jiménez
+
+1 curso en marcha · avance promedio 0 %
+
+Próxima clase: Repaso de la unidad 1 (Matemática Básica) · Mañana, 10:00 a. m.
+
+Ver su resumen

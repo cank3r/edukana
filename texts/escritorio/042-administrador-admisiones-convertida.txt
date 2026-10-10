@@ -1,0 +1,74 @@
+http://127.0.0.1:3000/dashboard/admisiones/cmv2i95mp007ed6bc2t86ik7a
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Personas
+Cursos
+Avisos
+Más
+Admisiones
+Cobros
+Ventas
+Calendario
+Reportes
+Configuración
+Notificaciones
+Cerrar sesión
+C
+
+Carla Méndez
+
+admin@instituto-demo.test
+
+Inicio
+Admisiones
+Solicitud
+Lucía Fernández (escritorio)
+
+Inscrito Ya es estudiante. Llegó hace un momento.
+
+Ya es estudiante
+
+Se creó a Lucía Fernández (escritorio) como estudiante el 10 de octubre de 2026. Todavía no está en ningún grupo.
+
+Todavía no tiene una invitación vigente: envíasela desde su ficha.
+
+Ver la ficha de Lucía Fernández (escritorio)
+Datos
+Correo
+lucia.escritorio@correo.test
+Teléfono
+No indicado
+Programa de interés
+Bachillerato Técnico
+De dónde vino
+No indicado
+Notas
+
+Sin notas.
+
+Editar datos
+Historial de cambios
+
+Se convirtió en estudiante.
+
+10 oct 2026, 10:44 · Carla Méndez
+
+Pasó de «En revisión» a «Admitido».
+
+10 oct 2026, 10:44 · Carla Méndez
+
+Pasó de «Documentos» a «En revisión».
+
+10 oct 2026, 10:44 · Carla Méndez
+
+Pasó de «Interesado» a «Documentos».
+
+10 oct 2026, 10:44 · Carla Méndez
+
+Se registró la solicitud.
+
+10 oct 2026, 10:44 · Carla Méndez

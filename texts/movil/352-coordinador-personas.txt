@@ -1,0 +1,84 @@
+http://127.0.0.1:3000/dashboard/gestion
+
+Saltar al contenido principal
+1
+Menú
+Volver a Inicio
+Personas
+
+Todas las personas de tu institución: estudiantes, docentes, tutores y equipo.
+
+Buscar
+Rol
+Todos
+Estudiantes
+Docentes
+Coordinadores
+Tutores
+Administradores
+Estado
+Activos
+Suspendidos
+Buscar
+
+10 personas
+
+Ana Rodríguez
+
+ana@instituto-demo.test · Estudiante
+
+Puede entrar
+
+Carla Méndez
+
+admin@instituto-demo.test · Administrador
+
+Puede entrar
+
+Juan Castillo
+
+juan@instituto-demo.test · Estudiante
+
+Puede entrar
+
+Lucía Fernández (movil)
+
+lucia.movil@correo.test · Estudiante
+
+Aún no crea su contraseña
+
+Luis Peralta
+
+docente@instituto-demo.test · Docente
+
+Puede entrar
+
+Marisol Rodríguez
+
+marisol@instituto-demo.test · Tutor
+
+Puede entrar
+
+Marta Prueba movil
+
+marta.movil@instituto-demo.test · Estudiante
+
+Aún no crea su contraseña
+
+Pedro Jiménez
+
+pedro@instituto-demo.test · Estudiante
+
+Puede entrar
+
+Rosa Almonte
+
+rosa@instituto-demo.test · Estudiante
+
+Puede entrar
+
+Sofía Batista
+
+coordinacion@instituto-demo.test · Coordinador
+
+Puede entrar

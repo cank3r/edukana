@@ -1,0 +1,57 @@
+http://127.0.0.1:3000/operador/planes
+
+Saltar al contenido principal
+Volver a mi institución
+Tablero
+Instituciones
+Planes
+Facturación
+Más opciones
+Planes
+
+Los precios se expresan en centavos. Deja un límite vacío si no tiene máximo. Cambiar un precio no altera acuerdos existentes.
+
+Gratis
+Nombre
+Precio mensual en centavos
+Moneda (por ejemplo DOP)
+Máximo de estudiantes
+Almacenamiento máximo (MB)
+Pedidos de IA al mes
+Catálogo
+Asistente de IA
+Disponible para nuevas suscripciones
+Guardar plan
+Inicial
+Nombre
+Precio mensual en centavos
+Moneda (por ejemplo DOP)
+Máximo de estudiantes
+Almacenamiento máximo (MB)
+Pedidos de IA al mes
+Catálogo
+Asistente de IA
+Disponible para nuevas suscripciones
+Guardar plan
+Profesional
+Nombre
+Precio mensual en centavos
+Moneda (por ejemplo DOP)
+Máximo de estudiantes
+Almacenamiento máximo (MB)
+Pedidos de IA al mes
+Catálogo
+Asistente de IA
+Disponible para nuevas suscripciones
+Guardar plan
+Empresa
+Nombre
+Precio mensual en centavos
+Moneda (por ejemplo DOP)
+Máximo de estudiantes
+Almacenamiento máximo (MB)
+Pedidos de IA al mes
+Catálogo
+Asistente de IA
+Disponible para nuevas suscripciones
+Guardar plan

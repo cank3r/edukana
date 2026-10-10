@@ -1,0 +1,41 @@
+http://127.0.0.1:3000/dashboard/aula/cmv2i55ei000ody4hi8jockm0/presentar
+
+Saltar al contenido principal
+
+Instituto Demo
+
+Inicio
+Mis cursos
+Avisos
+Calendario
+Más
+15
+Notificaciones
+Cerrar sesión
+P
+
+Pedro Jiménez
+
+pedro@instituto-demo.test
+
+Inicio
+Cursos
+Curso
+Exámenes
+
+Matemática Básica
+
+Exámenes
+Abiertos
+Prueba corta: suma y resta
+
+Abierto, sin fecha de cierre.
+
+Tiempo
+5 minutos
+Intentos
+0 de 3 usados
+Nota
+Aún no lo has presentado
+Presentar examen
+Volver al curso

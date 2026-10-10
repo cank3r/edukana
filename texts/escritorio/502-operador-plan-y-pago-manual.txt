@@ -1,0 +1,33 @@
+http://127.0.0.1:3000/operador/facturacion?estado=PAID
+
+Saltar al contenido principal
+Panel de la plataforma
+Volver a mi institución
+Tablero
+Instituciones
+Planes
+Facturación
+Más opciones
+Facturación
+Por cobrar este mes
+
+No hay cobros abiertos con vencimiento este mes.
+
+Mostrar
+Abiertas
+Vencidas
+Pagadas
+Anuladas
+Todas
+Filtrar
+Instituto Backoffice movil
+
+50.00 DOP · Vence 2026-11-09
+
+Pagada
+
+Instituto Backoffice escritorio
+
+50.00 DOP · Vence 2026-11-09
+
+Pagada
