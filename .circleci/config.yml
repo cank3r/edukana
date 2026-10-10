@@ -34,7 +34,7 @@ jobs:
             dockerize -wait tcp://127.0.0.1:5432 -timeout 60s
             npx prisma migrate deploy
             npx prisma migrate status
-      - run: { name: Ejecutar pruebas, command: npm test }
+      - run: { name: Ejecutar pruebas, command: npm test && npm run test:backoffice }
       - run: { name: Esperar PostgreSQL, command: dockerize -wait tcp://127.0.0.1:5432 -timeout 60s }
       - run: { name: Aplicar migraciones en PostgreSQL real, command: npx prisma migrate deploy }
       - run:
@@ -71,6 +71,7 @@ jobs:
       EDUKANA_INTEGRATION_DB: "1"
       SMOKE_BASE_URL: http://127.0.0.1:3000
       INDEPENDENT_SIGNUP_ENABLED: "true"
+      PLATFORM_OPERATOR_EMAILS: "direccion@colegio-nuevo.test"
     steps:
       - checkout
       - restore_cache:

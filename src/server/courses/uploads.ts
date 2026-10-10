@@ -266,10 +266,10 @@ const PUBLIC_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
  * carpeta pública de su institución Y es hoy la imagen de un curso o el logo de esa institución.
  * Cualquier otro archivo (entregas, fotos de perfil, lecciones, avisos) responde como inexistente.
  */
-export async function publicImageAsset(assetId: string) {
+export async function publicImageAsset(assetId: string, institutionId?: string) {
   if (!assetId || !/^[a-z0-9]{10,40}$/i.test(assetId)) return null;
   const asset = await db.storageAsset.findFirst({
-    where: { id: assetId, kind: "IMAGE", confirmedAt: { not: null }, announcementId: null, submissionId: null },
+    where: { id: assetId, ...(institutionId ? { institutionId } : {}), kind: "IMAGE", confirmedAt: { not: null }, announcementId: null, submissionId: null },
     select: { id: true, institutionId: true, bucket: true, objectPath: true, mimeType: true, courseId: true },
   });
   if (!asset || !PUBLIC_IMAGE_TYPES.has(asset.mimeType)) return null;

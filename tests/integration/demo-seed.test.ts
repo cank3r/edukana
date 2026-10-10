@@ -67,8 +67,10 @@ async function demoRows(institutionId: string) {
     db.courseOrder.count({ where: scope }),
     db.courseReview.count({ where: scope }),
     db.auditLog.count({ where: scope }),
+    db.institutionSubscription.count({ where: scope }),
+    db.platformInvoice.count({ where: scope }),
   ]);
-  const names = ["users", "courses", "lessons", "enrollments", "lessonProgress", "sessions", "attendance", "assignments", "submissions", "gradeItems", "gradeEntries", "exams", "attempts", "answers", "charges", "payments", "leads", "notifications", "announcements", "liveClasses", "programs", "groups", "guardianships", "certificates", "orders", "reviews", "audits"];
+  const names = ["users", "courses", "lessons", "enrollments", "lessonProgress", "sessions", "attendance", "assignments", "submissions", "gradeItems", "gradeEntries", "exams", "attempts", "answers", "charges", "payments", "leads", "notifications", "announcements", "liveClasses", "programs", "groups", "guardianships", "certificates", "orders", "reviews", "audits", "subscriptions", "invoices"];
   return Object.fromEntries(names.map((name, index) => [name, entries[index]]));
 }
 
@@ -104,6 +106,12 @@ test("demo: crea un instituto técnico con ocho semanas de actividad realista", 
   const institution = await db.institution.findUniqueOrThrow({ where: { id: demoId } });
   assert.equal(institution.slug, DEMO_SLUG);
   assert.equal(institution.name, "Instituto Técnico Demo");
+  assert.equal(institution.status, "ACTIVE", "la demostración nace activa");
+  const subscription = await db.institutionSubscription.findUniqueOrThrow({ where: { institutionId: demoId } });
+  assert.equal(subscription.status, "ACTIVE");
+  assert.equal(subscription.planCode, institution.plan);
+  assert.ok(Number.isInteger(subscription.priceCents));
+  assert.ok(subscription.currentPeriodEnd > new Date(), "la suscripción está vigente");
   const scope = { institutionId: demoId };
   const now = new Date();
 

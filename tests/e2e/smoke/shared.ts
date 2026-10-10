@@ -21,7 +21,13 @@ export const SMOKE_ACCOUNTS = {
   newAdmin: "direccion@colegio-nuevo.test",
 } as const;
 
+export type BackofficeTarget = {
+  institutionId: string; institutionName: string; institutionSlug: string; memberEmail: string;
+};
+
 export type SmokeSeed = {
+  /** Disposable, isolated mutation targets: never suspend the demo roles or the operator. */
+  backofficeTargets: Record<"movil" | "escritorio", BackofficeTarget>;
   institutionId: string;
   courseId: string;
   lessonIds: string[];

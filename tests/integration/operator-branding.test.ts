@@ -88,7 +88,7 @@ test("reenviar la invitación usa el envío de invitaciones y solo alcanza al ad
   assert.equal(result.ok, true, result.message);
   assert.equal(mail.sent.length, 1);
   assert.equal(mail.sent[0].to, ADMIN_EMAIL);
-  assert.match(mail.sent[0].subject, /Tu acceso a Colegio Marca M14 en Edukana/);
+  assert.equal(mail.sent[0].subject, "Tu acceso a Colegio Marca M14");
   assert.match(mail.sent[0].text, /\/restablecer\//);
   assert.equal(await db.passwordResetToken.count({ where: { userId: created.adminUserId } }), before + 1);
   assert.equal(await db.auditLog.count({ where: { institutionId: created.institutionId, action: "PEOPLE_INVITED" } }), 2);

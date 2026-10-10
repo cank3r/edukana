@@ -1,4 +1,5 @@
-import type { InstitutionType, Role } from "@prisma/client";
+import { institutionStatusFilter } from "./suspension-policy";
+import type { InstitutionStatus, InstitutionType, Role } from "@prisma/client";
 import { db } from "@/lib/db";
 import { normalizeEmail } from "@/server/identity";
 import { countPendingInvitations, sendInvitations } from "@/server/people/invitations";
@@ -20,6 +21,7 @@ export type OperatorInstitutionRow = {
   name: string;
   slug: string;
   type: InstitutionType;
+  status: InstitutionStatus;
   createdAt: Date;
   activePeople: number;
   courses: number;
@@ -28,13 +30,13 @@ export type OperatorInstitutionRow = {
 export const OPERATOR_LIST_LIMIT = 200;
 
 /** Instituciones de la plataforma, la más reciente primero. `q` busca por nombre o identificador. */
-export async function listInstitutionsForOperator(operatorEmail: string | null | undefined, q = ""): Promise<OperatorInstitutionRow[] | null> {
+export async function listInstitutionsForOperator(operatorEmail: string | null | undefined, q = "", status = ""): Promise<OperatorInstitutionRow[] | null> {
   if (!isPlatformOperator(operatorEmail)) return null;
   const search = q.trim().slice(0, 100);
   const rows = await db.institution.findMany({
-    where: search
-      ? { OR: [{ name: { contains: search, mode: "insensitive" } }, { slug: { contains: search.toLowerCase() } }] }
-      : undefined,
+    where: { ...institutionStatusFilter(status), ...(search
+      ? { OR: [{ name: { contains: search, mode: "insensitive" as const } }, { slug: { contains: search.toLowerCase() } }] }
+      : {}) },
     orderBy: [{ createdAt: "desc" }, { id: "asc" }],
     take: OPERATOR_LIST_LIMIT,
     select: {
@@ -42,6 +44,7 @@ export async function listInstitutionsForOperator(operatorEmail: string | null |
       name: true,
       slug: true,
       type: true,
+      status: true,
       createdAt: true,
       _count: { select: { users: { where: { status: "ACTIVE" } }, courses: { where: { archivedAt: null } } } },
     },
@@ -72,6 +75,7 @@ export async function getInstitutionForOperator(
       name: true,
       slug: true,
       type: true,
+      status: true,
       createdAt: true,
       _count: { select: { users: { where: { status: "ACTIVE" } }, courses: { where: { archivedAt: null } } } },
     },

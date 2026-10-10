@@ -5,7 +5,7 @@ import { setInstitutionAiAction, type AiSettingState } from "@/server/actions/ai
 
 const empty: AiSettingState = { ok: false, message: "" };
 
-export function AiSettingForm({ enabled, platformReady }: { enabled: boolean; platformReady: boolean }) {
+export function AiSettingForm({ enabled, platformReady, locked = false }: { enabled: boolean; platformReady: boolean; locked?: boolean }) {
   const [confirming, setConfirming] = useState(false);
   const [state, action, pending] = useActionState(async (previous: AiSettingState, data: FormData) => {
     const result = await setInstitutionAiAction(previous, data);
@@ -29,7 +29,7 @@ export function AiSettingForm({ enabled, platformReady }: { enabled: boolean; pl
         <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">La plataforma todavía no tiene el asistente activado. Hasta que se active, nadie lo verá en los cursos.</p>
       )}
 
-      {confirming ? (
+      {locked ? <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">Desactivado por Edukana</p> : confirming ? (
         <form action={action} className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
           <input type="hidden" name="enabled" value={next ? "1" : "0"} />
           <p className="text-sm text-slate-800">

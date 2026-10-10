@@ -32,6 +32,7 @@ import { addDaysToDateKey, zonedDateKey, zonedTimeToUtc } from "@/lib/timezone";
 import { createPeriod } from "@/server/academic/periods";
 import { questionSnapshot } from "@/server/exams";
 import { ensureIdentity } from "@/server/identity";
+import { DEFAULT_PLATFORM_PLANS, seedPlatformPlans } from "@/server/platform/plan-defaults";
 import type { EdukanaRole } from "@/types/next-auth";
 import {
   ADMIN,
@@ -173,6 +174,25 @@ const WEEKLY_ANSWERS = [
 // Crear
 // ---------------------------------------------------------------------------------------
 
+/** Plan de la demostración: sus 120 estudiantes caben sin que aparezca el aviso de límite del plan. */
+const DEMO_PLAN = "PRO" as const;
+
+/**
+ * Suscripción activa de la demostración (un mes desde `now`). Idempotente: si ya tiene una, no la cambia
+ * (el operador pudo haberla editado).
+ */
+async function ensureDemoSubscription(tx: Prisma.TransactionClient, institutionId: string, now: Date) {
+  const existing = await tx.institutionSubscription.findUnique({ where: { institutionId }, select: { id: true } });
+  if (existing) return;
+  await seedPlatformPlans(tx);
+  const plan = DEFAULT_PLATFORM_PLANS.find((row) => row.code === DEMO_PLAN)!;
+  const end = new Date(now);
+  end.setUTCMonth(end.getUTCMonth() + 1);
+  await tx.institutionSubscription.create({
+    data: { institutionId, planCode: DEMO_PLAN, status: "ACTIVE", priceCents: plan.priceCents, currentPeriodStart: now, currentPeriodEnd: end, notes: "Institución de demostración" },
+  });
+}
+
 /**
  * Crea la institución de demostración. Si ya existe, no crea nada y devuelve `created: false`.
  * Si algo falla a mitad de camino, borra lo que alcanzó a crear y vuelve a lanzar el error.
@@ -180,7 +200,11 @@ const WEEKLY_ANSWERS = [
 export async function createDemo(options: CreateDemoOptions): Promise<CreateDemoResult> {
   const log: Log = options.log ?? (() => undefined);
   const existing = await findDemoInstitution();
-  if (existing) return { created: false, institutionId: existing.id };
+  if (existing) {
+    // Una demostración cargada antes del backoffice no tenía suscripción: se le agrega sin tocar nada más.
+    await db.$transaction((tx) => ensureDemoSubscription(tx, existing.id, options.now ?? new Date()));
+    return { created: false, institutionId: existing.id };
+  }
 
   const now = options.now ?? new Date();
   const passwordHash = await bcrypt.hash(options.password, 10);
@@ -188,9 +212,10 @@ export async function createDemo(options: CreateDemoOptions): Promise<CreateDemo
   // La institución y su directora nacen juntas, como cuando la crea el operador de la plataforma.
   const created = await db.$transaction(async (tx) => {
     const institution = await tx.institution.create({
-      data: { name: DEMO_NAME, slug: DEMO_SLUG, type: "INSTITUTE", timezone: TIME_ZONE, language: "es", brandColor: "#0E7490" },
+      data: { name: DEMO_NAME, slug: DEMO_SLUG, type: "INSTITUTE", timezone: TIME_ZONE, language: "es", brandColor: "#0E7490", status: "ACTIVE", plan: DEMO_PLAN },
       select: { id: true },
     });
+    await ensureDemoSubscription(tx, institution.id, now);
     const identityId = await ensureIdentity(tx, { email: ADMIN.email });
     const admin = await tx.user.create({
       data: { identityId, institutionId: institution.id, name: ADMIN.name, email: ADMIN.email, phone: ADMIN.phone, role: "ADMIN", status: "ACTIVE" },
@@ -1311,6 +1336,8 @@ async function removeDemoInstitution(institutionId: string): Promise<RemoveDemoR
     await tx.course.deleteMany({ where: scope });
     await tx.academicPeriod.deleteMany({ where: scope });
     await tx.auditLog.deleteMany({ where: scope });
+    await tx.platformInvoice.deleteMany({ where: scope });
+    await tx.institutionSubscription.deleteMany({ where: scope });
     await tx.institution.delete({ where: { id: institutionId } });
     const identities = await tx.identity.deleteMany({ where: { email: { endsWith: `@${DEMO_EMAIL_DOMAIN}` }, users: { none: {} } } });
     return { removed: true, identitiesRemoved: identities.count };

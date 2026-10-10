@@ -25,7 +25,9 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   // Ventana de las cifras y orden de la tabla de cursos del tablero; cualquier otro valor cae en el predeterminado.
   const boardQuery = { rango: firstParam(raw.rango), orden: firstParam(raw.orden) };
   const session = await auth();
-  const user = session!.user;
+  // Layout and page render in parallel. Let the layout redirect when live access is revoked.
+  if (!session?.user) return null;
+  const user = session.user;
   const iid = user.institutionId;
   const capabilities = await getEffectiveCapabilities(iid, user.role);
   if (capabilities.has("tenant.settings.manage")) {

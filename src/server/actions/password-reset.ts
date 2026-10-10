@@ -1,5 +1,6 @@
 "use server";
 
+import { getRequestInstitution } from "@/server/platform/domains";
 import { headers } from "next/headers";
 import { z } from "zod";
 import { requestPasswordReset, resetPasswordWithToken } from "@/server/password-reset";
@@ -14,7 +15,9 @@ export async function requestPasswordResetAction(_state: PasswordResetState, for
   const email = z.string().trim().toLowerCase().email().max(200).safeParse(formData.get("email"));
   if (!email.success) return { ok: false, message: "Escribe un correo válido." };
   try {
-    await requestPasswordReset({ email: email.data, ip: clientIpFromHeaders(await headers()) });
+    await requestPasswordReset({
+      email: email.data, ip: clientIpFromHeaders(await headers()), institutionId: (await getRequestInstitution())?.id,
+    });
   } catch (error) {
     const correlationId = crypto.randomUUID();
     console.error("requestPasswordResetAction failed", { correlationId, error });

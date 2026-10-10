@@ -1,3 +1,4 @@
+import { createTrialSubscription, PLATFORM_TRIAL_DAYS } from "./plan-defaults";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { db } from "@/lib/db";
@@ -54,6 +55,12 @@ export async function createInstitution(operatorEmail: string, input: NewInstitu
         data: { name: data.name, slug: data.slug, type: data.type },
         select: { id: true },
       });
+      const subscription = await createTrialSubscription(tx, institution.id);
+      await tx.auditLog.create({ data: {
+        institutionId: institution.id, action: "PLATFORM_SUBSCRIPTION_TRIAL_CREATED", entity: "InstitutionSubscription",
+        entityId: subscription.id, changes: { operator: normalizeEmail(operatorEmail), before: null,
+          after: { planCode: "FREE", status: "TRIAL", trialDays: PLATFORM_TRIAL_DAYS } },
+      } });
       const identityId = await ensureIdentity(tx, { email: data.adminEmail });
       const admin = await tx.user.create({
         data: { identityId, institutionId: institution.id, name: data.adminName, email: data.adminEmail, role: "ADMIN", status: "ACTIVE" },
