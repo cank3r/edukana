@@ -18,7 +18,12 @@ const roleLabel = { SUPER_ADMIN: "Súper administrador", ADMIN: "Administrador",
 type TaskLink = { href: string; title: string; detail: string; icon: React.ReactNode };
 type Summary = { label: string; value: number; href: string };
 
-export default async function DashboardPage() {
+const firstParam = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
+
+export default async function DashboardPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const raw = await searchParams;
+  // Ventana de las cifras y orden de la tabla de cursos del tablero; cualquier otro valor cae en el predeterminado.
+  const boardQuery = { rango: firstParam(raw.rango), orden: firstParam(raw.orden) };
   const session = await auth();
   // Layout and page render in parallel. Let the layout redirect when live access is revoked.
   if (!session?.user) return null;
@@ -29,11 +34,11 @@ export default async function DashboardPage() {
     const independent = await getIndependentHome(iid);
     if (independent) return <IndependentHome home={independent} userName={user.name} />;
   }
-  if (capabilities.has("tenant.settings.manage")) return <AdminHome institutionId={iid} userName={user.name} canManagePeople={capabilities.has("people.manage")} canPublish={capabilities.has("announcement.publish")} />;
+  if (capabilities.has("tenant.settings.manage")) return <AdminHome actor={{ id: user.id, institutionId: iid, role: user.role }} capabilities={capabilities} userName={user.name} query={boardQuery} />;
   if (user.role === "STUDENT" && capabilities.has("student.portal.view")) return <StudentHome user={{ id: user.id, institutionId: iid }} userName={user.name} />;
   if (user.role === "TEACHER" && capabilities.has("course.view") && capabilities.has("course.manage")) return <TeacherHome user={{ id: user.id, institutionId: iid }} userName={user.name} />;
   if (user.role === "PARENT" && capabilities.has("child.portal.view")) return <ParentHome user={{ id: user.id, institutionId: iid, role: user.role }} userName={user.name} />;
-  if (user.role === "COORDINATOR" && capabilities.has("course.view")) return <CoordinatorHome actor={{ id: user.id, institutionId: iid, role: user.role }} capabilities={capabilities} userName={user.name} />;
+  if (user.role === "COORDINATOR" && capabilities.has("course.view")) return <CoordinatorHome actor={{ id: user.id, institutionId: iid, role: user.role }} capabilities={capabilities} userName={user.name} query={boardQuery} />;
   const courseWhere = courseWhereForScope(iid, resolveCourseReadScope(user, capabilities));
   let attention: TaskLink[] = [];
   let continueItems: TaskLink[] = [];
