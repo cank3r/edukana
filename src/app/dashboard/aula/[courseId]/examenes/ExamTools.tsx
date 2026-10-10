@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useState } from "react";
+import { formatScore } from "@/lib/grade-format";
 import { deleteExamAction, reviewExamAttemptAction, saveExamAction, type ExamActionState } from "@/server/actions/exam-admin";
 import { QUESTION_TYPE_LABEL, formatPoints, type QuestionKind } from "../preguntas/labels";
 
@@ -300,7 +301,7 @@ export function ReviewAttempt({ attemptId, answers }: { attemptId: string; answe
           <p className="mt-2 break-words text-sm text-slate-600">Respuesta esperada: {answer.expected}</p>
           <div className="mt-2 grid gap-3 sm:grid-cols-[10rem_1fr]">
             <label className="block text-sm font-semibold text-slate-900">
-              Puntos (de 0 a {Number(answer.points.toFixed(2))})
+              Puntos (de 0 a {formatScore(answer.points)})
               <input name={`score_${answer.id}`} type="number" inputMode="decimal" min="0" max={answer.points} step="any" required className={field} />
             </label>
             <label className="block text-sm font-semibold text-slate-900">

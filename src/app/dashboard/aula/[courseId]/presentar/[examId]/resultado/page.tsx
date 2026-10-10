@@ -61,7 +61,7 @@ export default async function ExamResultPage({
         {result.passed !== null && (
           <p className={`mt-2 inline-block rounded-lg px-3 py-1.5 text-base font-bold ${result.passed ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-800"}`}>
             {result.passed ? "Aprobado" : "No aprobado"}
-            <span className="ml-1 font-normal">· se aprueba con {result.passingPercent} %</span>
+            <span className="font-normal">{" "}· se aprueba con {result.passingPercent} %</span>
           </p>
         )}
         {result.pendingReview && (

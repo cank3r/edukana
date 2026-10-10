@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { calendarDaysBetween, CLOSE_VERBS, deadlineLabel, OPEN_VERBS } from "../src/lib/deadline";
 import { addDaysToDateKey, timeZoneDisplayName, zonedDateKey, zonedTimeToUtc, zonedTimeValue } from "../src/lib/timezone";
 
 const iso = (date: string, time: string, zone: string) => zonedTimeToUtc(date, time, zone)?.toISOString() ?? null;
@@ -61,4 +62,55 @@ test("la zona se muestra con un nombre legible, sin barras ni guiones bajos", ()
   assert.equal(timeZoneDisplayName("America/Argentina/Buenos_Aires"), "hora de Buenos Aires");
   assert.equal(timeZoneDisplayName("UTC"), "hora universal");
   assert.equal(timeZoneDisplayName(""), "hora universal");
+});
+
+// --- Fechas límite en palabras (src/lib/deadline.ts): días de calendario en la zona de la institución ---
+const DR = "America/Santo_Domingo"; // UTC-4 todo el año
+const plain = (text: string) => text.replace(/\s/g, " ");
+const label = (deadline: string, now: string, zone = DR, options?: Parameters<typeof deadlineLabel>[3]) =>
+  plain(deadlineLabel(new Date(deadline), new Date(now), zone, options));
+// Jueves 15 de octubre de 2026 a las 11:59 p. m. en Santo Domingo.
+const THURSDAY_2359 = "2026-10-16T03:59:00Z";
+
+test("fecha límite: una tarea del jueves 11:59 p. m. dice «ayer» el viernes y «hace 2 días» el sábado", () => {
+  assert.equal(label(THURSDAY_2359, "2026-10-16T04:01:00Z"), "Venció ayer", "viernes 12:01 a. m.: ya es otro día");
+  assert.equal(label(THURSDAY_2359, "2026-10-16T14:00:00Z"), "Venció ayer", "viernes 10:00 a. m.");
+  assert.equal(label(THURSDAY_2359, "2026-10-17T14:00:00Z"), "Venció hace 2 días", "sábado 10:00 a. m. (antes decía «hace 1 día»)");
+  assert.equal(label(THURSDAY_2359, "2026-10-18T03:58:00Z"), "Venció hace 2 días", "sábado 11:58 p. m.");
+  assert.equal(label(THURSDAY_2359, "2026-10-18T04:00:00Z"), "Venció hace 3 días", "domingo 12:00 a. m.");
+  assert.equal(label(THURSDAY_2359, "2026-10-21T14:00:00Z"), "Venció hace 6 días");
+  assert.equal(label(THURSDAY_2359, "2026-10-23T14:00:00Z"), "Venció el jueves 15 de octubre", "pasada una semana se dice el día");
+  assert.equal(label(THURSDAY_2359, "2026-10-16T14:00:00Z", DR, { withTime: true }), "Venció ayer a las 11:59 p. m.");
+});
+
+test("fecha límite: el mismo día se cuenta en minutos u horas", () => {
+  assert.equal(label(THURSDAY_2359, "2026-10-16T03:59:30Z"), "Venció hace un momento");
+  assert.equal(label("2026-10-15T20:00:00Z", "2026-10-15T20:01:00Z"), "Venció hace 1 minuto");
+  assert.equal(label("2026-10-15T12:00:00Z", "2026-10-15T15:30:00Z"), "Venció hace 3 horas");
+});
+
+test("fecha límite: hoy y mañana llevan la hora; más adelante se dice el día", () => {
+  assert.equal(label(THURSDAY_2359, "2026-10-15T12:00:00Z"), "Vence hoy a las 11:59 p. m.");
+  // Miércoles 11:00 p. m. en Santo Domingo, pero ya jueves en UTC: sigue siendo «mañana».
+  assert.equal(label(THURSDAY_2359, "2026-10-15T03:00:00Z"), "Vence mañana a las 11:59 p. m.");
+  assert.equal(label(THURSDAY_2359, "2026-10-10T14:00:00Z"), "Vence el jueves 15 de octubre");
+  assert.equal(label(THURSDAY_2359, "2026-10-10T14:00:00Z", DR, { withTime: true }), "Vence el jueves 15 de octubre a las 11:59 p. m.");
+  assert.equal(label("2027-01-09T03:59:00Z", "2026-12-20T14:00:00Z"), "Vence el viernes 8 de enero de 2027", "otro año: lo dice");
+});
+
+test("fecha límite: la cuenta depende de la zona de la institución", () => {
+  // El mismo instante es viernes 5:59 a. m. en Madrid: allí venció «hoy», no «ayer».
+  assert.equal(label(THURSDAY_2359, "2026-10-16T14:00:00Z", "Europe/Madrid"), "Venció hace 10 horas");
+  assert.equal(label(THURSDAY_2359, "2026-10-15T12:00:00Z", "Europe/Madrid"), "Vence mañana a las 5:59 a. m.");
+  // Una zona inválida usa la de Santo Domingo.
+  assert.equal(label(THURSDAY_2359, "2026-10-16T14:00:00Z", "Marte/Olympus"), "Venció ayer");
+  // Jueves 7:00 p. m. en Santo Domingo: mismo día; en UTC ya serían días distintos.
+  assert.equal(calendarDaysBetween(new Date("2026-10-15T23:00:00Z"), new Date(THURSDAY_2359), DR), 0);
+  assert.equal(calendarDaysBetween(new Date("2026-10-15T23:00:00Z"), new Date(THURSDAY_2359), "UTC"), 1);
+});
+
+test("fecha límite: los exámenes «abren» y «cierran»", () => {
+  assert.equal(label(THURSDAY_2359, "2026-10-16T14:00:00Z", DR, { verbs: CLOSE_VERBS }), "Cerró ayer");
+  assert.equal(label(THURSDAY_2359, "2026-10-15T12:00:00Z", DR, { verbs: CLOSE_VERBS }), "Cierra hoy a las 11:59 p. m.");
+  assert.equal(label(THURSDAY_2359, "2026-10-10T14:00:00Z", DR, { verbs: OPEN_VERBS, withTime: true }), "Abre el jueves 15 de octubre a las 11:59 p. m.");
 });

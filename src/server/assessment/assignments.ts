@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { archiveSubmissionVersion, writeGradeEntry } from "@/server/grade-history";
 import type { EdukanaRole } from "@/types/next-auth";
 import { notifyAssignmentPublished, notifyGradePosted, notifySubmissionReceived } from "@/server/notifications/events";
+import { deadlineLabel } from "@/lib/deadline";
 import { lockAssignmentSubmission } from "./submission-lock";
 import {
   ASSIGNMENT_RETENTION_MESSAGE,
@@ -93,28 +94,13 @@ export function formatDateTime(date: Date, timeZone: string): string {
   return `${day}, ${clock(date, zone)}`;
 }
 
-const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
-
-/** «Vence mañana a las 5:00 p. m.», «Venció hace 2 días», «Sin fecha límite». */
-export function dueLabel(dueDate: Date | null, now: Date, timeZone: string): string {
+/**
+ * «Vence mañana a las 5:00 p. m.», «Venció ayer», «Vence el jueves 16 de octubre», «Sin fecha límite».
+ * Cuenta días de calendario en la zona de la institución (ver `src/lib/deadline.ts`).
+ */
+export function dueLabel(dueDate: Date | null, now: Date, timeZone: string, options: { withTime?: boolean } = {}): string {
   if (!dueDate) return "Sin fecha límite";
-  const zone = safeZone(timeZone);
-  const diff = dueDate.getTime() - now.getTime();
-  if (diff < 0) {
-    const minutes = Math.floor(-diff / 60_000);
-    if (minutes < 1) return "Venció hace un momento";
-    if (minutes < 60) return `Venció hace ${plural(minutes, "minuto", "minutos")}`;
-    if (minutes < 24 * 60) return `Venció hace ${plural(Math.floor(minutes / 60), "hora", "horas")}`;
-    return `Venció hace ${plural(Math.floor(minutes / (24 * 60)), "día", "días")}`;
-  }
-  const d = zonedParts(dueDate, zone);
-  const n = zonedParts(now, zone);
-  const days = Math.round((Date.UTC(d.year, d.month - 1, d.day) - Date.UTC(n.year, n.month - 1, n.day)) / 86_400_000);
-  const at = `a las ${clock(dueDate, zone)}`;
-  if (days === 0) return `Vence hoy ${at}`;
-  if (days === 1) return `Vence mañana ${at}`;
-  if (days < 7) return `Vence el ${new Intl.DateTimeFormat("es-DO", { timeZone: zone, weekday: "long" }).format(dueDate)} ${at}`;
-  return `Vence el ${new Intl.DateTimeFormat("es-DO", { timeZone: zone, day: "numeric", month: "long" }).format(dueDate)} ${at}`;
+  return deadlineLabel(dueDate, now, safeZone(timeZone), options);
 }
 
 // ---------------------------------------------------------------------------

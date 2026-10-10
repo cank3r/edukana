@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getEffectiveCapabilities } from "@/lib/authorization";
+import { formatScore } from "@/lib/grade-format";
 import {
   dateToLocalInput,
   dueLabel,
@@ -58,7 +59,7 @@ export default async function AssignmentsPage({ params }: { params: Promise<{ co
                         <span className="block font-semibold text-slate-950">{assignment.title}</span>
                         <span className="mt-1 block text-sm text-slate-600">
                           {group.name === "Calificadas"
-                            ? `Nota: ${assignment.score ?? "—"} de ${assignment.maxScore}`
+                            ? `Nota: ${assignment.score === null ? "—" : formatScore(assignment.score)} de ${formatScore(assignment.maxScore)}`
                             : group.name === "Entregadas"
                               ? `Entregada. ${dueLabel(assignment.dueDate, now, zone)}`
                               : dueLabel(assignment.dueDate, now, zone)}

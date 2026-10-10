@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AlertCircle, BookOpen, ChevronRight, ClipboardList, FileText, PlayCircle, Video } from "lucide-react";
+import { formatAverage } from "@/lib/grade-format";
 import { getStudentHome, type HomeActor, type HomeLiveClass, type StudentCourse } from "@/server/student-home";
 
 type Props = { user: HomeActor; userName?: string | null };
@@ -72,7 +73,7 @@ export async function StudentHome({ user, userName }: Props) {
                         <span className="block break-words font-semibold text-slate-900">{item.title}</span>
                         <span className="block text-sm text-slate-600">{item.kind === "exam" ? "Examen" : "Tarea"} · {item.courseName}</span>
                         <span className={`block text-sm ${item.overdue ? "font-semibold text-red-700" : "text-slate-700"}`}>
-                          {item.overdue ? `Vencida · era para ${lower(item.dueText)}` : item.kind === "exam" ? examText(item.dueText, item.retry) : `Entrega: ${lower(item.dueText)}`}
+                          {item.kind === "exam" ? examText(item.dueText, item.retry) : item.dueText ?? "Sin fecha límite"}
                         </span>
                       </span>
                       <ChevronRight className="shrink-0 text-slate-400" size={18} aria-hidden="true" />
@@ -98,11 +99,9 @@ export async function StudentHome({ user, userName }: Props) {
   );
 }
 
-const lower = (text: string | null) => (text ? text.charAt(0).toLowerCase() + text.slice(1) : "");
-
 function examText(dueText: string | null, retry: boolean) {
   const lead = retry ? "Puedes volver a intentarlo" : "Sin presentar";
-  return dueText ? `${lead} · cierra ${lower(dueText)}` : lead;
+  return dueText ? `${lead} · ${dueText}` : lead;
 }
 
 /** Tarjeta de curso con barra de avance; también la usa «Mis cursos». */
@@ -123,7 +122,7 @@ export function CourseCard({ course }: { course: StudentCourse }) {
           <p className="mt-1 text-sm text-slate-700">{course.progressPercent}% completado</p>
         </>
       )}
-      {course.finalGrade !== null && <p className="mt-2 text-sm text-slate-900">Nota final: <strong>{course.finalGrade}</strong></p>}
+      {course.finalGrade !== null && <p className="mt-2 text-sm text-slate-900">Nota final: <strong>{formatAverage(course.finalGrade)}</strong></p>}
     </Link>
   );
 }

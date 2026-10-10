@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
+import { formatScore } from "@/lib/grade-format";
 import { getExamResults, type AttemptView } from "@/server/assessment/exam-admin";
 import { examPassed } from "@/server/assessment/exam-pass";
 import { ReviewAttempt } from "../../ExamTools";
@@ -14,7 +15,7 @@ const STATUS: Record<AttemptView["status"], { label: string; tone: string }> = {
   GRADED: { label: "Calificado", tone: "bg-emerald-100 text-emerald-900" },
 };
 
-const number = (value: number) => Number(value.toFixed(2));
+const number = (value: number) => formatScore(value);
 
 export default async function ExamResultsPage({ params }: { params: Promise<{ courseId: string; examId: string }> }) {
   const user = (await auth())?.user;

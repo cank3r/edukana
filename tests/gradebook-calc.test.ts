@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { buildCsv, categoryWeightsProblem, courseAverage, csvCell } from "../src/lib/gradebook-calc";
+import { formatAverage, formatScore } from "../src/lib/grade-format";
 
 const period = (categories: Parameters<typeof courseAverage>[0][number]["categories"], weight = 100) => ({ weight, categories });
 
@@ -64,4 +65,16 @@ test("CSV: escapa comas, comillas y saltos de línea, y desactiva fórmulas", ()
   assert.equal(csvCell(85.5), "85.5");
   assert.equal(csvCell(null), "");
   assert.equal(buildCsv([["Estudiante", "Nota"], ["Ñandú", 9]]), "﻿Estudiante,Nota\r\nÑandú,9\r\n");
+});
+
+test("notas en pantalla: promedios enteros sobre 100 y puntos con hasta dos decimales", () => {
+  assert.equal(formatAverage(88.91), "89");
+  assert.equal(formatAverage(89.5), "90");
+  assert.equal(formatAverage(67.35), "67");
+  assert.equal(formatAverage(100), "100");
+  assert.equal(formatAverage(0), "0");
+  assert.equal(formatScore(85), "85");
+  assert.equal(formatScore(8.5), "8.5");
+  assert.equal(formatScore(2.3333), "2.33");
+  assert.equal(formatScore(1234.5), "1234.5", "sin separador de miles");
 });
