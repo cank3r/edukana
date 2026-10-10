@@ -160,9 +160,9 @@ type Profile = {
 /** Cómo le va a cada perfil. Los de «en riesgo» se ajustan con `RISK_PATTERNS`: cada uno falla en lo suyo. */
 const PROFILE: Record<StudentProfile, Profile> = {
   destacado: { progress: [1.1, 1.35], attendance: [0.92, 0.98], late: 0.03, missing: 0, lateTask: 0.02, score: [88, 100], early: 0.15, exam: { take: 1, correct: 0.92, retry: 0.05, sample: [0.85, 0.15, 0] } },
-  regular: { progress: [0.85, 1.1], attendance: [0.85, 0.92], late: 0.07, missing: 0, lateTask: 0.08, score: [74, 92], early: 0.05, exam: { take: 0.96, correct: 0.76, retry: 0.25, sample: [0.45, 0.5, 0.05] } },
-  atrasado: { progress: [0.62, 0.85], attendance: [0.83, 0.88], late: 0.12, missing: 0, lateTask: 0.3, score: [72, 88], early: 0, exam: { take: 0.85, correct: 0.66, retry: 0.2, sample: [0.1, 0.7, 0.2] } },
-  en_riesgo: { progress: [0.62, 0.8], attendance: [0.85, 0.9], late: 0.12, missing: 0, lateTask: 0.4, score: [72, 84], early: 0, exam: { take: 0.8, correct: 0.66, retry: 0.3, sample: [0.1, 0.7, 0.2] } },
+  regular: { progress: [0.85, 1.1], attendance: [0.86, 0.93], late: 0.07, missing: 0, lateTask: 0.08, score: [74, 92], early: 0.05, exam: { take: 0.96, correct: 0.76, retry: 0.25, sample: [0.45, 0.5, 0.05] } },
+  atrasado: { progress: [0.62, 0.85], attendance: [0.85, 0.9], late: 0.12, missing: 0, lateTask: 0.3, score: [72, 88], early: 0, exam: { take: 0.85, correct: 0.66, retry: 0.2, sample: [0.1, 0.7, 0.2] } },
+  en_riesgo: { progress: [0.62, 0.8], attendance: [0.86, 0.9], late: 0.12, missing: 0, lateTask: 0.4, score: [72, 84], early: 0, exam: { take: 0.8, correct: 0.66, retry: 0.3, sample: [0.1, 0.7, 0.2] } },
 };
 
 type Weakness = "asistencia" | "tareas" | "notas" | "avance" | "cobros";
@@ -204,7 +204,7 @@ function profileOf(student: DemoStudent): Profile {
  * Cuántas entregas deja cada docente por calificar: todas de los últimos días (lo demás ya tiene nota).
  * Con las respuestas abiertas de examen por revisar, cada docente queda entre 3 y 20 pendientes.
  */
-const PENDING_GRADING: Record<TeacherKey, number> = { rosa: 12, julio: 9, ramon: 13, yokasta: 6, milagros: 10, victor: 5, domingo: 8, fausto: 4, lissette: 7, yahaira: 3 };
+const PENDING_GRADING: Record<TeacherKey, number> = { rosa: 12, julio: 9, ramon: 11, yokasta: 6, milagros: 10, victor: 5, domingo: 8, fausto: 4, lissette: 7, yahaira: 3 };
 
 const ABSENCE_NOTES = ["Avisó por WhatsApp que estaba enferma.", "Cita médica.", "Problema con el transporte.", "No avisó.", "Turno extra en el trabajo.", "Se fue la luz en su sector y no pudo llegar."];
 const FEEDBACK: Array<[number, string[]]> = [
@@ -641,6 +641,7 @@ async function fill(institutionId: string, adminId: string, passwordHash: string
   const sessionRows: Prisma.AttendanceSessionCreateManyInput[] = [];
   const attendanceRows: Prisma.AttendanceCreateManyInput[] = [];
   const firstClassDay = dayKey(-WEEKS * 7);
+  const sessionsByCourse = new Map<number, Array<{ id: string; date: string; index: number; title: string | null; recordedAt: Date }>>();
   for (const [courseIndex, course] of built.entries()) {
     const weekdays = new Set(course.data.schedule.map((slot) => slot.weekday));
     const dates: string[] = [];
@@ -660,50 +661,61 @@ async function fill(institutionId: string, adminId: string, passwordHash: string
       });
       return { id, date, index, title: sessionRows.at(-1)!.title ?? null, recordedAt: at(date, endTime) };
     });
-    for (const enrollment of enrollmentsOf(courseIndex)) {
-      const next = random(`clases:${course.data.code}:${enrollment.student.email}`);
-      const joinedKey = joinedOf(enrollment.student) ? zonedDateKey(enrollment.enrolledAt, TIME_ZONE) : null;
-      // Quien llegó este mes solo tiene las clases desde que entró, y no ha faltado.
-      const rate = joinedKey ? 1 : attendanceRate.get(enrollment.student.email)!;
-      const counted = sessions.filter((session) => (!enrollment.withdrawnAt || at(session.date, "23:59") < enrollment.withdrawnAt) && (!joinedKey || session.date >= joinedKey));
-      const absences = Math.round((1 - rate) * counted.length);
-      // Las ausencias se reparten a lo largo del cuatrimestre (un poco más al principio): así la asistencia
-      // de cualquier semana o mes se parece a la del estudiante, y mejora levemente con el tiempo.
-      const absent = new Set<string>();
-      const offset = next();
-      for (let k = 0; k < absences; k += 1) {
-        let position = Math.min(counted.length - 1, Math.floor(counted.length * ((k + offset) / absences) ** 1.2));
-        while (absent.has(counted[position].id)) position = (position + 1) % counted.length;
-        absent.add(counted[position].id);
-      }
-      for (const session of counted) {
-        let status: "PRESENT" | "LATE" | "ABSENT" | "EXCUSED" = "PRESENT";
-        let notes: string | null = null;
-        if (absent.has(session.id)) {
-          if (next() < 0.12) {
-            status = "EXCUSED";
-            notes = "Presentó excusa médica.";
-          } else {
-            status = "ABSENT";
-            notes = next() < 0.6 ? pick(next, ABSENCE_NOTES) : null;
-          }
-        } else if (next() < profileOf(enrollment.student).late) {
-          status = "LATE";
-          notes = "Llegó 15 minutos tarde.";
-        }
-        attendanceRows.push({
-          institutionId,
-          courseId: course.id,
-          sessionId: session.id,
-          enrollmentId: enrollment.id,
-          date: dbDate(session.date),
-          classSession: session.title,
-          status,
-          notes,
-          recordedAt: session.recordedAt,
-        });
-      }
+    sessionsByCourse.set(courseIndex, sessions);
+  }
+  // Las ausencias se reparten parejo en la línea de tiempo de cada estudiante (todas sus clases, de todos
+  // sus cursos, en orden), un poco más al principio: así la asistencia de cualquier semana o mes se parece a
+  // la del estudiante y mejora levemente con el tiempo. Con un solo curso hay pocas clases por mes: sus
+  // ausencias quedan en la primera mitad, para que una falta reciente no lo haga ver en riesgo.
+  for (const student of STUDENTS) {
+    const next = random(`clases:${student.email}`);
+    const mine = enrollments.filter((row) => row.student.email === student.email);
+    const joinedKey = joinedOf(student) ? zonedDateKey(joinedOf(student)!, TIME_ZONE) : null;
+    const timeline = mine
+      .flatMap((enrollment) =>
+        (sessionsByCourse.get(enrollment.courseIndex) ?? [])
+          .filter((session) => (!enrollment.withdrawnAt || at(session.date, "23:59") < enrollment.withdrawnAt) && (!joinedKey || session.date >= joinedKey))
+          .map((session) => ({ enrollment, session, key: `${session.date}:${built[enrollment.courseIndex].data.code}` })),
+      )
+      .sort((a, b) => a.key.localeCompare(b.key));
+    // Quien llegó este mes no ha faltado.
+    const rate = joinedKey ? 1 : attendanceRate.get(student.email)!;
+    const absences = Math.round((1 - rate) * timeline.length);
+    const reach = mine.length === 1 ? 0.5 : 1;
+    const absent = new Set<number>();
+    const offset = next();
+    for (let k = 0; k < absences; k += 1) {
+      let position = Math.min(timeline.length - 1, Math.floor(timeline.length * reach * ((k + offset) / absences) ** 1.15));
+      while (absent.has(position)) position = (position + 1) % timeline.length;
+      absent.add(position);
     }
+    timeline.forEach(({ enrollment, session }, position) => {
+      let status: "PRESENT" | "LATE" | "ABSENT" | "EXCUSED" = "PRESENT";
+      let notes: string | null = null;
+      if (absent.has(position)) {
+        if (next() < 0.12) {
+          status = "EXCUSED";
+          notes = "Presentó excusa médica.";
+        } else {
+          status = "ABSENT";
+          notes = next() < 0.6 ? pick(next, ABSENCE_NOTES) : null;
+        }
+      } else if (next() < profileOf(student).late) {
+        status = "LATE";
+        notes = "Llegó 15 minutos tarde.";
+      }
+      attendanceRows.push({
+        institutionId,
+        courseId: built[enrollment.courseIndex].id,
+        sessionId: session.id,
+        enrollmentId: enrollment.id,
+        date: dbDate(session.date),
+        classSession: session.title,
+        status,
+        notes,
+        recordedAt: session.recordedAt,
+      });
+    });
   }
   await inBatches(sessionRows, (data) => db.attendanceSession.createMany({ data }));
   await inBatches(attendanceRows, (data) => db.attendance.createMany({ data }), 2000);
@@ -901,8 +913,8 @@ async function fill(institutionId: string, adminId: string, passwordHash: string
         const correct = Math.min(0.98, profile.correct + attemptIndex * 0.12);
         let auto = 0;
         let openScore: number | null = null;
-        // El docente revisa las respuestas abiertas a los pocos días: solo esperan las de ayer y anteayer.
-        const reviewed = day > 2;
+        // El docente revisa las respuestas abiertas al día siguiente: solo esperan las de ayer.
+        const reviewed = day > 1;
         for (const question of questions) {
           let response: string;
           if (question.type === "SHORT_ANSWER") {
