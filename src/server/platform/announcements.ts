@@ -26,6 +26,7 @@ export async function savePlatformAnnouncement(operatorEmail: string | null, inp
   const parsed = platformAnnouncementSchema.safeParse(input);
   if (!parsed.success) return { ok: false as const, message: parsed.error.issues[0]?.message ?? "Revisa los datos." };
   return db.$transaction(async (tx) => {
+    if (id) await tx.$queryRaw`SELECT "id" FROM "platform_announcements" WHERE "id" = ${id} FOR UPDATE`;
     const before = id ? await tx.platformAnnouncement.findUnique({ where: { id } }) : null;
     if (id && !before) return { ok: false as const, message: "Ese aviso ya no existe. Vuelve a la lista." };
     const after = id
@@ -42,6 +43,7 @@ export async function savePlatformAnnouncement(operatorEmail: string | null, inp
 export async function endPlatformAnnouncement(operatorEmail: string | null, id: string, confirmation: string) {
   const operator = requireOperator(operatorEmail);
   return db.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT "id" FROM "platform_announcements" WHERE "id" = ${id} FOR UPDATE`;
     const before = await tx.platformAnnouncement.findUnique({ where: { id } });
     if (!before) return { ok: false as const, message: "Ese aviso ya no existe. Vuelve a la lista." };
     if (confirmation.trim() !== before.title) return { ok: false as const, message: "Escribe el título del aviso para terminarlo." };
