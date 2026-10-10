@@ -47,6 +47,11 @@ test("administrador institucion nueva", async ({ page }, info) => {
   await tour.open("inicio primeros pasos", "/dashboard", async () => {
     await heading(page, "Primeros pasos");
     await heading(page, "Colegio Nuevo Amanecer");
+    // Institución vacía: el tablero se ve completo, con «—» y cuándo se llena cada bloque.
+    await heading(page, "Cómo va la institución");
+    await visible(page, "Se llenará cuando los docentes registren asistencia.");
+    await heading(page, "Estudiantes en riesgo");
+    await heading(page, "Cursos");
   });
   await tour.open("personas vacio", "/dashboard/gestion", () => heading(page, "Personas"));
   await tour.open("cursos vacio", "/dashboard/aula", () => heading(page, "Cursos"));
@@ -62,7 +67,25 @@ test("administrador", async ({ page }, info) => {
   const tour = new Tour(page, info, "administrador", 10);
   if (!(await start(tour, SMOKE_ACCOUNTS.admin))) return;
 
-  await tour.open("inicio", "/dashboard", () => heading(page, /Primeros pasos|Tu institución en números/));
+  await tour.open("inicio", "/dashboard", async () => {
+    await heading(page, "Cómo va la institución");
+    await visible(page, "Asistencia promedio");
+    await heading(page, "Requiere tu atención");
+    await heading(page, "Estudiantes en riesgo");
+    await heading(page, "Últimas 8 semanas");
+    await heading(page, "Cursos");
+    await heading(page, "Docentes");
+  });
+  await tour.step("inicio este periodo", async () => {
+    await page.getByRole("link", { name: "Este período" }).filter({ visible: true }).first().click();
+    await page.waitForURL(/rango=periodo/);
+    await expect(page.getByRole("link", { name: "Este período" }).filter({ visible: true }).first()).toHaveAttribute("aria-current", "page");
+    await visible(page, /comparado con el período anterior|Este período\./);
+  });
+  await tour.open("estudiantes en riesgo", "/dashboard/analitica/riesgo", async () => {
+    await heading(page, "Estudiantes en riesgo");
+    await visible(page, "Todas las señales");
+  });
   await tour.open("personas", "/dashboard/gestion", () => visible(page, "Ana Rodríguez"));
   await tour.step("personas agregar formulario", async () => {
     await page.getByRole("button", { name: "Agregar persona" }).click();
@@ -603,11 +626,19 @@ test("coordinador", async ({ page }, info) => {
   const tour = new Tour(page, info, "coordinador", 350);
   if (!(await start(tour, SMOKE_ACCOUNTS.coordinator))) return;
 
-  // Inicio propio de coordinación (CoordinatorHome): nombre de la institución, pendientes y docentes.
+  // Inicio de coordinación: el tablero de la dirección sin cobros (no tiene ese permiso).
   await tour.open("inicio", "/dashboard", async () => {
     await heading(page, "Instituto Demo");
+    await heading(page, "Cómo va la institución");
     await heading(page, "Requiere tu atención");
-    await heading(page, "Docentes con más pendientes");
+    await heading(page, "Estudiantes en riesgo");
+    await heading(page, "Docentes");
+    await expect(page.getByText(/^Cobrado /).filter({ visible: true })).toHaveCount(0);
+  });
+  await tour.step("inicio esta semana", async () => {
+    await page.getByRole("link", { name: "Esta semana" }).filter({ visible: true }).first().click();
+    await page.waitForURL(/rango=semana/);
+    await visible(page, /comparado con la semana pasada/);
   });
   await tour.open("personas", "/dashboard/gestion", async () => {
     await heading(page, "Personas");
