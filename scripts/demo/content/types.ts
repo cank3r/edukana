@@ -1,5 +1,7 @@
 import type { TeacherKey } from "./people";
 
+export type ProgramKey = "ENF" | "CON";
+
 export type DemoLesson = {
   title: string;
   summary: string;
@@ -17,6 +19,16 @@ export type DemoQuestion =
   | { type: "MULTIPLE_CHOICE"; prompt: string; options: string[]; correctIndex: number; explanation: string }
   | { type: "TRUE_FALSE"; prompt: string; answer: "Verdadero" | "Falso"; explanation: string };
 
+/** Pregunta de respuesta corta: no se califica sola; el docente la revisa. */
+export type DemoShortAnswer = {
+  prompt: string;
+  /** Respuesta esperada (la ve el docente al revisar). */
+  answer: string;
+  explanation: string;
+  /** Respuestas de ejemplo que escriben los estudiantes, de la mejor a la más floja. */
+  samples: [string, string, string];
+};
+
 export type DemoAssignment = {
   title: string;
   instructions: string;
@@ -30,14 +42,17 @@ export type DemoCourse = {
   name: string;
   description: string;
   teacher: TeacherKey;
-  program: "ENF" | "CON" | null;
+  program: ProgramKey | null;
   maxStudents: number;
-  /** Bloques del horario semanal: día 1 = lunes … 7 = domingo; minutos desde las 00:00. */
+  /** Bloques del horario semanal: día 1 = lunes … 7 = domingo; minutos desde las 00:00. La asistencia se toma esos días. */
   schedule: Array<{ weekday: number; start: number; end: number; room: string }>;
   chapters: DemoChapter[];
-  /** La primera vence en el pasado (con entregas y notas); la segunda vence en los próximos días. */
+  /**
+   * Dos tareas escritas a mano: la primera es la práctica principal de la semana 5 y la segunda la que vence
+   * en los próximos días. Las demás tareas semanales salen de los títulos de las lecciones.
+   */
   assignments: [DemoAssignment, DemoAssignment];
-  exam: { title: string; instructions: string; questions: DemoQuestion[] };
+  exam: { title: string; instructions: string; questions: DemoQuestion[]; shortAnswer?: DemoShortAnswer };
   liveClass: { title: string; description: string; time: string; durationMinutes: number; daysFromToday: number; weeks: number };
   /** Si tiene precio, el curso aparece en el catálogo público. */
   catalogPriceCents?: number;
