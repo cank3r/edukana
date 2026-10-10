@@ -4,6 +4,7 @@ import { getAnnouncementRecipient } from "@/lib/announcement-data";
 import { announcementRecipientWhere } from "@/lib/announcements";
 import { getEffectiveCapabilities } from "@/lib/authorization";
 import { db } from "@/lib/db";
+import { CLOSE_VERBS, deadlineLabel } from "@/lib/deadline";
 import { courseAverage, type AveragePeriod } from "@/lib/gradebook-calc";
 import { canViewGuardianArea, type GuardianArea } from "@/lib/guardianship-policy";
 import { chargeBalances } from "@/server/finance/charges";
@@ -373,7 +374,7 @@ async function collect(institutionId: string, accesses: ChildAccess[], now: Date
           title: assignment.title,
           courseName: row.course.name,
           dueAt: assignment.dueDate,
-          dueText: assignment.dueDate ? formatWhen(assignment.dueDate, now, timezone) : null,
+          dueText: assignment.dueDate ? deadlineLabel(assignment.dueDate, now, timezone) : null,
           state: gradeVisible ? "graded" : submission ? "submitted" : overdue ? "overdue" : "pending",
           maxScore: assignment.maxScore,
           score: gradeVisible ? (submission?.score ?? null) : null,
@@ -422,7 +423,7 @@ async function collect(institutionId: string, accesses: ChildAccess[], now: Date
       ...exams.flatMap((exam) => {
         const course = academic.find((row) => row.course.id === exam.courseId && row.status === "ACTIVE");
         return course && exam.closesAt
-          ? [{ key: `e-${exam.id}`, kind: "Examen" as const, title: exam.title, courseName: course.course.name, dueAt: exam.closesAt, dueText: formatWhen(exam.closesAt, now, timezone) }]
+          ? [{ key: `e-${exam.id}`, kind: "Examen" as const, title: exam.title, courseName: course.course.name, dueAt: exam.closesAt, dueText: deadlineLabel(exam.closesAt, now, timezone, { verbs: CLOSE_VERBS }) }]
           : [];
       }),
     ].sort((a, b) => a.dueAt.getTime() - b.dueAt.getTime());

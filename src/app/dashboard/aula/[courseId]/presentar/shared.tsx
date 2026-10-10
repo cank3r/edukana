@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getEffectiveCapabilities } from "@/lib/authorization";
+import { formatScore } from "@/lib/grade-format";
 
 /** Quien presenta exámenes: un estudiante con permiso de participar. `null` para cualquier otra persona. */
 export async function currentStudent() {
@@ -24,7 +25,7 @@ export function dateTime(value: Date, timezone: string) {
 }
 
 export function points(value: number) {
-  return Number(value.toFixed(2)).toLocaleString("es");
+  return formatScore(value);
 }
 
 export function timeLimit(durationMinutes: number | null, closesAt: Date | null) {

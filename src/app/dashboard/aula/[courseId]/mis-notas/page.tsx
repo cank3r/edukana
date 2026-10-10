@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { formatNumber } from "@/lib/gradebook-calc";
+import { formatAverage, formatScore } from "@/lib/grade-format";
 import { loadMyGrades } from "@/server/assessment/gradebook";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +27,7 @@ export default async function MyGradesPage({ params }: { params: Promise<{ cours
       <section className={card} aria-labelledby="titulo-promedio">
         <h2 id="titulo-promedio" className="text-sm font-semibold text-slate-600">Mi promedio hasta ahora</h2>
         <p className="mt-1 text-4xl font-bold text-slate-950">
-          {grades.average === null ? "—" : formatNumber(grades.average)}
+          {grades.average === null ? "—" : formatAverage(grades.average)}
           {grades.average !== null && <span className="text-lg font-semibold text-slate-500"> de 100</span>}
         </p>
         <p className="mt-2 text-sm text-slate-600">
@@ -61,7 +61,7 @@ export default async function MyGradesPage({ params }: { params: Promise<{ cours
             <section key={group.id} className={card} aria-labelledby={`grupo-${group.id}`}>
               <h2 id={`grupo-${group.id}`} className="text-lg font-bold text-slate-950">
                 {group.name}
-                {severalGroups && <span className="ml-2 text-sm font-normal text-slate-500">vale {formatNumber(group.weight)} % del promedio</span>}
+                {severalGroups && <span className="text-sm font-normal text-slate-500">{" "}· vale {formatScore(group.weight)} % del promedio</span>}
               </h2>
               <ul className="mt-2 divide-y divide-slate-100">
                 {group.items.map((item) => (
@@ -75,8 +75,8 @@ export default async function MyGradesPage({ params }: { params: Promise<{ cours
                           <span className="text-slate-500">Sin calificar</span>
                         ) : (
                           <>
-                            <strong className="text-base text-slate-950">{formatNumber(item.score)}</strong>
-                            <span className="text-slate-500"> de {formatNumber(item.maxScore)}</span>
+                            <strong className="text-base text-slate-950">{formatScore(item.score)}</strong>
+                            <span className="text-slate-500"> de {formatScore(item.maxScore)}</span>
                           </>
                         )}
                       </p>

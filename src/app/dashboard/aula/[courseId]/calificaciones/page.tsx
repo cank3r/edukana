@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { formatNumber } from "@/lib/gradebook-calc";
+import { formatAverage, formatScore } from "@/lib/grade-format";
 import { loadGradeCell, loadGradebook, type GradebookCell, type GradebookItem } from "@/server/assessment/gradebook";
 import { CategoryEditor, DeleteItem, GradeEditor, ItemForm, PublishToggle, SimpleSetup } from "./GradebookTools";
 
@@ -14,16 +14,16 @@ const when = new Intl.DateTimeFormat("es", { dateStyle: "medium", timeStyle: "sh
 
 function cellText(cell: GradebookCell | undefined) {
   if (cell?.isExcused) return "Exon.";
-  return cell && cell.score !== null ? formatNumber(cell.score) : "—";
+  return cell && cell.score !== null ? formatScore(cell.score) : "—";
 }
 
 function cellLabel(student: string, item: GradebookItem, cell: GradebookCell | undefined) {
-  const current = cell?.isExcused ? "exonerado" : cell && cell.score !== null ? `nota ${formatNumber(cell.score)} de ${formatNumber(item.maxScore)}` : "sin nota";
+  const current = cell?.isExcused ? "exonerado" : cell && cell.score !== null ? `nota ${formatScore(cell.score)} de ${formatScore(item.maxScore)}` : "sin nota";
   return `${student}, ${item.title}: ${current}. Tocar para cambiar.`;
 }
 
 function average(value: number | null) {
-  return value === null ? "—" : formatNumber(value);
+  return value === null ? "—" : formatAverage(value);
 }
 
 export default async function GradebookPage({
@@ -106,7 +106,7 @@ export default async function GradebookPage({
                           <li key={item.id}>
                             <Link href={cellHref(item.id, student.enrollmentId)} scroll={false} className="flex min-h-11 items-center justify-between gap-3 px-4 py-2.5 text-sm">
                               <span className="text-slate-800">{item.title}</span>
-                              <span className="shrink-0 font-semibold text-blue-700">{cellText(student.cells[item.id])} <span className="font-normal text-slate-500">/ {formatNumber(item.maxScore)}</span></span>
+                              <span className="shrink-0 font-semibold text-blue-700">{cellText(student.cells[item.id])} <span className="font-normal text-slate-500">/ {formatScore(item.maxScore)}</span></span>
                             </Link>
                           </li>
                         ))}
@@ -121,20 +121,22 @@ export default async function GradebookPage({
                 <table className="w-full border-collapse text-sm">
                   <thead>
                     <tr className="border-b border-slate-200 bg-slate-50 text-left">
-                      <th scope="col" className="sticky left-0 z-10 bg-slate-50 px-4 py-3 font-semibold text-slate-900">Estudiante</th>
+                      <th scope="col" className="sticky left-0 z-10 min-w-44 bg-slate-50 px-4 py-3 font-semibold text-slate-900">Estudiante</th>
+                      {/* El promedio va junto al nombre: con muchas actividades la tabla se desplaza y no debe quedar fuera de vista. */}
+                      <th scope="col" className="px-4 py-3 text-right align-bottom font-semibold text-slate-900">Promedio <span className="block text-xs font-normal text-slate-500">de 100</span></th>
                       {items.map((item) => (
                         <th key={item.id} scope="col" className="min-w-28 px-2 py-3 text-center align-bottom font-semibold text-slate-900">
                           <span className="block">{item.title}</span>
-                          <span className="block text-xs font-normal text-slate-500">máx. {formatNumber(item.maxScore)} · {item.isPublished ? "publicada" : "oculta"}</span>
+                          <span className="block text-xs font-normal text-slate-500">máx. {formatScore(item.maxScore)} · {item.isPublished ? "publicada" : "oculta"}</span>
                         </th>
                       ))}
-                      <th scope="col" className="px-4 py-3 text-right font-semibold text-slate-900">Promedio</th>
                     </tr>
                   </thead>
                   <tbody>
                     {students.map((student) => (
                       <tr key={student.enrollmentId} className="border-b border-slate-100 last:border-0">
-                        <th scope="row" className="sticky left-0 z-10 bg-white px-4 py-1 text-left font-medium text-slate-900">{student.name}</th>
+                        <th scope="row" className="sticky left-0 z-10 min-w-44 bg-white px-4 py-1 text-left font-medium text-slate-900">{student.name}</th>
+                        <td className="border-r border-slate-100 px-4 py-1 text-right font-bold text-slate-950">{average(student.average)}</td>
                         {items.map((item) => (
                           <td key={item.id} className="px-1 py-1 text-center">
                             <Link
@@ -147,7 +149,6 @@ export default async function GradebookPage({
                             </Link>
                           </td>
                         ))}
-                        <td className="px-4 py-1 text-right font-bold text-slate-950">{average(student.average)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -169,7 +170,7 @@ export default async function GradebookPage({
                       <div className="min-w-0">
                         <p className="font-semibold text-slate-900">{item.title}</p>
                         <p className="text-sm text-slate-600">
-                          {severalPeriods ? `${item.periodName} · ` : ""}{item.categoryName} · máximo {formatNumber(item.maxScore)} · {item.gradedCount} de {students.length} con nota
+                          {severalPeriods ? `${item.periodName} · ` : ""}{item.categoryName} · máximo {formatScore(item.maxScore)} · {item.gradedCount} de {students.length} con nota
                         </p>
                         <p className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-semibold ${item.isPublished ? "bg-emerald-50 text-emerald-800" : "bg-slate-100 text-slate-700"}`}>
                           {item.isPublished ? "Los estudiantes ven esta nota" : "Oculta para los estudiantes"}
@@ -250,7 +251,7 @@ export default async function GradebookPage({
                         <p className="font-semibold text-slate-900">
                           {change.from === change.to
                             ? "Cambió el comentario"
-                            : `De ${change.from === null ? "sin nota" : formatNumber(change.from)} a ${change.to === null ? "sin nota" : formatNumber(change.to)}`}
+                            : `De ${change.from === null ? "sin nota" : formatScore(change.from)} a ${change.to === null ? "sin nota" : formatScore(change.to)}`}
                         </p>
                         <p className="text-slate-600">{change.who} · {when.format(change.when)}</p>
                         <p className="text-slate-700">{change.reason ? `Motivo: ${change.reason}` : "Sin motivo escrito."}</p>

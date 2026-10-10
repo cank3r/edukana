@@ -6,7 +6,7 @@ import { AnnouncementContent } from "@/components/dashboard/AnnouncementContent"
 import { safeAnnouncementHref } from "@/lib/announcements";
 import { auth } from "@/lib/auth";
 import { getEffectiveCapabilities } from "@/lib/authorization";
-import { formatNumber } from "@/lib/gradebook-calc";
+import { formatAverage, formatScore } from "@/lib/grade-format";
 import { spanishLabel } from "@/lib/ux";
 import { authorizeChildren, getChildOverview, type ChildTask } from "@/server/family/guardian-portal";
 
@@ -89,7 +89,7 @@ export default async function ChildOverviewPage({ params }: { params: Promise<{ 
                       <div className="h-full rounded-full bg-blue-700" style={{ width: `${course.progressPercent}%` }} />
                     </div>
                     <p className="mt-1 text-sm text-slate-700">{course.progressPercent} % · {course.lessonsDone} de {course.lessonsTotal} lecciones completadas</p>
-                    {course.finalGrade !== null && <p className="mt-2 text-sm text-slate-900">Nota final: <strong>{formatNumber(course.finalGrade)}</strong></p>}
+                    {course.finalGrade !== null && <p className="mt-2 text-sm text-slate-900">Nota final: <strong>{formatAverage(course.finalGrade)}</strong></p>}
                   </article>
                 ))}
               </div>
@@ -114,10 +114,10 @@ export default async function ChildOverviewPage({ params }: { params: Promise<{ 
                               <div className="flex flex-wrap items-start justify-between gap-2">
                                 <div className="min-w-0">
                                   <p className="break-words font-semibold text-slate-900">{task.title}</p>
-                                  <p className="text-sm text-slate-600">{task.courseName} · {task.dueText ? `Fecha límite: ${task.dueText}` : "Sin fecha límite"}</p>
+                                  <p className="text-sm text-slate-600">{task.courseName} · {task.dueText ?? "Sin fecha límite"}</p>
                                 </div>
                                 {task.state === "overdue" && <span className="rounded-full bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-800">Vencida sin entregar</span>}
-                                {task.state === "graded" && task.score !== null && <strong className="text-slate-900">{formatNumber(task.score)} / {formatNumber(task.maxScore)}</strong>}
+                                {task.state === "graded" && task.score !== null && <strong className="text-slate-900">{formatScore(task.score)} / {formatScore(task.maxScore)}</strong>}
                               </div>
                               {task.feedback && <p className="mt-2 whitespace-pre-wrap break-words rounded-lg bg-slate-50 p-3 text-sm text-slate-700"><span className="font-semibold">Comentario del docente: </span>{task.feedback}</p>}
                             </li>
@@ -141,14 +141,14 @@ export default async function ChildOverviewPage({ params }: { params: Promise<{ 
                   <article className={card} key={course.courseId}>
                     <div className="flex items-start justify-between gap-3">
                       <h3 className="min-w-0 break-words font-semibold text-slate-900">{course.courseName}</h3>
-                      <p className="shrink-0 text-right text-sm text-slate-600">Promedio<br /><strong className="text-xl text-blue-700">{course.average === null ? "—" : formatNumber(course.average)}</strong></p>
+                      <p className="shrink-0 text-right text-sm text-slate-600">Promedio<br /><strong className="text-xl text-blue-700">{course.average === null ? "—" : formatAverage(course.average)}</strong></p>
                     </div>
                     <ul className="mt-3 divide-y divide-slate-100">
                       {course.items.map((item) => (
                         <li className="py-2 text-sm" key={item.id}>
                           <div className="flex items-start justify-between gap-3">
                             <span className="min-w-0 break-words text-slate-800">{item.title}</span>
-                            <span className="shrink-0 font-semibold text-slate-900">{item.isExcused ? "Exonerada" : item.score === null ? "Sin nota aún" : `${formatNumber(item.score)} / ${formatNumber(item.maxScore)}`}</span>
+                            <span className="shrink-0 font-semibold text-slate-900">{item.isExcused ? "Exonerada" : item.score === null ? "Sin nota aún" : `${formatScore(item.score)} / ${formatScore(item.maxScore)}`}</span>
                           </div>
                           {item.feedback && <p className="mt-1 whitespace-pre-wrap break-words text-slate-600">{item.feedback}</p>}
                         </li>

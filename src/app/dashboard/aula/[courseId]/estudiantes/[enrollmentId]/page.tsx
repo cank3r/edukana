@@ -1,11 +1,13 @@
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { deadlineLabel, DEFAULT_TIME_ZONE } from "@/lib/deadline";
+import { formatAverage, formatScore } from "@/lib/grade-format";
 import { getStudentProgress } from "@/server/courses/enrollment";
 
 export const dynamic = "force-dynamic";
 
 const day = (value: Date) => new Intl.DateTimeFormat("es", { dateStyle: "medium" }).format(value);
-const score = (value: number) => (Number.isInteger(value) ? String(value) : value.toFixed(1));
 
 const ENROLLMENT_STATUS: Record<string, string> = { ACTIVE: "Activo en el curso", DROPPED: "Retirado del curso", COMPLETED: "Terminó el curso", FAILED: "No aprobó" };
 const TASK_STATUS: Record<string, { label: string; className: string }> = {
@@ -21,6 +23,9 @@ export default async function StudentProgressPage({ params }: { params: Promise<
   const { courseId, enrollmentId } = await params;
   const data = await getStudentProgress({ id: user.id, institutionId: user.institutionId, role: user.role }, courseId, enrollmentId);
   if (!data) notFound();
+  const institution = await db.institution.findUnique({ where: { id: user.institutionId }, select: { timezone: true } });
+  const zone = institution?.timezone ?? DEFAULT_TIME_ZONE;
+  const now = new Date();
 
   const { enrollment, student } = data;
   const submitted = data.assignments.filter((assignment) => assignment.status !== "PENDING").length;
@@ -31,7 +36,7 @@ export default async function StudentProgressPage({ params }: { params: Promise<
         <p className="break-words text-sm text-slate-600">{student.email} · {data.course.name}</p>
         <p className="mt-2 text-sm font-medium text-slate-800">
           {ENROLLMENT_STATUS[enrollment.status] ?? "Inscrito"} · Inscrito el {day(enrollment.enrolledAt)}
-          {enrollment.finalGrade !== null && ` · Nota final: ${score(enrollment.finalGrade)}`}
+          {enrollment.finalGrade !== null && ` · Nota final: ${formatAverage(enrollment.finalGrade)}`}
         </p>
         {enrollment.status === "DROPPED" && (
           <p className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
@@ -94,8 +99,8 @@ export default async function StudentProgressPage({ params }: { params: Promise<
                     <span className={`rounded-full px-2 py-1 text-xs font-semibold ${status.className}`}>{status.label}</span>
                   </div>
                   <p className="mt-1 text-sm text-slate-600">
-                    {assignment.submittedAt ? `Entregada el ${day(assignment.submittedAt)}` : assignment.dueDate ? `Vence el ${day(assignment.dueDate)}` : "Sin fecha de entrega"}
-                    {assignment.score !== null && ` · Nota: ${score(assignment.score)} de ${score(assignment.maxScore)}`}
+                    {assignment.submittedAt ? `Entregada el ${day(assignment.submittedAt)}` : assignment.dueDate ? deadlineLabel(assignment.dueDate, now, zone) : "Sin fecha de entrega"}
+                    {assignment.score !== null && ` · Nota: ${formatScore(assignment.score)} de ${formatScore(assignment.maxScore)}`}
                   </p>
                 </li>
               );

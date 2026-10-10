@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import { getEffectiveCapabilities } from "@/lib/authorization";
 import { resolveCourseReadScope, resolveCourseWriteScope } from "@/lib/course-scope";
 import { db } from "@/lib/db";
+import { formatAverage } from "@/lib/grade-format";
 import { courseListWhere, courseStatusLabel } from "@/server/courses/course";
 
 export const dynamic = "force-dynamic";
@@ -134,7 +135,7 @@ export default async function AulaPage({ searchParams }: { searchParams: Promise
                           <p className="mt-1 text-xs text-slate-600">{progress}% completado</p>
                         </>
                       )}
-                      {own?.finalGrade != null && <p className="mt-2 text-sm text-slate-900">Nota final: <strong>{own.finalGrade}</strong></p>}
+                      {own?.finalGrade != null && <p className="mt-2 text-sm text-slate-900">Nota final: <strong>{formatAverage(own.finalGrade)}</strong></p>}
                     </div>
                   )}
                   <div className="mt-auto flex items-center justify-between pt-4 text-sm text-slate-600">

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
+import { CLOSE_VERBS, deadlineLabel, OPEN_VERBS } from "@/lib/deadline";
 import { listExams, type ExamStatus } from "@/server/assessment/exam-admin";
 import { formatPoints } from "../preguntas/labels";
 
@@ -22,7 +23,7 @@ export default async function ExamsPage({ params }: { params: Promise<{ courseId
   const data = await listExams({ id: user.id, institutionId: user.institutionId, role: user.role }, courseId);
   if (!data) redirect("/dashboard/aula");
   const base = `/dashboard/aula/${data.course.id}`;
-  const when = new Intl.DateTimeFormat("es", { timeZone: data.timezone, dateStyle: "medium", timeStyle: "short" });
+  const now = new Date();
 
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-4 sm:p-8">
@@ -64,8 +65,8 @@ export default async function ExamsPage({ params }: { params: Promise<{ courseId
               </p>
               {(exam.opensAt || exam.closesAt) && (
                 <p className="mt-1 text-sm text-slate-600">
-                  {exam.opensAt && `Se abre: ${when.format(exam.opensAt)}. `}
-                  {exam.closesAt && `Se cierra: ${when.format(exam.closesAt)}.`}
+                  {exam.opensAt && `${deadlineLabel(exam.opensAt, now, data.timezone, { verbs: OPEN_VERBS, withTime: true })}. `}
+                  {exam.closesAt && `${deadlineLabel(exam.closesAt, now, data.timezone, { verbs: CLOSE_VERBS, withTime: true })}.`}
                 </p>
               )}
               <p className="mt-1 text-sm text-slate-700">

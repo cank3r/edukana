@@ -1,13 +1,14 @@
 import Link from "next/link";
+import { CLOSE_VERBS, deadlineLabel, OPEN_VERBS } from "@/lib/deadline";
 import { listStudentExams, type StudentExamSummary } from "@/server/assessment/exam-taking";
-import { currentStudent, dateTime, NothingHere, points, primaryLink, secondaryLink, timeLimit } from "./shared";
+import { currentStudent, NothingHere, points, primaryLink, secondaryLink, timeLimit } from "./shared";
 
 export const dynamic = "force-dynamic";
 
-function windowText(exam: StudentExamSummary, timezone: string) {
-  if (exam.availability === "upcoming" && exam.opensAt) return `Abre el ${dateTime(exam.opensAt, timezone)}.`;
-  if (exam.availability === "closed" && exam.closesAt) return `Cerró el ${dateTime(exam.closesAt, timezone)}.`;
-  if (exam.closesAt) return `Abierto hasta el ${dateTime(exam.closesAt, timezone)}.`;
+function windowText(exam: StudentExamSummary, timezone: string, now: Date) {
+  if (exam.availability === "upcoming" && exam.opensAt) return `${deadlineLabel(exam.opensAt, now, timezone, { verbs: OPEN_VERBS, withTime: true })}.`;
+  if (exam.availability === "closed") return exam.closesAt && exam.closesAt <= now ? `${deadlineLabel(exam.closesAt, now, timezone, { verbs: CLOSE_VERBS, withTime: true })}.` : "Cerrado.";
+  if (exam.closesAt) return `${deadlineLabel(exam.closesAt, now, timezone, { verbs: CLOSE_VERBS, withTime: true })}.`;
   return "Abierto, sin fecha de cierre.";
 }
 
@@ -22,7 +23,7 @@ function ExamCard({ exam, courseId, timezone }: { exam: StudentExamSummary; cour
   return (
     <li className="rounded-xl border border-slate-200 bg-white p-5">
       <h3 className="text-lg font-bold text-slate-950">{exam.title}</h3>
-      <p className="mt-1 text-sm text-slate-600">{windowText(exam, timezone)}</p>
+      <p className="mt-1 text-sm text-slate-600">{windowText(exam, timezone, new Date())}</p>
       <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-3">
         <div><dt className="text-slate-500">Tiempo</dt><dd className="font-medium text-slate-900">{timeLimit(exam.durationMinutes, exam.closesAt)}</dd></div>
         <div><dt className="text-slate-500">Intentos</dt><dd className="font-medium text-slate-900">{exam.attemptsUsed} de {exam.maxAttempts} usados</dd></div>

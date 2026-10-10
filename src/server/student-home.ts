@@ -1,3 +1,4 @@
+import { CLOSE_VERBS, deadlineLabel } from "@/lib/deadline";
 import { db } from "@/lib/db";
 
 /** Persona en sesión: todo se consulta dentro de su institución. */
@@ -253,7 +254,7 @@ export async function getStudentHome(actor: HomeActor, now = new Date()): Promis
     courseName: courseName.get(item.courseId) ?? "",
     href: `/dashboard/aula/${item.courseId}/tareas/${item.id}`,
     dueAt: item.dueDate,
-    dueText: item.dueDate ? formatWhen(item.dueDate, now, timezone) : null,
+    dueText: item.dueDate ? deadlineLabel(item.dueDate, now, timezone) : null,
     overdue: item.dueDate !== null && item.dueDate < now,
     retry: false,
   }));
@@ -267,7 +268,7 @@ export async function getStudentHome(actor: HomeActor, now = new Date()): Promis
       courseName: courseName.get(exam.courseId) ?? "",
       href: `/dashboard/aula/${exam.courseId}/presentar/${exam.id}`,
       dueAt: exam.closesAt,
-      dueText: exam.closesAt ? formatWhen(exam.closesAt, now, timezone) : null,
+      dueText: exam.closesAt ? deadlineLabel(exam.closesAt, now, timezone, { verbs: CLOSE_VERBS }) : null,
       overdue: false,
       retry: exam.attempts.some((attempt) => attempt.status !== "IN_PROGRESS"),
     }));

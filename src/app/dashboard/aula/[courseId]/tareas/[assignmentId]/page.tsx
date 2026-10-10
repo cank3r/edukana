@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { getEffectiveCapabilities } from "@/lib/authorization";
+import { formatScore } from "@/lib/grade-format";
 import { assignmentForStudent, assignmentRoster, dueLabel, formatDateTime, type RosterState } from "@/server/assessment/assignments";
 import { submissionFilesForManager, submissionFilesForStudent } from "@/server/courses/submission-files";
 import { GradeForm } from "../AssignmentTools";
@@ -49,7 +50,7 @@ export default async function AssignmentPage({ params, searchParams }: { params:
         <header>
           <h1 className="text-2xl font-bold" style={{ color: "var(--navy)" }}>{assignment.title}</h1>
           <p className="mt-1 text-sm text-slate-600">
-            {dueLabel(assignment.dueDate, now, zone)}
+            {dueLabel(assignment.dueDate, now, zone, { withTime: !!assignment.dueDate && assignment.dueDate > now })}
             {assignment.dueDate && assignment.dueDate < now ? ` (${formatDateTime(assignment.dueDate, zone)})` : ""} · Vale {assignment.maxScore} puntos
             {assignment.dueDate ? (assignment.allowLate ? " · Acepta entregas tarde" : " · No acepta entregas tarde") : ""}
           </p>
@@ -63,7 +64,7 @@ export default async function AssignmentPage({ params, searchParams }: { params:
         {submission?.graded && (
           <section className={card} aria-labelledby="mi-nota">
             <h2 id="mi-nota" className="text-lg font-bold text-slate-950">Tu nota</h2>
-            <p className="mt-2 text-3xl font-bold text-slate-950">{submission.score ?? "—"} <span className="text-base font-medium text-slate-600">de {assignment.maxScore}</span></p>
+            <p className="mt-2 text-3xl font-bold text-slate-950">{submission.score === null ? "—" : formatScore(submission.score)} <span className="text-base font-medium text-slate-600">de {formatScore(assignment.maxScore)}</span></p>
             <h3 className="mt-3 text-sm font-semibold text-slate-900">Comentario de tu docente</h3>
             <p className="mt-1 whitespace-pre-wrap break-words text-sm text-slate-800">{submission.feedback || "Tu docente no dejó comentario."}</p>
           </section>
@@ -113,7 +114,7 @@ export default async function AssignmentPage({ params, searchParams }: { params:
           <span className={`${badge} ${assignment.isPublished ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-700"}`}>{assignment.isPublished ? "Publicada" : "Borrador"}</span>
         </div>
         <p className="mt-1 text-sm text-slate-600">
-          {dueLabel(assignment.dueDate, now, zone)}
+          {dueLabel(assignment.dueDate, now, zone, { withTime: !!assignment.dueDate && assignment.dueDate > now })}
           {assignment.dueDate && assignment.dueDate < now ? ` (${formatDateTime(assignment.dueDate, zone)})` : ""} · Puntaje máximo: {assignment.maxScore}
         </p>
         <p className="mt-1 text-sm font-medium text-slate-800">
@@ -159,7 +160,7 @@ export default async function AssignmentPage({ params, searchParams }: { params:
                   <p className="truncate font-semibold text-slate-950">{student.name}</p>
                   <p className="mt-1 text-sm text-slate-600">
                     <span className={`${badge} ${STATE_STYLE[student.state]}`}>{student.state}</span>
-                    {student.submission?.graded ? ` Nota: ${student.submission.score ?? "—"} de ${assignment.maxScore}` : ""}
+                    {student.submission?.graded ? ` Nota: ${student.submission.score === null ? "—" : formatScore(student.submission.score)} de ${formatScore(assignment.maxScore)}` : ""}
                   </p>
                 </div>
                 {student.submission && (

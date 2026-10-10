@@ -1,3 +1,5 @@
+import { formatScore } from "@/lib/grade-format";
+
 export type QuestionKind = "MULTIPLE_CHOICE" | "TRUE_FALSE" | "SHORT_ANSWER";
 
 export const QUESTION_TYPE_LABEL: Record<QuestionKind, string> = {
@@ -12,4 +14,4 @@ export const QUESTION_TYPE_HELP: Record<QuestionKind, string> = {
   SHORT_ANSWER: "El estudiante escribe su respuesta. La revisas y le pones los puntos tú.",
 };
 
-export const formatPoints = (points: number) => `${Number(points.toFixed(2))} ${points === 1 ? "punto" : "puntos"}`;
+export const formatPoints = (points: number) => `${formatScore(points)} ${points === 1 ? "punto" : "puntos"}`;
