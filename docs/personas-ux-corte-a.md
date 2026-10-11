@@ -58,4 +58,10 @@ La primera suite completa detectó 16/20 PASS: el select de rol se restablecía 
 
 ## Siguiente paso
 
-Revisar el PR borrador y el resultado de CI; después recorrer Personas en un Preview autorizado con Carlos. No se fusiona ni despliega manualmente como parte de este corte.
+El código `c2235c891754e47b6bee0d1420c81931a5c2ec4b` del [PR 115](https://github.com/cank3r/edukana/pull/115) terminó con `validate` y `browser-smoke` aprobados tanto en [GitHub Actions](https://github.com/cank3r/edukana/actions/runs/38154763333) como en CircleCI ([validate 362](https://circleci.com/gh/cank3r/edukana/362), [browser-smoke 361](https://circleci.com/gh/cank3r/edukana/361)). La revisión independiente del diff no encontró bloqueantes ni pidió parches de código.
+
+Los 20 casos locales de navegador equivalen a 10 escenarios de componentes en dos tamaños, con acciones simuladas. No prueban páginas completas, persistencia, Back/Forward de Next ni el foco cuando una fila desaparece por un filtro. El smoke de CI es evidencia adicional de su recorrido existente; no reemplaza la aceptación visual de Carlos en Preview.
+
+Se generaron e inspeccionaron tres capturas adicionales en `../personas-captures-c2235c8/`: directorio a 1280 y 360 px, y ficha personal a 1280 px. Renderizan estáticamente el contenido y componentes reales de las páginas con respuestas ficticias, CSS real y Chrome efímero. Todas llevan un rótulo visible de fixture local y el SHA del código. No incluyen el layout autenticado, hidratación, sesión de Preview ni conexión a una base. Ninguna mostró desbordamiento horizontal. `manifest.json` registra dimensiones, tamaños y SHA-256; `capture.cjs` conserva la reproducción local fuera del repositorio.
+
+Siguiente paso: recorrer Personas en un Preview autorizado con Carlos. El PR sigue en borrador. No se fusiona ni despliega manualmente como parte de este corte.
