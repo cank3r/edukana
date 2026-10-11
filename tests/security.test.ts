@@ -102,7 +102,7 @@ test("aísla finanzas y horarios en todas las capas visibles", () => {
   assert.match(analytics, /getEffectiveCapabilities\(user\.institutionId, user\.role\)/);
   assert.match(analytics, /capabilities\.has\("analytics\.view"\)/);
   assert.match(studentDetail, /canViewFinance = capabilities\.has\("finance\.manage"\)/);
-  assert.match(studentDetail, /\{canViewFinance && <section>/);
+  // people-profile-ui.test.ts verifies finance query/render permission gates without relying on JSX whitespace or layout.
   assert.match(calendar, /if \(!capabilities\.has\("schedule\.view"\)\) notFound\(\)/);
   assert.match(dashboard, /getCommunityAnnouncementWhere\(user, \{ canManage:/);
   assert.doesNotMatch(dashboard, /title: "Consultar calendario"/);

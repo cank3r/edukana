@@ -100,8 +100,10 @@ test("administrador", async ({ page }, info) => {
     const form = page.getByRole("form", { name: "Agregar persona" });
     await form.getByLabel("Nombre completo").fill(`Marta Prueba ${tag}`);
     await form.getByLabel("Correo").fill(`marta.${tag}@instituto-demo.test`);
-    await form.getByLabel("Enviarle la invitación ahora").uncheck();
-    await form.getByRole("button", { name: "Agregar persona" }).click();
+    await form.getByLabel("Enviarle la invitación al agregar").uncheck();
+    await form.getByRole("button", { name: "Revisar", exact: true }).click();
+    await page.getByRole("form", { name: "Revisar antes de agregar" })
+      .getByRole("button", { name: "Agregar sin enviar correo", exact: true }).click();
     await done(page, /Persona agregada/);
     await visible(page, `Marta Prueba ${tag}`);
   });
