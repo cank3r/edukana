@@ -80,6 +80,8 @@ export default async function AccessPage({ searchParams }: { searchParams: Promi
                   roleLabel: roleLabel(person.role),
                   suspended: person.status !== "ACTIVE",
                   hasPassword: Boolean(person.identity?.passwordHash),
+                  hasIdentity: Boolean(person.identity),
+                  canManageAdminRoles: user.role === "ADMIN" || user.role === "SUPER_ADMIN",
                   isSelf: person.id === user.id,
                 }}
               />
