@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { formatNumber } from "@/lib/gradebook-calc";
 import { loadGradeCell, loadGradebook, type GradebookCell, type GradebookItem } from "@/server/assessment/gradebook";
 import { CategoryEditor, DeleteItem, GradeEditor, ItemForm, PublishToggle, SimpleSetup } from "./GradebookTools";
+import { GradeDialog } from "./GradeDialog";
 
 export const dynamic = "force-dynamic";
 
@@ -219,9 +220,13 @@ export default async function GradebookPage({
         </>
       )}
 
-      {cell && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 sm:items-center sm:p-4">
-          <section role="dialog" aria-modal="true" aria-labelledby="titulo-editor" className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-2xl bg-white p-5 sm:rounded-2xl">
+      <GradeDialog
+        open={Boolean(cell)}
+        closeHref={base}
+        returnHref={cell ? cellHref(cell.item.id, cell.student.enrollmentId) : null}
+      >
+        {cell && (
+          <>
             <div className="mb-4 flex items-start justify-between gap-3">
               <div>
                 <h2 id="titulo-editor" className="text-lg font-bold text-slate-950">{cell.student.name}</h2>
@@ -260,9 +265,9 @@ export default async function GradebookPage({
                 )}
               </div>
             )}
-          </section>
-        </div>
-      )}
+          </>
+        )}
+      </GradeDialog>
     </div>
   );
 }

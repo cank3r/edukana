@@ -1,10 +1,17 @@
 # S0-12 — Registro de aceptación aditiva sin borrar staging
 
+> **Registro histórico, no autorización vigente (12 de octubre de 2026).** Los destinos, rama,
+> bypass y comandos descritos aquí pertenecen al piloto anterior. No habilitan una ejecución actual.
+> El procedimiento vigente está en [Recorrido canónico del MVP](canonical-mvp-pilot.md).
+> La aceptación desplegada sigue pendiente; el PostgreSQL temporal y Storage local solo acreditan
+> el entorno aislado. Antes de nuevas escrituras en Preview se requieren destino aislado confirmado,
+> alcance exacto y acceso autorizado existente. No se permite reactivar el bypass histórico.
+
 **Staging es el entorno demostrativo de Edukana y conserva todos sus datos.** S0-12 ejecuta el recorrido con un administrador existente y un namespace nuevo dentro de la institución allowlisted. No resetea, vacía, borra ni sobrescribe datos previos. La instalación desde cero se valida por separado en PostgreSQL temporal de CI.
 
 ## 1. Identidad allowlisted
 
-| Recurso | Valor aprobado |
+| Recurso | Valor histórico; no vigente |
 |---|---|
 | Supabase project ref de staging Edukana | `xbjtwhpabntygxlzxpcl` (confirmar nuevamente antes de ejecutar) |
 | Institución / slug esperado | `demo` o el slug confirmado por el administrador |
@@ -26,7 +33,7 @@ La autorización del propietario acepta expresamente solo:
 - Crear tres usuarios ficticios, una unidad, un curso y sus artefactos con un `PILOT_RUN_ID` nuevo.
 - Reutilizar un período activo existente sin cambiar su estado ni sus datos.
 - Ejecutar escrituras funcionales del E2E y cargar un PNG privado exclusivo del run.
-- Usar el bypass de automatización solo en el Preview identificado.
+- El permiso histórico de bypass queda retirado del procedimiento vigente; no usarlo.
 - Conservar todo lo creado como material demostrativo; cualquier limpieza futura requiere autorización separada.
 
 - **Autorizado por:** PENDIENTE
@@ -52,16 +59,11 @@ El runner llama al endpoint autenticado y de solo lectura `/api/pilot-preflight`
 
 ## 4. Ejecución autorizada
 
-Desde el checkout limpio del SHA candidato, apuntando exclusivamente al Preview de Edukana:
-
-```powershell
-git rev-parse HEAD
-git status --short
-npm run test:pilot:config
-$env:PILOT_MODE = "existing"
-$env:PILOT_RUN_ID = "s0-<id-nuevo>"
-npm run test:pilot:preview
-```
+El comando histórico `test:pilot:preview` está retirado del procedimiento de aceptación vigente.
+No ejecutarlo ni preparar sus variables o bypass. Seguir las seis etapas, los casos de denegación
+y las restricciones de Preview de [Recorrido canónico del MVP](canonical-mvp-pilot.md), registrando
+SHA, URL, entorno, identificador de ejecución y resultado real. Los campos pendientes de este
+registro no constituyen una aceptación ni sustituyen una ejecución completa.
 
 No ejecutar `prisma migrate deploy`, `prisma migrate reset`, SQL manual, comandos de borrado ni limpieza de Storage contra staging. Las credenciales se cargan como variables de proceso y nunca se imprimen o guardan en el repositorio.
 
