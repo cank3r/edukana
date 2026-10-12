@@ -57,6 +57,15 @@ function noteLink(page: Page) {
   return page.locator(`main a[href="${paths().cell}"]`).filter({ visible: true });
 }
 
+async function expectCellScore(page: Page, viewport: Viewport) {
+  const entry = noteLink(page);
+  if (viewport.width === 360) {
+    await expect(entry.locator(":scope > span")).toHaveText([NAMES.assignment, "92 / 100"]);
+  } else {
+    await expect(entry).toHaveText("92");
+  }
+}
+
 function studentCard(page: Page) {
   return page.locator("main details").filter({
     has: page.locator("summary").filter({ hasText: USERS.student.name }),
@@ -76,7 +85,7 @@ async function showCell(page: Page, viewport: Viewport) {
   }
   await expect(noteLink(page)).toHaveCount(1);
   await expect(noteLink(page)).toBeVisible();
-  await expect(noteLink(page)).toContainText(/\b92\b/);
+  await expectCellScore(page, viewport);
 }
 
 function historyPanel(dialog: Locator) {
@@ -97,7 +106,7 @@ async function expectOpen(page: Page, history?: string) {
   await expect(dialog.getByRole("checkbox", { name: /^Exonerado/ })).not.toBeChecked();
   await expect(dialog.getByRole("textbox", { name: /^Motivo del cambio/ })).toHaveValue("");
   await expect(dialog.getByRole("heading", { name: "Historial de esta nota", exact: true })).toBeVisible();
-  if (history !== undefined) await expect(historyPanel(dialog)).toHaveText(history);
+  if (history !== undefined) await expect(historyPanel(dialog)).toHaveText(history, { useInnerText: true });
   return dialog;
 }
 
@@ -110,7 +119,7 @@ async function expectClosed(page: Page, viewport: Viewport) {
   await expect(noteLink(page)).toHaveCount(1);
   await expect(noteLink(page)).toBeVisible();
   await expect(noteLink(page)).toBeFocused();
-  await expect(noteLink(page)).toContainText(/\b92\b/);
+  await expectCellScore(page, viewport);
 }
 
 async function openWithKeyboard(page: Page) {
