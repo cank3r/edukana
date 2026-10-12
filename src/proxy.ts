@@ -27,14 +27,18 @@ const navigate = authFromToken(async (request, _event: NextFetchEvent) => {
   return NextResponse.next({ request: { headers: requestHeaders } });
 });
 
-export default function proxy(request: NextRequest, event: NextFetchEvent) {
+export default async function proxy(request: NextRequest, event: NextFetchEvent) {
   const origin = requestOrigin(request.headers.get("host"), request.nextUrl.protocol);
   if (!origin) return new NextResponse("Invalid request host", { status: 400 });
   const url = new URL(`${request.nextUrl.pathname}${request.nextUrl.search}`, origin);
   const clean = new NextRequest(new NextRequest(url, request), {
     headers: sanitizeHostHeaders(request.headers, request.nextUrl.protocol),
   });
-  return navigate(clean, event);
+  const response = await navigate(clean, event);
+  // Navigation only reads the session: a late response must not undo signout.
+  // Auth handlers keep their own cookies for login, logout and explicit renewal.
+  response?.headers.delete("set-cookie");
+  return response;
 }
 
 export const config = {
