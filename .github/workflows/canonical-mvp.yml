@@ -33,6 +33,7 @@ jobs:
       CANONICAL_MVP_SOURCE_DIRTY: "0"
     steps:
       - uses: actions/checkout@v4
+        with: { persist-credentials: false }
       - name: Select isolated temporary run directory
         run: echo "CANONICAL_MVP_RUN_DIR=$RUNNER_TEMP/canonical-mvp" >> "$GITHUB_ENV"
       - uses: actions/setup-node@v4
@@ -73,6 +74,7 @@ jobs:
           --health-interval 5s --health-timeout 5s --health-retries 20
     steps:
       - uses: actions/checkout@v4
+        with: { persist-credentials: false }
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }
       - name: Install locked dependencies
