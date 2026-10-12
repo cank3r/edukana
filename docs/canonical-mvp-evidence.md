@@ -1,126 +1,121 @@
-# Evidencia del cierre canónico — 12 de octubre de 2026
+# Evidencia del candidato canónico - 12 de octubre de 2026
 
-Estado: aceptación incompleta. PR de trabajo #122; base de aplicación `ffaadff471c4c02341b31619dbef8956bf1b4896`.
-No se fusionó a la rama desplegada ni se desplegó este candidato. Preview/Supabase no se probaron de forma autenticada.
+Estado: **23/23 pruebas locales correctas**, CI del candidato y aceptación en Preview pendientes.
+PR de trabajo [#122](https://github.com/cank3r/edukana/pull/122), base de aplicación
+`ffaadff471c4c02341b31619dbef8956bf1b4896`. No se fusionó ni desplegó este candidato.
 
-Último recorrido completo: **run08, 16 PASS / 3 FAIL**, terminado `2026-10-12T20:07:22.489Z`.
-SHA probado `8cd68474ac51e9ac19a5b097b91876c968f8b380`, árbol limpio al iniciar.
-Los seis bloques canónicos pasan. Los únicos fallos restantes son el modal de notas a 360/1280
-y la emisión de nuevas URLs al propietario después de revocar `course.view`.
-Auth y atomicidad de archivos están corregidos, integrados localmente y revisados; sus commits
-todavía no están publicados. Último remoto del PR: `c93b6b9f41e92493e4a48856191872438da27d49`.
+Último recorrido completo: **run10**, terminado `2026-10-12T21:01:59.08Z`, código
+`2d8d9d22b3db815493b33fffaa01915bfa0bf22c`, árbol limpio al iniciar. Node 22.20.0,
+PostgreSQL 16.4, Next 16.4 y Chromium de Playwright 1.64. Se creó un PostgreSQL nuevo y vacío;
+se aplicaron las 16 migraciones existentes y los seis bloques académicos nacieron en la interfaz.
+El flujo principal no usó seed, inserciones directas de cuentas, hashes ni sesiones preparadas.
 
-## Resultado del candidato integrado
+## Resultado integrado
 
 | Comprobación | Resultado real |
 |---|---|
 | Arranque vacío y seis bloques por UI | PASS |
-| Cuatro roles a 360/1280, controles, recarga y navegación | 8/8 PASS |
-| Aislamiento entre instituciones, roles y audiencia | PASS |
-| Mismo alumno COMPLETED: entrega, reenvío, examen y progreso rechazados | PASS; texto, ID, fecha y versiones conservados; nota92 e historia legibles |
-| Tutor: banderas, revocación terminal y URL previa | PASS; nueva autorización denegada y TTL60 real |
-| Logout inmediato y quiescente | PASS, tres muestras de cada uno |
-| Carga UI de documento y video | PASS; confirmación200 y bytes descargados idénticos |
-| Docente sin course.view | Menú/página/acción rechazan; contenido intacto; URLs previas vencen60/300; nuevas propias fallan con302 en vez de403 |
-| Modal de nota | FAIL a360/1280: Tab, Shift+Tab, Escape y retorno del foco |
-| Guardas / regresiones Auth / unitarias existentes | 22/22, 5/5 y188/188 PASS con Node22 |
-| Lint, TypeScript y build integrados | PASS |
-| Concurrencia Storage en PG dedicado / uploads existentes | 4/4 y8/8 PASS; QA independiente PASS |
+| Cuatro roles a 360/1280: pantallas, controles, recarga y navegación | 8/8 PASS |
+| Modal a 360/1280: Tab, Shift+Tab, Escape y retorno del foco | 2/2 PASS |
+| Entrada directa, recarga abierta, Cerrar/Cancelar y Atrás/Adelante | 4/4 PASS; nota 92, comentario e historial conservados, cero intentos de escritura |
+| Instituciones, roles, audiencia y privacidad entre compañeros | PASS con sesiones y peticiones reales |
+| Mismo alumno COMPLETED: entrega nueva, reenvío, examen y progreso abiertos | Escrituras rechazadas; texto, ID, fecha, versiones, nota 92 e historia conservados |
+| Docente sin course.view | Menú, página y acción deniegan; nuevas URLs propias devuelven 403; contenido intacto |
+| URLs emitidas anteriormente | Vencen tras 60/300 segundos reales, sin adelantar el reloj |
+| Tutor: banderas y revocación terminal | Nuevas consultas y autorizaciones denegadas; URL anterior vence realmente a 60 segundos |
+| Logout inmediato y quiescente | Tres muestras de cada uno PASS |
+| Carga de documento y vídeo desde UI | Confirmación 200 y bytes descargados idénticos |
+| Build, TypeScript y lint del candidato final | PASS |
 
-Sonda adicional de accesibilidad tras run08: documento360/1280 respectivamente, una tabla
-accesible con ocho encabezados de fila en ambos tamaños, cero escrituras posteriores al login.
-Su primer arranque falló antes de abrir Chromium con
-`TypeError: Cannot read properties of undefined (reading 'readManifest')`; se corrigió únicamente
-la importación del script diagnóstico y la repetición pasó. No cambió la aplicación.
+Guardas 22/22, Auth 5/5 y unitarias existentes 188/188 pasaron sobre `f66bdd3` en Node 22.
+Los cambios posteriores sólo afectan el guard de visibilidad del diálogo y dos comparadores de
+sus pruebas; build, tipos y lint se repitieron tras esos cambios. CI debe validar el SHA publicado.
 
-CI remoto anterior `38300409593` sobre `c93b6b9` terminó con13 PASS/6 FAIL. El resumen público
-identifica admin360, dos modales, COMPLETED, capacidad docente y logout inmediato. No contiene
-excepciones privadas; las causas se contrastan con reproducciones locales, sin inventar detalle
-remoto. Ese SHA precede los fixes Auth/Storage. CI existente `38300409553` del mismo SHA: PASS.
-El candidato local añade gates explícitos de Auth y concurrencia Storage, con PostgreSQL separado
-para esta última; deben ejecutarse en CI tras revisar su publicación.
+En otro PostgreSQL exclusivo, el comando conjunto que utiliza CI pasó **16/16**: cuatro carreras
+reales de entrega/descarte y doce regresiones de archivos. Las pruebas nuevas de propietario pasaron
+de **9 PASS/3 FAIL** antes del cambio a **12/12 PASS** después. Veintiuna unidades de alcance,
+avisos y Storage pasaron. Las 32 sondas de QA en memoria se registran aparte y no se cuentan como PG.
 
-La autorización de atomicidad no incluye modificar permisos de lectura. La corrección del
-atajo de propietario en `assetReadAccess` necesita aprobación adicional. El modal toca una página
-de PR114 y necesita handoff explícito. Ambos tienen propuestas acotadas; no se han editado.
+## Correcciones y revisión independiente
 
-## PostgreSQL temporal y recorrido UI
+- [Auth](canonical-auth-logout.md): el proxy retira `Set-Cookie` tras Auth.js. Navegar deja de renovar
+  la cookie; duración configurada y handlers explícitos se conservan. El handler `/api/auth/session`
+  mantiene la carrera residual documentada: no se afirma revocación global de sesiones.
+- [Atomicidad](canonical-submission-races.md): revalidar antes de borrar bytes y exigir el número
+  exacto de archivos vinculados dentro de la transacción; un archivo ausente revierte la entrega.
+- [Propietario](canonical-asset-owner-access.md): requiere alcance vigente del curso sin
+  `announcementId`. Se preservan avisos, privados ajenos, ACTIVE/COMPLETED actuales e históricos,
+  avatar/logo, rutas públicas y TTL. Carlos autorizó este contrato a las 20:21 UTC.
+- [Diálogo](canonical-grade-dialog.md): `showModal`, foco, ciclo de teclado, Escape y retorno móvil.
+  Handoff limitado de la página compartida; formulario, acciones, historial y formato intactos.
+  PR114 sigue separado.
+- [Lecciones](canonical-lesson-upload.md): enviar File crudo con su MIME; [UX](canonical-ux-review.md):
+  controles de 44 px y tabla accesible sin desbordamiento.
 
-Node22.20.0, PostgreSQL16.4, Chromium de Playwright1.64, Storage privado local.
-Cada intento completo comenzó con un contenedor nuevo vacío; migraciones existentes y datos creados
-por UI, sin seed ni inserción de cuentas, hashes o sesiones. Correo ficticio interceptado localmente.
-URL exclusiva dentro del contenedor: `http://127.0.0.1:3160`.
+QA independiente cotejó los commits y alcances sin hallazgos bloqueantes. Los últimos correctivos
+revisados fueron `a8a6397` (diálogo) y `84e5d45` (comparadores); integrados en el SHA probado anterior.
+Antes de run10, los seis casos focales del diálogo pasaron sobre los datos UI de run09 en
+`run09-modal01`. Esa ejecución de lectura no se presenta como otro recorrido desde cero.
 
-| Ensayo | Bloques completados | Resultado global / límite |
+Inspección adicional a 360/1280: diálogo nativo modal, documento de 360/1280 px y panel de 360/512 px,
+sin desbordamiento ni contenido vertical fuera de la ventana; cero intentos de escritura tras login.
+Se inspeccionaron ambas capturas locales. No constituye una auditoría completa de accesibilidad.
+
+## Historial de intentos conservado
+
+| Ensayo | Bloques completos | Resultado y alcance |
 |---|---|---|
-| run02 | 1–2 | Falló selector de período |
-| run03 | 1–3 | Falló selector de tutor |
-| run04 | 1–4 | Entrega persistida; falló selector de relectura en bloque5 |
-| run05 | ninguno | Logout intermitente devolvió dashboard tras signout200 |
-| run06 | 1–6 | 4 pruebas PASS y 4 FAIL; no aceptación global |
-| run07 | 1-6 | 10 pruebas PASS y 9 FAIL; no aceptación global |
-| run08 | 1-6 | 16 pruebas PASS y 3 FAIL; candidato integrado, no aceptación global |
+| run02 | 1-2 | Falló selector de período |
+| run03 | 1-3 | Falló selector de tutor |
+| run04 | 1-4 | Entrega persistida; falló selector de relectura del bloque 5 |
+| run05 | Ninguno | Logout intermitente volvió al dashboard tras signout 200 |
+| run06 | 1-6 | 4 PASS/4 FAIL; árbol con cambios, `1ac260b`, terminó 19:19:08 UTC |
+| run07 | 1-6 | 10 PASS/9 FAIL; `4f8a4e0` limpio, terminó 19:41:19 UTC |
+| run08 | 1-6 | 16 PASS/3 FAIL; `8cd6847` limpio, terminó 20:07:22 UTC |
+| run09 | 1-6 | 18 PASS/5 FAIL; `f66bdd3` limpio, terminó 20:51:24 UTC |
+| run09-modal01 | No repite el core | 6/6 casos de lectura del diálogo PASS sobre `2d8d9d2` |
+| run10 | 1-6 | 23/23 PASS; `2d8d9d2` limpio |
 
-`run07` terminó a `2026-10-12T19:41:19.321Z` sobre
-`4f8a4e0674e8e61667176112df12ec7c9f57d3e4`, con árbol limpio al iniciar. Pasaron
-los seis bloques, rutas por rol, aislamiento entre instituciones con peticiones reales,
-audiencia/privacidad entre compañeros, banderas y revocación terminal del tutor con caducidad
-real de la URL anterior a 60 segundos. Siete fallos pertenecen a UX (controles, desbordamiento
-y modal); dos pruebas negativas quedan incompletas por selectores de alertas/contenido.
-COMPLETED y revocación de capacidad docente con TTL 60/300 todavía no tienen PASS global.
-Las seis muestras de logout de este intento pasaron, lo que no invalida la carrera intermitente
-reproducida en `run06-auth01`. CI existente del SHA `4f8a4e0` pasó en la ejecución `38298793302`.
+Run09 confirmó el arreglo de permisos del propietario y todos los gates de denegación/Auth.
+Conserva un fallo real del retorno móvil y cuatro casos interrumpidos por dos comparaciones incorrectas
+del nuevo harness. Error terminal exacto: `Error: browser exited 1; inspect the private run log.`
+Una sonda DOM de Chromium confirmó que un enlace bajo `<details>` cerrado reporta un rectángulo
+y `visibility: visible`, pero no admite foco. El guard ahora excluye ese contenido y permite reabrir
+la ficha. Las pruebas comparan los spans numéricos exactos y usan la misma extracción `innerText`
+para el historial; no se relajaron foco, visibilidad, persistencia ni prohibición de escrituras.
 
-El workflow canónico adicional falló antes de crear jobs en `38298791948`; usaba el contexto
-`runner.temp` donde GitHub no lo admite (env de job). `d5f93cc` mueve la selección de directorio
-a un paso del runner. El nuevo CI conserva todas las pruebas y está pendiente de resultado.
+Los resultados anteriores siguen siendo evidencia histórica, no gates aprobados del candidato final.
+El diagnóstico CDP inicial de logout era insuficiente y fue sustituido por observación pasiva y una
+petición protegida nueva; no se resolvió la carrera añadiendo una espera al test.
 
-`run06` terminó a `2026-10-12T19:19:08.438Z`. Metadatos registrados:
-SHA `1ac260b82dc24947a50c683adf4c457a2c974599`, árbol con cambios locales; aplicación aún sobre la base
-indicada. El summary público conserva este hecho: no atribuir el resultado a un commit posterior.
+## CI y manejo de evidencia
 
-En run06 pasaron el recorrido completo, rutas restringidas y audiencia/privacidad entre compañeros.
-La cuarta prueba aprobada era el diagnóstico CDP, cuyo alcance insuficiente se detectó y documentó:
-no acreditaba ausencia de carrera de sesión. Se sustituyó por observación pasiva y petición nueva.
-Fallaron aislamiento entre instituciones (timeout del harness), preparación del examen (captura prematura
-de la ruta `nuevo`), subida del archivo de lección (error real de formato) y restauración de bandera del
-tutor (pendiente repetir con lectura persistida del control). Sus aserciones corregidas requieren ejecución.
+El workflow canónico exige Auth explícitamente y ejecuta las suites de atomicidad/uploads en otro
+PostgreSQL del job, con concurrencia de archivos igual a uno. Checkout no conserva credenciales.
+Se publica sólo `public/summary.json`; buzón, archivos, sesiones, logs y capturas privados quedan fuera.
 
-## Defectos reproducidos y correcciones
+CI remoto histórico sobre `c93b6b9`: canónico
+[38300409593](https://github.com/cank3r/edukana/actions/runs/38300409593) terminó 13 PASS/6 FAIL;
+CI existente [38300409553](https://github.com/cank3r/edukana/actions/runs/38300409553) pasó.
+Ese SHA precede los arreglos Auth/Storage y no acredita el candidato nuevo. Los resultados del SHA
+publicado se registrarán en el PR y en el handoff final; no se atribuyen resultados entre commits.
 
-- Lecciones: la UI envía multipart pero Storage local valida archivo crudo; apareció «El archivo recibido
-  no coincide con la carga autorizada». Fix cliente limitado a File+MIME, revisado independientemente;
-  Run07 confirmó por UI la subida de documento de texto y video, confirmación HTTP 200 y descarga
-  con bytes idénticos, antes de que un selector posterior interrumpiera la prueba de capacidad.
-  La revocación docente y TTL 60/300 siguen pendientes. No cambia API/proveedor.
-- Logout `run06-auth01`: dos de tres muestras inmediatas fallaron; tres quiescentes pasaron. Una muestra
-  observa signout200, cookie ausente, respuestas GET posteriores que emiten cookie y una petición nueva
-  al dashboard autorizada200. No se guardan valores de cookies en sus metadatos. Carlos autorizó
-  la corrección limitada de Auth a las 19:43 UTC; commit15b7b8e, QA independiente y run08 PASS.
-  No se considera resuelto por esperar en el harness.
-- Entrega/descarte concurrentes: control secuencial PASS y dos regresiones FAIL en PostgreSQL real,
-  repetidas por el integrador. Entrega SUBMITTED sin contenido/archivos y objeto perdido. Prueba,
-  condiciones y límites en [diagnóstico de persistencia](canonical-submission-races.md). Fix de Storage
-  autorizado por Carlos a las 19:43 UTC; commitdcc8914, cuatro regresiones PG y QA PASS.
+El backend local fue PostgreSQL desechable y Storage privado local. Correo ficticio interceptado,
+sin entrega a proveedor. Las fixtures directas de integración están separadas del recorrido UI.
+No se usaron secretos, cuentas, correo ni DB/Storage externos. Ninguna migración nueva ni reset.
 
-Guardas del harness22/22 y suite existente188/188 PASS con Node22. ESLint, tipos y build deben
-revalidarse junto al SHA final. QA independiente revisó aislamiento/proyección pública, prueba de
-persistencia y fix cliente. UX run06-ux01 y run07: 3 PASS/7 FAIL a 360/1280.
-El ajuste CSS de áreas de 44 px está revisado e integrado en `f926e28`; su runtime pasó en run08.
-El modal de notas solapa PR114 y requiere handoff separado. CI del candidato final sigue pendiente.
+## Preview y aceptación pendientes
 
-## Preview y aceptación humana
+La Preview de la base `ffaadff` sigue separada de este candidato:
+`https://edukana-df71bathl-cerkanasrl.vercel.app`, deployment `dpl_5VRpXXdforsovpjzy7G616KgqSLs`.
+La protección exige sesión Vercel existente. El runtime CUA falló exactamente con:
 
-El Preview desplegado de la base `ffaadff` continúa separado de esta evidencia:
-`https://edukana-df71bathl-cerkanasrl.vercel.app` (deployment `dpl_5VRpXXdforsovpjzy7G616KgqSLs`).
-La protección exige sesión Vercel. El runtime CUA falló con:
-
-```
+```text
 node_repl kernel exited unexpectedly
 MXC launcher: cannot locate required Windows platform directory: HRESULT 0x80070003
 ```
 
-No se reintentó ciegamente ni se extrajeron cookies/credenciales o habilitó bypass.
-Se necesita acceso existente autorizado mediante un navegador funcional. Antes de nuevos datos,
-confirmar destino aislado y alcance exacto; sin seed/reset ni alterar datos anteriores. El backend
-local no valida Supabase. Carlos conserva la aceptación final de usabilidad y cualquier integración.
+No se extrajeron cookies/credenciales ni se habilitó bypass. Se necesita acceso autorizado mediante
+un navegador funcional; antes de datos nuevos, confirmar destino aislado y alcance exacto, sin seed,
+reset ni alterar datos anteriores. Las pruebas locales no acreditan Supabase ni entrega real de correo.
+Carlos conserva la aceptación final y la decisión de merge/deploy.

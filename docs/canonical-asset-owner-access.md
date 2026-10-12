@@ -39,3 +39,8 @@ node --require ./tests/integration/stub-server-only.cjs --import tsx --test --te
 ## Handoff
 
 QA independiente revisó el diff, el documento y la conservación de contratos sin hallazgos bloqueantes. El integrador debe incorporar el commit local, ejecutar build/CI y repetir el recorrido canónico HTTP existente sin relajar la denegación de nuevas URLs, manteniendo las comprobaciones de caducidad real de 60/300 segundos. Este frente no certifica ese recorrido posterior ni un despliegue. Sin push, merge o cambios en Preview.
+
+
+## Verificacion integrada del coordinador
+
+Run10 termino el 2026-10-12 a las 21:01:59 UTC: **23/23 PASS**, SHA limpio 2d8d9d22b3db815493b33fffaa01915bfa0bf22c. Build, tipos y lint PASS. El detalle, los intentos previos y los limites estan en [evidencia canonica](canonical-mvp-evidence.md). CI del candidato, Preview y aceptacion de Carlos siguen pendientes; sin merge/deploy.

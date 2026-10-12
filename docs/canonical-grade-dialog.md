@@ -71,3 +71,8 @@ Esto sigue el [comportamiento de details en el estándar HTML](https://html.spec
 
 Tipos focales, lint y `git diff --check` pasaron para esta corrección; QA independiente revisó el guard de
 summary y ancestros anidados sin observaciones. La repetición del recorrido de aplicación sigue pendiente del integrador.
+
+
+## Verificacion integrada del coordinador
+
+Run10 termino el 2026-10-12 a las 21:01:59 UTC: **23/23 PASS**, SHA limpio 2d8d9d22b3db815493b33fffaa01915bfa0bf22c. Build, tipos y lint PASS. El detalle, los intentos previos y los limites estan en [evidencia canonica](canonical-mvp-evidence.md). CI del candidato, Preview y aceptacion de Carlos siguen pendientes; sin merge/deploy.
