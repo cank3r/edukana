@@ -1,5 +1,7 @@
 # Matrícula: recuperación de búsqueda e inscripción
 
+Actualización 12-Oct-2026: Carlos autorizó integrar PR116 y publicar PR117 sin fusionarlo. PR116 está integrado en `1a220855cc59fb14fbc6d49c225984275e40e6e5`. PR117 incorpora esa base; el único conflicto fue documental en TEAM, resuelto preservando todas las filas de la coordinadora y añadiendo la propia. El código y las pruebas de matrícula permanecen idénticos a `eea4e73b7b1b231288c7ff5eff0cc7ecdb69d7f3`. Tras reconciliar: 188 unitarias, TypeScript y 26 pruebas de navegador PASS. El estado final del CI se registra con su SHA en la descripción de PR117; no se autoriza su fusión.
+
 Base `24892ee1df52c2e86252f5b0ad20706a0732e084`, rama `m2/matricula-ux-corte-c-20261011`, claim `M2-MATRICULA-CORTE-C`, [PR117](https://github.com/cank3r/edukana/pull/117). Continúa el desarrollo autorizado mientras PR116 espera una decisión de integración; PR116 permanece intacto en su rama.
 
 ## Hallazgo reproducido antes de cambiar el código
