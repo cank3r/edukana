@@ -192,6 +192,8 @@ for (const viewport of viewports) {
       await expect.soft(dialog.getByRole("textbox", { name: /^Nota / })).toBeFocused();
       await focusStaysInside(page, dialog, "Tab");
       await focusStaysInside(page, dialog, "Shift+Tab");
+      // Isolate Escape from a preceding focus-trap failure; all assertions remain active.
+      await dialog.getByRole("link", { name: "Cerrar", exact: true }).focus();
       await page.keyboard.press("Escape");
       await expect.soft(dialog, "Escape cierra el editor sin guardar").not.toBeVisible();
       // Explicit close is only cleanup of navigation state if Escape is broken. The failure above stays red.

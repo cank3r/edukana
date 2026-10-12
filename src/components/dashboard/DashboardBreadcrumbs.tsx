@@ -27,7 +27,7 @@ export default function DashboardBreadcrumbs() {
 
   return (
     <div className="border-b border-slate-200 bg-white px-4 py-2 sm:px-8">
-      <Link href={parentHref} className="mb-1 inline-flex items-center gap-1 text-sm font-semibold text-blue-700 md:hidden">
+      <Link href={parentHref} className="mb-1 inline-flex min-h-11 items-center gap-1 text-sm font-semibold text-blue-700 md:hidden">
         <ChevronLeft size={16} aria-hidden="true" /> {`Volver ${BACK_TO_ITEM[parentLabel] ?? `a ${parentLabel}`}`}
       </Link>
       <nav aria-label="Ruta de navegación" className="hidden items-center gap-1 text-sm text-slate-600 md:flex">
