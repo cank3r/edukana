@@ -50,3 +50,24 @@ No se ejecutaron navegador, build ni base de datos desde este worktree. La integ
 360/1280, foco inicial, ciclo Tab/Shift+Tab, Escape/Cerrar/Cancelar, entrada directa, recarga abierta,
 Atrás/Adelante, retorno móvil y nota persistente. Las pruebas conservan el bloqueo de escrituras de negocio
 después del login. Los resultados de estas ejecuciones y la aceptación de Carlos siguen pendientes.
+
+## Corrección del retorno móvil tras Run09
+
+El integrador ejecutó Run09 sobre `f66bdd3`. En la prueba UX original, escritorio pasó; en móvil pasaron
+el foco inicial, Tab/Shift+Tab y Escape, pero falló el retorno: el diálogo cerró y la URL volvió a la base,
+mientras el enlace filtrado por visibilidad no existía porque la tarjeta del estudiante permanecía plegada.
+
+La sonda Chromium aislada del integrador, sin aplicación ni DB, confirmó la causa con
+`<details><summary>Alumno</summary><a>92</a></details>`. Cerrado: `open:false`, `rectCount:1`,
+`visibility:visible`, helper anterior `true`, foco rechazado. Abierto: helper `true`, foco aceptado.
+Script de evidencia fuera de Git: `../canonical-mvp-evidence/run-local-01/details-visibility-probe.mjs`.
+El contexto del fallo está en `run09/private/test-results/ux-UX-docente-360-modal-de-nota-con-teclado-sin-guardar-canonical-ux/`.
+
+`visible()` ahora revisa todos los ancestros `details` cerrados y solo admite los elementos que pertenecen
+a su primer `summary`. Así la celda oculta deja de ser elegida prematuramente y el bloque existente de
+restauración abre su tarjeta antes de enfocarla. También cubre detalles anidados, sin ocultar el summary
+necesario para la reapertura. No agrega observadores, temporizadores ni reintentos y no cambia la navegación.
+Esto sigue el [comportamiento de details en el estándar HTML](https://html.spec.whatwg.org/multipage/interactive-elements.html#the-details-element).
+
+Tipos focales, lint y `git diff --check` pasaron para esta corrección; QA independiente revisó el guard de
+summary y ancestros anidados sin observaciones. La repetición del recorrido de aplicación sigue pendiente del integrador.

@@ -11,6 +11,13 @@ type Props = {
 };
 
 function visible(element: HTMLElement) {
+  // Closed details can retain layout boxes; only their first summary remains visible.
+  for (let ancestor = element.parentElement; ancestor; ancestor = ancestor.parentElement) {
+    if (ancestor instanceof HTMLDetailsElement && !ancestor.open) {
+      const summary = Array.from(ancestor.children).find((child) => child.tagName === "SUMMARY");
+      if (!summary?.contains(element)) return false;
+    }
+  }
   return element.getClientRects().length > 0 && getComputedStyle(element).visibility !== "hidden";
 }
 
