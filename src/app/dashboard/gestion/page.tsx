@@ -79,7 +79,8 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
         {canManage && <AddPerson key={params.agregar ? "abierto" : "cerrado"}
           canAddAdmin={canManageAdminRoles} startOpen={Boolean(params.agregar)} />}
         <div className="flex flex-wrap gap-x-5">
-          {canManage && <Link href="/dashboard/gestion/accesos" className={link}>Importar e invitar</Link>}
+          {canManage && <Link href={`/dashboard/gestion/accesos?${new URLSearchParams({ volver: returnHref })}`}
+            className={link}>Importar e invitar</Link>}
           {canOrganize && <Link href="/dashboard/gestion/programas" className={link}>Programas</Link>}
           {canOrganize && <Link href="/dashboard/gestion/grupos" className={link}>Grupos</Link>}
         </div>
