@@ -43,6 +43,8 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Verify local isolation and mail interception
         run: node --test tests/canonical-mvp-harness.test.mjs
+      - name: Require proxy logout race and Auth.js handler regressions
+        run: node --import tsx --test tests/auth-proxy-logout.test.ts
       - name: Apply existing migrations and build against empty disposable PostgreSQL
         run: node scripts/canonical-mvp-run.mjs prepare
       - name: Complete the canonical UI journey and negative cases
@@ -55,3 +57,40 @@ jobs:
           path: ${{ runner.temp }}/canonical-mvp/public/summary.json
           if-no-files-found: warn
           retention-days: 14
+
+  storage-atomicity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16.4
+        env:
+          POSTGRES_USER: fixture
+          POSTGRES_PASSWORD: fixture
+          POSTGRES_DB: edukana_persistence_proof
+        options: >-
+          --health-cmd "pg_isready -U fixture -d edukana_persistence_proof"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Require real concurrent submission and discard regressions
+        env:
+          POSTGRES_CONTAINER_ID: ${{ job.services.postgres.id }}
+        run: |
+          docker run --rm --network "container:$POSTGRES_CONTAINER_ID" \
+            --workdir /app --volume "$GITHUB_WORKSPACE:/app" \
+            --env CANONICAL_SUBMISSION_RACE_PROOF=ISOLATED_POSTGRES_ONLY \
+            --env 'DATABASE_URL=postgresql://fixture:fixture@127.0.0.1:5432/edukana_persistence_proof?connection_limit=8' \
+            --env 'DIRECT_URL=postgresql://fixture:fixture@127.0.0.1:5432/edukana_persistence_proof?connection_limit=8' \
+            --env APP_URL=http://127.0.0.1:3169 \
+            node:22.20-bookworm-slim sh -ec '
+              apt-get update -qq
+              apt-get install -y --no-install-recommends openssl ca-certificates >/dev/null
+              node node_modules/prisma/build/index.js migrate deploy
+              node --require ./tests/integration/stub-server-only.cjs --import tsx --test \
+                --test-concurrency=1 --test-reporter=spec tests/integration/canonical-submission-races.proof.ts
+            '
