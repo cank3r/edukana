@@ -61,16 +61,22 @@ function screens(role: Role): Screen[] {
     { name: "vínculos", path: "/dashboard/configuracion/tutores", heading: "Tutores y estudiantes" }, community];
   if (role === "teacher") return [home,
     { name: "contenido", path: `${course}/contenido`, heading: "Contenido del curso",
-      persists: async (page) => { await expect.soft(page.getByText(NAMES.lesson, { exact: true })).toBeVisible(); } },
+      persists: async (page) => {
+        await expect.soft(page.getByRole("button", { name: `Editar lección ${NAMES.lesson}`, exact: true })).toBeVisible();
+      } },
     { name: "entrega", path: `${course}/tareas/${manifest.assignmentId}`, heading: NAMES.assignment },
     { name: "calificaciones", path: `${course}/calificaciones`, heading: "Calificaciones" }, community];
   if (role === "student") return [home,
     { name: "lección", path: `${course}/leccion/${manifest.lessonId}`, heading: NAMES.lesson,
       persists: async (page) => { await expect.soft(page.getByText(/Completada el/)).toBeVisible(); } },
     { name: "entrega", path: `${course}/tareas/${manifest.assignmentId}`, heading: NAMES.assignment,
-      persists: async (page) => { await expect.soft(page.getByText(NAMES.submission, { exact: true })).toBeVisible(); } },
+      persists: async (page) => {
+        const response = page.getByRole("textbox", { name: /^Tu respuesta/ });
+        if (await response.count()) await expect.soft(response).toHaveValue(NAMES.submission);
+        else await expect.soft(page.getByRole("region", { name: "Tu entrega", exact: true })).toContainText(NAMES.submission);
+      } },
     { name: "notas", path: `${course}/mis-notas`, heading: "Mis notas",
-      persists: async (page) => { await expect.soft(page.getByText(NAMES.feedback, { exact: true })).toBeVisible(); } }, community];
+      persists: async (page) => { await expect.soft(page.getByText(NAMES.feedback)).toBeVisible(); } }, community];
   return [home, { name: "hijo", path: `/dashboard/hijos/${manifest.studentId}`, heading: USERS.student.name,
     persists: async (page) => {
       await expect.soft(page.getByRole("progressbar", { name: `Avance en ${NAMES.course}` })).toHaveAttribute("aria-valuenow", "100");

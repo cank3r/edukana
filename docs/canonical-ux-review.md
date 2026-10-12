@@ -10,6 +10,8 @@ Base de aplicación: `ffaadff471c4c02341b31619dbef8956bf1b4896`. Claim `MVP-UX-C
 
 Validación estática local: TypeScript 5.9.3 sin errores (resolución virtual de solo lectura a los helpers/fixtures reales del integrador y dependencias existentes); ESLint con el preset TypeScript de Next 16.4.0, cero errores y avisos; sintaxis y `git diff --check` correctos. No se instaló ni copió el harness a esta rama, y estas comprobaciones no ejecutaron navegador ni base de datos.
 
+Selectores contrastados con la UI: contenido usa el botón accesible «Editar lección …», sin depender del prefijo numérico del título; comentario admite el prefijo «Comentario de tu docente». La entrega editable comprueba el valor del textbox; una entrega ya calificada aparece como texto en la región «Tu entrega», pues la política impide reenviarla. Ambos estados deben conservar exactamente la respuesta del ensayo.
+
 ## Qué comprueba
 
 | Área | Comprobación |
