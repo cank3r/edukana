@@ -224,7 +224,16 @@ export async function discardUpload(actor: UploadActor, assetId: string): Promis
   if (!asset || !purpose) return fail(404, "Ese archivo ya no está.");
   const pendingSubmissionFile = purpose === "submission" && Boolean(asset.assignmentId);
   if (asset.confirmedAt && !pendingSubmissionFile) return fail(409, "Este archivo está en uso y no se puede quitar desde aquí.");
-  await destroyAsset(asset);
+  // Claim the still-unused row before removing bytes. PostgreSQL rechecks these predicates
+  // after a concurrent attachment commits; a stale preflight must not delete delivered evidence.
+  const discarded = await db.storageAsset.deleteMany({ where: {
+    id: asset.id, institutionId: actor.institutionId, uploaderId: actor.id, announcementId: null, submissionId: null,
+    ...(pendingSubmissionFile ? { assignmentId: asset.assignmentId } : { confirmedAt: null }),
+  } });
+  if (discarded.count !== 1) return fail(404, "Ese archivo ya no está disponible para quitarlo.");
+  // The row is already committed as deleted, so a cleanup failure cannot expose a delivered file.
+  await removePrivateAsset(asset.bucket, asset.objectPath)
+    .catch((error) => console.error("removePrivateAsset failed", { assetId: asset.id, error }));
   return { ok: true };
 }
 

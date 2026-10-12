@@ -129,7 +129,14 @@ export async function submitAssignmentWithFiles(
       const dropped = [...linkedIds].filter((id) => !assetIds.includes(id));
       // Se desligan sin borrarse: siguen en la versión anterior (SubmissionRevision.assetIds).
       if (dropped.length) await tx.storageAsset.updateMany({ where: { id: { in: dropped }, submissionId: submission.id }, data: { submissionId: null, assignmentId: null } });
-      if (pendingIds.size) await tx.storageAsset.updateMany({ where: { id: { in: [...pendingIds] }, submissionId: null }, data: { submissionId: submission.id } });
+      if (pendingIds.size) {
+        const attached = await tx.storageAsset.updateMany({
+          where: { ...pendingSubmissionFilesWhere(student, current.id), id: { in: [...pendingIds] } },
+          data: { submissionId: submission.id },
+        });
+        // A concurrent discard can win after the pending read. Never commit a partial submission.
+        if (attached.count !== pendingIds.size) throw new StaleFiles();
+      }
       return { ok: true as const, courseId: current.courseId, resubmitted };
     }, { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted });
   } catch (error) {

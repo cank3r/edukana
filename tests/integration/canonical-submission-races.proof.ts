@@ -12,7 +12,7 @@ import { PUT as store } from "@/app/api/local-storage/route";
 import { submitAssignmentWithFiles } from "@/server/courses/submission-files";
 import { confirmUpload, discardUpload, prepareUpload } from "@/server/courses/uploads";
 
-// A dedicated, deliberately red diagnostic. Do not run against the UI journey or shared CI DB.
+// A dedicated concurrency regression. Do not run against the UI journey or shared CI DB.
 const prefix = `canonical_persistence_${randomUUID()}_`;
 const institutionId = `${prefix}institution`;
 const teacherId = `${prefix}teacher`;
@@ -85,6 +85,10 @@ after(async () => {
 async function fixture(name: string) {
   const assignmentId = `${prefix}${name}`;
   await db.assignment.create({ data: { id: assignmentId, institutionId, courseId, title: name, isPublished: true } });
+  return uploadForAssignment(assignmentId);
+}
+
+async function uploadForAssignment(assignmentId: string) {
   const prepared = await prepareUpload(student, {
     purpose: "submission", assignmentId, name: "proof.pdf", type: "application/pdf", size: pdf.length,
   });
@@ -127,9 +131,11 @@ async function blockedBy(blocker: number, command: "DELETE" | "UPDATE") {
   throw new Error(`No observed PostgreSQL ${command} wait on storage_assets behind backend ${blocker}`);
 }
 
-async function race(item: Awaited<ReturnType<typeof fixture>>, first: "discard" | "submit", t: TestContext) {
+async function race(
+  item: Awaited<ReturnType<typeof fixture>>, first: "discard" | "submit", t: TestContext, assetIds = [item.assetId],
+) {
   const held = holdAsset(item.assetId);
-  const submit = () => submitAssignmentWithFiles(student, { assignmentId: item.assignmentId, assetIds: [item.assetId] });
+  const submit = () => submitAssignmentWithFiles(student, { assignmentId: item.assignmentId, assetIds });
   const discard = () => discardUpload(student, item.assetId);
   let firstResult: ReturnType<typeof submit> | ReturnType<typeof discard> | undefined;
   let secondResult: ReturnType<typeof submit> | ReturnType<typeof discard> | undefined;
@@ -192,4 +198,17 @@ test("submission first: stale discard must preserve the now-delivered file and b
   assert.ok(result.asset?.submissionId);
   assert.equal(result.blobExists, true);
   assert.deepEqual(new Uint8Array(await readFile(item.path)), pdf);
+});
+
+test("discard first with two files: surviving attachment rolls back without losing its bytes", async (t) => {
+  const item = await fixture("partial_attachment");
+  const surviving = await uploadForAssignment(item.assignmentId);
+  const result = await race(item, "discard", t, [item.assetId, surviving.assetId]);
+  assert.ok(result.firstValue.ok);
+  assert.equal(result.secondValue.ok, false, "One missing file must reject the entire submission");
+  assert.equal(result.submission, null);
+  const asset = await db.storageAsset.findUniqueOrThrow({ where: { id: surviving.assetId } });
+  assert.equal(asset.submissionId, null, "The surviving file remains pending after rollback");
+  assert.equal(asset.assignmentId, item.assignmentId);
+  assert.deepEqual(new Uint8Array(await readFile(surviving.path)), pdf);
 });
