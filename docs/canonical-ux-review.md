@@ -6,7 +6,7 @@ Base de aplicación de Run06: `ffaadff471c4c02341b31619dbef8956bf1b4896`. Claims
 
 `tests/e2e/canonical-mvp/ux.spec.ts` añade diez casos: cuatro roles por dos anchos, y dos casos de teclado en el editor de nota. La prueba depende de los seis bloques UI completos y de los helpers/fixtures del nuevo harness canónico; no funciona por sí sola sobre esta rama de documentación/prueba.
 
-**Run06-ux01: 3 casos PASS y 7 FAIL. Run07 confirma las áreas táctiles observables de administración; la corrección del desbordamiento todavía necesita runtime. No es aceptación del MVP.** El integrador ejecutó los diez casos el 12 de octubre de 2026 contra la aplicación local y la fixture de Run06, con acceso académico y progreso de lección restaurados por UI antes del ensayo. Carlos mantiene la aceptación final en Preview.
+**Último resultado Run08: 8 casos PASS y 2 FAIL (modal). Controles y desbordamiento corregidos y verificados; no es aceptación del MVP.** El integrador ejecutó los diez casos el 12 de octubre de 2026 contra la aplicación local y la fixture de Run06, con acceso académico y progreso de lección restaurados por UI antes del ensayo. Carlos mantiene la aceptación final en Preview.
 
 Validación estática local: TypeScript 5.9.3 sin errores (resolución virtual de solo lectura a los helpers/fixtures reales del integrador y dependencias existentes); ESLint con el preset TypeScript de Next 16.4.0, cero errores y avisos; sintaxis y `git diff --check` correctos. No se instaló ni copió el harness a esta rama, y estas comprobaciones no ejecutaron navegador ni base de datos.
 
@@ -69,7 +69,7 @@ La sonda posterior usa Node 22.20.0 y el build `B0vrKq9OtJdqr3i3sQ2Tv`, `fixture
 
 Las casillas visibles miden 20 × 20 px y su etiqueta completa proporciona el área táctil. Activar y Revocar no aparecen en la fixture revocada; no se verificaron sus medidas ni el estado habilitado de Guardar. Tampoco se repitieron las rutas de los otros roles ni el modal.
 
-## Desbordamiento localizado y corrección pendiente de runtime
+## Desbordamiento: diagnóstico previo y corrección
 
 En `/dashboard` a 360 px, `main figure > table.sr-only` ocupa `x=32`, `y=1626.23`, ancho `494`, alto `240` y extremo derecho `526`, que coincide con el ancho del documento. `main` conserva `clientWidth=360` y `scrollWidth=360`. La tabla, su caption y filas son el grupo que alcanza ese extremo. El CSS calculado de la tabla es `display: table`, `position: absolute`, `width: 494px`, `white-space: nowrap` y `overflow-x: hidden`. La fuente es `src/app/dashboard/_tablero/TrendChart.tsx`, tabla posterior a los dos SVG (líneas 43–59 antes del cambio).
 
@@ -89,7 +89,8 @@ La sonda tuvo dos errores de preparación resueltos antes del resultado final: `
 - `ContentEditor.tsx:176`: publicar/ocultar contenido no solicita confirmación ni muestra impacto. No se pulsa en esta prueba porque cambiaría datos de negocio.
 
 No cubre lector de pantalla, contraste completo, correo real, backend Supabase, red lenta ni el recorrido completo de creación a 360 px. El smoke preparado y las suites de Personas/matrícula/asistencia siguen siendo evidencia complementaria, nunca sustituyen este recorrido ni la revisión humana.
-# Actualización integrada: run08
+
+## Actualización integrada: run08
 
 SHA `8cd68474ac51e9ac19a5b097b91876c968f8b380`, árbol limpio al iniciar, PostgreSQL y Storage
 privados nuevos. Las ocho pruebas de pantallas de cuatro roles a360/1280 pasan; los dos casos
@@ -99,4 +100,3 @@ del documento360/1280, una tabla expuesta a los selectores de accesibilidad y oc
 de fila en ambos tamaños; cero escrituras tras login. No se eliminó contenido accesible.
 Evidencia privada: `run08/private/ux-accessibility-probe.json`; resumen permitido:
 `run08/public/summary.json`. No prueba Preview ni sustituye aceptación de Carlos.
-
