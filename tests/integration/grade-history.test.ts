@@ -98,9 +98,9 @@ test("alta inicial: con SETUP_TOKEN definido solo vale el valor exacto", () => {
   assert.equal(checkSetupToken(undefined, env), "invalid");
 });
 
-test("alta inicial: sin SETUP_TOKEN se conserva el comportamiento anterior y un valor corto se rechaza", () => {
-  assert.equal(checkSetupToken("", {}), "not_required");
-  assert.throws(() => checkSetupToken("x", { SETUP_TOKEN: "corto" }), /24 caracteres/);
+test("alta inicial: sin SETUP_TOKEN o con un valor corto se rechaza el acceso", () => {
+  assert.equal(checkSetupToken("", {}), "invalid");
+  assert.equal(checkSetupToken("corto", { SETUP_TOKEN: "corto" }), "invalid");
 });
 
 test("URLs firmadas: un documento vive 60 segundos y un video 5 minutos como máximo", async () => {
