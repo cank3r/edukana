@@ -16,6 +16,8 @@
 import { existsSync } from "node:fs";
 import Module from "node:module";
 import { join } from "node:path";
+import { validateDemoTarget } from "./target-policy";
+import { APPROVED_DEMO_TARGETS } from "./approved-targets";
 
 // Las funciones del servidor importan `server-only`, que solo existe dentro de Next.js.
 // Fuera de Next se sustituye por un módulo vacío antes de cargarlas.
@@ -75,8 +77,10 @@ async function main() {
     process.exitCode = 1;
     return;
   }
-  // El esquema declara también DIRECT_URL; aquí basta con la misma base.
-  process.env.DIRECT_URL ||= url;
+  // Reject before countdown, server imports or any database connection.
+  const verified = validateDemoTarget(process.env, APPROVED_DEMO_TARGETS);
+  process.env.DATABASE_URL = verified.databaseUrl;
+  process.env.DIRECT_URL = verified.directUrl;
   const password = process.env.DEMO_PASSWORD?.trim() ?? "";
   if (!removing && password.length < 8) {
     console.error("Falta DEMO_PASSWORD (al menos 8 caracteres): es la contraseña de todas las cuentas de demostración.");
@@ -134,7 +138,7 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error("\nNo se pudo completar. Si se alcanzó a crear parte de la demostración, se borró; las demás instituciones no se tocaron.");
+  console.error("\nNo se pudo completar. No se confirma la limpieza: revisa el resultado antes de volver a intentarlo.");
   console.error(error instanceof Error ? error.message : error);
   process.exitCode = 1;
 });
