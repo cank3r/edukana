@@ -29,11 +29,12 @@ jobs:
           --health-interval 5s --health-timeout 5s --health-retries 20
     env:
       CANONICAL_MVP_ISOLATED: "1"
-      CANONICAL_MVP_RUN_DIR: ${{ runner.temp }}/canonical-mvp
       CANONICAL_MVP_SOURCE_SHA: ${{ github.sha }}
       CANONICAL_MVP_SOURCE_DIRTY: "0"
     steps:
       - uses: actions/checkout@v4
+      - name: Select isolated temporary run directory
+        run: echo "CANONICAL_MVP_RUN_DIR=$RUNNER_TEMP/canonical-mvp" >> "$GITHUB_ENV"
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }
       - name: Install locked dependencies and Chromium
