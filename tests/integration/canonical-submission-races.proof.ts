@@ -147,7 +147,7 @@ async function race(item: Awaited<ReturnType<typeof fixture>>, first: "discard" 
     held.release();
     await Promise.allSettled([held.finished, firstResult, secondResult]);
   }
-  assert.ok(firstResult && secondResult);
+  assert.ok(firstResult !== undefined && secondResult !== undefined);
   const [firstValue, secondValue] = await Promise.all([firstResult, secondResult]);
   const [submission, asset] = await Promise.all([
     db.submission.findUnique({

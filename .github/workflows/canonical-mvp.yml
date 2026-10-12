@@ -1,0 +1,56 @@
+name: Canonical MVP from empty PostgreSQL
+
+on:
+  push:
+    branches: ["mvp/canonical-acceptance-20261012"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: canonical-mvp-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  canonical:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    services:
+      postgres:
+        image: postgres:16.4
+        env:
+          POSTGRES_USER: canonical
+          POSTGRES_PASSWORD: canonical_fixture_only
+          POSTGRES_DB: canonical_mvp
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U canonical -d canonical_mvp"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      CANONICAL_MVP_ISOLATED: "1"
+      CANONICAL_MVP_RUN_DIR: ${{ runner.temp }}/canonical-mvp
+      CANONICAL_MVP_SOURCE_SHA: ${{ github.sha }}
+      CANONICAL_MVP_SOURCE_DIRTY: "0"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - name: Install locked dependencies and Chromium
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Verify local isolation and mail interception
+        run: node --test tests/canonical-mvp-harness.test.mjs
+      - name: Apply existing migrations and build against empty disposable PostgreSQL
+        run: node scripts/canonical-mvp-run.mjs prepare
+      - name: Complete the canonical UI journey and negative cases
+        run: node scripts/canonical-mvp-run.mjs test
+      - name: Publish outcome without mailbox, tokens, sessions, traces or private files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: canonical-mvp-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/canonical-mvp/public/summary.json
+          if-no-files-found: warn
+          retention-days: 14
