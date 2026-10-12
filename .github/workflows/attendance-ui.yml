@@ -31,11 +31,13 @@ jobs:
       # Real React components, in-memory actions and loopback-only browser requests.
       # No application server, external database, seed or deployment.
       - run: npx playwright test --config=playwright.attendance.config.ts
+        env:
+          ATTENDANCE_UI_OUTPUT: ${{ runner.temp }}/attendance-ui-artifacts
       - name: Guardar resultados del navegador
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: attendance-ui-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ../attendance-ui-artifacts/
+          path: ${{ runner.temp }}/attendance-ui-artifacts/
           if-no-files-found: warn
           retention-days: 14
