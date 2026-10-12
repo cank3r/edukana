@@ -79,13 +79,14 @@ jobs:
         with: { node-version: 22, cache: npm }
       - name: Install locked dependencies
         run: npm ci
-      - name: Require real concurrent submission and discard regressions
+      - name: Require real concurrent submission, discard and asset access regressions
         env:
           POSTGRES_CONTAINER_ID: ${{ job.services.postgres.id }}
         run: |
           docker run --rm --network "container:$POSTGRES_CONTAINER_ID" \
             --workdir /app --volume "$GITHUB_WORKSPACE:/app" \
             --env CANONICAL_SUBMISSION_RACE_PROOF=ISOLATED_POSTGRES_ONLY \
+            --env EDUKANA_INTEGRATION_DB=1 \
             --env 'DATABASE_URL=postgresql://fixture:fixture@127.0.0.1:5432/edukana_persistence_proof?connection_limit=8' \
             --env 'DIRECT_URL=postgresql://fixture:fixture@127.0.0.1:5432/edukana_persistence_proof?connection_limit=8' \
             --env APP_URL=http://127.0.0.1:3169 \
@@ -94,5 +95,6 @@ jobs:
               apt-get install -y --no-install-recommends openssl ca-certificates >/dev/null
               node node_modules/prisma/build/index.js migrate deploy
               node --require ./tests/integration/stub-server-only.cjs --import tsx --test \
-                --test-concurrency=1 --test-reporter=spec tests/integration/canonical-submission-races.proof.ts
+                --test-concurrency=1 --test-reporter=spec \
+                tests/integration/canonical-submission-races.proof.ts tests/integration/uploads.test.ts
             '

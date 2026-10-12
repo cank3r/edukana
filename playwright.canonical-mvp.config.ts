@@ -32,6 +32,7 @@ export default defineConfig({
   projects: [
     { name: "canonical-core", testMatch: "core.spec.ts" },
     { name: "canonical-ux", testMatch: "ux.spec.ts", dependencies: ["canonical-core"] },
+    { name: "canonical-grade-dialog", testMatch: "grade-dialog.spec.ts", dependencies: ["canonical-core"] },
     { name: "canonical-denials", testMatch: "denials.spec.ts", dependencies: ["canonical-core"] },
     { name: "canonical-auth-race", testMatch: "logout-race.spec.ts", dependencies: ["canonical-core"] },
   ],

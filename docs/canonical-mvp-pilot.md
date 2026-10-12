@@ -57,6 +57,7 @@ El workflow `.github/workflows/canonical-mvp.yml` crea PostgreSQL 16.4 exclusivo
 
 ```sh
 node --test tests/canonical-mvp-harness.test.mjs
+node --import tsx --test tests/auth-proxy-logout.test.ts
 node scripts/canonical-mvp-run.mjs prepare
 node scripts/canonical-mvp-run.mjs test
 ```
@@ -71,6 +72,15 @@ El recorrido principal espera que termine la navegación antes de cerrar sesión
 `logout-race.spec.ts` compara tres cierres inmediatos y tres quiescentes; cualquier muestra fallida
 mantiene el gate rojo. Una prueba de logout quiescente no acredita ausencia de carreras. El diagnóstico
 inicial con una respuesta retenida por CDP no demostraba el orden del almacén de cookies y fue reemplazado.
+
+Las pruebas de calificaciones conservan las verificaciones originales de teclado a 360 y 1280 px.
+Un proyecto adicional comprueba entrada directa, recarga y navegación del historial del navegador
+sin guardar cambios. Después del login, ambas auditorías bloquean cualquier intento de escritura.
+
+El job separado de archivos usa otro PostgreSQL desechable y ejecuta explícitamente las regresiones
+concurrentes de entrega/descarte y `tests/integration/uploads.test.ts`. Sus fixtures de integración
+no preparan datos del recorrido principal. Este gate cubre también la pérdida y recuperación de
+acceso vigente del propietario, conservando los contratos de avisos y lectura histórica.
 
 Los recursos locales deben ser contenedores recién creados y propios del ensayo. Al terminar, retirar únicamente esos contenedores y sus volúmenes efímeros, verificando primero sus identificadores y etiqueta de propiedad. Nunca apuntar estos comandos a una base persistente aunque esté en loopback.
 
