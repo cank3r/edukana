@@ -91,13 +91,17 @@ Antes de autorizar una entrada se debe verificar, sin compartir contraseñas ni 
 3. Identidad de cada conexión de Prisma: host, puerto, nombre de base, usuario/rol y schema. Un pooler compartido requiere identificar también el tenant mediante su usuario. DATABASE_URL y DIRECT_URL pueden tener endpoints distintos, pero ambos deben figurar en la misma entrada aprobada.
 4. Migraciones requeridas y permiso específico de carga. La aprobación del guard no aplica migraciones ni carga datos.
 
-La entrada revisada contiene solo esos identificadores, nunca contraseñas, claves o URLs. El CLI exige `DEMO_TARGET=isolated-preview`, `DEMO_TARGET_ID` de una entrada aprobada, TLS y coincidencia exacta de ambos endpoints. Ninguna variable de entorno puede agregar una entrada a la allowlist. No cambiar variables Vercel ni crear credenciales como parte de este paso de código.
+La entrada revisada contiene solo esos identificadores, nunca contraseñas, claves o URLs. El CLI exige `DEMO_TARGET=isolated-preview`, un `DEMO_TARGET_ID` no vacío que identifique una única entrada aprobada, TLS y coincidencia exacta de ambos endpoints. Una referencia duplicada en la lista también se rechaza. Ninguna variable de entorno puede agregar una entrada a la allowlist. No cambiar variables Vercel ni crear credenciales como parte de este paso de código.
+
+`DATABASE_URL` y `DIRECT_URL` son obligatorias y explícitas; la segunda ya no hereda la primera. Ambas deben incluir usuario y contraseña, sin imprimirlos. Se exigen identificadores sin escapes y una ruta simple de base de datos: se rechazan rutas con `..` incluso si un parser las normaliza, usuarios codificados, contraseñas con escapes incompletos, puerto cero y parámetros de enrutamiento desconocidos o repetidos. La contraseña puede usar la codificación URL necesaria; se conserva el valor original de cada URL validada.
 
 ### Base local desechable
 
-Se admite `DEMO_TARGET=isolated-local` únicamente con host localhost, 127.0.0.1 o ::1 y nombre `edukana_demo_*`; ambas conexiones deben coincidir. Esto es una barrera contra accidentes, **no prueba de aislamiento físico**: un puerto local podría ser un túnel. Verificar su origen antes de cualquier carga. No se ha instalado ni creado una base local en esta entrega.
+Se admite `DEMO_TARGET=isolated-local` únicamente con host localhost, 127.0.0.1 o ::1 y nombre `edukana_demo_*`; ambas conexiones deben declararse y coincidir. `DEMO_TARGET_ID` debe estar ausente en este modo para no ignorar una referencia Preview sobrante. Esto es una barrera contra accidentes, **no prueba de aislamiento físico**: un puerto local podría ser un túnel. Verificar su origen antes de cualquier carga. No se ha instalado ni creado una base local en esta entrega.
 
-Ambos modos rechazan NODE_ENV=production o VERCEL_ENV=production, protocolos ajenos a PostgreSQL y parámetros que alteren el host/ruta. Se conserva DEMO_CONFIRM para crear o quitar, y una contraseña de demo suministrada por el mecanismo seguro del entorno; nunca enviarla por chat o guardarla en Git. No se ejecutó ninguna carga o reset.
+Ambos modos rechazan señales de producción, etiquetas vacías/desconocidas, espacios y metadatos contradictorios. Si están presentes, `NODE_ENV` solo admite `development` o `test`; `VERCEL_ENV` y `VERCEL_TARGET_ENV` solo admiten `development` o `preview` y deben coincidir entre sí. Los entornos personalizados no forman parte de este contrato. Vercel documenta ambas señales en sus [variables de sistema](https://vercel.com/docs/environment-variables/system-environment-variables#vercel_target_env). Una señal productiva no se debe quitar para forzar una carga.
+
+Se conserva DEMO_CONFIRM para crear o quitar, y una contraseña de demo suministrada por el mecanismo seguro del entorno; nunca enviarla por chat o guardarla en Git. No se ejecutó ninguna carga o reset.
 
 ### Repetición, alcance y borrado
 

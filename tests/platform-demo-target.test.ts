@@ -5,9 +5,9 @@ import { validateDemoTarget, type ApprovedDemoTarget } from "../scripts/demo/tar
 import { APPROVED_DEMO_TARGETS } from "../scripts/demo/approved-targets";
 
 const localUrl = "postgresql://demo:synthetic-test-value@127.0.0.1:5544/edukana_demo_test?schema=public";
-const local = { DEMO_TARGET: "isolated-local", DATABASE_URL: localUrl };
+const local = { DEMO_TARGET: "isolated-local", DATABASE_URL: localUrl, DIRECT_URL: localUrl };
 const remoteUrl = "postgresql://demo.tenant:synthetic-test-value@pool.demo.invalid:6543/postgres?schema=public&sslmode=require";
-const remote = { DEMO_TARGET: "isolated-preview", DEMO_TARGET_ID: "verified-fixture", DATABASE_URL: remoteUrl };
+const remote = { DEMO_TARGET: "isolated-preview", DEMO_TARGET_ID: "verified-fixture", DATABASE_URL: remoteUrl, DIRECT_URL: remoteUrl };
 const target = { hostname: "pool.demo.invalid", port: "6543", database: "postgres", username: "demo.tenant", schema: "public" };
 const approved: ApprovedDemoTarget[] = [{ id: "verified-fixture", environment: "isolated-preview", database: target, direct: target }];
 
@@ -16,7 +16,10 @@ test("demo target: local mode is explicit, frozen and limited to a dedicated loo
   assert.equal(result.databaseUrl, localUrl);
   assert.equal(result.directUrl, localUrl);
   assert.ok(Object.isFrozen(result) && Object.isFrozen(result.target));
-  for (const host of ["localhost", "[::1]"]) assert.equal(validateDemoTarget({ ...local, DATABASE_URL: localUrl.replace("127.0.0.1", host) }, []).target.hostname, host);
+  for (const host of ["localhost", "[::1]"]) {
+    const url = localUrl.replace("127.0.0.1", host);
+    assert.equal(validateDemoTarget({ ...local, DATABASE_URL: url, DIRECT_URL: url }, []).target.hostname, host);
+  }
 });
 
 test("demo target: remote mode is closed until a reviewed allowlist entry pins both endpoints", () => {
@@ -58,7 +61,7 @@ test("demo CLI: invalid create, remove and reset stop before countdown or Prisma
     for (const unsafe of unsafeTargets) {
       const result = spawnSync(process.execPath, ["--require", "./tests/helpers/forbid-demo-db.cjs", "--import", "tsx", "scripts/demo/seed-demo.ts", ...(action === "remove" ? ["--remove"] : [])], {
         cwd: process.cwd(), encoding: "utf8", timeout: 10_000,
-        env: { NODE_ENV: "test", PATH: process.env.PATH, DEMO_TARGET: "isolated-local", DEMO_PASSWORD: "synthetic-test-value", DEMO_CONFIRM: action === "remove" ? "borrar-demo" : "crear-demo", ...(action === "reset" ? { DEMO_RESET: "1" } : {}), ...unsafe },
+        env: { NODE_ENV: "test", PATH: process.env.PATH, DEMO_TARGET: "isolated-local", DIRECT_URL: localUrl, DEMO_PASSWORD: "synthetic-test-value", DEMO_CONFIRM: action === "remove" ? "borrar-demo" : "crear-demo", ...(action === "reset" ? { DEMO_RESET: "1" } : {}), ...unsafe },
       });
       assert.equal(result.status, 1, result.stderr);
       const output = result.stdout + result.stderr;

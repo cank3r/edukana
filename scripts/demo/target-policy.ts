@@ -15,13 +15,15 @@ function reject(): never {
 }
 function parse(raw: string | undefined): DemoConnectionTarget {
   if (!raw || /[\u0000-\u0020\u007f]/.test(raw)) return reject();
+  // Check the original path before URL can normalize /other/../database or encoded dot segments.
+  if (!/^postgres(?:ql)?:\/\/[^/?#]+\/[A-Za-z][A-Za-z0-9_-]{0,62}(?:\?[^#]*)?$/.test(raw)) return reject();
   let url: URL;
   try { url = new URL(raw); } catch { return reject(); }
   if (!["postgresql:", "postgres:"].includes(url.protocol) || url.hash || !url.hostname) return reject();
   if (!/^\/[A-Za-z][A-Za-z0-9_-]{0,62}$/.test(url.pathname)) return reject();
-  let username: string;
-  try { username = decodeURIComponent(url.username); } catch { return reject(); }
-  if (!/^[A-Za-z0-9_.-]+$/.test(username)) return reject();
+  const username = url.username;
+  if (!/^[A-Za-z0-9_.-]+$/.test(username) || !url.password || url.port === "0") return reject();
+  try { decodeURIComponent(url.password); } catch { return reject(); }
   const seen = new Set<string>();
   for (const [key, value] of url.searchParams) {
     if (seen.has(key)) return reject();
@@ -40,19 +42,28 @@ function same(a: DemoConnectionTarget, b: DemoConnectionTarget) {
 
 /** CLI accident barrier, not proof of physical isolation; a loopback port may be a tunnel. */
 export function validateDemoTarget(env: DemoTargetEnv, approved: readonly ApprovedDemoTarget[]) {
-  if (env.NODE_ENV?.toLowerCase() === "production" || env.VERCEL_ENV?.toLowerCase() === "production") return reject();
+  // Explicit non-production labels only; whitespace, unknown/custom environments and contradictions are unsafe.
+  if (env.NODE_ENV !== undefined && !["development", "test"].includes(env.NODE_ENV)) return reject();
+  for (const key of ["VERCEL_ENV", "VERCEL_TARGET_ENV"]) {
+    if (env[key] !== undefined && !["development", "preview"].includes(env[key]!)) return reject();
+  }
+  if (env.VERCEL_ENV !== undefined && env.VERCEL_TARGET_ENV !== undefined &&
+      env.VERCEL_ENV !== env.VERCEL_TARGET_ENV) return reject();
   const database = parse(env.DATABASE_URL);
-  const direct = parse(env.DIRECT_URL ?? env.DATABASE_URL);
+  const direct = parse(env.DIRECT_URL);
   if (env.DEMO_TARGET === "isolated-local") {
-    if (!["127.0.0.1", "[::1]", "localhost"].includes(database.hostname) ||
+    if (env.DEMO_TARGET_ID !== undefined || !["127.0.0.1", "[::1]", "localhost"].includes(database.hostname) ||
         !/^edukana_demo_[a-z0-9_]+$/.test(database.database) || !same(database, direct)) return reject();
   } else if (env.DEMO_TARGET === "isolated-preview") {
-    const target = approved.find((entry) => entry.id === env.DEMO_TARGET_ID && entry.environment === "isolated-preview");
-    if (!target || !same(database, target.database) || !same(direct, target.direct)) return reject();
+    if (!env.DEMO_TARGET_ID || env.DEMO_TARGET_ID.trim() !== env.DEMO_TARGET_ID) return reject();
+    const matches = approved.filter((entry) => entry.id === env.DEMO_TARGET_ID);
+    if (matches.length !== 1) return reject();
+    const target = matches[0];
+    if (target.environment !== "isolated-preview" || !same(database, target.database) || !same(direct, target.direct)) return reject();
     // A verified remote target still requires encrypted connections.
-    for (const raw of [env.DATABASE_URL!, env.DIRECT_URL ?? env.DATABASE_URL!]) {
+    for (const raw of [env.DATABASE_URL!, env.DIRECT_URL!]) {
       if (!["require", "verify-ca", "verify-full"].includes(new URL(raw).searchParams.get("sslmode") ?? "")) return reject();
     }
   } else return reject();
-  return Object.freeze({ databaseUrl: env.DATABASE_URL!, directUrl: env.DIRECT_URL ?? env.DATABASE_URL!, target: database });
+  return Object.freeze({ databaseUrl: env.DATABASE_URL!, directUrl: env.DIRECT_URL!, target: database });
 }
