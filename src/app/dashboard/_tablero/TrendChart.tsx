@@ -40,23 +40,25 @@ export function TrendChart({ id, title, summary, weeks, series, threshold }: {
       </div>
       <ChartSvg id={`${id}-m`} className="sm:hidden" size={MOBILE} title={title} summary={summary} weeks={weeks} series={series} threshold={threshold} />
       <ChartSvg id={`${id}-e`} className="hidden sm:block" size={DESKTOP} title={title} summary={summary} weeks={weeks} series={series} threshold={threshold} />
-      <table className="sr-only">
-        <caption>{title}, semana por semana</caption>
-        <thead>
-          <tr>
-            <th scope="col">Semana que empieza</th>
-            {series.map((line) => <th key={line.key} scope="col">{line.label}</th>)}
-          </tr>
-        </thead>
-        <tbody>
-          {weeks.map((label, index) => (
-            <tr key={label + index}>
-              <th scope="row">{index === weeks.length - 1 ? `${label} (esta semana)` : label}</th>
-              {series.map((line) => <td key={line.key}>{line.values[index] === null ? "Sin datos" : `${formatPercent(line.values[index])} (${line.details[index]})`}</td>)}
+      <div className="sr-only">
+        <table>
+          <caption>{title}, semana por semana</caption>
+          <thead>
+            <tr>
+              <th scope="col">Semana que empieza</th>
+              {series.map((line) => <th key={line.key} scope="col">{line.label}</th>)}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {weeks.map((label, index) => (
+              <tr key={label + index}>
+                <th scope="row">{index === weeks.length - 1 ? `${label} (esta semana)` : label}</th>
+                {series.map((line) => <td key={line.key}>{line.values[index] === null ? "Sin datos" : `${formatPercent(line.values[index])} (${line.details[index]})`}</td>)}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </figure>
   );
 }
