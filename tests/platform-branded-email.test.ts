@@ -82,14 +82,14 @@ test("Resend payload keeps verified address and adds HTML without a network call
   } finally { globalThis.fetch = original; }
 });
 test("reset selects requested active own membership and never leaks other institutions", async () => {
-  await reset.requestPasswordReset({ email: "person@example.test", ip: "test", institutionId: "b" });
+  assert.equal(await reset.requestPasswordReset({ email: "person@example.test", ip: "test", institutionId: "b" }), undefined);
   assert.equal(tokens[0].userId, "user-b"); assert.equal(mail.sent.length, 1);
   assert.equal(mail.sent[0].fromName, "Colegio B vía Edukana");
   assert.match(mail.sent[0].text, /https:\/\/b.colegio.test\/restablecer\//);
   assert.doesNotMatch(mail.sent[0].text, /Colegio A|a.colegio.test/);
 });
 test("foreign tenant reset uses only generic configured origin and branding", async () => {
-  await reset.requestPasswordReset({ email: "person@example.test", ip: "test", institutionId: "foreign" });
+  assert.equal(await reset.requestPasswordReset({ email: "person@example.test", ip: "test", institutionId: "foreign" }), undefined);
   assert.equal(mail.sent[0].fromName, "Edukana");
   assert.match(mail.sent[0].text, /https:\/\/platform.test\/restablecer\//);
   assert.doesNotMatch(mail.sent[0].text, /Colegio A|Colegio B|foreign/);
