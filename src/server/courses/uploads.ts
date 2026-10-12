@@ -238,8 +238,8 @@ export async function discardUpload(actor: UploadActor, assetId: string): Promis
 }
 
 /**
- * Quién puede abrir un archivo privado (`/api/assets/[assetId]`): quien lo subió, el estudiante
- * dueño de la entrega, quien gestiona el curso, y quien puede ver el curso si el archivo no es privado.
+ * Los archivos de curso exigen alcance vigente también a su propietario; los PRIVATE ajenos
+ * requieren gestión. Los avisos conservan su propia audiencia y precedencia sobre courseId.
  */
 export async function assetReadAccess(actor: UploadActor, assetId: string): Promise<
   { status: 200; asset: { bucket: string; kind: AssetKind; objectPath: string } } | { status: 403 | 404 }
@@ -257,12 +257,12 @@ export async function assetReadAccess(actor: UploadActor, assetId: string): Prom
   if (asset.announcementId && !owner) {
     const recipientWhere = await getCommunityAnnouncementWhere(actor, { canManage: actor.capabilities.has("announcement.manage"), canPublish: actor.capabilities.has("announcement.publish") });
     allowed = Boolean(await db.announcement.findFirst({ where: { AND: [{ id: asset.announcementId }, recipientWhere] }, select: { id: true } }));
-  } else if (asset.courseId && !owner) {
+  } else if (asset.courseId && !asset.announcementId) {
     const readWhere = courseWhereForScope(actor.institutionId, resolveCourseReadScope(actor, actor.capabilities));
     const writeWhere = courseWhereForScope(actor.institutionId, resolveCourseWriteScope(actor, actor.capabilities));
     const readableCourse = readWhere ? Boolean(await db.course.findFirst({ where: { id: asset.courseId, ...readWhere }, select: { id: true } })) : false;
     const manageableCourse = writeWhere ? Boolean(await db.course.findFirst({ where: { id: asset.courseId, ...writeWhere }, select: { id: true } })) : false;
-    allowed = manageableCourse || (asset.visibility !== "PRIVATE" && readableCourse);
+    allowed = manageableCourse || (readableCourse && (owner || asset.visibility !== "PRIVATE"));
   }
   if (!allowed) return { status: 403 };
   return { status: 200, asset: { bucket: asset.bucket, kind: asset.kind, objectPath: asset.objectPath } };
