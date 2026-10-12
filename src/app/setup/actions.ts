@@ -18,7 +18,7 @@ const setupSchema = z.object({
 });
 
 export async function createFirstInstitution(_state: SetupState, formData: FormData): Promise<SetupState> {
-  if (checkSetupToken(String(formData.get("setupToken") ?? "")) === "invalid") {
+  if (checkSetupToken(String(formData.get("setupToken") ?? "")) !== "valid") {
     return { ok: false, message: "La puesta en marcha inicial no está disponible." };
   }
   const parsed = setupSchema.safeParse(Object.fromEntries(formData.entries()));
