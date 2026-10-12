@@ -215,10 +215,7 @@ function LessonFiles({ courseId, lessonId, files }: { courseId: string; lessonId
       const intent = (await prepared.json()) as { error?: string; assetId?: string; uploadUrl?: string };
       if (!prepared.ok || !intent.assetId || !intent.uploadUrl) throw new Error(intent.error ?? "No se pudo preparar la subida.");
       assetId = intent.assetId;
-      const body = new FormData();
-      body.append("cacheControl", "3600");
-      body.append("", file);
-      const uploaded = await fetch(intent.uploadUrl, { method: "PUT", headers: { "x-upsert": "false" }, body });
+      const uploaded = await fetch(intent.uploadUrl, { method: "PUT", headers: { "content-type": file.type, "x-upsert": "false" }, body: file });
       if (!uploaded.ok) throw new Error("El archivo no se pudo subir. Revisa tu conexión e intenta de nuevo.");
       const confirmed = await fetch(`/api/assets/${assetId}`, { method: "PATCH" });
       if (!confirmed.ok) throw new Error(((await confirmed.json().catch(() => ({}))) as { error?: string }).error ?? "No se pudo confirmar la subida.");
