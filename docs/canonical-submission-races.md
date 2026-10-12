@@ -99,3 +99,10 @@ QA independiente inicial: barreras, control positivo, guard seguro y conservaci�
 revisados. La revisión independiente de la corrección se registra en el handoff de este corte.
 La aceptación de UI/Preview y la inclusión explícita de estas regresiones en el CI del candidato
 siguen pendientes del integrador. No hubo push, merge ni despliegue desde este worktree.
+
+Actualización del integrador: QA independiente definitivo PASS sobre `dcc8914`, integrado
+localmente en `6a413b5`. El workflow canónico local incorpora un job obligatorio dedicado con
+PostgreSQL16.4 propio, identidad de fixture exacta y Node22 en la misma red del contenedor para
+conservar el guard de loopback. No comparte la base del recorrido UI ni hereda credenciales de Git.
+Su ejecución en CI queda pendiente de revisión de publicación. Build, tipos y lint del candidato
+integrado8cd6847 PASS; run08 completó los seis bloques UI, sin acreditar por ello Supabase.

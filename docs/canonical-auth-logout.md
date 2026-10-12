@@ -97,8 +97,14 @@ el entorno de aplicación.
 
 ## Pendientes del integrador
 
-Revisión independiente, ejecución explícita de la prueba nueva en CI (el
+Actualización del integrador: QA independiente definitivo PASS para `15b7b8e`.
+Run08 integrado sobre `8cd68474ac51e9ac19a5b097b91876c968f8b380`, limpio al iniciar,
+pasó login/logout y las tres muestras inmediatas más tres quiescentes contra handlers reales.
+Regresión dedicada5/5 y suite existente188/188 PASS con Node22, lint/tipos/build PASS.
+El workflow local ya incluye la regresión explícita; publicación y ejecución de ese CI siguen
+pendientes de revisión. El límite del handler explícito `/api/auth/session` descrito arriba permanece.
+
+La ejecución explícita de la prueba nueva en CI (el
 `npm test` actual enumera archivos y no la descubre) y repetición del flujo
-pasivo de login/logout con navegador y handlers de la aplicación real. El
-integrador controla ese runtime. Esta evidencia no constituye aceptación del
+desplegado siguen pendientes. El integrador controla ese runtime. Esta evidencia no constituye aceptación del
 Preview ni aprobación de Carlos del recorrido final.

@@ -89,3 +89,14 @@ La sonda tuvo dos errores de preparación resueltos antes del resultado final: `
 - `ContentEditor.tsx:176`: publicar/ocultar contenido no solicita confirmación ni muestra impacto. No se pulsa en esta prueba porque cambiaría datos de negocio.
 
 No cubre lector de pantalla, contraste completo, correo real, backend Supabase, red lenta ni el recorrido completo de creación a 360 px. El smoke preparado y las suites de Personas/matrícula/asistencia siguen siendo evidencia complementaria, nunca sustituyen este recorrido ni la revisión humana.
+# Actualización integrada: run08
+
+SHA `8cd68474ac51e9ac19a5b097b91876c968f8b380`, árbol limpio al iniciar, PostgreSQL y Storage
+privados nuevos. Las ocho pruebas de pantallas de cuatro roles a360/1280 pasan; los dos casos
+del modal siguen fallando y requieren handoff sobre la página compartida con PR114.
+El fix44px y la contención de la tabla oculta pasan runtime. Sonda posterior de lectura: ancho
+del documento360/1280, una tabla expuesta a los selectores de accesibilidad y ocho encabezados
+de fila en ambos tamaños; cero escrituras tras login. No se eliminó contenido accesible.
+Evidencia privada: `run08/private/ux-accessibility-probe.json`; resumen permitido:
+`run08/public/summary.json`. No prueba Preview ni sustituye aceptación de Carlos.
+
