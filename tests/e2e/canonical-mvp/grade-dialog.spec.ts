@@ -87,6 +87,8 @@ async function expectOpen(page: Page, history?: string) {
   await expect(page).toHaveURL(`${BASE_URL}${paths().cell}`);
   const dialog = page.getByRole("dialog", { name: USERS.student.name, exact: true });
   await expect(dialog).toBeVisible();
+  await expect.poll(() => dialog.evaluate((element) => element instanceof HTMLDialogElement && element.matches(":modal")),
+    { message: "El diálogo nativo debe abrirse con showModal y dejar el fondo inerte" }).toBe(true);
   await expect(dialog.getByText(NAMES.assignment, { exact: true })).toBeVisible();
   const score = dialog.getByRole("textbox", { name: /^Nota / });
   await expect(score).toHaveValue("92");
