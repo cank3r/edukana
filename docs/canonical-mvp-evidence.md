@@ -1,10 +1,16 @@
 # Evidencia del candidato canónico - 12 de octubre de 2026
 
-Estado: **23/23 pruebas locales correctas**, CI del candidato y aceptación en Preview pendientes.
-PR de trabajo [#122](https://github.com/cank3r/edukana/pull/122), base de aplicación
-`ffaadff471c4c02341b31619dbef8956bf1b4896`. No se fusionó ni desplegó este candidato.
+Actualización del 13-oct: PR [#122](https://github.com/cank3r/edukana/pull/122) integrado como
+`8115614be8f0870826deda18b1fe3d9a86b6e40e`; CI general y canónico del mismo SHA terminaron
+correctamente, incluido el recorrido **23/23**. Preview actual READY sobre ese SHA, correo recibido
+y login tutor confirmados por Carlos. **La aceptación completa permanece abierta**: véase la
+[matriz actual y siguientes pasos](mvp-acceptance-20261013.md), que separa CI aislado de Preview/Supabase.
 
-Último recorrido completo: **run10**, terminado `2026-10-12T21:01:59.08Z`, código
+El resto del registro conserva el ensayo local histórico del 12-oct, cuya base de aplicación fue
+`ffaadff471c4c02341b31619dbef8956bf1b4896`. Los pendientes anteriores a la integración no sustituyen
+el estado actualizado anterior.
+
+Último ensayo local histórico completo: **run10**, terminado `2026-10-12T21:01:59.08Z`, código
 `2d8d9d22b3db815493b33fffaa01915bfa0bf22c`, árbol limpio al iniciar. Node 22.20.0,
 PostgreSQL 16.4, Next 16.4 y Chromium de Playwright 1.64. Se creó un PostgreSQL nuevo y vacío;
 se aplicaron las 16 migraciones existentes y los seis bloques académicos nacieron en la interfaz.
@@ -104,9 +110,9 @@ El backend local fue PostgreSQL desechable y Storage privado local. Correo ficti
 sin entrega a proveedor. Las fixtures directas de integración están separadas del recorrido UI.
 No se usaron secretos, cuentas, correo ni DB/Storage externos. Ninguna migración nueva ni reset.
 
-## Preview y aceptación pendientes
+## Preview y bloqueo de navegador históricos (12-oct)
 
-La Preview de la base `ffaadff` sigue separada de este candidato:
+Antes de la integración, la Preview de la base `ffaadff` estaba separada de este candidato:
 `https://edukana-df71bathl-cerkanasrl.vercel.app`, deployment `dpl_5VRpXXdforsovpjzy7G616KgqSLs`.
 La protección exige sesión Vercel existente. El runtime CUA falló exactamente con:
 
