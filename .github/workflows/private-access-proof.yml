@@ -1,0 +1,69 @@
+name: Private access PostgreSQL proofs
+
+on:
+  pull_request:
+    paths:
+      - ".github/workflows/private-access-proof.yml"
+      - "tests/integration/private-access-*"
+      - "tests/integration/stub-server-only.cjs"
+      - "tests/helpers/load-with-stubs.cjs"
+      - "src/app/api/assets/**"
+      - "src/app/api/local-storage/**"
+      - "src/lib/**"
+      - "src/server/courses/**"
+      - "src/server/signed-urls.ts"
+      - "prisma/**"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: private-access-proof-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  private-access:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16.4-alpine
+        env:
+          POSTGRES_USER: fixture
+          POSTGRES_PASSWORD: fixture
+          POSTGRES_DB: edukana_private_access_proof
+        options: >-
+          --health-cmd "pg_isready -U fixture -d edukana_private_access_proof"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Check types and new test files
+        run: |
+          npx tsc --noEmit --incremental false
+          npx eslint tests/integration/private-access-*.ts
+      - name: Apply existing migrations and require the isolated PostgreSQL proofs
+        env:
+          POSTGRES_CONTAINER_ID: ${{ job.services.postgres.id }}
+        run: |
+          docker run --rm --user 0 --network "container:$POSTGRES_CONTAINER_ID" \
+            --workdir /app --volume "$GITHUB_WORKSPACE:/app:ro" \
+            --env EDUKANA_PRIVATE_ACCESS_PROOF=ISOLATED_POSTGRES_ONLY \
+            --env 'DATABASE_URL=postgresql://fixture:fixture@127.0.0.1:5432/edukana_private_access_proof?connection_limit=8' \
+            --env 'DIRECT_URL=postgresql://fixture:fixture@127.0.0.1:5432/edukana_private_access_proof?connection_limit=8' \
+            --env APP_URL=http://127.0.0.1:3179 \
+            cimg/node:22.20 sh -ec '
+              node -e '\''const fs=require("fs");if(fs.readdirSync(".").some(n=>n.startsWith(".env")&&n!==".env.example"))throw Error("Runtime environment files refused")'\''
+              node node_modules/prisma/build/index.js migrate deploy
+              node --require ./tests/integration/stub-server-only.cjs --import tsx --test \
+                --test-concurrency=1 --test-reporter=spec \
+                tests/integration/private-access-parent.proof.ts tests/integration/private-access-legacy.proof.ts
+            '
