@@ -1,8 +1,9 @@
 import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { getEmailProvider, type EmailProvider } from "@/server/integrations/email";
-import { brandedEmail, emailBrandSelect, emailBaseUrl, type EmailBrand } from "@/server/platform/branded-email";
+import { emailBrandSelect, emailBaseUrl, type EmailBrand } from "@/server/platform/branded-email";
 import { isEmailKind, shouldSendEmail } from "./email-policy";
+import { notificationEmail } from "./email-template";
 
 /**
  * Notificaciones en la aplicación y por correo.
@@ -164,11 +165,11 @@ export async function deliverEmails(request: EmailRequest | null | undefined): P
       const chunk = people.slice(start, start + EMAIL_PARALLEL);
       const results = await Promise.allSettled(
         chunk.map((person) =>
-          provider.send(brandedEmail(person.institution, {
+          provider.send(notificationEmail(person.institution, {
             to: person.email,
             subject: `${person.institution.name}: ${request.title}`.slice(0, 250),
             text: emailText({ name: person.name, institution: person.institution }, request),
-          })),
+          }, { ...request, href: safeHref(request.href), name: person.name })),
         ),
       );
       results.forEach((result, index) => {

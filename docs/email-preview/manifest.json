@@ -1,0 +1,15 @@
+{
+  "base": "4add96a752fa8a71e24a9bfe9395f2b0f1fafeea",
+  "branch": "m3/grade-email-design-20261014",
+  "fixtures": "synthetic",
+  "emailSent": false,
+  "externalHtmlRequestsAllowed": false,
+  "scenarios": 48,
+  "source": {
+    "src/server/notifications/index.ts": "8fc24992ea6775258d3b15ea3b71c52fe5f6ae0c655696f7a1fbd86c8848c338",
+    "scripts/preview-notification-email.ts": "032179110962d8cf126cde0ad397d8eb3bc03a3eee1cdcdee5edb302a4a3921c",
+    "public/logos/edukana_horizontal_sin_firma.svg": "07180ca125370f0fc85a963afcc489dab508dad9b27abc37d151e18a45f0339c",
+    "src/server/notifications/email-template.ts": "c615be20a686383cff3a7b63e51ec22e33e87cd3a8c016e25a940cc6fed6e1b8",
+    "public/logos/edukana_email.png": "966d1ae0ab908e19f78661fa9e51e404468fec1adb0622f7cb667a4439fa5721"
+  }
+}
