@@ -14,7 +14,9 @@ asunto, texto plano y proveedor. Recuperación e invitaciones no cambian.
 ## Evidencia
 
 - [Vista previa portátil](index.html), [móvil](grade-chromium-360.png), [escritorio](grade-chromium-1280.png).
-- Node 22.20.0: npm test PASS; backoffice 162/162 PASS (11 nuevas); política de correo 5/5 PASS.
+- Validación inicial Node 22.20.0: npm test PASS; backoffice 162/162 PASS (11 nuevas).
+- Ajuste de contraste tras revisión: preferencias usa navy sobre cloud; regresión roja a 4.23:1 antes
+  del fix y 29/29 pruebas focales PASS después (12 plantilla, 12 marca/reset/invitaciones, 5 política).
 - Regresiones existentes de marca, reset e invitaciones 12/12 PASS; tipos de fuentes, lint focal,
   Prisma generate/validate y diff-check PASS.
 - Chromium/Firefox: 48/48 casos en 320/360/600/1280 px, incluidos textos largos e imágenes bloqueadas.

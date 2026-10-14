@@ -122,6 +122,20 @@ test("CTA and text colors meet AA contrast on their actual backgrounds", () => {
   assert.ok(contrastWithWhite("#101B3F") / contrastWithWhite("#F4F7FC") >= 4.5);
 });
 
+test("preferences link meets AA against its rendered footer for borderline institutional colors", () => {
+  for (const brandColor of ["#767676", "#24C8E5", "#2457F5"]) {
+    const html = notificationEmail({ ...brand, brandColor }, message, notice).html!;
+    const link = /<a href="[^"]+\/preferencias" style="([^"]+)"/.exec(html)!;
+    const foreground = /(?:^|;)color:(#[0-9A-F]{6})/i.exec(link[1])![1];
+    const beforeLink = html.slice(0, link.index);
+    const background = [...beforeLink.matchAll(/<td\b[^>]*bgcolor="(#[0-9A-F]{6})"/gi)].at(-1)![1];
+    const colors = [contrastWithWhite(foreground), contrastWithWhite(background)].sort((a, b) => a - b);
+    const contrast = colors[1] / colors[0];
+    assert.ok(contrast >= 4.5, `${brandColor}: ${foreground} on ${background} = ${contrast.toFixed(2)}:1`);
+    assert.match(link[1], /text-decoration:underline/);
+  }
+});
+
 test("delivery exercises real template with memory provider and retains recipient query and batch policy", async () => {
   const ids = Array.from({ length: 55 }, (_, i) => `user-${i}`);
   people = ids.slice(0, 50).map((id) => ({ id, name: "Andrea", email: `${id}@example.test`, institution: brand }));

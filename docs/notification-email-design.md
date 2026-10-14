@@ -46,6 +46,7 @@ compartida o los tests reclamados de recuperación.
 
 - Azul `#2457F5`, navy `#101B3F`, fondo `#F4F7FC` y blanco: `src/app/globals.css`.
 - Color institucional validado por `ensureReadableOnWhite`, mínimo 4.5:1 con blanco.
+- El enlace de preferencias usa navy sobre el fondo cloud; el color institucional se reserva para superficies blancas.
 - Logo: `public/logos/edukana_horizontal_sin_firma.svg`, sin cambiar trazos ni colores.
 - `public/logos/edukana_email.png`: derivado raster de 624 × 176 px, mostrado a 156 × 44 px.
   Se genera con `node scripts/render-email-logo.mjs` usando `sharp`, ya incluido en el lockfile por Next.
@@ -60,11 +61,12 @@ No se abrieron archivos de credenciales ni se conectó ninguna base de datos rea
 
 | Comprobación | Resultado |
 |---|---|
-| 11 pruebas nuevas `platform-notification-email.test.ts` | PASS; ejercitan compositor real y entrega a proveedor en memoria |
+| 12 pruebas nuevas `platform-notification-email.test.ts` | PASS; compositor real, entrega en memoria y contraste del enlace sobre su fondo real |
 | Regresiones existentes `platform-branded-email.test.ts` | 12/12 PASS; reset, invitación, remitente, aislamiento, marca blanca y fallback |
 | Política existente `notification-email-policy.test.ts` | 5/5 PASS |
-| `npm test` | PASS |
-| `npm run test:backoffice` | 162/162 PASS, incluidas las 11 nuevas |
+| `npm test` (validación inicial) | PASS |
+| `npm run test:backoffice` (validación inicial) | 162/162 PASS, incluidas las 11 pruebas nuevas iniciales |
+| Regresión posterior de contraste + suites focales completas | 29/29 PASS: 12 plantilla, 12 marca/reset/invitaciones, 5 política |
 | `tsc --noEmit` antes de generar el build | PASS |
 | `tsc --noEmit` después del build | Solo el error del validador generado de Next para `AnnouncementCard`; sin errores nuevos en fuentes |
 | ESLint focal de los cinco archivos TypeScript/JavaScript de este cambio | PASS |
@@ -90,6 +92,14 @@ Las pruebas de entrega usan `MemoryEmailProvider`; comprueban la consulta vigent
 institución y cuentas activas, preferencia apagada y tope de 50. El evento real de nota, con fronteras de DB
 simuladas, conserva destinatario estudiante, excluye score/feedback y no notifica una calificación oculta.
 Esto **no equivale a una prueba PostgreSQL nueva**; la lógica de esos servicios no cambió.
+
+La revisión independiente detectó que el enlace de preferencias heredaba un color institucional contrastado
+contra blanco, aunque su fondo es cloud. La prueba nueva reproduce el fallo antes del ajuste: `#767676`
+sobre `#F4F7FC` da **4.23:1**. Se cambia únicamente ese enlace a navy `#101B3F` (**15.64:1**), manteniendo subrayado,
+destino y área táctil. La regresión lee foreground/background del HTML generado y exige al menos 4.5:1
+para los colores institucionales `#767676`, `#24C8E5` y azul Edukana. Pasa después de la corrección,
+junto con las 29 pruebas focales y los 48 escenarios visuales regenerados. No se repitió el build bloqueado
+porque el ajuste no altera el problema preexistente documentado arriba.
 
 ## Reproducción
 

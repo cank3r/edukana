@@ -124,7 +124,7 @@ ${notice.kind === "grade" ? `<p style="margin:16px 0 0;color:${NAVY};font-size:1
 </td></tr>
 <tr><td bgcolor="${CLOUD}" style="padding:20px 24px;background-color:${CLOUD};border-top:1px solid #E2E8F0;${font}${wrap}">
 <p style="margin:0 0 8px;color:${NAVY};font-size:12px;line-height:19px;">Recibes este correo porque eres parte de ${institution}.</p>
-${preferences ? `<a href="${escape(preferences)}" style="display:inline-block;padding:11px 0;color:${color};font-size:13px;line-height:22px;text-decoration:underline;">Elegir qué correos recibo</a>`
+${preferences ? `<a href="${escape(preferences)}" style="display:inline-block;padding:11px 0;color:${NAVY};font-size:13px;line-height:22px;text-decoration:underline;">Elegir qué correos recibo</a>`
     : `<p style="margin:0;color:${NAVY};font-size:12px;line-height:19px;">Puedes elegir qué correos recibes en Notificaciones.</p>`}
 ${whiteLabel ? "" : `<p style="margin:14px 0 0;color:${NAVY};font-size:12px;line-height:18px;">Hecho con Edukana</p>`}
 </td></tr></table><!--[if mso]></td></tr></table><![endif]-->
