@@ -54,7 +54,7 @@ compartida o los tests reclamados de recuperación.
   logo y atribución de plataforma y se mantienen nombre, logo y color institucionales configurados.
 - Sin URL de aplicación válida se mantiene contenido legible y marca textual, sin enlaces o imágenes rotos.
 
-## Pruebas ejecutadas
+## Pruebas iniciales del diseño (antes del relevo de Community)
 
 Node oficial **22.20.0**, SHA256 contrastado con `SHASUMS256.txt` de nodejs.org. Prisma **5.22.0**.
 No se abrieron archivos de credenciales ni se conectó ninguna base de datos real.
@@ -78,9 +78,9 @@ No se abrieron archivos de credenciales ni se conectó ninguna base de datos rea
 
 El primer intento de build en sandbox no pudo descargar Inter de Google Fonts. El reintento con acceso de red
 superó ese punto, pero encontró el fallo de proceso de Turbopack. Webpack compiló y después detectó el export de
-página preexistente. No se ha relajado TypeScript, modificado esa página ni cambiado el bundler del proyecto.
+página preexistente. En ese corte no se relajó TypeScript, modificó esa página ni cambió el bundler del proyecto.
 El archivo señalado coincide byte a byte con la base (blob Git `0ca94a5111a0d65bb23ea0f72d00d8476cf614ad`).
-El build completo **no está acreditado**. No se excluyó el validador generado para presentar un resultado verde.
+En ese corte inicial el build completo **no estaba acreditado**; el relevo posterior se documenta abajo. No se excluyó el validador generado para presentar un resultado verde.
 
 Las 48 comprobaciones visuales cubren cinco fixtures × cuatro anchos (320/360/600/1280) × dos motores,
 más imágenes bloqueadas en cada ancho y motor. Verifican ausencia de overflow, logo cargado, un h1,
@@ -114,11 +114,39 @@ node --require ./tests/integration/stub-server-only.cjs --import tsx scripts/pre
 
 La opción sin `--render` genera solo HTML. No hay ruta de producción de preview ni botón de envío.
 
-## Límites y publicación pendiente
+## Publicación autorizada y corrección de Community
 
-No se enviaron mensajes, no se inspeccionó el buzón, no se publicaron refs, no se abrió PR remoto, no se hizo
-merge ni despliegue. El claim se registró localmente antes de editar; la instrucción expresa de mostrar
-la vista previa antes de publicar aplaza su publicación remota. La base remota se revalidó sin cambios.
+Carlos aprobó publicar el rediseño, corregir el build y abrir PR el 14-oct a las 21:05 UTC.
+Claim publicado antes de la nueva escritura en `08da73f`, con relevo M1 limitado por el coordinador;
+base remota revalidada `4add96a`. [PR #125](https://github.com/cank3r/edukana/pull/125) hacia `todo/tanda-4`.
+
+El único cambio de aplicación adicional retira la palabra `export` de `AnnouncementCard` en
+`src/app/dashboard/comunidad/page.tsx`. No había importadores externos. La función, consultas,
+UI y permisos conservan su contenido. Nueva `tests/platform-community-page.test.ts`, descubierta por
+`test:backoffice`, carga el módulo real y renderiza la página con fronteras de sesión/DB simuladas.
+Antes: 3/4 PASS y fallo por export no admitido. Después: 4/4 PASS, incluidos audiencia de destinatario,
+controles de gestor y estado vacío. No es una prueba de autorización PostgreSQL.
+
+Validación de este corte con Node 22.20.0:
+
+- 33/33 focales: 29 de correo + 4 de Community, sin skips.
+- `npm test`: 188/188; `npm run test:backoffice`: 167/167, sin skips.
+- `npm run lint`: PASS completo.
+- `next build --webpack`: PASS completo, TypeScript y 20/20 páginas estáticas.
+- `next build`/Turbopack: persiste el fallo local de proceso CSS en Windows; CI Linux ejecutará el comando normal.
+- Los cinco hashes de fuentes/assets del manifest visual coinciden: los 48 renders revisados siguen vigentes;
+  el cambio de Community no requiere regenerarlos.
+- Revisión del diff público: solo fuentes, pruebas, logo oficial y documentación/capturas con fixtures
+  sintéticos `example.test`; sin archivos privados, secretos, schema ni migraciones.
+
+CI y preview se comprobarán sobre el SHA publicado y quedarán enlazados en PR #125 y tablero #30.
+La política vigente `vercel.json` desactiva `m3/*`; no se cambia sin una autorización acotada.
+No se ordena un despliegue manual.
+
+## Límites de aceptación
+
+No se enviaron mensajes ni se inspeccionó el buzón. La publicación de la rama y del PR fue autorizada
+después de la revisión visual. No se hizo merge ni despliegue manual. La base remota se revalidó sin cambios.
 
 Gmail y Outlook reales, Outlook clásico/VML, clientes móviles nativos, modo oscuro y recepción de imágenes
 desde el deployment siguen **sin probar**. El uso de inline y las propiedades elegidas se contrastó con
