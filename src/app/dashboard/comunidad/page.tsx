@@ -98,7 +98,7 @@ export default async function ComunidadPage() {
   </div>;
 }
 
-export function AnnouncementCard({ announcement, readableCourseIds, viewerRole, canEdit = false }: { announcement: AnnouncementCardData; readableCourseIds: ReadonlySet<string>; canEdit?: boolean; viewerRole: "SUPER_ADMIN" | "ADMIN" | "COORDINATOR" | "TEACHER" | "STUDENT" | "PARENT" }) {
+function AnnouncementCard({ announcement, readableCourseIds, viewerRole, canEdit = false }: { announcement: AnnouncementCardData; readableCourseIds: ReadonlySet<string>; canEdit?: boolean; viewerRole: "SUPER_ADMIN" | "ADMIN" | "COORDINATOR" | "TEACHER" | "STUDENT" | "PARENT" }) {
   const safeUrl = announcement.externalUrl ? safeAnnouncementHref(announcement.externalUrl) : null;
   const details = announcement.audienceDetails;
   const detailedLabels = details ? [
