@@ -4,7 +4,8 @@
     "deploymentEnabled": {
       "**": false,
       "main": true,
-      "todo/**": true
+      "todo/**": true,
+      "m3/grade-email-design-20261014": true
     }
   }
 }

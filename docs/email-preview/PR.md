@@ -22,4 +22,21 @@ Se corrige además el bloqueo del build retirando únicamente `export` de `Annou
 
 Base `todo/tanda-4` en `4add96a`; claim `M3-NOTIFICATION-EMAIL-DESIGN` publicado antes del fix (`08da73f`). Carlos autorizó subir el rediseño y corregir build el 14-oct, 21:05 UTC; relevo M1 limitado transmitido por el coordinador. [Tablero #30](https://github.com/cank3r/edukana/issues/30#issuecomment-6178593519).
 
-CI por SHA y preview automática pendientes de verificar. `vercel.json` actualmente desactiva previews de ramas `m3/*`; no se cambia esa política ni se ordena despliegue manual sin autorización adicional. Gmail/Outlook reales, modo oscuro y carga remota del logo siguen sin probar. No correos externos, merge ni aceptación final del MVP.
+## CI verificado sobre `079471f54855c4490ed2c1668cfd32949cdf7731`
+
+[GitHub Actions 38638672018](https://github.com/cank3r/edukana/actions/runs/38638672018): **SUCCESS** en `validate` y `browser-smoke`.
+
+- 188/188 generales, 167/167 backoffice y 593/593 integración, sin skips. Regresiones de Community y contraste confirmadas por nombre en logs.
+- ESLint, TypeScript y build normal Turbopack en Linux: PASS, 20/20 páginas estáticas.
+- Recorrido de navegador: **34/34 PASS**, con fixtures efímeros de CI.
+- CircleCI: [validate 452](https://circleci.com/gh/cank3r/edukana/452) y [browser-smoke 451](https://circleci.com/gh/cank3r/edukana/451), ambos SUCCESS.
+
+La limitación local de Turbopack Windows no se reproduce en Linux CI. No se ha cambiado el bundler del proyecto.
+
+## Estado de coordinación y preview
+
+Claim `M3-NOTIFICATION-EMAIL-DESIGN`: **REVIEW**, escritor de aplicación finalizado. Siguiente: coordinador/Carlos decide la excepción de preview y posteriormente revisa el PR; no hay autorización de merge. Base remota sin cambios `4add96a`; worktree limpio.
+
+Carlos autorizó a las 21:26 UTC la preview exclusiva de esta rama. Claim publicado antes del cambio (`acc6f40`). `vercel.json` añade solamente `"m3/grade-email-design-20261014": true`; validación JSON confirma el resto idéntico. La configuración/credenciales de Preview existentes no se leen ni modifican. No hay cambios adicionales de aplicación, pruebas, logo o fixtures.
+
+CI y deployment automático del nuevo SHA se verificarán antes del cierre y se registrarán aquí y en el tablero. Sin merge, producción, despliegue manual ni correos externos. Gmail/Outlook reales y modo oscuro siguen pendientes; login autenticado solo con sesión ya autorizada disponible.

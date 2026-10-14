@@ -140,8 +140,18 @@ Validación de este corte con Node 22.20.0:
   sintéticos `example.test`; sin archivos privados, secretos, schema ni migraciones.
 
 CI y preview se comprobarán sobre el SHA publicado y quedarán enlazados en PR #125 y tablero #30.
-La política vigente `vercel.json` desactiva `m3/*`; no se cambia sin una autorización acotada.
-No se ordena un despliegue manual.
+El 14-oct a las 21:26 UTC Carlos autorizó una excepción exclusiva para esta rama, registrada antes
+de editar en el claim `acc6f40`. `vercel.json` agrega únicamente
+`"m3/grade-email-design-20261014": true`; comparación JSON confirma intactas todas las demás reglas.
+[Semántica oficial de Vercel](https://vercel.com/docs/project-configuration/git-configuration#git.deploymentenabled).
+Se utiliza la configuración de Preview existente, sin leer/copiar/generar claves ni modificar variables,
+Supabase o datos. El push dispara la integración Git habitual; no se ordena un despliegue manual.
+
+El código `079471f` ya completó GitHub CI38638672018 (188 generales,167 backoffice,593 integración sin skips,
+34 navegador,lint/tipos/build normal Turbopack) y CircleCI451/452, todos SUCCESS. Esta excepción no altera
+fuentes, pruebas, logo o fixtures. Los checks del SHA nuevo y la URL/estado de Preview se registrarán en
+PR125 y tablero30 después de verificarlos. Login autenticado depende de una sesión ya autorizada;
+no se crean accesos ni se envían correos externos.
 
 ## Límites de aceptación
 
