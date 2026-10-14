@@ -123,6 +123,11 @@ export default async function AssignmentPage({ params, searchParams }: { params:
         {!selected && nextId && <Link className="mt-3 inline-flex min-h-11 items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 font-semibold text-white" href={open(nextId)}>Siguiente por calificar</Link>}
       </header>
 
+      <section className={card} aria-labelledby="instrucciones">
+        <h2 id="instrucciones" className="text-lg font-bold text-slate-950">Instrucciones</h2>
+        <p className="mt-2 whitespace-pre-wrap break-words text-sm text-slate-800">{assignment.instructions || "Esta tarea no tiene instrucciones."}</p>
+      </section>
+
       {selected?.submission && (
         <section id="entrega" className={`${card} scroll-mt-4`} aria-labelledby="entrega-titulo">
           <div className="flex flex-wrap items-start justify-between gap-2">

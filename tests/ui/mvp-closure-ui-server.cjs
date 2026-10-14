@@ -34,6 +34,37 @@ const stubs = {
   "next/link": `import {createElement} from 'react';
     export default function Link({children,href,...props}) {return createElement('a',{...props,href},children);}`,
 };
+async function renderTeacherTask(instructions) {
+  require("tsx/cjs");
+  const React = require("react");
+  const {renderToStaticMarkup} = require("react-dom/server");
+  const {loadWithStubs} = require("../helpers/load-with-stubs.cjs");
+  globalThis.React = React;
+  const page = loadWithStubs("src/app/dashboard/aula/[courseId]/tareas/[assignmentId]/page.tsx", {
+    "@/lib/auth": {auth: async () => ({user:{id:"teacher-fixture",institutionId:"institution-fixture",role:"TEACHER"}})},
+    "@/lib/authorization": {getEffectiveCapabilities: async () => new Set(["course.view"])},
+    "next/navigation": {notFound: () => {throw new Error("Unexpected missing fixture");},redirect: () => {throw new Error("Unexpected redirect");}},
+    "next/link": {default: ({children,href}) => React.createElement("a",{href},children)},
+    "@/server/assessment/assignments": {
+      assignmentRoster: async () => ({
+        course:{id:"course-fixture",institution:{timezone:"UTC"}}, students:[], waiting:[],
+        assignment:{id:"assignment-fixture",title:"Actividad de lectura",instructions,dueDate:null,
+          maxScore:100,allowLate:true,isPublished:true},
+      }),
+      assignmentForStudent: () => {throw new Error("Student route not used here");},
+      dueLabel: () => "Sin fecha límite", formatDateTime: () => "Fecha sintética",
+    },
+    "@/server/courses/submission-files": {submissionFilesForManager: async () => [],submissionFilesForStudent: async () => []},
+    "../AssignmentTools": {GradeForm: () => null},
+    "./SubmissionFiles": {FileList: () => null,SubmitWithFiles: () => null},
+  });
+  const html = renderToStaticMarkup(await page.default({
+    params:Promise.resolve({courseId:"course-fixture",assignmentId:"assignment-fixture"}),searchParams:Promise.resolve({}),
+  }));
+  // A second render must load fresh stubs, rather than retaining the first fixture's closure.
+  delete require.cache[require.resolve(path.join(root,"src/app/dashboard/aula/[courseId]/tareas/[assignmentId]/page.tsx"))];
+  return html;
+}
 async function main() {
   const bundle = await esbuild.build({
     absWorkingDir: root, entryPoints: ["tests/ui/mvp-closure-fixture.tsx"], bundle: true, write: false,
@@ -55,11 +86,20 @@ async function main() {
   const html = `<!doctype html><html lang="es"><head><meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1"><title>Fixture cierre MVP</title>
     <link rel="stylesheet" href="/styles.css"></head><body><div id="root"></div><script src="/app.js"></script></body></html>`;
+  const teacherInstructions = "Lee el material de ejemplo.\nRecurso: https://example.test/material/" + "lectura".repeat(18) +
+    "\nExplica el procedimiento y entrega tu respuesta en PDF.";
+  const teacherPages = {};
+  for (const [route,instructions] of [["/teacher-task",teacherInstructions],["/teacher-task-empty",""]]) {
+    const markup = await renderTeacherTask(instructions);
+    teacherPages[route] = html.replace('<div id="root"></div><script src="/app.js"></script>',
+      `<main><p class="mx-auto max-w-3xl px-4 pt-4 text-sm text-slate-600">Vista docente real con datos ficticios; sin sesión ni servicios externos.</p>${markup}</main>`);
+  }
   const server = http.createServer((request,response) => {
     if (request.headers.host !== `${host}:${port}` || request.method !== "GET") {response.writeHead(403).end(); return;}
     response.setHeader("Cache-Control", "no-store");
     const pathname = request.url.split("?")[0];
     if (pathname === "/") response.writeHead(200, {"Content-Type":"text/html; charset=utf-8"}).end(html);
+    else if (Object.hasOwn(teacherPages,pathname)) response.writeHead(200, {"Content-Type":"text/html; charset=utf-8"}).end(teacherPages[pathname]);
     else if (pathname === "/app.js") response.writeHead(200, {"Content-Type":"text/javascript"}).end(bundle.outputFiles[0].contents);
     else if (pathname === "/styles.css") response.writeHead(200, {"Content-Type":"text/css"}).end(css.css);
     else response.writeHead(404).end();

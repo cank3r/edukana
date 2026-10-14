@@ -35,7 +35,7 @@ const assignmentPage = loadWithStubs("src/app/dashboard/aula/[courseId]/tareas/[
 const renderAssignment = async () => renderToStaticMarkup(await assignmentPage.default({
   params: Promise.resolve({courseId:course.id,assignmentId:assignment.id}), searchParams:Promise.resolve({}),
 }));
-beforeEach(() => {role="STUDENT"; available=true;});
+beforeEach(() => {role="STUDENT"; available=true; assignment.instructions=instructions;});
 
 test("student task page displays complete instructions and the existing resource text", async () => {
   const html = await renderAssignment();
@@ -47,6 +47,21 @@ test("teacher task page displays the same instructions used to assess submission
   role="TEACHER";
   const html = await renderAssignment();
   assert.ok(html.includes(instructions), "Task instructions returned by the roster must be visible to the teacher");
+  assert.match(html, /aria-labelledby="instrucciones"/);
+});
+
+test("teacher instructions explain an empty task without omitting the section", async () => {
+  role="TEACHER"; assignment.instructions="";
+  const html = await renderAssignment();
+  assert.ok(html.includes("Esta tarea no tiene instrucciones."));
+  assert.match(html, /aria-labelledby="instrucciones"/);
+});
+
+test("teacher instructions render authored markup as text", async () => {
+  role="TEACHER"; assignment.instructions='<script>alert("example")</script>';
+  const html = await renderAssignment();
+  assert.ok(html.includes("&lt;script&gt;"));
+  assert.ok(!html.includes("<script>"));
 });
 
 for (const actor of ["TEACHER","STUDENT"] as const) {

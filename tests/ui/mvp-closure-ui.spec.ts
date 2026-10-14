@@ -35,10 +35,75 @@ test("quitar archivo pendiente bloquea la entrega hasta terminar la solicitud", 
   try {
     await page.screenshot({path:info.outputPath("retirada-en-curso.png"),fullPage:true});
     await expect(page.getByRole("button", {name:"Entregar tarea",exact:true})).toBeDisabled({timeout:1000});
+    await expect(page.getByRole("status")).toContainText("Quitando archivo");
+    await expect(page.getByRole("button", {name:"Quitar pending-a.pdf",exact:true})).toBeDisabled();
+    await expect(page.locator('input[type="file"]')).toBeDisabled();
     await expect(page.getByRole("alertdialog")).toHaveCount(0);
     expect(await calls(page)).toEqual([]);
   } finally {release();}
   await expect(page.getByLabel("Archivos listos para entregar")).toHaveCount(0);
+  await expect(page.getByRole("button", {name:"Entregar tarea",exact:true})).toBeEnabled();
+  await expect(page.getByRole("status")).toHaveCount(0);
+  await page.getByLabel("Tu respuesta", {exact:true}).fill("Respuesta después de quitar el archivo");
+  await page.getByRole("button", {name:"Entregar tarea",exact:true}).click();
+  await page.getByRole("button", {name:"Sí, entregar",exact:true}).click();
+  await expect(page.getByRole("status")).toContainText("completada");
+  expect((await calls(page))[0].fields.filter(([name]) => name === "assetIds")).toEqual([]);
+});
+
+test("retirada bloquea doble clic, envío implícito y cambios de archivos anteriores", async ({page}) => {
+  let release!: () => void;
+  let requested!: () => void;
+  let attempts = 0;
+  const entered = new Promise<void>(resolve => {requested=resolve;});
+  const held = new Promise<void>(resolve => {release=resolve;});
+  await page.route("**/api/uploads/pending-a", async route => {
+    attempts++; requested(); await held; await route.fulfill({status:204});
+  });
+  await page.goto("/?pending=1&current=1");
+  await page.evaluate(() => {
+    const remove = document.querySelector<HTMLButtonElement>('button[aria-label="Quitar pending-a.pdf"]')!;
+    remove.click(); remove.click();
+    document.querySelector("form")!.requestSubmit();
+  });
+  await entered;
+  try {
+    await expect(page.getByRole("checkbox")).toBeDisabled();
+    await expect(page.getByRole("checkbox")).toBeChecked();
+    await expect(page.getByRole("button", {name:"Volver a entregar",exact:true})).toBeDisabled();
+    await expect(page.locator('input[type="file"]')).toBeDisabled();
+    expect(attempts).toBe(1);
+    expect(await calls(page)).toEqual([]);
+  } finally {release();}
+  await expect(page.getByLabel("Archivos listos para entregar")).toHaveCount(0);
+  await expect(page.getByRole("checkbox")).toBeEnabled();
+  await page.getByRole("button", {name:"Volver a entregar",exact:true}).click();
+  await page.getByRole("button", {name:"Sí, entregar",exact:true}).click();
+  await expect(page.getByRole("status")).toContainText("completada");
+  expect((await calls(page))[0].fields.filter(([name]) => name === "assetIds")).toEqual([["assetIds","current-a"]]);
+  expect(attempts).toBe(1);
+});
+
+test("error de red al quitar conserva el archivo y libera los controles", async ({page}) => {
+  await page.route("**/api/uploads/pending-a", route => route.abort("connectionfailed"));
+  await page.goto("/?pending=1");
+  await page.getByRole("button", {name:"Quitar pending-a.pdf",exact:true}).click();
+  await expect(page.getByRole("alert")).toContainText("No se pudo quitar");
+  await expect(page.getByRole("status")).toHaveCount(0);
+  await expect(page.getByRole("button", {name:"Quitar pending-a.pdf",exact:true})).toBeEnabled();
+  await expect(page.locator('input[type="file"]')).toBeEnabled();
+  await page.getByRole("button", {name:"Entregar tarea",exact:true}).click();
+  await page.getByRole("button", {name:"Sí, entregar",exact:true}).click();
+  await expect(page.getByRole("status")).toContainText("completada");
+  expect((await calls(page))[0].fields).toContainEqual(["assetIds","pending-a"]);
+});
+
+test("archivo ya ausente permite completar la retirada sin error", async ({page}) => {
+  await page.route("**/api/uploads/pending-a", route => route.fulfill({status:404}));
+  await page.goto("/?pending=1");
+  await page.getByRole("button", {name:"Quitar pending-a.pdf",exact:true}).click();
+  await expect(page.getByLabel("Archivos listos para entregar")).toHaveCount(0);
+  await expect(page.getByRole("alert")).toHaveCount(0);
   await expect(page.getByRole("button", {name:"Entregar tarea",exact:true})).toBeEnabled();
 });
 
@@ -144,4 +209,22 @@ test("controles de adjuntos funcionan con teclado sin desbordamiento", async ({p
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect(await page.locator("button:visible").evaluateAll(nodes => nodes.every(node => node.getBoundingClientRect().height >= 44))).toBe(true);
   await page.screenshot({path:info.outputPath("adjuntos-confirmacion.png"),fullPage:true});
+});
+
+test("vista docente muestra instrucciones completas y recurso largo sin desbordamiento", async ({page},info) => {
+  await page.goto("/teacher-task");
+  const section = page.getByRole("region", {name:"Instrucciones",exact:true});
+  await expect(section).toBeVisible();
+  const instructions = "Lee el material de ejemplo.\nRecurso: https://example.test/material/" + "lectura".repeat(18) +
+    "\nExplica el procedimiento y entrega tu respuesta en PDF.";
+  expect(await section.locator("p").textContent()).toBe(instructions);
+  await expect(section.locator("p")).toHaveCSS("white-space","pre-wrap");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await expect(page.getByRole("heading", {name:"Estudiantes",exact:true})).toBeVisible();
+  await page.screenshot({path:info.outputPath("instrucciones-docente.png"),fullPage:true});
+});
+
+test("vista docente explica una tarea sin instrucciones", async ({page}) => {
+  await page.goto("/teacher-task-empty");
+  await expect(page.getByRole("region", {name:"Instrucciones",exact:true})).toContainText("Esta tarea no tiene instrucciones.");
 });
