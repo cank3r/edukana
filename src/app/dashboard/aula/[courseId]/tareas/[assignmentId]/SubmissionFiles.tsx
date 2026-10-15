@@ -49,6 +49,8 @@ export function SubmitWithFiles({ assignmentId, content, link, resubmitting, cur
   const [confirming, setConfirming] = useState(false);
   const [localError, setLocalError] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const removingRef = useRef(false);
   /** Subidos en esta visita (antes de que la página se actualice). */
   const [uploaded, setUploaded] = useState<SubmissionFile[]>([]);
   /** Quitados de la lista en esta visita. */
@@ -69,9 +71,10 @@ export function SubmitWithFiles({ assignmentId, content, link, resubmitting, cur
   const ready = [...pendingFiles, ...uploaded.filter((file) => !pendingFiles.some((other) => other.id === file.id))].filter((file) => !removed.has(file.id));
   const kept = currentFiles.filter((file) => !leftOut.has(file.id));
   const total = kept.length + ready.length;
-  const busy = pending || uploading;
+  const busy = pending || uploading || removingId !== null;
 
   async function addFiles(list: FileList | null) {
+    if (busy || confirming || removingRef.current) return;
     const files = Array.from(list ?? []);
     if (!files.length) return;
     setLocalError("");
@@ -95,16 +98,25 @@ export function SubmitWithFiles({ assignmentId, content, link, resubmitting, cur
   }
 
   async function removeReady(file: SubmissionFile) {
+    if (busy || confirming || removingRef.current) return;
+    removingRef.current = true;
+    setRemovingId(file.id);
     setLocalError("");
-    const response = await fetch(`/api/uploads/${file.id}`, { method: "DELETE" }).catch(() => null);
-    if (!response || (!response.ok && response.status !== 404)) {
-      setLocalError(`No se pudo quitar «${file.name}». Intenta de nuevo.`);
-      return;
+    try {
+      const response = await fetch(`/api/uploads/${file.id}`, { method: "DELETE" }).catch(() => null);
+      if (!response || (!response.ok && response.status !== 404)) {
+        setLocalError(`No se pudo quitar «${file.name}». Intenta de nuevo.`);
+        return;
+      }
+      setRemoved((current) => new Set(current).add(file.id));
+    } finally {
+      removingRef.current = false;
+      setRemovingId(null);
     }
-    setRemoved((current) => new Set(current).add(file.id));
   }
 
   function toggleKept(id: string, keep: boolean) {
+    if (busy || confirming || removingRef.current) return;
     setLeftOut((current) => {
       const next = new Set(current);
       if (keep) next.delete(id);
@@ -114,6 +126,7 @@ export function SubmitWithFiles({ assignmentId, content, link, resubmitting, cur
   }
 
   function ask() {
+    if (busy || confirming || removingRef.current) return;
     const form = formRef.current;
     if (!form) return;
     const data = new FormData(form);
@@ -127,7 +140,9 @@ export function SubmitWithFiles({ assignmentId, content, link, resubmitting, cur
   }
 
   return (
-    <form ref={formRef} action={action} className="mt-4 space-y-3">
+    <form ref={formRef} action={action} className="mt-4 space-y-3" onSubmit={(event) => {
+      if (busy || removingRef.current) event.preventDefault();
+    }}>
       <input type="hidden" name="assignmentId" value={assignmentId} />
       {[...kept, ...ready].map((file) => <input key={file.id} type="hidden" name="assetIds" value={file.id} />)}
       <label className={label}>
@@ -140,7 +155,7 @@ export function SubmitWithFiles({ assignmentId, content, link, resubmitting, cur
         <span className="mt-1 block text-xs font-normal text-slate-500">Por ejemplo un documento compartido. Debe empezar con https:// y tu docente debe poder abrirlo. Si envías un enlace, por ahora no podrás reemplazar esta entrega.</span>
       </label>
 
-      <fieldset className="rounded-lg border border-slate-200 p-3" disabled={confirming}>
+      <fieldset className="rounded-lg border border-slate-200 p-3" disabled={busy || confirming} aria-busy={removingId !== null}>
         <legend className="px-1 text-sm font-medium text-slate-900">Archivos (opcional)</legend>
         <p className="text-xs text-slate-500">Hasta {SUBMISSION_MAX_FILES} archivos: PDF, imágenes, Word, Excel, PowerPoint o ZIP, de hasta {formatFileSize(SUBMISSION_MAX_BYTES)} cada uno. Solo tú y tu docente pueden abrirlos.</p>
         {currentFiles.length > 0 && (
@@ -163,7 +178,7 @@ export function SubmitWithFiles({ assignmentId, content, link, resubmitting, cur
             {ready.map((file) => (
               <li key={file.id} className="flex flex-wrap items-center justify-between gap-2 py-1">
                 <span className="flex min-w-0 items-center gap-2 text-sm text-slate-900"><Paperclip size={16} aria-hidden="true" className="shrink-0 text-slate-500" /><span className="break-all">{file.name}</span><span className="shrink-0 text-slate-500">{formatFileSize(file.sizeBytes)} · listo para entregar</span></span>
-                <button type="button" className="min-h-11 px-2 text-sm font-semibold text-red-700 underline disabled:opacity-60" disabled={busy || confirming} onClick={() => void removeReady(file)} aria-label={`Quitar ${file.name}`}>Quitar</button>
+                <button type="button" className="min-h-11 px-2 text-sm font-semibold text-red-700 underline disabled:opacity-60" disabled={busy || confirming} onClick={() => void removeReady(file)} aria-label={`Quitar ${file.name}`}>{removingId === file.id ? "Quitando…" : "Quitar"}</button>
               </li>
             ))}
           </ul>
@@ -177,6 +192,7 @@ export function SubmitWithFiles({ assignmentId, content, link, resubmitting, cur
         )}
       </fieldset>
 
+      {removingId && <p role="status" className="text-sm text-slate-800">Quitando archivo… Espera antes de entregar.</p>}
       {localError && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{localError}</p>}
       {!confirming && <button type="button" className={primary} onClick={ask} disabled={busy}>{resubmitting ? "Volver a entregar" : "Entregar tarea"}</button>}
       {confirming && (
@@ -185,7 +201,7 @@ export function SubmitWithFiles({ assignmentId, content, link, resubmitting, cur
             Tu docente verá esta entrega{total > 0 ? ` con ${total} ${total === 1 ? "archivo" : "archivos"}` : ""}. {resubmitting ? "Reemplaza a la que enviaste antes; la anterior queda guardada como versión previa, con sus archivos." : "Puedes cambiarla mientras no esté calificada y la tarea siga abierta, salvo que envíes un enlace."}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
-            <button className={primary} type="submit" disabled={pending}>{pending ? "Entregando…" : "Sí, entregar"}</button>
+            <button className={primary} type="submit" disabled={busy}>{pending ? "Entregando…" : "Sí, entregar"}</button>
             <button className={secondary} type="button" disabled={pending} onClick={() => setConfirming(false)}>Seguir editando</button>
           </div>
         </div>
