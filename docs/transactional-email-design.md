@@ -56,11 +56,14 @@ instrucciones de pago se escapan como texto y no se convierten en enlaces nuevos
 - 16/16 pruebas de composición y 10/10 nuevas de emisores con proveedor en memoria.
 - 29/29 regresiones de marca, notificaciones y política, incluyendo privacidad de notas.
 - 188/188 pruebas generales; TypeScript completo y lint focal PASS. Build Webpack PASS (20/20 páginas).
-- La auditoría independiente no encontró defectos productivos bloqueantes.
+- La auditoría independiente final no encontró bloqueantes: 82/82 focales PASS
+  (26 nuevas, 29 de correo/política y 27 de observabilidad). Confirmó las aserciones intactas.
 - Detectó cuatro fallos (196/200 PASS) del doble antiguo en platform-password-reset-observability:
   omite helpers del compositor y falla prematuramente en message_build. Su ajuste
-  requiere relevo acotado y queda pendiente; no se declara toda la suite verde.
-- 76/76 renders Chromium 155.0.8059.12:19 fixtures por 320/360/600/1280 px, sin overflow,
+  quedó corregido con un doble explícito de resetEmail (tres líneas), tras el relevo
+  Sentinel_d4dd131be180819184b8b852a8531272. Todas las aserciones siguen intactas.
+  Suite backoffice final: 200/200 PASS, cero fallos u omisiones.
+- 76/76 renders Chromium 155.0.8059.12: 19 fixtures por 320/360/600/1280 px, sin overflow,
   links >= 44 px, un h1, tablas de presentación, preheader oculto, alt y foco de teclado.
 - 38 capturas PNG, HTML fuente, copias portátiles con enlaces inertes y texto plano.
   `transactional-email-preview/index.html` es la galería; `render-evidence.json`
@@ -69,7 +72,8 @@ instrucciones de pago se escapan como texto y no se convierten en enlaces nuevos
 - Todas las solicitudes del renderer se abortan o reciben el PNG local; no hay red.
 
 Los renders de navegador no acreditan Gmail, Outlook real, VML ni modo oscuro.
-No se enviaron correos ni se abrió una base real. CI/Preview no se infieren de pruebas
+No se enviaron correos ni se abrió una base real desde la ejecución local. El resultado
+terminal de CI se registra en la PR para su SHA exacto; no se infiere de pruebas
 locales. Vercel mantiene desactivada esta rama; no se modifica esa política.
 
 ## Reproducir

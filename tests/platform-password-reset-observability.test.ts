@@ -63,6 +63,9 @@ const service: typeof import("../src/server/password-reset") = loadWithStubs("sr
   },
   "@/server/security/login-throttle": throttle,
   "@/server/integrations/email": { getEmailProvider: () => { step("provider_setup"); return getEmailProvider(); } },
+  "@/server/email/access": {
+    resetEmail: (_brand: unknown, message: EmailMessage) => message,
+  },
   "@/server/platform/branded-email": {
     loadEmailBrand: async () => { step("branding_lookup"); return { name: "Private School", domain: hasDomain ? "school.example.test" : null }; },
     brandedEmail: (_brand: unknown, message: EmailMessage) => message,
