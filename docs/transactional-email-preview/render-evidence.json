@@ -1,0 +1,1998 @@
+{
+  "externalRequestsAllowed": 0,
+  "count": 76,
+  "evidence": [
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "invitation",
+      "status": "PASS",
+      "width": 320,
+      "documentWidth": 320,
+      "links": [
+        {
+          "text": "Crear mi contraseña",
+          "height": 48,
+          "right": 229.734375
+        },
+        {
+          "text": "Solicitar un nuevo enlace",
+          "height": 44,
+          "right": 193.4375
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "existing-account",
+      "status": "PASS",
+      "width": 320,
+      "documentWidth": 320,
+      "links": [
+        {
+          "text": "Entrar a la plataforma",
+          "height": 48,
+          "right": 239.5
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "reset",
+      "status": "PASS",
+      "width": 320,
+      "documentWidth": 320,
+      "links": [
+        {
+          "text": "Restablecer contraseña",
+          "height": 48,
+          "right": 255.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "catalog-pending",
+      "status": "PASS",
+      "width": 320,
+      "documentWidth": 320,
+      "links": [],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "catalog-access",
+      "status": "PASS",
+      "width": 320,
+      "documentWidth": 320,
+      "links": [
+        {
+          "text": "Entrar a la plataforma",
+          "height": 48,
+          "right": 239.5
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "catalog-role",
+      "status": "PASS",
+      "width": 320,
+      "documentWidth": 320,
+      "links": [],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "grade",
+      "status": "PASS",
+      "width": 320,
+      "documentWidth": 320,
+      "links": [
+        {
+          "text": "Ver nota y comentarios",
+          "height": 48,
+          "right": 251.0625
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 181.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "announcement",
+      "status": "PASS",
+      "width": 320,
+      "documentWidth": 320,
+      "links": [
+        {
+          "text": "Leer aviso",
+          "height": 48,
+          "right": 154.15625
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 181.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "assignment",
+      "status": "PASS",
+      "width": 320,
+      "documentWidth": 320,
+      "links": [
+        {
+          "text": "Ver tarea",
+          "height": 48,
+          "right": 142.609375
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 181.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "submission",
+      "status": "PASS",
+      "width": 320,
+      "documentWidth": 320,
+      "links": [
+        {
+          "text": "Revisar entrega",
+          "height": 48,
+          "right": 195.0625
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 181.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "exam",
+      "status": "PASS",
+      "width": 320,
+      "documentWidth": 320,
+      "links": [
+        {
+          "text": "Ver examen",
+          "height": 48,
+          "right": 163.953125
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 181.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "live_class",
+      "status": "PASS",
+      "width": 320,
+      "documentWidth": 320,
+      "links": [
+        {
+          "text": "Ver clase",
+          "height": 48,
+          "right": 144.40625
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 181.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "certificate",
+      "status": "PASS",
+      "width": 320,
+      "documentWidth": 320,
+      "links": [
+        {
+          "text": "Ver certificado",
+          "height": 48,
+          "right": 185.28125
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 181.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "charge",
+      "status": "PASS",
+      "width": 320,
+      "documentWidth": 320,
+      "links": [
+        {
+          "text": "Ver estado de cuenta",
+          "height": 48,
+          "right": 235.0625
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 181.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "corrected",
+      "status": "PASS",
+      "width": 320,
+      "documentWidth": 320,
+      "links": [
+        {
+          "text": "Ver nota y comentarios",
+          "height": 48,
+          "right": 251.0625
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 181.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "white-label",
+      "status": "PASS",
+      "width": 320,
+      "documentWidth": 320,
+      "links": [
+        {
+          "text": "Crear mi contraseña",
+          "height": 48,
+          "right": 229.734375
+        },
+        {
+          "text": "Solicitar un nuevo enlace",
+          "height": 44,
+          "right": 193.4375
+        }
+      ],
+      "images": [],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "long-names",
+      "status": "PASS",
+      "width": 320,
+      "documentWidth": 320,
+      "links": [
+        {
+          "text": "Crear mi contraseña",
+          "height": 48,
+          "right": 229.734375
+        },
+        {
+          "text": "Solicitar un nuevo enlace",
+          "height": 44,
+          "right": 193.4375
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "images-blocked",
+      "status": "PASS",
+      "width": 320,
+      "documentWidth": 320,
+      "links": [
+        {
+          "text": "Crear mi contraseña",
+          "height": 48,
+          "right": 229.734375
+        },
+        {
+          "text": "Solicitar un nuevo enlace",
+          "height": 44,
+          "right": 193.4375
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": false
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "missing-url",
+      "status": "PASS",
+      "width": 320,
+      "documentWidth": 320,
+      "links": [],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "invitation",
+      "status": "PASS",
+      "width": 360,
+      "documentWidth": 360,
+      "links": [
+        {
+          "text": "Crear mi contraseña",
+          "height": 48,
+          "right": 229.734375
+        },
+        {
+          "text": "Solicitar un nuevo enlace",
+          "height": 44,
+          "right": 193.4375
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "existing-account",
+      "status": "PASS",
+      "width": 360,
+      "documentWidth": 360,
+      "links": [
+        {
+          "text": "Entrar a la plataforma",
+          "height": 48,
+          "right": 239.5
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "reset",
+      "status": "PASS",
+      "width": 360,
+      "documentWidth": 360,
+      "links": [
+        {
+          "text": "Restablecer contraseña",
+          "height": 48,
+          "right": 255.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "catalog-pending",
+      "status": "PASS",
+      "width": 360,
+      "documentWidth": 360,
+      "links": [],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "catalog-access",
+      "status": "PASS",
+      "width": 360,
+      "documentWidth": 360,
+      "links": [
+        {
+          "text": "Entrar a la plataforma",
+          "height": 48,
+          "right": 239.5
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "catalog-role",
+      "status": "PASS",
+      "width": 360,
+      "documentWidth": 360,
+      "links": [],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "grade",
+      "status": "PASS",
+      "width": 360,
+      "documentWidth": 360,
+      "links": [
+        {
+          "text": "Ver nota y comentarios",
+          "height": 48,
+          "right": 251.0625
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 181.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "announcement",
+      "status": "PASS",
+      "width": 360,
+      "documentWidth": 360,
+      "links": [
+        {
+          "text": "Leer aviso",
+          "height": 48,
+          "right": 154.15625
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 181.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "assignment",
+      "status": "PASS",
+      "width": 360,
+      "documentWidth": 360,
+      "links": [
+        {
+          "text": "Ver tarea",
+          "height": 48,
+          "right": 142.609375
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 181.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "submission",
+      "status": "PASS",
+      "width": 360,
+      "documentWidth": 360,
+      "links": [
+        {
+          "text": "Revisar entrega",
+          "height": 48,
+          "right": 195.0625
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 181.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "exam",
+      "status": "PASS",
+      "width": 360,
+      "documentWidth": 360,
+      "links": [
+        {
+          "text": "Ver examen",
+          "height": 48,
+          "right": 163.953125
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 181.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "live_class",
+      "status": "PASS",
+      "width": 360,
+      "documentWidth": 360,
+      "links": [
+        {
+          "text": "Ver clase",
+          "height": 48,
+          "right": 144.40625
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 181.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "certificate",
+      "status": "PASS",
+      "width": 360,
+      "documentWidth": 360,
+      "links": [
+        {
+          "text": "Ver certificado",
+          "height": 48,
+          "right": 185.28125
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 181.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "charge",
+      "status": "PASS",
+      "width": 360,
+      "documentWidth": 360,
+      "links": [
+        {
+          "text": "Ver estado de cuenta",
+          "height": 48,
+          "right": 235.0625
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 181.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "corrected",
+      "status": "PASS",
+      "width": 360,
+      "documentWidth": 360,
+      "links": [
+        {
+          "text": "Ver nota y comentarios",
+          "height": 48,
+          "right": 251.0625
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 181.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "white-label",
+      "status": "PASS",
+      "width": 360,
+      "documentWidth": 360,
+      "links": [
+        {
+          "text": "Crear mi contraseña",
+          "height": 48,
+          "right": 229.734375
+        },
+        {
+          "text": "Solicitar un nuevo enlace",
+          "height": 44,
+          "right": 193.4375
+        }
+      ],
+      "images": [],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "long-names",
+      "status": "PASS",
+      "width": 360,
+      "documentWidth": 360,
+      "links": [
+        {
+          "text": "Crear mi contraseña",
+          "height": 48,
+          "right": 229.734375
+        },
+        {
+          "text": "Solicitar un nuevo enlace",
+          "height": 44,
+          "right": 193.4375
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "images-blocked",
+      "status": "PASS",
+      "width": 360,
+      "documentWidth": 360,
+      "links": [
+        {
+          "text": "Crear mi contraseña",
+          "height": 48,
+          "right": 229.734375
+        },
+        {
+          "text": "Solicitar un nuevo enlace",
+          "height": 44,
+          "right": 193.4375
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": false
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "missing-url",
+      "status": "PASS",
+      "width": 360,
+      "documentWidth": 360,
+      "links": [],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "invitation",
+      "status": "PASS",
+      "width": 600,
+      "documentWidth": 600,
+      "links": [
+        {
+          "text": "Crear mi contraseña",
+          "height": 48,
+          "right": 229.734375
+        },
+        {
+          "text": "Solicitar un nuevo enlace",
+          "height": 44,
+          "right": 193.4375
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "existing-account",
+      "status": "PASS",
+      "width": 600,
+      "documentWidth": 600,
+      "links": [
+        {
+          "text": "Entrar a la plataforma",
+          "height": 48,
+          "right": 239.5
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "reset",
+      "status": "PASS",
+      "width": 600,
+      "documentWidth": 600,
+      "links": [
+        {
+          "text": "Restablecer contraseña",
+          "height": 48,
+          "right": 255.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "catalog-pending",
+      "status": "PASS",
+      "width": 600,
+      "documentWidth": 600,
+      "links": [],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "catalog-access",
+      "status": "PASS",
+      "width": 600,
+      "documentWidth": 600,
+      "links": [
+        {
+          "text": "Entrar a la plataforma",
+          "height": 48,
+          "right": 239.5
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "catalog-role",
+      "status": "PASS",
+      "width": 600,
+      "documentWidth": 600,
+      "links": [],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "grade",
+      "status": "PASS",
+      "width": 600,
+      "documentWidth": 600,
+      "links": [
+        {
+          "text": "Ver nota y comentarios",
+          "height": 48,
+          "right": 251.0625
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 181.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "announcement",
+      "status": "PASS",
+      "width": 600,
+      "documentWidth": 600,
+      "links": [
+        {
+          "text": "Leer aviso",
+          "height": 48,
+          "right": 154.15625
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 181.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "assignment",
+      "status": "PASS",
+      "width": 600,
+      "documentWidth": 600,
+      "links": [
+        {
+          "text": "Ver tarea",
+          "height": 48,
+          "right": 142.609375
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 181.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "submission",
+      "status": "PASS",
+      "width": 600,
+      "documentWidth": 600,
+      "links": [
+        {
+          "text": "Revisar entrega",
+          "height": 48,
+          "right": 195.0625
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 181.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "exam",
+      "status": "PASS",
+      "width": 600,
+      "documentWidth": 600,
+      "links": [
+        {
+          "text": "Ver examen",
+          "height": 48,
+          "right": 163.953125
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 181.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "live_class",
+      "status": "PASS",
+      "width": 600,
+      "documentWidth": 600,
+      "links": [
+        {
+          "text": "Ver clase",
+          "height": 48,
+          "right": 144.40625
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 181.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "certificate",
+      "status": "PASS",
+      "width": 600,
+      "documentWidth": 600,
+      "links": [
+        {
+          "text": "Ver certificado",
+          "height": 48,
+          "right": 185.28125
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 181.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "charge",
+      "status": "PASS",
+      "width": 600,
+      "documentWidth": 600,
+      "links": [
+        {
+          "text": "Ver estado de cuenta",
+          "height": 48,
+          "right": 235.0625
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 181.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "corrected",
+      "status": "PASS",
+      "width": 600,
+      "documentWidth": 600,
+      "links": [
+        {
+          "text": "Ver nota y comentarios",
+          "height": 48,
+          "right": 251.0625
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 181.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "white-label",
+      "status": "PASS",
+      "width": 600,
+      "documentWidth": 600,
+      "links": [
+        {
+          "text": "Crear mi contraseña",
+          "height": 48,
+          "right": 229.734375
+        },
+        {
+          "text": "Solicitar un nuevo enlace",
+          "height": 44,
+          "right": 193.4375
+        }
+      ],
+      "images": [],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "long-names",
+      "status": "PASS",
+      "width": 600,
+      "documentWidth": 600,
+      "links": [
+        {
+          "text": "Crear mi contraseña",
+          "height": 48,
+          "right": 229.734375
+        },
+        {
+          "text": "Solicitar un nuevo enlace",
+          "height": 44,
+          "right": 193.4375
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "images-blocked",
+      "status": "PASS",
+      "width": 600,
+      "documentWidth": 600,
+      "links": [
+        {
+          "text": "Crear mi contraseña",
+          "height": 48,
+          "right": 229.734375
+        },
+        {
+          "text": "Solicitar un nuevo enlace",
+          "height": 44,
+          "right": 193.4375
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": false
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "missing-url",
+      "status": "PASS",
+      "width": 600,
+      "documentWidth": 600,
+      "links": [],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "invitation",
+      "status": "PASS",
+      "width": 1280,
+      "documentWidth": 1280,
+      "links": [
+        {
+          "text": "Crear mi contraseña",
+          "height": 48,
+          "right": 557.734375
+        },
+        {
+          "text": "Solicitar un nuevo enlace",
+          "height": 44,
+          "right": 521.4375
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "existing-account",
+      "status": "PASS",
+      "width": 1280,
+      "documentWidth": 1280,
+      "links": [
+        {
+          "text": "Entrar a la plataforma",
+          "height": 48,
+          "right": 567.5
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "reset",
+      "status": "PASS",
+      "width": 1280,
+      "documentWidth": 1280,
+      "links": [
+        {
+          "text": "Restablecer contraseña",
+          "height": 48,
+          "right": 583.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "catalog-pending",
+      "status": "PASS",
+      "width": 1280,
+      "documentWidth": 1280,
+      "links": [],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "catalog-access",
+      "status": "PASS",
+      "width": 1280,
+      "documentWidth": 1280,
+      "links": [
+        {
+          "text": "Entrar a la plataforma",
+          "height": 48,
+          "right": 567.5
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "catalog-role",
+      "status": "PASS",
+      "width": 1280,
+      "documentWidth": 1280,
+      "links": [],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "grade",
+      "status": "PASS",
+      "width": 1280,
+      "documentWidth": 1280,
+      "links": [
+        {
+          "text": "Ver nota y comentarios",
+          "height": 48,
+          "right": 579.0625
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 509.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "announcement",
+      "status": "PASS",
+      "width": 1280,
+      "documentWidth": 1280,
+      "links": [
+        {
+          "text": "Leer aviso",
+          "height": 48,
+          "right": 482.15625
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 509.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "assignment",
+      "status": "PASS",
+      "width": 1280,
+      "documentWidth": 1280,
+      "links": [
+        {
+          "text": "Ver tarea",
+          "height": 48,
+          "right": 470.609375
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 509.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "submission",
+      "status": "PASS",
+      "width": 1280,
+      "documentWidth": 1280,
+      "links": [
+        {
+          "text": "Revisar entrega",
+          "height": 48,
+          "right": 523.0625
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 509.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "exam",
+      "status": "PASS",
+      "width": 1280,
+      "documentWidth": 1280,
+      "links": [
+        {
+          "text": "Ver examen",
+          "height": 48,
+          "right": 491.953125
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 509.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "live_class",
+      "status": "PASS",
+      "width": 1280,
+      "documentWidth": 1280,
+      "links": [
+        {
+          "text": "Ver clase",
+          "height": 48,
+          "right": 472.40625
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 509.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "certificate",
+      "status": "PASS",
+      "width": 1280,
+      "documentWidth": 1280,
+      "links": [
+        {
+          "text": "Ver certificado",
+          "height": 48,
+          "right": 513.28125
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 509.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "charge",
+      "status": "PASS",
+      "width": 1280,
+      "documentWidth": 1280,
+      "links": [
+        {
+          "text": "Ver estado de cuenta",
+          "height": 48,
+          "right": 563.0625
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 509.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "corrected",
+      "status": "PASS",
+      "width": 1280,
+      "documentWidth": 1280,
+      "links": [
+        {
+          "text": "Ver nota y comentarios",
+          "height": 48,
+          "right": 579.0625
+        },
+        {
+          "text": "Elegir qué correos recibo",
+          "height": 44,
+          "right": 509.53125
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "white-label",
+      "status": "PASS",
+      "width": 1280,
+      "documentWidth": 1280,
+      "links": [
+        {
+          "text": "Crear mi contraseña",
+          "height": 48,
+          "right": 557.734375
+        },
+        {
+          "text": "Solicitar un nuevo enlace",
+          "height": 44,
+          "right": 521.4375
+        }
+      ],
+      "images": [],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "long-names",
+      "status": "PASS",
+      "width": 1280,
+      "documentWidth": 1280,
+      "links": [
+        {
+          "text": "Crear mi contraseña",
+          "height": 48,
+          "right": 557.734375
+        },
+        {
+          "text": "Solicitar un nuevo enlace",
+          "height": 44,
+          "right": 521.4375
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "images-blocked",
+      "status": "PASS",
+      "width": 1280,
+      "documentWidth": 1280,
+      "links": [
+        {
+          "text": "Crear mi contraseña",
+          "height": 48,
+          "right": 557.734375
+        },
+        {
+          "text": "Solicitar un nuevo enlace",
+          "height": 44,
+          "right": 521.4375
+        }
+      ],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": false
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    },
+    {
+      "engine": "chromium",
+      "version": "155.0.8059.12",
+      "fixture": "missing-url",
+      "status": "PASS",
+      "width": 1280,
+      "documentWidth": 1280,
+      "links": [],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
+      "headingCount": 1,
+      "preheaderHidden": true,
+      "presentational": true
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+name: MVP closure regression
+
+on:
+  push:
+    paths:
+      - "tests/ui/mvp-closure-*"
+      - "tests/platform-mvp-closure.test.ts"
+      - "playwright.mvp-closure.config.ts"
+      - ".github/workflows/mvp-closure-ui.yml"
+      - "src/app/dashboard/aula/**/tareas/**"
+      - "src/app/dashboard/aula/nuevo/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mvp-closure-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  render-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: node --require ./tests/integration/stub-server-only.cjs --import tsx --test tests/platform-mvp-closure.test.ts
+  component-ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      # Real React components; fake actions and loopback-only HTTP responses.
+      # No application server, account creation, database, mail or external Storage.
+      - run: npx playwright test --config=playwright.mvp-closure.config.ts
+        env:
+          MVP_CLOSURE_OUTPUT: ${{ runner.temp }}/mvp-closure-ui
+      - name: Keep synthetic UI evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mvp-closure-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/mvp-closure-ui/
+          if-no-files-found: warn
+          retention-days: 7

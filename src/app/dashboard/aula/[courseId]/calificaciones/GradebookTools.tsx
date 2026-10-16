@@ -75,6 +75,12 @@ export function ItemForm({
       ) : (
         <input type="hidden" name="categoryId" value={categories[0]?.id ?? ""} />
       )}
+      {!item && (
+        <label className="flex min-h-11 items-center gap-3 text-sm font-medium text-slate-900 sm:col-span-2">
+          <input type="checkbox" name="isPublished" defaultChecked className="h-5 w-5 shrink-0" />
+          Mostrar la nota a los estudiantes
+        </label>
+      )}
       <div className="sm:col-span-2">
         <button className={primary} disabled={pending}>{pending ? "Guardando…" : item ? "Guardar cambios" : "Agregar actividad"}</button>
         <Notice state={state} />

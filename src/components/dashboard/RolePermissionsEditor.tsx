@@ -4,6 +4,7 @@ import { useActionState, useMemo, useState } from "react";
 import { AlertTriangle, Search, ShieldCheck } from "lucide-react";
 import { saveRolePermissions, type RolePermissionsActionState } from "@/app/dashboard/configuracion/roles/actions";
 import { CAPABILITY_CATALOG, CAPABILITIES, PROTECTED_ADMIN_CAPABILITIES, type Capability } from "@/lib/capabilities";
+import { plural } from "@/lib/ux";
 import type { EdukanaRole } from "@/types/next-auth";
 
 const initialState: RolePermissionsActionState = { ok: false, message: "" };
@@ -109,7 +110,7 @@ export function RolePermissionsEditor({ roles, actorCapabilities }: { roles: Rol
       </div>
 
       {state.message && <p role="status" className={`rounded-xl px-4 py-3 text-sm ${state.ok ? "bg-emerald-50 text-emerald-800" : "bg-red-50 text-red-800"}`}>{state.message}</p>}
-      <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4"><p className="text-sm text-slate-500">{selected.size} activas · {changes.length} cambios</p><button type="submit" disabled={pending || Boolean(config.restriction) || changes.length === 0} className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">{pending ? "Guardando…" : "Guardar permisos"}</button></div>
+      <div className="flex items-center justify-between gap-4 rounded-xl border border-slate-200 bg-white p-4"><p className="text-sm text-slate-500">{plural(selected.size, "activa", "activas")} · {plural(changes.length, "cambio", "cambios")}</p><button type="submit" disabled={pending || Boolean(config.restriction) || changes.length === 0} className="rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50">{pending ? "Guardando…" : "Guardar permisos"}</button></div>
     </form>
   );
 }

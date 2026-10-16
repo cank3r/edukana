@@ -14,7 +14,17 @@ const common = {
   calendar: { label: "Calendario", href: "/dashboard/calendario", icon: "calendar" },
 } satisfies Record<string, NavigationItem>;
 
-export function navigationForRole(role: EdukanaRole, effective?: ReadonlySet<Capability> | readonly Capability[]): NavigationItem[] {
+/**
+ * Menú por rol. Con `independent` (espacio de docente independiente) quedan solo las tareas de quien
+ * enseña y vende sus cursos: sin personas, admisiones, cobros manuales, calendario ni reportes.
+ * Las pantallas siguen siendo las mismas; solo se ocultan las entradas.
+ */
+export function navigationForRole(
+  role: EdukanaRole,
+  effective?: ReadonlySet<Capability> | readonly Capability[],
+  options: { independent?: boolean } = {},
+): NavigationItem[] {
+  if (options.independent) return independentNavigation(role, effective);
   const can = (capability: Capability) => hasCapability(role, capability, effective);
   // Docente y estudiante solo ven sus cursos: el menú lo dice igual que el título de la página.
   const courses = role === "TEACHER" || role === "STUDENT" ? { ...common.courses, label: "Mis cursos" } : common.courses;
@@ -35,6 +45,17 @@ export function navigationForRole(role: EdukanaRole, effective?: ReadonlySet<Cap
       { label: "Mi estado de cuenta", href: "/dashboard/mi-cuenta", icon: "payments" } as NavigationItem,
       { label: "Mis certificados", href: "/dashboard/mis-certificados", icon: "portal" } as NavigationItem,
     ] : []),
+  ];
+}
+
+function independentNavigation(role: EdukanaRole, effective?: ReadonlySet<Capability> | readonly Capability[]): NavigationItem[] {
+  const can = (capability: Capability) => hasCapability(role, capability, effective);
+  return [
+    common.home,
+    ...(can("course.view") ? [{ ...common.courses, label: "Mis cursos" }] : []),
+    ...(can("finance.manage") ? [{ label: "Ventas", href: "/dashboard/ventas", icon: "payments" } as NavigationItem] : []),
+    common.community,
+    ...(can("tenant.settings.manage") ? [{ label: "Configuración", href: "/dashboard/configuracion", icon: "settings" } as NavigationItem] : []),
   ];
 }
 
@@ -73,15 +94,22 @@ export function roleLabel(role: EdukanaRole): string {
   return ROLE_LABELS[role];
 }
 
+/** Cantidad con su palabra en singular o plural: `plural(1, "aviso", "avisos")` → «1 aviso». */
+export function plural(count: number, one: string, many: string): string {
+  return count === 1 ? `1 ${one}` : `${count} ${many}`;
+}
+
 export function spanishLabel(value: string | null | undefined): string {
   if (!value) return "Sin estado";
   return STATUS_LABELS[value] ?? value.toLocaleLowerCase("es").replaceAll("_", " ").replace(/^./, (letter) => letter.toLocaleUpperCase("es"));
 }
 
 const BREADCRUMB_LABELS: Record<string, string> = {
+  planes: "Planes", facturacion: "Facturación", avisos: "Avisos",
+  tablero: "Tablero", bitacora: "Bitácora", vista: "Soporte de solo lectura",
   dashboard: "Inicio", aula: "Cursos", gestion: "Personas", estudiantes: "Estudiantes", portal: "Mi aprendizaje",
   comunidad: "Avisos", admisiones: "Admisiones", pagos: "Cobros", calendario: "Calendario", analitica: "Reportes", configuracion: "Configuración", roles: "Roles y permisos", tutores: "Tutores", hijos: "Mis hijos", "puesta-en-marcha": "Puesta en marcha", periodos: "Períodos", institucion: "Datos de la institución", asistencia: "Asistencia", certificados: "Certificados", "mis-certificados": "Mis certificados", "mi-cuenta": "Mi estado de cuenta", perfil: "Mi perfil", contenido: "Contenido", leccion: "Lección", clases: "Clases en vivo", tareas: "Tareas", preguntas: "Banco de preguntas", examenes: "Exámenes", presentar: "Exámenes", calificaciones: "Calificaciones", "mis-notas": "Mis notas", editar: "Editar", nuevo: "Nuevo", nueva: "Nueva", resultados: "Resultados", resultado: "Resultado", accesos: "Importar e invitar", programas: "Programas", grupos: "Grupos", horario: "Horario", ventas: "Ventas", recibo: "Recibo",
-  notificaciones: "Notificaciones",
+  notificaciones: "Notificaciones", personas: "Personas", preferencias: "Qué me llega por correo", "generar-preguntas": "Generar preguntas", riesgo: "Estudiantes en riesgo",
 };
 
 export function breadcrumbLabel(segment: string): string {

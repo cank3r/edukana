@@ -18,7 +18,7 @@ export function BrandHeader({ brand }: { brand: PublicBrand }) {
           )}
           <span className="truncate text-lg font-bold" style={{ color: "var(--navy)" }}>{brand.name}</span>
         </Link>
-        <Link href="/login" className="inline-flex min-h-11 shrink-0 items-center rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-800">Entrar</Link>
+        <Link href={`/login?institucion=${brand.slug}`} className="inline-flex min-h-11 shrink-0 items-center rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-800">Entrar</Link>
       </div>
     </header>
   );

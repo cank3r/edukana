@@ -1,0 +1,6 @@
+Asunto: Tu pedido de Informática
+
+Ya tienes acceso. No necesitas pagar.
+https://platform.example.test/login
+
+Hecho con Edukana

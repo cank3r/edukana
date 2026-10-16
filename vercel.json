@@ -1,0 +1,11 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "git": {
+    "deploymentEnabled": {
+      "**": false,
+      "main": true,
+      "todo/**": true,
+      "m3/grade-email-design-20261014": true
+    }
+  }
+}

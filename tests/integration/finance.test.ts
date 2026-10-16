@@ -251,11 +251,12 @@ test("el estudiante solo ve su cuenta; el tutor, solo con permiso del rol y del 
   assert.equal(await getStudentAccount(A.teacher, A.student.id), null);
   assert.equal((await getStudentAccount(A.admin, A.student.id))?.owedCents, 300_000, "quien gestiona cobros puede consultarla");
 
-  // Tutor: hace falta el permiso del rol en la institución Y la marca de finanzas en el vínculo.
-  assert.equal(await getStudentAccount(A.parent, A.student.id), null);
+  // Tutor: hace falta el permiso del rol (viene por omisión) Y la marca de finanzas en el vínculo.
+  assert.equal(await getStudentAccount(A.parent, A.student.id), null, "sin la marca del vínculo");
   await db.guardianship.update({ where: { id: A.guardianshipId }, data: { canViewFinance: true } });
-  assert.equal(await getStudentAccount(A.parent, A.student.id), null, "sin permiso del rol");
-  await db.roleCapabilityOverride.create({ data: { institutionId: A.institutionId, role: "PARENT", capability: "child.finance.view", enabled: true, updatedById: A.admin.id } });
+  await db.roleCapabilityOverride.create({ data: { institutionId: A.institutionId, role: "PARENT", capability: "child.finance.view", enabled: false, updatedById: A.admin.id } });
+  assert.equal(await getStudentAccount(A.parent, A.student.id), null, "la institución le quitó el permiso al rol");
+  await db.roleCapabilityOverride.deleteMany({ where: { institutionId: A.institutionId, role: "PARENT", capability: "child.finance.view" } });
   assert.equal((await getStudentAccount(A.parent, A.student.id))?.owedCents, 300_000);
   assert.deepEqual((await accountStudentsFor(A.parent)).map((student) => student.id), [A.student.id]);
   assert.equal(await getStudentAccount(A.parent, A.student2.id), null, "no es su hijo");
@@ -379,13 +380,13 @@ test("recibo: lo ven quien cobra, el estudiante dueño y su tutor autorizado; na
   assert.equal(await getPaymentReceipt(B.student, paymentId), null);
   assert.equal(await getPaymentReceipt(A.student, ""), null);
 
-  // Tutor: permiso del rol Y marca de finanzas en el vínculo, y solo los recibos de su hijo.
-  // (Una prueba anterior deja el permiso del rol concedido: se parte de cero.)
+  // Tutor: permiso del rol (por omisión) Y marca de finanzas en el vínculo, y solo los recibos de su hijo.
   await db.roleCapabilityOverride.deleteMany({ where: { institutionId: A.institutionId, role: "PARENT", capability: "child.finance.view" } });
-  assert.equal(await getPaymentReceipt(A.parent, paymentId), null);
+  assert.equal(await getPaymentReceipt(A.parent, paymentId), null, "sin la marca del vínculo");
   await db.guardianship.update({ where: { id: A.guardianshipId }, data: { canViewFinance: true } });
-  assert.equal(await getPaymentReceipt(A.parent, paymentId), null, "sin permiso del rol");
-  await db.roleCapabilityOverride.create({ data: { institutionId: A.institutionId, role: "PARENT", capability: "child.finance.view", enabled: true, updatedById: A.admin.id } });
+  await db.roleCapabilityOverride.create({ data: { institutionId: A.institutionId, role: "PARENT", capability: "child.finance.view", enabled: false, updatedById: A.admin.id } });
+  assert.equal(await getPaymentReceipt(A.parent, paymentId), null, "la institución le quitó el permiso al rol");
+  await db.roleCapabilityOverride.deleteMany({ where: { institutionId: A.institutionId, role: "PARENT", capability: "child.finance.view" } });
   assert.equal((await getPaymentReceipt(A.parent, paymentId))?.id, paymentId);
   assert.equal(await getPaymentReceipt(A.parent, theirPayment), null, "no es su hijo");
   assert.equal(await getPaymentReceipt(B.parent, paymentId), null);

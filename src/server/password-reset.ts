@@ -5,6 +5,11 @@ import { db } from "@/lib/db";
 import { ensureIdentity, listActiveMemberships, normalizeEmail } from "@/server/identity";
 import { getEmailProvider } from "@/server/integrations/email";
 import { isAttemptAllowed, recordAttempt } from "@/server/security/login-throttle";
+import { reportPasswordResetFailure, type PasswordResetStage } from "@/server/security/password-reset-observability";
+
+import { resetEmail } from "@/server/email/access";
+import { loadEmailBrand } from "@/server/platform/branded-email";
+import { institutionBaseUrl } from "@/server/platform/domain-policy";
 
 export const RESET_TOKEN_MINUTES = 60;
 
@@ -18,9 +23,7 @@ export const newPasswordSchema = z
 export const hashToken = (token: string) => createHash("sha256").update(token).digest("hex");
 
 export function appUrl() {
-  const value = process.env.APP_URL ?? process.env.AUTH_URL ?? process.env.NEXTAUTH_URL;
-  if (!value) throw new Error("APP_URL es obligatorio para enviar enlaces de recuperación.");
-  return value.replace(/\/$/, "");
+  return institutionBaseUrl({});
 }
 
 /**
@@ -40,43 +43,54 @@ export async function issuePasswordToken(
 }
 
 /**
- * Solicita la recuperación. No devuelve nada y no lanza por causas que dependan de si la
- * cuenta existe: quien llama responde siempre lo mismo.
+ * Conserva el contrato void y no registra elegibilidad. La respuesta pública es idéntica
+ * para todos los correos con formato válido; aceptar el envío no acredita entrega al buzón.
  *
  * La contraseña pertenece a la identidad: se envía un solo enlace aunque la persona esté en
  * varias instituciones, y al usarlo cambia para todas.
  */
-export async function requestPasswordReset(input: { email: string; ip: string }, now = new Date()) {
+export async function requestPasswordReset(
+  input: { email: string; ip: string; institutionId?: string | null }, now = new Date(),
+): Promise<void> {
   const email = normalizeEmail(input.email);
   const subject = { email, ip: input.ip, kind: "reset" as const };
   if (!(await isAttemptAllowed(subject, now))) return;
   await recordAttempt(subject, false, now);
-
   const identity = await db.identity.findUnique({ where: { email }, select: { id: true, status: true } });
   if (!identity || identity.status !== "ACTIVE") return;
   const memberships = await listActiveMemberships(identity.id);
   if (!memberships.length) return;
 
-  const token = await issuePasswordToken(db, { userId: memberships[0].id, minutes: RESET_TOKEN_MINUTES }, now);
-  const places = memberships.map((item) => item.institution.name).join(", ");
+  // Host context chooses a membership, never grants one. A foreign host gets neutral branding.
+  const member = input.institutionId
+    ? memberships.find((item) => item.institutionId === input.institutionId)
+    : memberships[0];
+  let stage: PasswordResetStage = "branding_lookup";
   try {
-    await getEmailProvider().send({
+    const brand = member ? await loadEmailBrand(member.institutionId) : null;
+    stage = "token_create";
+    const token = await issuePasswordToken(db, { userId: (member ?? memberships[0]).id, minutes: RESET_TOKEN_MINUTES }, now);
+    stage = "provider_setup";
+    const provider = getEmailProvider();
+    stage = "message_build";
+    const message = resetEmail(brand, {
       to: email,
-      subject: "Restablece tu contraseña de Edukana",
+      subject: `Restablece tu contraseña de ${brand?.name ?? "Edukana"}`,
       text: [
-        `Hola, ${memberships[0].name}:`,
-        "",
-        `Recibimos una solicitud para cambiar la contraseña de tu cuenta (${places}).`,
-        `Abre este enlace para elegir una nueva. Vence en ${RESET_TOKEN_MINUTES} minutos y solo funciona una vez:`,
-        "",
-        `${appUrl()}/restablecer/${token}`,
-        "",
+        `Hola, ${(member ?? memberships[0]).name}:`, "",
+        "Recibimos una solicitud para cambiar la contraseña de tu cuenta.",
+        `Abre este enlace para elegir una nueva. Vence en ${RESET_TOKEN_MINUTES} minutos y solo funciona una vez:`, "",
+        `${institutionBaseUrl(brand ?? {})}/restablecer/${token}`, "",
         "Si no lo pediste, ignora este mensaje: tu contraseña no cambia.",
       ].join("\n"),
+    }, {
+      name: (member ?? memberships[0]).name,
+      href: `${institutionBaseUrl(brand ?? {})}/restablecer/${token}`, minutes: RESET_TOKEN_MINUTES,
     });
+    stage = "provider_send";
+    await provider.send(message);
   } catch (error) {
-    const correlationId = crypto.randomUUID();
-    console.error("requestPasswordReset: no se pudo enviar el correo", { correlationId, error });
+    reportPasswordResetFailure(stage, error);
   }
 }
 

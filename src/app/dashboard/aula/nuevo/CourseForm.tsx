@@ -16,7 +16,11 @@ type Option = { id: string; name: string };
  * Formulario de curso, para crear y para corregir. Con `fixedTeacherId` quien lo usa es
  * docente: el curso es suyo y no se muestra el selector de docente.
  */
-export function CourseForm({ course, teachers, periods, fixedTeacherId }: { course?: CourseFormValues; teachers: Option[]; periods: Option[]; fixedTeacherId?: string }) {
+export function CourseForm({ course, teachers, periods, fixedTeacherId, fixedPeriodId }: {
+  course?: CourseFormValues; teachers: Option[]; periods: Option[]; fixedTeacherId?: string;
+  /** Docente independiente con un solo período: no se le pregunta. */
+  fixedPeriodId?: string;
+}) {
   const router = useRouter();
   const [state, action, pending] = useActionState(course ? updateCourseAction : createCourseAction, empty);
   const created = !course && state.ok ? state.courseId : undefined;
@@ -47,13 +51,17 @@ export function CourseForm({ course, teachers, periods, fixedTeacherId }: { cour
           </select>
         </label>
       )}
-      <label className={label}>
-        Período
-        <select className={input} name="periodId" required defaultValue={course?.periodId ?? (periods.length === 1 ? periods[0].id : "")}>
-          <option value="" disabled>Elige un período</option>
-          {periods.map((period) => <option key={period.id} value={period.id}>{period.name}</option>)}
-        </select>
-      </label>
+      {fixedPeriodId ? (
+        <input type="hidden" name="periodId" value={fixedPeriodId} />
+      ) : (
+        <label className={label}>
+          Período
+          <select className={input} name="periodId" required defaultValue={course?.periodId ?? (periods.length === 1 ? periods[0].id : "")}>
+            <option value="" disabled>Elige un período</option>
+            {periods.map((period) => <option key={period.id} value={period.id}>{period.name}</option>)}
+          </select>
+        </label>
+      )}
       <details className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-2" open={Boolean(course?.code || course?.maxStudents)}>
         <summary className="min-h-11 cursor-pointer py-2.5 font-semibold text-slate-900">Opciones avanzadas</summary>
         <div className="mb-2 mt-2 grid gap-4 sm:grid-cols-2">

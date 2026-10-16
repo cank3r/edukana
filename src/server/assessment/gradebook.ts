@@ -327,8 +327,11 @@ const itemSchema = z.object({
 
 type ItemInput = { title: string; maxScore: number; categoryId: string };
 
-/** Crea una actividad calificable que no viene de una tarea ni de un examen. Nace oculta. */
-export async function createManualItem(actor: GradebookActor, input: ItemInput & { courseId: string }): Promise<GradebookResult> {
+/**
+ * Crea una actividad calificable que no viene de una tarea ni de un examen. Nace visible para
+ * los estudiantes (el docente espera que vean la nota que pone); `isPublished: false` la crea oculta.
+ */
+export async function createManualItem(actor: GradebookActor, input: ItemInput & { courseId: string; isPublished?: boolean }): Promise<GradebookResult> {
   const course = await manageableCourse(actor, input.courseId);
   if (!course) return fail(NO_ACCESS);
   const parsed = itemSchema.safeParse(input);
@@ -337,9 +340,9 @@ export async function createManualItem(actor: GradebookActor, input: ItemInput &
   const category = await db.gradeCategory.findFirst({ where: { id: parsed.data.categoryId, ...scope }, select: { id: true, gradingPeriodId: true } });
   if (!category) return fail("Elige una categoría de este curso.");
   await db.gradeItem.create({
-    data: { ...scope, gradingPeriodId: category.gradingPeriodId, categoryId: category.id, title: parsed.data.title, maxScore: parsed.data.maxScore },
+    data: { ...scope, gradingPeriodId: category.gradingPeriodId, categoryId: category.id, title: parsed.data.title, maxScore: parsed.data.maxScore, isPublished: input.isPublished ?? true },
   });
-  return done("Actividad agregada. Ya puedes poner sus notas.");
+  return done(input.isPublished === false ? "Actividad agregada, oculta para los estudiantes. Ya puedes poner sus notas." : "Actividad agregada. Ya puedes poner sus notas: los estudiantes las verán.");
 }
 
 /** Edita una actividad manual. Las de tareas y exámenes se cambian en su propia pantalla. */

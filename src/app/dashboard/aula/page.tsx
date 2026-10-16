@@ -125,10 +125,15 @@ export default async function AulaPage({ searchParams }: { searchParams: Promise
                   <p className="mt-1 text-sm text-slate-600">{course.teacher.name} · {course.period.name}</p>
                   {isStudent && (
                     <div className="mt-4">
-                      <div className="h-2 overflow-hidden rounded-full bg-slate-100" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} aria-label={`Avance en ${course.name}`}>
-                        <div className="h-full rounded-full bg-emerald-500" style={{ width: `${progress}%` }} />
-                      </div>
-                      <p className="mt-1 text-xs text-slate-600">{progress}% completado</p>
+                      {/* Un curso completado ya dice «Completado» arriba: no se muestra el avance de lecciones (puede no ser 100 % si lo marcó el docente). */}
+                      {own?.status !== "COMPLETED" && (
+                        <>
+                          <div className="h-2 overflow-hidden rounded-full bg-slate-100" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress} aria-label={`Avance en ${course.name}`}>
+                            <div className="h-full rounded-full bg-emerald-500" style={{ width: `${progress}%` }} />
+                          </div>
+                          <p className="mt-1 text-xs text-slate-600">{progress}% completado</p>
+                        </>
+                      )}
                       {own?.finalGrade != null && <p className="mt-2 text-sm text-slate-900">Nota final: <strong>{own.finalGrade}</strong></p>}
                     </div>
                   )}

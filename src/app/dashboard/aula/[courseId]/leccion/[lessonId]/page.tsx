@@ -2,8 +2,10 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { normalizeLessonVideo, type LessonVideo } from "@/lib/lesson-video";
 import { getLessonView, parseVideoLink, type LessonView } from "@/server/courses/lesson-progress";
 import { LessonActions } from "./LessonActions";
+import { AskCourse } from "@/components/ai/AskCourse";
 
 export const dynamic = "force-dynamic";
 
@@ -61,29 +63,46 @@ function Progress({ view }: { view: LessonView }) {
   );
 }
 
+/** Reproductor 16:9 del video de la lección. La dirección se vuelve a validar aquí antes de mostrarla. */
+function LessonPlayer({ video, title }: { video: LessonVideo; title: string }) {
+  if (video.kind === "file") {
+    return (
+      <video className="aspect-video w-full rounded-xl bg-black" controls preload="metadata" title={`Video: ${title}`}>
+        <source src={video.src} />
+        Tu navegador no puede mostrar este video.
+      </video>
+    );
+  }
+  return (
+    <iframe
+      src={video.src}
+      title={`Video: ${title} (${video.provider})`}
+      className="aspect-video w-full rounded-xl border-0 bg-black"
+      sandbox="allow-scripts allow-same-origin allow-presentation"
+      referrerPolicy="strict-origin-when-cross-origin"
+      allow="encrypted-media; picture-in-picture; fullscreen"
+      allowFullScreen
+      loading="lazy"
+    />
+  );
+}
+
 function LessonBody({ lesson }: { lesson: LessonView["lesson"] }) {
-  const video = lesson.type === "VIDEO" ? parseVideoLink(lesson.content) : null;
+  const player = normalizeLessonVideo(lesson.videoUrl);
+  // Formato anterior: una lección de video guardaba solo el enlace en el contenido.
+  const legacyVideo = !player && lesson.type === "VIDEO" ? parseVideoLink(lesson.content) : null;
+  const shown = player ?? (legacyVideo?.kind === "embed" ? normalizeLessonVideo(legacyVideo.src) : null);
+  const legacyLink = legacyVideo?.kind === "link" ? legacyVideo : null;
   const videoFiles = lesson.assets.filter((asset) => asset.kind === "VIDEO");
   const files = lesson.assets.filter((asset) => asset.kind !== "VIDEO");
-  const hasText = Boolean(lesson.content?.trim()) && !video;
-  const isEmpty = !video && !hasText && lesson.assets.length === 0;
+  const hasText = Boolean(lesson.content?.trim()) && !legacyVideo;
+  const isEmpty = !player && !legacyVideo && !hasText && lesson.assets.length === 0;
 
   return (
     <div className="mt-6 space-y-5">
-      {video?.kind === "embed" && (
-        <iframe
-          src={video.src}
-          title={`Video: ${lesson.title}`}
-          className="aspect-video w-full rounded-xl border-0 bg-black"
-          sandbox="allow-scripts allow-same-origin allow-presentation"
-          referrerPolicy="strict-origin-when-cross-origin"
-          allow="encrypted-media; picture-in-picture; fullscreen"
-          allowFullScreen
-          loading="lazy"
-        />
-      )}
-      {video?.kind === "link" && (
-        <a href={video.href} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 font-semibold text-slate-800">
+      {shown && <LessonPlayer video={shown} title={lesson.title} />}
+      {legacyLink && (
+        <a href={legacyLink.href} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 font-semibold text-slate-800">
           Abrir video
         </a>
       )}
@@ -134,6 +153,7 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
       {view.mode === "preview" && (
         <p role="note" className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm font-medium text-amber-900">
           Vista previa: así la ve el estudiante.{!lesson.isPublished && " Esta lección todavía no está publicada, así que los estudiantes aún no la ven."}
+          {" "}<Link href={`/dashboard/aula/${view.course.id}/generar-preguntas?leccion=${lesson.id}`} className="inline-flex min-h-11 items-center font-semibold underline">Generar preguntas con IA</Link>
         </p>
       )}
       {allDone && (
@@ -187,6 +207,7 @@ export default async function LessonPage({ params }: { params: Promise<{ courseI
               {view.nextLessonId && <Link href={`${base}/${view.nextLessonId}`} className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-300 bg-white px-4 py-2.5 font-semibold text-slate-800">Siguiente</Link>}
             </div>
           )}
+          {view.mode === "student" && <AskCourse actor={{ id: user.id, institutionId: user.institutionId, role: user.role }} courseId={view.course.id} lessonId={lesson.id} />}
         </article>
       </div>
     </div>

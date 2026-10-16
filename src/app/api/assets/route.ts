@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { getEffectiveCapabilities } from "@/lib/authorization";
-import { courseWhereForParticipation, courseWhereForScope, resolveCourseWriteScope } from "@/lib/course-scope";
+import { courseWhereForScope, resolveCourseWriteScope } from "@/lib/course-scope";
 import { db } from "@/lib/db";
 import { createPrivateAssetUpload } from "@/lib/storage";
 import { validateUpload } from "@/lib/lms";
@@ -31,27 +31,14 @@ export async function POST(request: Request) {
   const input = parsed.data;
   const validationError = validateUpload(input, input.kind);
   if (validationError) return Response.json({ error: validationError }, { status: 400 });
-  const isStudent = user.role === "STUDENT";
-  const courseAccessWhere = isStudent
-    ? courseWhereForParticipation(user.institutionId, user, capabilities)
-    : courseWhereForScope(user.institutionId, resolveCourseWriteScope(user, capabilities));
+  // Deliveries use the pending-file pipeline, which enforces deadlines, revisions and atomic attachment.
+  if (user.role === "STUDENT" || input.submissionId) {
+    return Response.json({ error: "Adjunta los archivos desde la entrega de la tarea." }, { status: 403 });
+  }
+  const courseAccessWhere = courseWhereForScope(user.institutionId, resolveCourseWriteScope(user, capabilities));
   if (!courseAccessWhere) return Response.json({ error: "Permisos insuficientes" }, { status: 403 });
-  if (isStudent && (!input.submissionId || input.kind !== "DOCUMENT")) return Response.json({ error: "Los estudiantes solo pueden adjuntar documentos a sus entregas." }, { status: 403 });
 
   let courseId = input.courseId ?? null;
-  if (input.submissionId) {
-    const submission = await db.submission.findFirst({
-      where: {
-        id: input.submissionId,
-        ...(isStudent ? { studentId: user.id } : {}),
-        assignment: { course: courseAccessWhere },
-      },
-      select: { assignmentId: true, assignment: { select: { courseId: true } } },
-    });
-    if (!submission) return Response.json({ error: "Entrega no disponible" }, { status: 403 });
-    if ((courseId && courseId !== submission.assignment.courseId) || (input.assignmentId && input.assignmentId !== submission.assignmentId)) return Response.json({ error: "Relaciones de archivo inconsistentes" }, { status: 400 });
-    courseId = submission.assignment.courseId;
-  } else if (isStudent) return Response.json({ error: "La entrega es obligatoria" }, { status: 403 });
 
   if (input.lessonId) {
     const lesson = await db.lesson.findFirst({ where: { id: input.lessonId, institutionId: user.institutionId, course: courseAccessWhere }, select: { courseId: true } });
@@ -76,7 +63,7 @@ export async function POST(request: Request) {
         courseId,
         lessonId: input.lessonId ?? null,
         assignmentId: input.assignmentId ?? null,
-        submissionId: input.submissionId ?? null,
+        submissionId: null,
         uploaderId: user.id,
         bucket: upload.bucket,
         objectPath: upload.objectPath,
@@ -84,7 +71,7 @@ export async function POST(request: Request) {
         mimeType: input.type,
         sizeBytes: input.size,
         kind: input.kind,
-        visibility: isStudent ? "PRIVATE" : "COURSE",
+        visibility: "COURSE",
       },
     });
     return Response.json({ assetId: asset.id, uploadUrl: upload.signedUrl, retrievalUrl: `/api/assets/${asset.id}` }, { status: 201 });

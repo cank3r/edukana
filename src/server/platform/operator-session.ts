@@ -1,4 +1,5 @@
 import "server-only";
+import { getRequestInstitution } from "./domains";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { isPlatformOperator } from "./institutions";
@@ -8,6 +9,7 @@ import { isPlatformOperator } from "./institutions";
  * El correo se lee de la base y no del token.
  */
 export async function getOperatorEmail(): Promise<string | null> {
+  if (await getRequestInstitution()) return null;
   const identityId = (await auth())?.user?.identityId;
   if (!identityId) return null;
   const email = (await db.identity.findUnique({ where: { id: identityId }, select: { email: true } }))?.email ?? null;

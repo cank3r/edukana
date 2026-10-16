@@ -22,6 +22,11 @@ model Institution {
   language           String              @default("es")
   brandColor         String?
   plan               Plan                @default(FREE)
+  platformSubscription InstitutionSubscription?
+  platformInvoices PlatformInvoice[]
+  status             InstitutionStatus @default(ACTIVE)
+  suspendedAt        DateTime?
+  suspendedReason    String?
   settings           Json                @default("{}")
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
@@ -69,6 +74,7 @@ model Institution {
   liveClasses             LiveClass[]
   payments                Payment[]
   notifications           Notification[]
+  notificationPreferences NotificationPreference[]
   courseOrders            CourseOrder[]
   coupons                 Coupon[]
   courseReviews           CourseReview[]
@@ -135,6 +141,7 @@ model User {
   createdLiveClasses      LiveClass[] @relation("LiveClassCreator")
   recordedPayments        Payment[] @relation("PaymentRecorder")
   notifications           Notification[]
+  notificationPreferences NotificationPreference[]
   courseOrders            CourseOrder[]
   courseReviews           CourseReview[]
 
@@ -313,6 +320,8 @@ model Lesson {
   title            String
   summary          String?
   content          String?          @db.Text
+  /// Video de la lección además del texto: dirección ya normalizada por `src/lib/lesson-video.ts`.
+  videoUrl         String?
   type             LessonType       @default(TEXT)
   order            Int              @default(0)
   estimatedMinutes Int              @default(10)
@@ -1300,6 +1309,22 @@ model Notification {
   @@map("notifications")
 }
 
+/// Qué notificaciones quiere recibir cada persona por correo. Sin fila, vale el valor por omisión del tipo.
+model NotificationPreference {
+  id            String      @id @default(cuid())
+  institutionId String
+  institution   Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind          String
+  email         Boolean
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([userId, kind])
+  @@index([institutionId])
+  @@map("notification_preferences")
+}
+
 model Coupon {
   id            String        @id @default(cuid())
   institutionId String
@@ -1357,4 +1382,99 @@ model CourseReview {
   @@unique([courseId, userId])
   @@index([institutionId, courseId])
   @@map("course_reviews")
+}
+
+// --- Backoffice F ---
+enum PlatformAnnouncementLevel {
+ INFO
+ WARNING
+}
+enum PlatformAnnouncementAudience {
+ ALL
+ ADMINS
+ INDEPENDENT
+}
+model PlatformAnnouncement {
+ id String @id @default(cuid())
+ title String
+ body String
+ level PlatformAnnouncementLevel @default(INFO)
+ audience PlatformAnnouncementAudience @default(ALL)
+ startsAt DateTime
+ endsAt DateTime?
+ createdBy String
+ createdAt DateTime @default(now())
+ @@index([startsAt, endsAt])
+ @@map("platform_announcements")
+}
+
+// --- Backoffice C ---
+// Institution relations: platformSubscription InstitutionSubscription? ; platformInvoices PlatformInvoice[]
+enum InstitutionSubscriptionStatus {
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  CANCELED
+}
+enum PlatformInvoiceStatus {
+  OPEN
+  PAID
+  VOID
+}
+model PlatformPlan {
+  code Plan @id
+  name String
+  priceCents Int
+  currency String @default("DOP")
+  maxStudents Int?
+  maxStorageMb Int?
+  aiRequestsPerMonth Int?
+  features Json @default("{}")
+  active Boolean @default(true)
+  subscriptions InstitutionSubscription[]
+  @@map("platform_plans")
+}
+model InstitutionSubscription {
+  id String @id @default(cuid())
+  institutionId String @unique
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  planCode Plan
+  plan PlatformPlan @relation(fields: [planCode], references: [code])
+  status InstitutionSubscriptionStatus @default(TRIAL)
+  currentPeriodStart DateTime
+  currentPeriodEnd DateTime
+  trialEndsAt DateTime?
+  priceCents Int
+  notes String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([status, currentPeriodEnd])
+  @@map("institution_subscriptions")
+}
+model PlatformInvoice {
+  id String @id @default(cuid())
+  institutionId String
+  institution Institution @relation(fields: [institutionId], references: [id], onDelete: Cascade)
+  periodStart DateTime
+  periodEnd DateTime
+  amountCents Int
+  currency String @default("DOP")
+  status PlatformInvoiceStatus @default(OPEN)
+  dueDate DateTime
+  paidAt DateTime?
+  paymentMethod String?
+  reference String?
+  recordedBy String
+  provider String?
+  providerRef String?
+  createdAt DateTime @default(now())
+  @@index([institutionId, status])
+  @@index([status, dueDate])
+  @@map("platform_invoices")
+}
+
+// --- Backoffice B ---
+enum InstitutionStatus {
+ ACTIVE
+ SUSPENDED
 }

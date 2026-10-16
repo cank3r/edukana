@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { getEffectiveCapabilities } from "@/lib/authorization";
 import { deleteBlockedReason, listPeriods, type PeriodStatus } from "@/server/academic/periods";
 import { DeletePeriodButton, MarkCurrentButton, PeriodForm } from "./PeriodTools";
+import { plural } from "@/lib/ux";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,6 @@ const STATUS: Record<PeriodStatus, { label: string; className: string; hint: str
 
 const dayFormat = new Intl.DateTimeFormat("es", { timeZone: "UTC", day: "numeric", month: "long", year: "numeric" });
 const formatDay = (key: string) => dayFormat.format(new Date(`${key}T00:00:00.000Z`));
-const plural = (count: number, one: string, many: string) => (count === 1 ? `1 ${one}` : `${count} ${many}`);
 
 export default async function PeriodsPage({ searchParams }: { searchParams: Promise<{ crear?: string }> }) {
   const user = (await auth())?.user;

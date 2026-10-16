@@ -1,5 +1,6 @@
 "use client";
 
+import { BrandingForm } from "@/components/platform/BrandingForm";
 import Link from "next/link";
 import { useActionState, useState } from "react";
 import { createInstitutionAction, type PlatformActionState } from "@/server/actions/platform";
@@ -18,24 +19,30 @@ export function NewInstitutionForm({ types }: { types: Option[] }) {
   const [slug, setSlug] = useState("");
   /** Mientras no se edite a mano, el identificador sigue al nombre. */
   const [slugEdited, setSlugEdited] = useState(false);
-  const [created, setCreated] = useState<{ name: string; slug: string; message: string } | null>(null);
+  const [created, setCreated] = useState<{ name: string; slug: string; message: string; institutionId: string } | null>(null);
   const [state, action, pending] = useActionState(async (previous: PlatformActionState, data: FormData) => {
     const result = await createInstitutionAction(previous, data);
-    if (result.ok) setCreated({ name: String(data.get("name") ?? ""), slug: String(data.get("slug") ?? ""), message: result.message });
+    if (result.ok && result.institutionId) setCreated({ institutionId: result.institutionId, name: String(data.get("name") ?? ""), slug: String(data.get("slug") ?? ""), message: result.message });
     return result;
   }, empty);
 
   if (created) {
     const loginLink = `${window.location.origin}/login?institucion=${created.slug}`;
     return (
-      <section role="status" className="space-y-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 sm:p-5">
+      <section className="space-y-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 sm:p-5">
         <h2 className="text-lg font-semibold text-emerald-900">{created.name} ya existe en Edukana</h2>
         <p className="text-sm text-emerald-900">{created.message}</p>
         <p className="text-sm text-emerald-900">
           Enlace de entrada con su nombre y colores, para compartir con la institución:
           <span className="mt-1 block break-all font-mono text-sm">{loginLink}</span>
         </p>
+        <div className="rounded-lg bg-white p-4">
+          <h2 className="mb-3 text-lg font-semibold text-slate-900">Marca</h2>
+          <p className="mb-3 text-sm text-slate-600">La primera invitación ya usa el nombre de la institución. Configura ahora el logo, el color y el dominio para los próximos correos.</p>
+          <BrandingForm institutionId={created.institutionId} values={{ name: created.name, logoUrl: null, brandColor: null, domain: null, hideEdukanaBrand: false }} />
+        </div>
         <div className="flex flex-wrap gap-3">
+          <Link href={`/operador/${created.institutionId}`} className={secondary}>Ver ficha de la institución</Link>
           <Link href="/operador" className={secondary}>Ver instituciones</Link>
           <button type="button" className={secondary} onClick={() => { setCreated(null); setName(""); setSlug(""); setSlugEdited(false); }}>Crear otra</button>
         </div>

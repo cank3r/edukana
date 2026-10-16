@@ -1,0 +1,5 @@
+Asunto: Se corrigió tu nota
+
+Consulta tu nota en la plataforma.
+
+Hecho con Edukana

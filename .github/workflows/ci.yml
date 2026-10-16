@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches-ignore: [qa-capturas]
+    branches-ignore: [qa-capturas, ci-registros]
 
 permissions:
   contents: write
@@ -22,10 +22,15 @@ env:
   EDUKANA_INTEGRATION_DB: "1"
   GH_TOKEN: ${{ github.token }}
 
+# Registros legibles: cada paso deja su salida completa en `registros/NN-paso.log`. Los pasos siguen aunque
+# uno falle (continue-on-error) para tener todas las salidas; cada job guarda logs y RESUMEN.md
+# en un artefacto por SHA/run/attempt con 14 días de retención. El último paso conserva el fallo.
+# No se publican, sobrescriben ni purgan ramas de registros o capturas.
+
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     services:
       postgres:
         image: postgres:16
@@ -37,28 +42,94 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }
-      - run: npm ci
+      - run: mkdir -p registros
+      - name: Instalar dependencias
+        id: install
+        continue-on-error: true
+        run: set -o pipefail; npm ci 2>&1 | tee registros/01-npm-ci.log
       - name: Validar y generar Prisma
-        run: npx prisma validate && npx prisma generate
+        id: prisma
+        continue-on-error: true
+        run: set -o pipefail; { npx prisma validate && npx prisma generate; } 2>&1 | tee registros/02-prisma.log
       - name: Migrar PostgreSQL desde cero
-        run: npx prisma migrate deploy 2>&1 | tee -a ci.log
+        id: migrate
+        continue-on-error: true
+        run: set -o pipefail; npx prisma migrate deploy 2>&1 | tee registros/03-migraciones.log
       - name: Migraciones coinciden con schema.prisma
-        run: npx prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --exit-code 2>&1 | tee ci.log
+        id: migrate_diff
+        continue-on-error: true
+        run: set -o pipefail; npx prisma migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --exit-code 2>&1 | tee registros/04-migraciones-diff.log
       - name: Pruebas unitarias
-        run: set -o pipefail; npm test 2>&1 | tee ci.log
-      - name: Pruebas de integración con dos instituciones
-        run: set -o pipefail; npm run test:integration 2>&1 | tee ci.log
-      - name: ESLint
-        run: set -o pipefail; npm run lint 2>&1 | tee ci.log
-      - name: TypeScript
-        run: set -o pipefail; npm run typecheck 2>&1 | tee ci.log
-      - name: Compilar producción
-        run: set -o pipefail; npm run build 2>&1 | tee ci.log
-      - name: Publicar el error como comentario del commit
-        if: failure()
+        id: unit
+        continue-on-error: true
         run: |
-          { echo "**CI validate falló** en \`${GITHUB_REF_NAME}\`. Últimas líneas:"; echo; echo '```'; grep -v '^\s*$' ci.log | grep -iv "^ok \|^# Subtest\|duration_ms\|^    ---\|^    \.\.\." | tail -n 120 | cut -c1-400; echo '```'; } > comment.md
+          set -o pipefail
+          { npm test && npm run test:backoffice && node --require ./tests/integration/stub-server-only.cjs --import tsx --test tests/exam-submit-enrollment.test.ts; } 2>&1 | tee registros/05-npm-test.log
+      - name: Pruebas de integración con dos instituciones
+        id: integration
+        continue-on-error: true
+        run: set -o pipefail; npm run test:integration 2>&1 | tee registros/06-test-integration.log
+      - name: ESLint
+        id: lint
+        continue-on-error: true
+        run: set -o pipefail; npm run lint 2>&1 | tee registros/07-lint.log
+      - name: TypeScript
+        id: typecheck
+        continue-on-error: true
+        run: set -o pipefail; npm run typecheck 2>&1 | tee registros/08-typecheck.log
+      - name: Compilar producción
+        id: build
+        continue-on-error: true
+        run: set -o pipefail; npm run build 2>&1 | tee registros/09-build.log
+      - name: Resumen
+        if: always()
+        run: |
+          fila() { printf '| %s | %s | `%s` |\n' "$1" "$2" "$3"; }
+          {
+            echo "## validate"
+            echo
+            echo "| Paso | Resultado | Registro |"
+            echo "|---|---|---|"
+            fila "Instalar dependencias" "${{ steps.install.outcome }}" 01-npm-ci.log
+            fila "Prisma validate/generate" "${{ steps.prisma.outcome }}" 02-prisma.log
+            fila "Migraciones" "${{ steps.migrate.outcome }}" 03-migraciones.log
+            fila "Migraciones = schema" "${{ steps.migrate_diff.outcome }}" 04-migraciones-diff.log
+            fila "npm test" "${{ steps.unit.outcome }}" 05-npm-test.log
+            fila "test:integration" "${{ steps.integration.outcome }}" 06-test-integration.log
+            fila "lint" "${{ steps.lint.outcome }}" 07-lint.log
+            fila "typecheck" "${{ steps.typecheck.outcome }}" 08-typecheck.log
+            fila "build" "${{ steps.build.outcome }}" 09-build.log
+            for log in registros/05-npm-test.log registros/06-test-integration.log; do
+              [ -f "$log" ] || continue
+              if grep -q '^✖ failing tests:' "$log"; then
+                echo; echo "### Pruebas que fallaron ($(basename "$log"))"; echo; echo '```'
+                sed -n '/^✖ failing tests:/,$p' "$log" | grep -E '^(test at |✖ )' | cut -c1-300
+                echo '```'
+              fi
+            done
+          } > registros/RESUMEN.md
+          cat registros/RESUMEN.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Guardar registros y resumen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: registros-${{ github.sha }}-validate-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            registros/*.log
+            registros/*.md
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Publicar el error como comentario del commit
+        if: always() && contains(join(steps.*.outcome, ','), 'failure')
+        run: |
+          primero=$(grep '| failure |' registros/RESUMEN.md | head -n 1 | grep -o '[0-9][0-9]-[a-z-]*\.log' || true)
+          { echo "**CI validate falló** en \`${GITHUB_REF_NAME}\`. Registros completos y resumen en los artefactos de esta ejecución: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}."; echo; sed -n '/^| Paso/,$p' registros/RESUMEN.md; echo; echo "Últimas líneas de \`${primero}\`:"; echo; echo '```'; grep -v '^\s*$' "registros/${primero}" | tail -n 80 | cut -c1-400; echo '```'; } > comment.md
           gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/comments" -F body=@comment.md --jq .html_url
+      - name: Resultado
+        if: always()
+        run: |
+          if grep -q '| failure |' registros/RESUMEN.md; then grep '| failure |' registros/RESUMEN.md; exit 1; fi
+          echo "Todo en verde"
 
   browser-smoke:
     runs-on: ubuntu-latest
@@ -67,6 +138,8 @@ jobs:
       LOCAL_STORAGE_ROOT: /tmp/edukana-smoke-storage
       LOCAL_STORAGE_SECRET: ci-local-storage-secret-at-least-32-characters
       SMOKE_BASE_URL: http://127.0.0.1:3000
+      INDEPENDENT_SIGNUP_ENABLED: "true"
+      PLATFORM_OPERATOR_EMAILS: "direccion@colegio-nuevo.test"
     services:
       postgres:
         image: postgres:16
@@ -78,39 +151,100 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }
-      - run: npm ci
-      - run: npx playwright install --with-deps chromium
-      - run: npx prisma generate && npx prisma migrate deploy
-      - name: Sembrar el Instituto Demo
-        run: npm run test:smoke:seed
-      - name: Compilar producción
-        run: npm run build
-      - name: Arrancar la aplicación
+      - run: mkdir -p registros smoke-artifacts "$LOCAL_STORAGE_ROOT"
+      - name: Preparar (dependencias, Chromium, Prisma y migraciones)
+        id: setup
         run: |
-          mkdir -p smoke-artifacts "$LOCAL_STORAGE_ROOT"
+          set -o pipefail
+          { npm ci && npx playwright install --with-deps chromium && npx prisma generate && npx prisma migrate deploy; } 2>&1 | tee registros/01-preparar.log
+      - name: Sembrar el Instituto Demo
+        id: seed
+        run: set -o pipefail; npm run test:smoke:seed 2>&1 | tee registros/02-siembra.log
+      # Galería de la demo en uso (tests/e2e/smoke/demo-galeria.smoke.ts): «Instituto Técnico Demo» con
+      # una contraseña aleatoria de esta ejecución, que no se imprime (add-mask) y solo vive en esta base efímera.
+      - name: Cargar «Instituto Técnico Demo» para la galería
+        id: demo
+        # Si falla, el recorrido igual corre; la galería lo detecta (falta demo.json) y hace fallar el job.
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          DEMO_PASSWORD="$(openssl rand -hex 12)"
+          echo "::add-mask::$DEMO_PASSWORD"
+          echo "DEMO_PASSWORD=$DEMO_PASSWORD" >> "$GITHUB_ENV"
+          export DEMO_PASSWORD
+          node --require ./tests/integration/stub-server-only.cjs --import tsx tests/e2e/smoke/demo-load.ts 2>&1 | tee registros/02b-demo.log
+      - name: Compilar producción
+        id: build
+        run: set -o pipefail; npm run build 2>&1 | tee registros/03-build.log
+      - name: Arrancar la aplicación
+        id: start
+        run: |
           nohup npm run start -- -H 127.0.0.1 -p 3000 > smoke-artifacts/server.log 2>&1 &
           for i in $(seq 1 60); do curl -fsS -o /dev/null http://127.0.0.1:3000/login && exit 0; sleep 2; done
           tail -n 50 smoke-artifacts/server.log; exit 1
       - name: Recorrido en navegador
         id: tour
         run: set -o pipefail; npm run test:smoke 2>&1 | tee smoke.log
-      - name: Publicar capturas e informe en la rama qa-capturas
+      - name: Resumen
+        if: always()
+        run: |
+          cp smoke.log registros/05-recorrido.log 2>/dev/null || true
+          cp smoke-artifacts/server.log registros/04-servidor.log 2>/dev/null || true
+          cp smoke-artifacts/smoke-report.md registros/06-informe-recorrido.md 2>/dev/null || true
+          fila() { printf '| %s | %s | `%s` |\n' "$1" "$2" "$3"; }
+          {
+            echo "## browser-smoke"
+            echo
+            echo "| Paso | Resultado | Registro |"
+            echo "|---|---|---|"
+            fila "Preparar" "${{ steps.setup.outcome }}" 01-preparar.log
+            fila "Sembrar" "${{ steps.seed.outcome }}" 02-siembra.log
+            fila "Cargar la demo" "${{ steps.demo.outcome }}" 02b-demo.log
+            fila "build" "${{ steps.build.outcome }}" 03-build.log
+            fila "Arrancar la aplicación" "${{ steps.start.outcome }}" 04-servidor.log
+            fila "Recorrido" "${{ steps.tour.outcome }}" 05-recorrido.log
+            if [ -f smoke.log ] && grep -q '^FALLA ' smoke.log; then
+              echo; echo "### Pantallas con defectos"; echo; echo '```'
+              grep '^FALLA ' smoke.log | sed 's/\x1b\[[0-9;]*m//g' | cut -c1-300
+              echo '```'
+            fi
+            echo; echo "Capturas y registros en los artefactos de esta ejecución: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}."
+          } > registros/RESUMEN.md
+          cat registros/RESUMEN.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Guardar registros y resumen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: registros-${{ github.sha }}-browser-smoke-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            registros/*.log
+            registros/*.md
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Preparar capturas e informe como artefacto
+        id: capture_files
         if: always()
         run: |
           set -e
+          bundle="$(mktemp -d "$RUNNER_TEMP/edukana-capturas.XXXXXX")"
+          echo "path=$bundle" >> "$GITHUB_OUTPUT"
           [ -d smoke-artifacts ] || exit 0
-          rm -rf /tmp/pub && mkdir -p /tmp/pub
-          cp -r smoke-artifacts/screenshots /tmp/pub/ 2>/dev/null || true
-          cp -r smoke-artifacts/texts /tmp/pub/ 2>/dev/null || true
-          cp smoke-artifacts/smoke-report.md /tmp/pub/ 2>/dev/null || true
-          tail -n 200 smoke-artifacts/server.log > /tmp/pub/server-tail.log 2>/dev/null || true
-          tail -n 150 smoke.log > /tmp/pub/recorrido-tail.log 2>/dev/null || true
-          printf '# Capturas del recorrido\n\nRama: `%s`\nCommit: `%s`\nResultado: %s\n' "$GITHUB_REF_NAME" "$GITHUB_SHA" "${{ steps.tour.outcome }}" > /tmp/pub/README.md
-          cd /tmp/pub && git init -q -b qa-capturas && git add -A
-          git -c user.name="edukana-ci" -c user.email="ci@users.noreply.github.com" commit -q -m "capturas de ${GITHUB_REF_NAME} @ ${GITHUB_SHA::7}"
-          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" qa-capturas
+          cp -r smoke-artifacts/screenshots "$bundle/" 2>/dev/null || true
+          cp -r smoke-artifacts/texts "$bundle/" 2>/dev/null || true
+          cp smoke-artifacts/smoke-report.md "$bundle/" 2>/dev/null || true
+          tail -n 200 smoke-artifacts/server.log > "$bundle/server-tail.log" 2>/dev/null || true
+          tail -n 150 smoke.log > "$bundle/recorrido-tail.log" 2>/dev/null || true
+          printf '# Capturas del recorrido\n\nRama: `%s`\nCommit: `%s`\nResultado: %s\n' "$GITHUB_REF_NAME" "$GITHUB_SHA" "${{ steps.tour.outcome }}" > "$bundle/README.md"
+      - name: Guardar capturas e informe
+        if: always() && steps.capture_files.outputs.path != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: capturas-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ steps.capture_files.outputs.path }}/
+          if-no-files-found: warn
+          retention-days: 14
       - name: Publicar el resultado como comentario del commit
         if: always()
         run: |
-          { echo "**Recorrido en navegador: ${{ steps.tour.outcome }}** en \`${GITHUB_REF_NAME}\`. Capturas en la rama \`qa-capturas\`."; echo; echo '```'; tail -n 60 smoke.log 2>/dev/null | cut -c1-300; echo '```'; } > comment.md
+          { echo "**Recorrido en navegador: ${{ steps.tour.outcome }}** en \`${GITHUB_REF_NAME}\`. Capturas, registros y resúmenes en los artefactos de esta ejecución: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}."; echo; echo '```'; tail -n 60 smoke.log 2>/dev/null | cut -c1-300; echo '```'; } > comment.md
           gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/comments" -F body=@comment.md --jq .html_url

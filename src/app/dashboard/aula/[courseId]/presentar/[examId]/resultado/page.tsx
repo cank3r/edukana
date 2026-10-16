@@ -66,7 +66,7 @@ export default async function ExamResultPage({
         )}
         {result.pendingReview && (
           <p className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
-            Tu docente todavía debe revisar tus respuestas escritas. Tu nota final puede subir cuando termine.
+            Tu docente revisará tus respuestas escritas. No necesitas hacer nada más: tu nota final puede subir cuando termine.
           </p>
         )}
         {result.expiredWithoutAnswers && (
@@ -75,8 +75,18 @@ export default async function ExamResultPage({
           </p>
         )}
         <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-          {result.canRetry && <Link className={primaryLink} href={examHref}>Intentar de nuevo</Link>}
-          <Link className={secondaryLink} href={courseHref}>Volver al curso</Link>
+          {/* Con respuestas por revisar, lo esperado es volver al curso; reintentar queda como opción secundaria. */}
+          {result.pendingReview ? (
+            <>
+              <Link className={primaryLink} href={courseHref}>Volver al curso</Link>
+              {result.canRetry && <Link className={secondaryLink} href={examHref}>Intentar de nuevo</Link>}
+            </>
+          ) : (
+            <>
+              {result.canRetry && <Link className={primaryLink} href={examHref}>Intentar de nuevo</Link>}
+              <Link className={secondaryLink} href={courseHref}>Volver al curso</Link>
+            </>
+          )}
         </div>
         {result.canRetry && (
           <p className="mt-2 text-sm text-slate-600">{result.attemptsLeft === 1 ? "Te queda 1 intento." : `Te quedan ${result.attemptsLeft} intentos.`}</p>

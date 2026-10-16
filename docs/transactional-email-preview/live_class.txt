@@ -1,0 +1,8 @@
+Asunto: Tu próxima clase en vivo
+
+Tu próxima clase en vivo
+La clase comienza el lunes a las 18:00.
+https://campus.example.test/dashboard
+https://campus.example.test/dashboard/notificaciones/preferencias
+
+Hecho con Edukana

@@ -34,7 +34,7 @@ export default defineConfig({
     video: "off",
   },
   projects: [
-    { name: "movil", use: { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 } },
+    { name: "movil", use: { viewport: { width: 360, height: 844 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 } },
     { name: "escritorio", use: { viewport: { width: 1280, height: 800 } } },
   ],
 });

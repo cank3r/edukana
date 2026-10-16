@@ -213,9 +213,10 @@ export async function getCourseReport(
     JOIN users u ON u.id = c."teacherId"
     LEFT JOIN (
       SELECT "courseId",
-        COUNT(*) FILTER (WHERE status = 'ACTIVE') AS enrolled,
+        -- Quien ya completó el curso sigue contando como inscrito (y en el avance).
+        COUNT(*) FILTER (WHERE status IN ('ACTIVE', 'COMPLETED')) AS enrolled,
         COUNT(*) FILTER (WHERE status = 'DROPPED') AS withdrawn,
-        AVG("progressPercent") FILTER (WHERE status = 'ACTIVE') AS progress
+        AVG("progressPercent") FILTER (WHERE status IN ('ACTIVE', 'COMPLETED')) AS progress
       FROM enrollments WHERE "courseId" IN (SELECT id FROM scoped) GROUP BY "courseId"
     ) e ON e."courseId" = c.id
     LEFT JOIN (

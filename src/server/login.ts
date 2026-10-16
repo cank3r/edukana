@@ -32,7 +32,8 @@ export type CredentialRejectionReason =
   | "account_suspended"
   | "missing_password"
   | "password_mismatch"
-  | "no_active_institution";
+  | "no_active_institution"
+  | "institution_suspended";
 
 /**
  * Deja en el log por qué se rechazó un inicio de sesión, sin datos de la persona.
@@ -52,15 +53,28 @@ export function rejectCredentials(reason: CredentialRejectionReason, context: { 
  * por bloqueo de intentos, cuenta inexistente o suspendida, contraseña incorrecta o falta de
  * instituciones activas. Con varias instituciones entra a la indicada o, si no se indica, a la más antigua.
  */
-export async function authenticateCredentials(input: {
+type LoginInput = {
   email: string;
   password: string;
   ip: string;
   institutionSlug?: string | null;
-}): Promise<LoginResult | null> {
+};
+export type CredentialOutcome = { user: LoginResult | null; suspendedInstitutionName?: string };
+
+export async function authenticateCredentials(input: LoginInput): Promise<LoginResult | null> {
+  return (await authenticateCredentialsWithStatus(input)).user;
+}
+
+/** Suspension is disclosed only after a valid password, active identity and own membership. */
+export async function authenticateCredentialsWithStatus(input: {
+  email: string;
+  password: string;
+  ip: string;
+  institutionSlug?: string | null;
+}): Promise<CredentialOutcome> {
   const email = normalizeEmail(input.email);
   const attempt = { email, ip: input.ip };
-  if (!(await isAttemptAllowed(attempt))) return rejectCredentials("too_many_attempts");
+  if (!(await isAttemptAllowed(attempt))) return { user: rejectCredentials("too_many_attempts") };
 
   const identity = await db.identity.findUnique({
     where: { email },
@@ -68,21 +82,36 @@ export async function authenticateCredentials(input: {
   });
   const passwordMatches = await bcrypt.compare(input.password, identity?.passwordHash ?? fallbackHash());
   const memberships = identity && identity.status === "ACTIVE" && identity.passwordHash && passwordMatches
-    ? await listActiveMemberships(identity.id)
+    ? await listActiveMemberships(identity.id, true)
     : [];
   const wanted = input.institutionSlug?.trim().toLowerCase();
-  const membership = wanted ? memberships.find((item) => item.institution.slug === wanted) : memberships[0];
+  const activeMemberships = memberships.filter((item) => item.institution.status === "ACTIVE");
+  const membership = wanted ? activeMemberships.find((item) => item.institution.slug === wanted) : activeMemberships[0];
 
   if (!identity || !membership) {
-    await recordAttempt(attempt, false);
-    if (!identity) return rejectCredentials("unknown_account");
-    if (identity.status !== "ACTIVE") return rejectCredentials("account_suspended");
-    if (!identity.passwordHash) return rejectCredentials("missing_password");
-    if (!passwordMatches) return rejectCredentials("password_mismatch");
-    return rejectCredentials("no_active_institution", { institutionCount: memberships.length });
+    const suspended = wanted ? memberships.find((item) => item.institution.slug === wanted) : memberships[0];
+    // A correct password for a paused institution must not lock access to another membership.
+    await recordAttempt(attempt, suspended?.institution.status === "SUSPENDED");
+    if (!identity) return { user: rejectCredentials("unknown_account") };
+    if (identity.status !== "ACTIVE") return { user: rejectCredentials("account_suspended") };
+    if (!identity.passwordHash) return { user: rejectCredentials("missing_password") };
+    if (!passwordMatches) return { user: rejectCredentials("password_mismatch") };
+    if (suspended?.institution.status === "SUSPENDED") {
+      return {
+        user: rejectCredentials("institution_suspended", { institutionCount: activeMemberships.length }),
+        suspendedInstitutionName: suspended.institution.name,
+      };
+    }
+    return { user: rejectCredentials("no_active_institution", { institutionCount: activeMemberships.length }) };
   }
   await recordAttempt(attempt, true);
-  return {
+  await db.auditLog.create({
+    data: {
+      institutionId: membership.institutionId, userId: membership.id,
+      action: "LOGIN_SUCCEEDED", entity: "User", entityId: membership.id, changes: {},
+    },
+  });
+  return { user: {
     id: membership.id,
     identityId: identity.id,
     email,
@@ -91,6 +120,6 @@ export async function authenticateCredentials(input: {
     institutionId: membership.institutionId,
     institutionSlug: membership.institution.slug,
     sessionVersion: identity.sessionVersion,
-    institutionCount: memberships.length,
-  };
+    institutionCount: activeMemberships.length,
+  } };
 }
