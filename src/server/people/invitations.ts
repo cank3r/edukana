@@ -2,7 +2,8 @@ import { db } from "@/lib/db";
 import { getEmailProvider } from "@/server/integrations/email";
 import { hashToken, issuePasswordToken } from "@/server/password-reset";
 
-import { brandedEmail, emailBrandSelect } from "@/server/platform/branded-email";
+import { invitationEmail } from "@/server/email/access";
+import { emailBrandSelect } from "@/server/platform/branded-email";
 import { institutionBaseUrl } from "@/server/platform/domain-policy";
 
 export const INVITATION_DAYS = 7;
@@ -59,7 +60,10 @@ export async function sendInvitations(actor: Actor, userIds: string[], now = new
           `Si vence, entra a ${base}/recuperar y pide uno nuevo con este mismo correo.`,
         );
       }
-      await getEmailProvider().send(brandedEmail(user.institution, { to: user.email, subject: `Tu acceso a ${user.institution.name}`, text: lines.join("\n") }));
+      await getEmailProvider().send(invitationEmail(user.institution, { to: user.email, subject: `Tu acceso a ${user.institution.name}`, text: lines.join("\n") }, {
+        name: user.name, href: user.identity.passwordHash ? `${base}/login` : `${base}/restablecer/${token}`,
+        days: INVITATION_DAYS, existing: Boolean(user.identity.passwordHash),
+      }));
       result.sent += 1;
       invited.push(user.id);
     } catch (error) {

@@ -1,0 +1,8 @@
+Asunto: Ya está disponible el examen
+
+Ya está disponible el examen
+Revisa las instrucciones y el horario en la plataforma.
+https://campus.example.test/dashboard
+https://campus.example.test/dashboard/notificaciones/preferencias
+
+Hecho con Edukana

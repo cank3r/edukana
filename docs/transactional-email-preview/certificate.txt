@@ -1,0 +1,8 @@
+Asunto: Tu certificado está listo
+
+Tu certificado está listo
+Puedes consultarlo en la plataforma.
+https://campus.example.test/dashboard
+https://campus.example.test/dashboard/notificaciones/preferencias
+
+Hecho con Edukana
