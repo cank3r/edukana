@@ -3,6 +3,8 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { formatMoney } from "@/server/finance/money";
 import { normalizeEmail } from "@/server/identity";
+import { catalogEmail, type CatalogEmailInput } from "@/server/email/catalog";
+import { loadEmailBrand } from "@/server/platform/branded-email";
 import { getEmailProvider } from "@/server/integrations/email";
 import { sendInvitations } from "@/server/people/invitations";
 import { appUrl } from "@/server/password-reset";
@@ -28,9 +30,18 @@ const schema = z.object({
   coupon: z.string().max(40, "Ese cupón no existe o ya no está activo."),
 });
 
-async function send(to: string, subject: string, lines: string[]) {
+async function send(to: string, subject: string, lines: string[], institutionId: string, presentation: CatalogEmailInput) {
+  const original = { to, subject, text: lines.join("\n") };
+  let message = original;
+  // A presentation lookup must not prevent the existing transactional delivery.
   try {
-    await getEmailProvider().send({ to, subject, text: lines.join("\n") });
+    const brand = await loadEmailBrand(institutionId);
+    if (brand) message = catalogEmail(brand, original, presentation);
+  } catch {
+    // Keep the original plain text when branding is temporarily unavailable.
+  }
+  try {
+    await getEmailProvider().send(message);
   } catch (error) {
     console.error("catalog: no se pudo enviar el correo", { correlationId: crypto.randomUUID(), error });
   }
@@ -67,7 +78,7 @@ async function enrollFree(brand: PublicBrand, course: { id: string; name: string
       "",
       `Pediste entrar al curso «${course.name}», pero tu cuenta en ${brand.name} no es de estudiante.`,
       "Pide a la institución que te inscriba directamente.",
-    ]);
+    ], brand.id, { kind: "role-mismatch", name: buyer.name, course: course.name });
     return { ok: true, kind: "enrolled", message: ENROLLED_MESSAGE };
   }
 
@@ -121,7 +132,9 @@ async function createOrder(brand: PublicBrand, course: PaidCourse, data: { name:
       ...(enrolled
         ? [`Ya tienes acceso al curso «${course.name}» en ${brand.name}: no necesitas pagar este pedido. Entra en ${appUrl()}/login`]
         : [`Recibimos tu pedido del curso «${course.name}» en ${brand.name}.`, `Número de pedido: ${number}`, `Total a pagar: ${total}`, "", "Cómo pagar:", instructions]),
-    ]);
+    ], brand.id, enrolled
+      ? { kind: "already-enrolled", name: buyer.name, course: course.name, loginHref: `${appUrl()}/login` }
+      : { kind: "pending-order", name: buyer.name, course: course.name, number, total, instructions });
   }
   return {
     ok: true,

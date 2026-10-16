@@ -1,0 +1,12 @@
+Asunto: Tu acceso a Instituto Demo Edukana
+
+Hola, Andrea:
+
+Instituto de Formación te dio acceso a Edukana.
+Abre este enlace para crear tu contraseña. Vence en 7 días y solo funciona una vez:
+
+https://campus.example.test/restablecer/FICTICIO-SIN-VALIDEZ
+
+Si vence, pide un enlace nuevo desde Recuperar contraseña con este mismo correo.
+
+Hecho con Edukana

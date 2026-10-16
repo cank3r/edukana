@@ -1,0 +1,8 @@
+Asunto: Restablece tu contraseña
+
+Recibimos tu solicitud.
+https://campus.example.test/restablecer/FICTICIO-SIN-VALIDEZ
+Vence en 60 minutos.
+Si no lo pediste, ignora este mensaje.
+
+Hecho con Edukana

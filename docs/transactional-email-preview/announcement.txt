@@ -1,0 +1,8 @@
+Asunto: El curso comienza el lunes
+
+El curso comienza el lunes
+El material de bienvenida ya está disponible.
+https://campus.example.test/dashboard
+https://campus.example.test/dashboard/notificaciones/preferencias
+
+Hecho con Edukana

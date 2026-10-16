@@ -7,7 +7,8 @@ import { getEmailProvider } from "@/server/integrations/email";
 import { isAttemptAllowed, recordAttempt } from "@/server/security/login-throttle";
 import { reportPasswordResetFailure, type PasswordResetStage } from "@/server/security/password-reset-observability";
 
-import { brandedEmail, loadEmailBrand } from "@/server/platform/branded-email";
+import { resetEmail } from "@/server/email/access";
+import { loadEmailBrand } from "@/server/platform/branded-email";
 import { institutionBaseUrl } from "@/server/platform/domain-policy";
 
 export const RESET_TOKEN_MINUTES = 60;
@@ -72,7 +73,7 @@ export async function requestPasswordReset(
     stage = "provider_setup";
     const provider = getEmailProvider();
     stage = "message_build";
-    const message = brandedEmail(brand, {
+    const message = resetEmail(brand, {
       to: email,
       subject: `Restablece tu contraseña de ${brand?.name ?? "Edukana"}`,
       text: [
@@ -82,6 +83,9 @@ export async function requestPasswordReset(
         `${institutionBaseUrl(brand ?? {})}/restablecer/${token}`, "",
         "Si no lo pediste, ignora este mensaje: tu contraseña no cambia.",
       ].join("\n"),
+    }, {
+      name: (member ?? memberships[0]).name,
+      href: `${institutionBaseUrl(brand ?? {})}/restablecer/${token}`, minutes: RESET_TOKEN_MINUTES,
     });
     stage = "provider_send";
     await provider.send(message);

@@ -1,0 +1,10 @@
+Asunto: Tu acceso a Instituto de Formación
+
+Hola, Andrea:
+
+Instituto de Formación te dio acceso a su plataforma.
+Abre este enlace para crear tu contraseña. Vence en 7 días y solo funciona una vez:
+
+https://campus.example.test/restablecer/FICTICIO-SIN-VALIDEZ
+
+Si vence, entra a https://campus.example.test/recuperar y pide uno nuevo con este mismo correo.

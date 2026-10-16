@@ -1,0 +1,8 @@
+Asunto: Nueva tarea: actividad de práctica
+
+Nueva tarea: actividad de práctica
+Entrega tu actividad antes del viernes a las 17:00.
+https://campus.example.test/dashboard
+https://campus.example.test/dashboard/notificaciones/preferencias
+
+Hecho con Edukana
