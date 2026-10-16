@@ -1,7 +1,7 @@
 [
   {
     "engine": "chromium",
-    "version": "156.0.8078.4",
+    "version": "155.0.8059.12",
     "fixture": "grade",
     "viewport": 320,
     "width": 320,
@@ -16,7 +16,7 @@
   },
   {
     "engine": "chromium",
-    "version": "156.0.8078.4",
+    "version": "155.0.8059.12",
     "fixture": "corrected",
     "viewport": 320,
     "width": 320,
@@ -31,7 +31,7 @@
   },
   {
     "engine": "chromium",
-    "version": "156.0.8078.4",
+    "version": "155.0.8059.12",
     "fixture": "white-label",
     "viewport": 320,
     "width": 320,
@@ -46,7 +46,7 @@
   },
   {
     "engine": "chromium",
-    "version": "156.0.8078.4",
+    "version": "155.0.8059.12",
     "fixture": "announcement",
     "viewport": 320,
     "width": 320,
@@ -61,7 +61,7 @@
   },
   {
     "engine": "chromium",
-    "version": "156.0.8078.4",
+    "version": "155.0.8059.12",
     "fixture": "long",
     "viewport": 320,
     "width": 320,
@@ -76,7 +76,7 @@
   },
   {
     "engine": "chromium",
-    "version": "156.0.8078.4",
+    "version": "155.0.8059.12",
     "width": 320,
     "imagesBlocked": true,
     "naturalWidth": 0,
@@ -84,7 +84,7 @@
   },
   {
     "engine": "chromium",
-    "version": "156.0.8078.4",
+    "version": "155.0.8059.12",
     "fixture": "grade",
     "viewport": 360,
     "width": 360,
@@ -99,7 +99,7 @@
   },
   {
     "engine": "chromium",
-    "version": "156.0.8078.4",
+    "version": "155.0.8059.12",
     "fixture": "corrected",
     "viewport": 360,
     "width": 360,
@@ -114,7 +114,7 @@
   },
   {
     "engine": "chromium",
-    "version": "156.0.8078.4",
+    "version": "155.0.8059.12",
     "fixture": "white-label",
     "viewport": 360,
     "width": 360,
@@ -129,7 +129,7 @@
   },
   {
     "engine": "chromium",
-    "version": "156.0.8078.4",
+    "version": "155.0.8059.12",
     "fixture": "announcement",
     "viewport": 360,
     "width": 360,
@@ -144,7 +144,7 @@
   },
   {
     "engine": "chromium",
-    "version": "156.0.8078.4",
+    "version": "155.0.8059.12",
     "fixture": "long",
     "viewport": 360,
     "width": 360,
@@ -159,7 +159,7 @@
   },
   {
     "engine": "chromium",
-    "version": "156.0.8078.4",
+    "version": "155.0.8059.12",
     "width": 360,
     "imagesBlocked": true,
     "naturalWidth": 0,
@@ -167,7 +167,7 @@
   },
   {
     "engine": "chromium",
-    "version": "156.0.8078.4",
+    "version": "155.0.8059.12",
     "fixture": "grade",
     "viewport": 600,
     "width": 600,
@@ -182,7 +182,7 @@
   },
   {
     "engine": "chromium",
-    "version": "156.0.8078.4",
+    "version": "155.0.8059.12",
     "fixture": "corrected",
     "viewport": 600,
     "width": 600,
@@ -197,7 +197,7 @@
   },
   {
     "engine": "chromium",
-    "version": "156.0.8078.4",
+    "version": "155.0.8059.12",
     "fixture": "white-label",
     "viewport": 600,
     "width": 600,
@@ -212,7 +212,7 @@
   },
   {
     "engine": "chromium",
-    "version": "156.0.8078.4",
+    "version": "155.0.8059.12",
     "fixture": "announcement",
     "viewport": 600,
     "width": 600,
@@ -227,7 +227,7 @@
   },
   {
     "engine": "chromium",
-    "version": "156.0.8078.4",
+    "version": "155.0.8059.12",
     "fixture": "long",
     "viewport": 600,
     "width": 600,
@@ -242,7 +242,7 @@
   },
   {
     "engine": "chromium",
-    "version": "156.0.8078.4",
+    "version": "155.0.8059.12",
     "width": 600,
     "imagesBlocked": true,
     "naturalWidth": 0,
@@ -250,7 +250,7 @@
   },
   {
     "engine": "chromium",
-    "version": "156.0.8078.4",
+    "version": "155.0.8059.12",
     "fixture": "grade",
     "viewport": 1280,
     "width": 1280,
@@ -265,7 +265,7 @@
   },
   {
     "engine": "chromium",
-    "version": "156.0.8078.4",
+    "version": "155.0.8059.12",
     "fixture": "corrected",
     "viewport": 1280,
     "width": 1280,
@@ -280,7 +280,7 @@
   },
   {
     "engine": "chromium",
-    "version": "156.0.8078.4",
+    "version": "155.0.8059.12",
     "fixture": "white-label",
     "viewport": 1280,
     "width": 1280,
@@ -295,7 +295,7 @@
   },
   {
     "engine": "chromium",
-    "version": "156.0.8078.4",
+    "version": "155.0.8059.12",
     "fixture": "announcement",
     "viewport": 1280,
     "width": 1280,
@@ -310,7 +310,7 @@
   },
   {
     "engine": "chromium",
-    "version": "156.0.8078.4",
+    "version": "155.0.8059.12",
     "fixture": "long",
     "viewport": 1280,
     "width": 1280,
@@ -325,7 +325,7 @@
   },
   {
     "engine": "chromium",
-    "version": "156.0.8078.4",
+    "version": "155.0.8059.12",
     "width": 1280,
     "imagesBlocked": true,
     "naturalWidth": 0,
@@ -333,7 +333,7 @@
   },
   {
     "engine": "firefox",
-    "version": "157.0",
+    "version": "156.0",
     "fixture": "grade",
     "viewport": 320,
     "width": 320,
@@ -348,7 +348,7 @@
   },
   {
     "engine": "firefox",
-    "version": "157.0",
+    "version": "156.0",
     "fixture": "corrected",
     "viewport": 320,
     "width": 320,
@@ -363,7 +363,7 @@
   },
   {
     "engine": "firefox",
-    "version": "157.0",
+    "version": "156.0",
     "fixture": "white-label",
     "viewport": 320,
     "width": 320,
@@ -378,7 +378,7 @@
   },
   {
     "engine": "firefox",
-    "version": "157.0",
+    "version": "156.0",
     "fixture": "announcement",
     "viewport": 320,
     "width": 320,
@@ -393,7 +393,7 @@
   },
   {
     "engine": "firefox",
-    "version": "157.0",
+    "version": "156.0",
     "fixture": "long",
     "viewport": 320,
     "width": 320,
@@ -408,7 +408,7 @@
   },
   {
     "engine": "firefox",
-    "version": "157.0",
+    "version": "156.0",
     "width": 320,
     "imagesBlocked": true,
     "naturalWidth": 0,
@@ -416,7 +416,7 @@
   },
   {
     "engine": "firefox",
-    "version": "157.0",
+    "version": "156.0",
     "fixture": "grade",
     "viewport": 360,
     "width": 360,
@@ -431,7 +431,7 @@
   },
   {
     "engine": "firefox",
-    "version": "157.0",
+    "version": "156.0",
     "fixture": "corrected",
     "viewport": 360,
     "width": 360,
@@ -446,7 +446,7 @@
   },
   {
     "engine": "firefox",
-    "version": "157.0",
+    "version": "156.0",
     "fixture": "white-label",
     "viewport": 360,
     "width": 360,
@@ -461,7 +461,7 @@
   },
   {
     "engine": "firefox",
-    "version": "157.0",
+    "version": "156.0",
     "fixture": "announcement",
     "viewport": 360,
     "width": 360,
@@ -476,7 +476,7 @@
   },
   {
     "engine": "firefox",
-    "version": "157.0",
+    "version": "156.0",
     "fixture": "long",
     "viewport": 360,
     "width": 360,
@@ -491,7 +491,7 @@
   },
   {
     "engine": "firefox",
-    "version": "157.0",
+    "version": "156.0",
     "width": 360,
     "imagesBlocked": true,
     "naturalWidth": 0,
@@ -499,7 +499,7 @@
   },
   {
     "engine": "firefox",
-    "version": "157.0",
+    "version": "156.0",
     "fixture": "grade",
     "viewport": 600,
     "width": 600,
@@ -514,7 +514,7 @@
   },
   {
     "engine": "firefox",
-    "version": "157.0",
+    "version": "156.0",
     "fixture": "corrected",
     "viewport": 600,
     "width": 600,
@@ -529,7 +529,7 @@
   },
   {
     "engine": "firefox",
-    "version": "157.0",
+    "version": "156.0",
     "fixture": "white-label",
     "viewport": 600,
     "width": 600,
@@ -544,7 +544,7 @@
   },
   {
     "engine": "firefox",
-    "version": "157.0",
+    "version": "156.0",
     "fixture": "announcement",
     "viewport": 600,
     "width": 600,
@@ -559,7 +559,7 @@
   },
   {
     "engine": "firefox",
-    "version": "157.0",
+    "version": "156.0",
     "fixture": "long",
     "viewport": 600,
     "width": 600,
@@ -574,7 +574,7 @@
   },
   {
     "engine": "firefox",
-    "version": "157.0",
+    "version": "156.0",
     "width": 600,
     "imagesBlocked": true,
     "naturalWidth": 0,
@@ -582,7 +582,7 @@
   },
   {
     "engine": "firefox",
-    "version": "157.0",
+    "version": "156.0",
     "fixture": "grade",
     "viewport": 1280,
     "width": 1280,
@@ -597,7 +597,7 @@
   },
   {
     "engine": "firefox",
-    "version": "157.0",
+    "version": "156.0",
     "fixture": "corrected",
     "viewport": 1280,
     "width": 1280,
@@ -612,7 +612,7 @@
   },
   {
     "engine": "firefox",
-    "version": "157.0",
+    "version": "156.0",
     "fixture": "white-label",
     "viewport": 1280,
     "width": 1280,
@@ -627,7 +627,7 @@
   },
   {
     "engine": "firefox",
-    "version": "157.0",
+    "version": "156.0",
     "fixture": "announcement",
     "viewport": 1280,
     "width": 1280,
@@ -642,7 +642,7 @@
   },
   {
     "engine": "firefox",
-    "version": "157.0",
+    "version": "156.0",
     "fixture": "long",
     "viewport": 1280,
     "width": 1280,
@@ -657,7 +657,7 @@
   },
   {
     "engine": "firefox",
-    "version": "157.0",
+    "version": "156.0",
     "width": 1280,
     "imagesBlocked": true,
     "naturalWidth": 0,

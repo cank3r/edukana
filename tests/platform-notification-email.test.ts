@@ -44,7 +44,7 @@ test("grade has official logo, separate task/course, one CTA, compact preference
   assert.equal(result.to, message.to); assert.equal(result.subject, message.subject);
   assert.equal(result.fromName, `${brand.name} vía Edukana`);
   assert.equal(result.text, `${message.text}\n\nHecho con Edukana`);
-  assert.match(result.html!, /src="https:\/\/campus.example.test\/logos\/edukana_email.png" alt="Edukana"/);
+  assert.ok(result.html!.includes('src="https://raw.githubusercontent.com/cank3r/edukana/673bb72eec620ddf6a3290b8f394b70ef11e23e9/public/logos/edukana_email.png" alt="Edukana"'));
   for (const copy of ["Tu tarea ya fue calificada", "Actividad 1", "Matemáticas", "Ver nota y comentarios", "Elegir qué correos recibo"])
     assert.ok(result.html!.includes(copy), copy);
   assert.match(result.html!, /href="https:\/\/campus.example.test\/dashboard\/aula\/curso\/tareas\/tarea"/);
@@ -108,7 +108,8 @@ test("unsafe/missing action never creates a button; canonical tenant links never
 test("no APP_URL preserves delivery and readable branding without broken or fabricated links", () => {
   delete process.env.APP_URL;
   const result = notificationEmail({ name: "Instituto", settings: {} }, message, notice);
-  assert.doesNotMatch(result.html!, /href=|src=|null\/|undefined\//);
+  assert.doesNotMatch(result.html!, /href=|null\/|undefined\//);
+  assert.match(result.html!, /src="https:\/\/raw\.githubusercontent\.com\//);
   assert.match(result.html!, /Edukana/); assert.match(result.html!, /Notificaciones/);
   assert.equal(result.text, `${message.text}\n\nHecho con Edukana`);
 });

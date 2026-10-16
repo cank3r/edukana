@@ -15,6 +15,9 @@ export type EmailPresentation = {
 };
 export type TransactionalMessage = Pick<EmailMessage, "to" | "subject" | "text">;
 export const EMAIL_LOGO_PATH = "/logos/edukana_email.png";
+// Official PNG pinned to a public commit: email image proxies cannot authenticate to protected previews.
+export const EDUKANA_EMAIL_LOGO_URL =
+  "https://raw.githubusercontent.com/cank3r/edukana/673bb72eec620ddf6a3290b8f394b70ef11e23e9/public/logos/edukana_email.png";
 const NAVY = "#101B3F";
 const CLOUD = "#F4F7FC";
 const font = "font-family:Arial,Helvetica,sans-serif;";
@@ -44,7 +47,6 @@ export function transactionalEmail(brand: EmailBrand | null, message: Transactio
   const whiteLabel = !!brand && resolveWhiteLabel(brand.settings, brand.platformSubscription?.plan.features);
   const color = ensureReadableOnWhite(brand?.brandColor ?? EDUKANA_BLUE).color;
   const institution = escape(brand?.name || "Edukana");
-  const logoBase = applicationEmailLink(base, EMAIL_LOGO_PATH);
   const logo = safeBrandLogoUrl(brand?.logoUrl);
   const custom = logo?.startsWith("/") ? applicationEmailLink(base, logo) : logo;
   const resolveAction = (action?: EmailAction) => action
@@ -52,8 +54,7 @@ export function transactionalEmail(brand: EmailBrand | null, message: Transactio
   const action = resolveAction(view.action);
   const secondary = resolveAction(view.secondary);
   const preferences = view.preferences ? applicationEmailLink(base, "/dashboard/notificaciones/preferencias") : null;
-  const branding = whiteLabel ? "" : logoBase ? image(logoBase, "Edukana", 156, 44)
-    : `<p style="margin:0;${font}color:${NAVY};font-size:24px;font-weight:bold;">Edukana</p>`;
+  const branding = whiteLabel ? "" : image(EDUKANA_EMAIL_LOGO_URL, "Edukana", 156, 44);
   const customLogo = custom ? `<div style="padding-top:${whiteLabel ? 0 : 16}px;">${image(custom, brand!.name, 100)}</div>` : "";
   const summary = view.summary?.length ? `<table ${table} width="100%" bgcolor="${CLOUD}"
 style="width:100%;table-layout:fixed;background-color:${CLOUD};border-radius:8px;">
