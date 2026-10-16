@@ -8,6 +8,9 @@ import type { EmailMessage } from "../src/server/integrations/email";
 
 // Synthetic data only. No env file, real token, database or provider is loaded.
 const { loadWithStubs } = createRequire(import.meta.url)("../tests/helpers/load-with-stubs.cjs");
+const { EDUKANA_EMAIL_LOGO_URL }: typeof import("../src/server/email/layout") = loadWithStubs(
+  "src/server/email/layout.ts", { "@/lib/db": { db: new Proxy({}, { get() { throw new Error("Preview cannot use DB"); } }) } },
+);
 const stubs = { "@/lib/db": { db: new Proxy({}, { get() { throw new Error("Preview cannot use DB"); } }) } };
 const { invitationEmail, resetEmail }: typeof import("../src/server/email/access") = loadWithStubs("src/server/email/access.ts", stubs);
 const { catalogEmail }: typeof import("../src/server/email/catalog") = loadWithStubs("src/server/email/catalog.ts", stubs);
@@ -79,7 +82,7 @@ async function main() {
     await writeFile(`${root}/${fixture.id}.source.html`, fixture.message.html!);
     await writeFile(`${root}/${fixture.id}.txt`, `Asunto: ${fixture.message.subject}\n\n${fixture.message.text}`);
     await writeFile(`${root}/${fixture.id}.html`, fixture.message.html!
-      .replaceAll("https://campus.example.test/logos/edukana_email.png", fixture.blocked ? "data:image/png;base64,AA==" : embedded)
+      .replaceAll(EDUKANA_EMAIL_LOGO_URL, fixture.blocked ? "data:image/png;base64,AA==" : embedded)
       .replace(/href="[^"]+"/gu, 'href="#vista-previa"'));
   }
   await writeFile(`${root}/index.html`, `<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width">
@@ -96,7 +99,7 @@ ${fixtures.map((f) => `<li style="margin:12px 0;"><a href="${f.id}.html">${f.lab
     for (const width of [320, 360, 600, 1280]) for (const fixture of fixtures) {
       const page = await browser.newPage({ viewport: { width, height: 1000 }, serviceWorkers: "block" });
       await page.route("**/*", async (route) => {
-        if (!fixture.blocked && route.request().url() === "https://campus.example.test/logos/edukana_email.png")
+        if (!fixture.blocked && route.request().url() === EDUKANA_EMAIL_LOGO_URL)
           await route.fulfill({ body: logo, contentType: "image/png" });
         else await route.abort();
       });

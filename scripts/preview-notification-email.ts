@@ -7,6 +7,9 @@ import type { EmailBrand } from "../src/server/platform/branded-email";
 
 // Synthetic fixtures only. No env files, database, provider, credential or remote page is opened.
 const { loadWithStubs } = createRequire(import.meta.url)("../tests/helpers/load-with-stubs.cjs");
+const { EDUKANA_EMAIL_LOGO_URL }: typeof import("../src/server/email/layout") = loadWithStubs(
+  "src/server/email/layout.ts", { "@/lib/db": { db: new Proxy({}, { get() { throw new Error("Preview cannot use DB"); } }) } },
+);
 const { notificationEmail }: typeof import("../src/server/notifications/email-template") = loadWithStubs(
   "src/server/notifications/email-template.ts", { "@/lib/db": { db: new Proxy({}, { get() { throw new Error("Preview cannot use DB"); } }) } },
 );
@@ -45,7 +48,7 @@ for (const fixture of fixtures) {
   rendered.push({ id: fixture.id, html, label: fixture.label });
   await writeFile(`${output}/${fixture.id}.source.html`, html);
   // Portable review copy. Only the image URL is embedded; production uses the absolute public PNG URL.
-  await writeFile(`${output}/${fixture.id}.html`, html.replaceAll("https://campus.example.test/logos/edukana_email.png", embeddedLogo));
+  await writeFile(`${output}/${fixture.id}.html`, html.replaceAll(EDUKANA_EMAIL_LOGO_URL, embeddedLogo));
 }
 await writeFile(`${output}/index.html`, `<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width">
 <title>Vista previa · Correos Edukana</title><body style="font-family:Arial,sans-serif;margin:32px;color:#101B3F;background:#F4F7FC">
@@ -57,13 +60,14 @@ await writeFile(`${output}/index.html`, `<!doctype html><html lang="es"><meta ch
 if (process.argv.includes("--render")) {
   const evidence: object[] = [];
   for (const [engine, browserType] of [["chromium", chromium], ["firefox", firefox]] as const) {
-    const browser = await browserType.launch({ headless: true });
+    const executablePath = process.argv.find((arg) => arg.startsWith(`--${engine}=`))?.slice(engine.length + 3);
+    const browser = await browserType.launch({ headless: true, ...(executablePath ? { executablePath } : {}) });
     try {
       for (const width of [320, 360, 600, 1280]) {
         const page = await browser.newPage({ viewport: { width, height: 1000 } });
         // Never fetch anything: the exact static production asset is fulfilled locally, everything else is blocked.
         await page.route("**/*", async (route) => {
-          if (route.request().url() === "https://campus.example.test/logos/edukana_email.png")
+          if (route.request().url() === EDUKANA_EMAIL_LOGO_URL)
             await route.fulfill({ body: logo, contentType: "image/png" });
           else await route.abort();
         });

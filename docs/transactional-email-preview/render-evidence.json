@@ -490,7 +490,12 @@
       "width": 320,
       "documentWidth": 320,
       "links": [],
-      "images": [],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
       "headingCount": 1,
       "preheaderHidden": true,
       "presentational": true
@@ -983,7 +988,12 @@
       "width": 360,
       "documentWidth": 360,
       "links": [],
-      "images": [],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
       "headingCount": 1,
       "preheaderHidden": true,
       "presentational": true
@@ -1476,7 +1486,12 @@
       "width": 600,
       "documentWidth": 600,
       "links": [],
-      "images": [],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
       "headingCount": 1,
       "preheaderHidden": true,
       "presentational": true
@@ -1969,7 +1984,12 @@
       "width": 1280,
       "documentWidth": 1280,
       "links": [],
-      "images": [],
+      "images": [
+        {
+          "alt": "Edukana",
+          "loaded": true
+        }
+      ],
       "headingCount": 1,
       "preheaderHidden": true,
       "presentational": true

@@ -11,11 +11,32 @@ const { noticeEmail }: typeof import("../src/server/email/notice") = loadWithStu
 const brand = { name: "Instituto de Formación", domain: "campus.example.test", settings: {} };
 const message = { to: "persona@example.test", subject: "Tu acceso", text: "Texto original de prueba.\nSegunda línea." };
 const href = "https://campus.example.test/restablecer/FICTICIO-no-utilizable_123";
+const publicLogo = "https://raw.githubusercontent.com/cank3r/edukana/673bb72eec620ddf6a3290b8f394b70ef11e23e9/public/logos/edukana_email.png";
 const view = { category: "Tu cuenta", heading: "Una acción", preheader: "Resumen", name: "Andrea" };
 beforeEach(() => {
   process.env.APP_URL = "https://platform.example.test";
   for (const key of ["AUTH_URL", "NEXTAUTH_URL", "PLATFORM_ROOT_DOMAIN", "ROOT_DOMAIN", "NEXT_PUBLIC_ROOT_DOMAIN"])
     delete process.env[key];
+});
+
+test("platform logo is public and commit-pinned independently of preview and institution origins", () => {
+  process.env.APP_URL = "https://protected-preview.example.test";
+  for (const context of [null, { name: "Instituto", settings: {} }, brand]) {
+    const result = transactionalEmail(context, message, { ...view, action: { label: "Continuar", href: "/dashboard" }, preferences: true });
+    assert.ok(result.html!.includes(`src="${publicLogo}" alt="Edukana"`));
+    const origin = context && "domain" in context ? "https://campus.example.test" : process.env.APP_URL;
+    assert.ok(result.html!.includes(`href="${origin}/dashboard"`));
+    assert.ok(result.html!.includes(`href="${origin}/dashboard/notificaciones/preferencias"`));
+    assert.equal(result.to, message.to); assert.equal(result.subject, message.subject);
+  }
+});
+
+test("institutional logos retain their validated origins while platform branding uses the public asset", () => {
+  for (const logoUrl of ["/api/public-images/custom_logo", "https://institution.example.test/custom.png"]) {
+    const html = transactionalEmail({ ...brand, logoUrl }, message, view).html!;
+    const expected = logoUrl.startsWith("/") ? `https://campus.example.test${logoUrl}` : logoUrl;
+    assert.ok(html.includes(`src="${expected}"`)); assert.ok(html.includes(`src="${publicLogo}"`));
+  }
 });
 
 test("new invitation preserves recipient, subject, exact token URL and expiration in both alternatives", () => {
@@ -138,10 +159,11 @@ test("invalid CTA never renders, while query characters in a valid CTA are escap
   const valid = transactionalEmail(brand, message, { ...view, action: { label: "Continuar", href: "/dashboard?a=1&b=2" } });
   assert.match(valid.html!, /a=1&amp;b=2/);
 });
-test("missing URL and institutional logo retain usable text and omit broken resource URLs", () => {
+test("missing application URL retains the public logo and omits unavailable actions", () => {
   delete process.env.APP_URL;
   const result = transactionalEmail({ name: "Instituto", settings: {} }, message,
     { ...view, action: { label: "Continuar", href: "/login" }, preferences: true });
-  assert.doesNotMatch(result.html!, /<img|href=|null\/|undefined/);
+  assert.doesNotMatch(result.html!, /href=|null\/|undefined/);
+  assert.ok(result.html!.includes(`src="${publicLogo}" alt="Edukana"`));
   assert.match(result.html!, /Entra a la plataforma/); assert.match(result.html!, /Puedes elegir qué correos recibes/);
 });
