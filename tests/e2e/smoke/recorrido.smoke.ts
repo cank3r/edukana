@@ -506,8 +506,12 @@ test("estudiante", async ({ page }, info) => {
   });
   await tour.step("tarea entregada", async () => {
     await page.getByLabel("Tu respuesta").fill("1) 42  2) 18  3) 105  4) 7  5) 60. Hice las sumas empezando por las unidades.");
-    await page.getByRole("button", { name: "Entregar tarea" }).click();
-    await page.getByRole("button", { name: "Sí, entregar" }).click();
+    await page.getByRole("button", { name: "Revisar respuesta", exact: true }).click();
+    await expect(page.getByRole("region", { name: "Revisión de la entrega", exact: true }))
+      .toContainText("1) 42  2) 18  3) 105  4) 7  5) 60. Hice las sumas empezando por las unidades.");
+    await page.getByRole("button", { name: "Continuar a entrega", exact: true }).click();
+    await expect(page.getByRole("region", { name: "Confirmación de la entrega", exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Entregar tarea", exact: true }).click();
     await done(page, /Tarea entregada/);
   });
 

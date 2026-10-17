@@ -14,9 +14,10 @@ test.afterEach(() => expect(errors).toEqual([]));
 
 test("respuesta vacía no abre confirmación ni envía", async ({page}) => {
   await page.goto("/");
-  await page.getByRole("button", {name:"Entregar tarea",exact:true}).click();
+  await page.getByRole("button", {name:"Revisar respuesta",exact:true}).click();
   await expect(page.getByRole("alert")).toContainText("adjunta un archivo");
-  await expect(page.getByRole("alertdialog")).toHaveCount(0);
+  await expect(page.getByRole("region", {name:"Revisión de la entrega",exact:true})).toHaveCount(0);
+  await expect(page.getByRole("region", {name:"Confirmación de la entrega",exact:true})).toHaveCount(0);
   expect(await calls(page)).toEqual([]);
 });
 
@@ -34,20 +35,25 @@ test("quitar archivo pendiente bloquea la entrega hasta terminar la solicitud", 
   await entered;
   try {
     await page.screenshot({path:info.outputPath("retirada-en-curso.png"),fullPage:true});
-    await expect(page.getByRole("button", {name:"Entregar tarea",exact:true})).toBeDisabled({timeout:1000});
+    await expect(page.getByRole("button", {name:"Revisar respuesta",exact:true})).toBeDisabled({timeout:1000});
     await expect(page.getByRole("status")).toContainText("Quitando archivo");
     await expect(page.getByRole("button", {name:"Quitar pending-a.pdf",exact:true})).toBeDisabled();
     await expect(page.locator('input[type="file"]')).toBeDisabled();
-    await expect(page.getByRole("alertdialog")).toHaveCount(0);
+    await expect(page.getByRole("region", {name:"Revisión de la entrega",exact:true})).toHaveCount(0);
+    await expect(page.getByRole("region", {name:"Confirmación de la entrega",exact:true})).toHaveCount(0);
     expect(await calls(page)).toEqual([]);
   } finally {release();}
   await expect(page.getByLabel("Archivos listos para entregar")).toHaveCount(0);
-  await expect(page.getByRole("button", {name:"Entregar tarea",exact:true})).toBeEnabled();
+  await expect(page.getByRole("button", {name:"Revisar respuesta",exact:true})).toBeEnabled();
   await expect(page.getByRole("status")).toHaveCount(0);
   await page.getByLabel("Tu respuesta", {exact:true}).fill("Respuesta después de quitar el archivo");
+  await page.getByRole("button", {name:"Revisar respuesta",exact:true}).click();
+  expect(await calls(page)).toEqual([]);
+  await page.getByRole("button", {name:"Continuar a entrega",exact:true}).click();
+  expect(await calls(page)).toEqual([]);
   await page.getByRole("button", {name:"Entregar tarea",exact:true}).click();
-  await page.getByRole("button", {name:"Sí, entregar",exact:true}).click();
   await expect(page.getByRole("status")).toContainText("completada");
+  expect(await calls(page)).toHaveLength(1);
   expect((await calls(page))[0].fields.filter(([name]) => name === "assetIds")).toEqual([]);
 });
 
@@ -70,16 +76,20 @@ test("retirada bloquea doble clic, envío implícito y cambios de archivos anter
   try {
     await expect(page.getByRole("checkbox")).toBeDisabled();
     await expect(page.getByRole("checkbox")).toBeChecked();
-    await expect(page.getByRole("button", {name:"Volver a entregar",exact:true})).toBeDisabled();
+    await expect(page.getByRole("button", {name:"Revisar respuesta",exact:true})).toBeDisabled();
     await expect(page.locator('input[type="file"]')).toBeDisabled();
     expect(attempts).toBe(1);
     expect(await calls(page)).toEqual([]);
   } finally {release();}
   await expect(page.getByLabel("Archivos listos para entregar")).toHaveCount(0);
   await expect(page.getByRole("checkbox")).toBeEnabled();
-  await page.getByRole("button", {name:"Volver a entregar",exact:true}).click();
-  await page.getByRole("button", {name:"Sí, entregar",exact:true}).click();
+  await page.getByRole("button", {name:"Revisar respuesta",exact:true}).click();
+  expect(await calls(page)).toEqual([]);
+  await page.getByRole("button", {name:"Continuar a entrega",exact:true}).click();
+  expect(await calls(page)).toEqual([]);
+  await page.getByRole("button", {name:"Actualizar entrega",exact:true}).click();
   await expect(page.getByRole("status")).toContainText("completada");
+  expect(await calls(page)).toHaveLength(1);
   expect((await calls(page))[0].fields.filter(([name]) => name === "assetIds")).toEqual([["assetIds","current-a"]]);
   expect(attempts).toBe(1);
 });
@@ -92,9 +102,13 @@ test("error de red al quitar conserva el archivo y libera los controles", async 
   await expect(page.getByRole("status")).toHaveCount(0);
   await expect(page.getByRole("button", {name:"Quitar pending-a.pdf",exact:true})).toBeEnabled();
   await expect(page.locator('input[type="file"]')).toBeEnabled();
+  await page.getByRole("button", {name:"Revisar respuesta",exact:true}).click();
+  expect(await calls(page)).toEqual([]);
+  await page.getByRole("button", {name:"Continuar a entrega",exact:true}).click();
+  expect(await calls(page)).toEqual([]);
   await page.getByRole("button", {name:"Entregar tarea",exact:true}).click();
-  await page.getByRole("button", {name:"Sí, entregar",exact:true}).click();
   await expect(page.getByRole("status")).toContainText("completada");
+  expect(await calls(page)).toHaveLength(1);
   expect((await calls(page))[0].fields).toContainEqual(["assetIds","pending-a"]);
 });
 
@@ -104,7 +118,7 @@ test("archivo ya ausente permite completar la retirada sin error", async ({page}
   await page.getByRole("button", {name:"Quitar pending-a.pdf",exact:true}).click();
   await expect(page.getByLabel("Archivos listos para entregar")).toHaveCount(0);
   await expect(page.getByRole("alert")).toHaveCount(0);
-  await expect(page.getByRole("button", {name:"Entregar tarea",exact:true})).toBeEnabled();
+  await expect(page.getByRole("button", {name:"Revisar respuesta",exact:true})).toBeEnabled();
 });
 
 test("fallo al quitar conserva el archivo y permite reintentar", async ({page}) => {
@@ -145,14 +159,20 @@ test("carga PDF real del cliente, revisión y cancelación conservan los datos",
   });
   await expect(page.getByLabel("Archivos listos para entregar")).toContainText("respuesta.pdf");
   expect(methods).toEqual(["POST","PUT","PATCH"]);
-  await page.getByRole("button", {name:"Entregar tarea",exact:true}).click();
-  await expect(page.getByRole("alertdialog")).toContainText("1 archivo");
-  await expect(page.getByRole("button", {name:"Quitar respuesta.pdf",exact:true})).toBeDisabled();
-  await page.getByRole("button", {name:"Seguir editando",exact:true}).click();
+  await page.getByRole("button", {name:"Revisar respuesta",exact:true}).click();
+  await expect(page.getByRole("region", {name:"Revisión de la entrega",exact:true})).toContainText("Archivos incluidos (1)");
+  await expect(page.getByRole("button", {name:"Quitar respuesta.pdf",exact:true,includeHidden:true})).toBeDisabled();
+  await page.getByRole("button", {name:"Corregir respuesta",exact:true}).click();
+  await expect(page.getByLabel("Archivos listos para entregar")).toContainText("respuesta.pdf");
+  await expect(page.getByRole("button", {name:"Quitar respuesta.pdf",exact:true})).toBeEnabled();
+  expect(await calls(page)).toEqual([]);
+  await page.getByRole("button", {name:"Revisar respuesta",exact:true}).click();
+  expect(await calls(page)).toEqual([]);
+  await page.getByRole("button", {name:"Continuar a entrega",exact:true}).click();
   expect(await calls(page)).toEqual([]);
   await page.getByRole("button", {name:"Entregar tarea",exact:true}).click();
-  await page.getByRole("button", {name:"Sí, entregar",exact:true}).click();
-  await expect(page.getByRole("status")).toBeVisible();
+  await expect(page.getByRole("status")).toContainText("completada");
+  expect(await calls(page)).toHaveLength(1);
   expect((await calls(page))[0].fields).toContainEqual(["assetIds","uploaded-a"]);
 });
 
@@ -162,10 +182,14 @@ test("dejar fuera un archivo anterior cambia el payload sin solicitar borrado", 
   await page.goto("/?current=1");
   await page.getByLabel("Tu respuesta", {exact:true}).fill("Nueva respuesta sintética");
   await page.getByRole("checkbox").uncheck();
-  await expect(page.getByText("No se borra: queda guardado", {exact:false})).toBeVisible();
-  await page.getByRole("button", {name:"Volver a entregar",exact:true}).click();
-  await page.getByRole("button", {name:"Sí, entregar",exact:true}).click();
-  await expect(page.getByRole("status")).toBeVisible();
+  await expect(page.getByText("Seguirán guardados en la entrega anterior", {exact:false})).toBeVisible();
+  await page.getByRole("button", {name:"Revisar respuesta",exact:true}).click();
+  expect(await calls(page)).toEqual([]);
+  await page.getByRole("button", {name:"Continuar a entrega",exact:true}).click();
+  expect(await calls(page)).toEqual([]);
+  await page.getByRole("button", {name:"Actualizar entrega",exact:true}).click();
+  await expect(page.getByRole("status")).toContainText("completada");
+  expect(await calls(page)).toHaveLength(1);
   expect((await calls(page))[0].fields.filter(([name]) => name === "assetIds")).toEqual([]);
   expect(deletes).toEqual([]);
 });
@@ -203,9 +227,14 @@ test("controles de adjuntos funcionan con teclado sin desbordamiento", async ({p
   await page.goto("/?pending=1&current=1");
   const reply = page.getByLabel("Tu respuesta", {exact:true});
   await reply.fill("Respuesta de prueba");
-  await page.getByRole("button", {name:"Volver a entregar",exact:true}).focus();
+  await page.getByRole("button", {name:"Revisar respuesta",exact:true}).focus();
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("alertdialog")).toBeVisible();
+  await expect(page.getByRole("region", {name:"Revisión de la entrega",exact:true})).toBeVisible();
+  expect(await calls(page)).toEqual([]);
+  await page.getByRole("button", {name:"Continuar a entrega",exact:true}).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("region", {name:"Confirmación de la entrega",exact:true})).toBeVisible();
+  expect(await calls(page)).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect(await page.locator("button:visible").evaluateAll(nodes => nodes.every(node => node.getBoundingClientRect().height >= 44))).toBe(true);
   await page.screenshot({path:info.outputPath("adjuntos-confirmacion.png"),fullPage:true});
