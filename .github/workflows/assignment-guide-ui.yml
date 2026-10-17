@@ -33,7 +33,6 @@ jobs:
       AUTH_URL: http://127.0.0.1:3171
       APP_URL: http://127.0.0.1:3171
       AUTH_TRUST_HOST: "true"
-      ASSIGNMENT_GUIDE_OUTPUT: ${{ runner.temp }}/assignment-guide
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -50,6 +49,8 @@ jobs:
         run: node node_modules/next/dist/bin/next build --webpack
       - run: npx playwright install --with-deps chromium
       - name: Browser regression matrix with isolated services
+        env:
+          ASSIGNMENT_GUIDE_OUTPUT: ${{ runner.temp }}/assignment-guide
         run: npx playwright test --config playwright.assignment-guide.config.ts
       - name: Save synthetic screenshots and test results
         if: always()
