@@ -8,6 +8,10 @@ on:
       - "tests/assignment-guide-*.test.ts"
       - "tests/platform-mvp-closure.test.ts"
       - "tests/ui/assignment-guide-*"
+      - "tests/ui/assignment-guide.spec.ts"
+      - "tests/e2e/assignment-flow-real/**"
+      - "playwright.assignment-flow-real.config.ts"
+      - "scripts/test-assignment-flow-real.py"
       - "playwright.assignment-guide.config.ts"
       - ".github/workflows/assignment-guide-ui.yml"
       - "package.json"
@@ -26,13 +30,27 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      DATABASE_URL: postgresql://fixture:fixture@127.0.0.1:5432/unused
-      DIRECT_URL: postgresql://fixture:fixture@127.0.0.1:5432/unused
+      DATABASE_URL: postgresql://fixture:fixture@127.0.0.1:5432/edukana_assignment_test
+      DIRECT_URL: postgresql://fixture:fixture@127.0.0.1:5432/edukana_assignment_test
       AUTH_SECRET: fixture-build-only-not-a-deployed-secret
       CERTIFICATE_SECRET: fixture-build-only-certificate-not-deployed
       AUTH_URL: http://127.0.0.1:3171
       APP_URL: http://127.0.0.1:3171
       AUTH_TRUST_HOST: "true"
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: fixture
+          POSTGRES_PASSWORD: fixture
+          POSTGRES_DB: edukana_assignment_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -52,11 +70,33 @@ jobs:
         env:
           ASSIGNMENT_GUIDE_OUTPUT: ${{ runner.temp }}/assignment-guide
         run: npx playwright test --config playwright.assignment-guide.config.ts
+      - name: Apply existing migrations to disposable local PostgreSQL
+        run: npx prisma migrate deploy
+      - name: Real submission, persistence, error, duplicate prevention and reload
+        env:
+          APP_URL: http://127.0.0.1:3172
+          AUTH_URL: http://127.0.0.1:3172
+          ASSIGNMENT_FLOW_BASE_URL: http://127.0.0.1:3172
+          ASSIGNMENT_FLOW_OUTPUT: ${{ runner.temp }}/assignment-flow-real
+          LOCAL_STORAGE_ROOT: ${{ runner.temp }}/assignment-flow-real/storage
+          LOCAL_STORAGE_SECRET: assignment-local-only-storage-secret-2026
+        run: |
+          mkdir -p "$ASSIGNMENT_FLOW_OUTPUT"
+          node node_modules/next/dist/bin/next start -H 127.0.0.1 -p 3172 > "$ASSIGNMENT_FLOW_OUTPUT/next.log" 2>&1 &
+          APP_PID=$!
+          trap 'kill "$APP_PID"' EXIT
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:3172/login > /dev/null; then break; fi
+            sleep 1
+          done
+          npx playwright test --config playwright.assignment-flow-real.config.ts
       - name: Save synthetic screenshots and test results
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: assignment-guide-${{ github.sha }}
-          path: ${{ runner.temp }}/assignment-guide/
+          path: |
+            ${{ runner.temp }}/assignment-guide/
+            ${{ runner.temp }}/assignment-flow-real/
           if-no-files-found: warn
           retention-days: 7

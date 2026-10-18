@@ -157,7 +157,7 @@ function decode(node: PackedNode): React.ReactNode {
     }
     return Array.from(template.content.childNodes).map(fromDom);
   }
-  return React.createElement(node.tag ?? React.Fragment, { ...node.props, key: node.key }, decode(node.children));
+  return React.createElement(node.tag ?? React.Fragment, { ...node.props, ...(node.key == null ? {} : { key: node.key }) }, decode(node.children));
 }
 for (const container of document.querySelectorAll<HTMLElement>("[data-assignment-boundary]")) {
   const packed = JSON.parse(container.dataset.props!);

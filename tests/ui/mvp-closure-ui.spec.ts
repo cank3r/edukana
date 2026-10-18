@@ -16,7 +16,6 @@ test("respuesta vacía no abre confirmación ni envía", async ({page}) => {
   await page.goto("/");
   await page.getByRole("button", {name:"Revisar respuesta",exact:true}).click();
   await expect(page.getByRole("alert")).toContainText("adjunta un archivo");
-  await expect(page.getByRole("region", {name:"Revisión de la entrega",exact:true})).toHaveCount(0);
   await expect(page.getByRole("region", {name:"Confirmación de la entrega",exact:true})).toHaveCount(0);
   expect(await calls(page)).toEqual([]);
 });
@@ -39,7 +38,6 @@ test("quitar archivo pendiente bloquea la entrega hasta terminar la solicitud", 
     await expect(page.getByRole("status")).toContainText("Quitando archivo");
     await expect(page.getByRole("button", {name:"Quitar pending-a.pdf",exact:true})).toBeDisabled();
     await expect(page.locator('input[type="file"]')).toBeDisabled();
-    await expect(page.getByRole("region", {name:"Revisión de la entrega",exact:true})).toHaveCount(0);
     await expect(page.getByRole("region", {name:"Confirmación de la entrega",exact:true})).toHaveCount(0);
     expect(await calls(page)).toEqual([]);
   } finally {release();}
@@ -49,7 +47,6 @@ test("quitar archivo pendiente bloquea la entrega hasta terminar la solicitud", 
   await page.getByLabel("Tu respuesta", {exact:true}).fill("Respuesta después de quitar el archivo");
   await page.getByRole("button", {name:"Revisar respuesta",exact:true}).click();
   expect(await calls(page)).toEqual([]);
-  await page.getByRole("button", {name:"Continuar a entrega",exact:true}).click();
   expect(await calls(page)).toEqual([]);
   await page.getByRole("button", {name:"Entregar tarea",exact:true}).click();
   await expect(page.getByRole("status")).toContainText("completada");
@@ -67,6 +64,7 @@ test("retirada bloquea doble clic, envío implícito y cambios de archivos anter
     attempts++; requested(); await held; await route.fulfill({status:204});
   });
   await page.goto("/?pending=1&current=1");
+  await page.getByRole("button", {name:"Editar entrega",exact:true}).click();
   await page.evaluate(() => {
     const remove = document.querySelector<HTMLButtonElement>('button[aria-label="Quitar pending-a.pdf"]')!;
     remove.click(); remove.click();
@@ -85,7 +83,6 @@ test("retirada bloquea doble clic, envío implícito y cambios de archivos anter
   await expect(page.getByRole("checkbox")).toBeEnabled();
   await page.getByRole("button", {name:"Revisar respuesta",exact:true}).click();
   expect(await calls(page)).toEqual([]);
-  await page.getByRole("button", {name:"Continuar a entrega",exact:true}).click();
   expect(await calls(page)).toEqual([]);
   await page.getByRole("button", {name:"Actualizar entrega",exact:true}).click();
   await expect(page.getByRole("status")).toContainText("completada");
@@ -104,7 +101,6 @@ test("error de red al quitar conserva el archivo y libera los controles", async 
   await expect(page.locator('input[type="file"]')).toBeEnabled();
   await page.getByRole("button", {name:"Revisar respuesta",exact:true}).click();
   expect(await calls(page)).toEqual([]);
-  await page.getByRole("button", {name:"Continuar a entrega",exact:true}).click();
   expect(await calls(page)).toEqual([]);
   await page.getByRole("button", {name:"Entregar tarea",exact:true}).click();
   await expect(page.getByRole("status")).toContainText("completada");
@@ -160,7 +156,7 @@ test("carga PDF real del cliente, revisión y cancelación conservan los datos",
   await expect(page.getByLabel("Archivos listos para entregar")).toContainText("respuesta.pdf");
   expect(methods).toEqual(["POST","PUT","PATCH"]);
   await page.getByRole("button", {name:"Revisar respuesta",exact:true}).click();
-  await expect(page.getByRole("region", {name:"Revisión de la entrega",exact:true})).toContainText("Archivos incluidos (1)");
+  await expect(page.getByRole("region", {name:"Confirmación de la entrega",exact:true})).toContainText("Archivos incluidos (1)");
   await expect(page.getByRole("button", {name:"Quitar respuesta.pdf",exact:true,includeHidden:true})).toBeDisabled();
   await page.getByRole("button", {name:"Corregir respuesta",exact:true}).click();
   await expect(page.getByLabel("Archivos listos para entregar")).toContainText("respuesta.pdf");
@@ -168,7 +164,6 @@ test("carga PDF real del cliente, revisión y cancelación conservan los datos",
   expect(await calls(page)).toEqual([]);
   await page.getByRole("button", {name:"Revisar respuesta",exact:true}).click();
   expect(await calls(page)).toEqual([]);
-  await page.getByRole("button", {name:"Continuar a entrega",exact:true}).click();
   expect(await calls(page)).toEqual([]);
   await page.getByRole("button", {name:"Entregar tarea",exact:true}).click();
   await expect(page.getByRole("status")).toContainText("completada");
@@ -180,12 +175,12 @@ test("dejar fuera un archivo anterior cambia el payload sin solicitar borrado", 
   const deletes: string[] = [];
   page.on("request", request => {if (request.method() === "DELETE") deletes.push(request.url());});
   await page.goto("/?current=1");
+  await page.getByRole("button", {name:"Editar entrega",exact:true}).click();
   await page.getByLabel("Tu respuesta", {exact:true}).fill("Nueva respuesta sintética");
   await page.getByRole("checkbox").uncheck();
   await expect(page.getByText("Seguirán guardados en la entrega anterior", {exact:false})).toBeVisible();
   await page.getByRole("button", {name:"Revisar respuesta",exact:true}).click();
   expect(await calls(page)).toEqual([]);
-  await page.getByRole("button", {name:"Continuar a entrega",exact:true}).click();
   expect(await calls(page)).toEqual([]);
   await page.getByRole("button", {name:"Actualizar entrega",exact:true}).click();
   await expect(page.getByRole("status")).toContainText("completada");
@@ -225,14 +220,13 @@ test("instrucciones de tarea conservan saltos de línea y recurso HTTPS al guard
 
 test("controles de adjuntos funcionan con teclado sin desbordamiento", async ({page},info) => {
   await page.goto("/?pending=1&current=1");
+  await page.getByRole("button", {name:"Editar entrega",exact:true}).click();
   const reply = page.getByLabel("Tu respuesta", {exact:true});
   await reply.fill("Respuesta de prueba");
   await page.getByRole("button", {name:"Revisar respuesta",exact:true}).focus();
   await page.keyboard.press("Enter");
-  await expect(page.getByRole("region", {name:"Revisión de la entrega",exact:true})).toBeVisible();
+  await expect(page.getByRole("region", {name:"Confirmación de la entrega",exact:true})).toBeVisible();
   expect(await calls(page)).toEqual([]);
-  await page.getByRole("button", {name:"Continuar a entrega",exact:true}).focus();
-  await page.keyboard.press("Enter");
   await expect(page.getByRole("region", {name:"Confirmación de la entrega",exact:true})).toBeVisible();
   expect(await calls(page)).toEqual([]);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);

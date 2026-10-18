@@ -507,12 +507,15 @@ test("estudiante", async ({ page }, info) => {
   await tour.step("tarea entregada", async () => {
     await page.getByLabel("Tu respuesta").fill("1) 42  2) 18  3) 105  4) 7  5) 60. Hice las sumas empezando por las unidades.");
     await page.getByRole("button", { name: "Revisar respuesta", exact: true }).click();
-    await expect(page.getByRole("region", { name: "Revisión de la entrega", exact: true }))
+    await expect(page.getByRole("region", { name: "Confirmación de la entrega", exact: true }))
       .toContainText("1) 42  2) 18  3) 105  4) 7  5) 60. Hice las sumas empezando por las unidades.");
-    await page.getByRole("button", { name: "Continuar a entrega", exact: true }).click();
     await expect(page.getByRole("region", { name: "Confirmación de la entrega", exact: true })).toBeVisible();
     await page.getByRole("button", { name: "Entregar tarea", exact: true }).click();
     await done(page, /Tarea entregada/);
+    await expect(page.getByRole("heading", { name: "Tarea entregada", exact: true })).toBeVisible();
+    await page.reload();
+    await expect(page.getByRole("heading", { name: "Tarea entregada", exact: true })).toBeVisible();
+    await expect(page.getByLabel("Tu respuesta", { exact: true })).not.toBeVisible();
   });
 
   await tour.open("examenes", `${course}/presentar`, () => visible(page, "Prueba corta: suma y resta"));

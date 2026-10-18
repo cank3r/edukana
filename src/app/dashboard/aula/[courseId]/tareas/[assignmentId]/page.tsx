@@ -68,7 +68,7 @@ export default async function AssignmentPage({ params, searchParams }: { params:
           content={submission?.content ?? ""} link={submission?.link ?? ""}
           resubmitting={Boolean(submission)} currentFiles={files.current} pendingFiles={files.pending}
           guideContext={{ title: assignment.title, instructions: assignment.instructions }}
-          canSubmit={data.canSubmit} assignmentHref={`${list}/${assignment.id}`}
+          canSubmit={data.canSubmit} assignmentHref={`${list}/${assignment.id}`} tasksHref={list}
           savedSummary={submission ? (
             <p className="mt-1 text-sm text-slate-600">
               Entregada el {formatDateTime(submission.submittedAt, zone)}{submission.late ? " (tarde)" : ""}
@@ -79,8 +79,6 @@ export default async function AssignmentPage({ params, searchParams }: { params:
           )}
           readOnlyContent={
             <>
-              {submission && <Work content={submission.content} links={submission.link ? [submission.link] : []} />}
-              <FileList files={files.current} title="Archivos entregados" />
               <p className="mt-3 rounded-lg bg-slate-50 p-3 text-sm text-slate-700">{data.cannotSubmitReason}</p>
             </>
           }

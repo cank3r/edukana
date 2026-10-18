@@ -19,6 +19,7 @@ test("student page connects its actual task context once and keys the existing f
   assert.equal(props.assignmentId, "assignment-fixture"); assert.equal(props.canSubmit, true);
   assert.deepEqual(props.guideContext, { title: page.scenario.assignment.title, instructions: page.scenario.assignment.instructions });
   assert.equal(props.assignmentHref, "/dashboard/aula/course-fixture/tareas/assignment-fixture");
+  assert.equal(props.tasksHref, "/dashboard/aula/course-fixture/tareas");
   assert.equal(props.content, ""); assert.equal(props.link, ""); assert.equal(props.resubmitting, false);
   assert.deepEqual(props.currentFiles, []); assert.deepEqual(props.pendingFiles, []);
   assert.equal(page.html.split(`>${page.scenario.assignment.instructions}<`).length - 1, 1);
@@ -26,20 +27,26 @@ test("student page connects its actual task context once and keys the existing f
   assert.match(page.html, /<ol[^>]*aria-label="Pasos para entregar tu tarea"/);
   assert.equal((page.html.match(/aria-current="step"/g) ?? []).length, 1);
   const steps = page.html.match(/<ol[^>]*aria-label="Pasos para entregar tu tarea"[^>]*>([\s\S]*?)<\/ol>/)?.[1] ?? "";
-  assert.equal((steps.match(/<button[^>]*type="button"/g) ?? []).length, 3);
+  assert.equal((steps.match(/<button[^>]*type="button"/g) ?? []).length, 2);
   assert.match(steps, /<button[^>]*aria-current="step"/); assert.doesNotMatch(steps, /Completado/);
-  for (const label of ["Prepara tu respuesta", "Revisa tu respuesta", "Entrega tu tarea", "Lo que pide tu docente"]) {
+  for (const label of ["Prepara tu respuesta", "Revisa y entrega", "Lo que pide tu docente"]) {
     assert.ok(page.html.includes(label));
   }
   assert.doesNotMatch(page.html, /Ver guía paso a paso|Salir de la guía|Repetir guía/);
   assert.deepEqual(page.calls, ["auth", "capabilities", "student", "studentFiles"]);
 });
-test("current submission provides the saved summary and retains its original content, link and files", async () => {
+test("current submission starts finished with saved content and an explicit edit action", async () => {
   const page = await renderScenario("current"); const props = page.props[0];
   assert.equal(props.content, page.scenario.submission!.content); assert.equal(props.link, ""); assert.equal(props.resubmitting, true);
   assert.equal(props.currentFiles[0].id, "current-fixture");
   const summary = renderToStaticMarkup(props.savedSummary);
   assert.match(summary, /16 de octubre de 2026/); assert.match(summary, /cambiado 1 vez/);
+  assert.match(page.html, /Tarea entregada/);
+  assert.match(page.html, /Editar entrega/);
+  assert.match(page.html, /href="\/dashboard\/aula\/course-fixture\/tareas"[^>]*>Volver a mis tareas</);
+  assert.doesNotMatch(page.html, /Pasos para entregar tu tarea|Continuar a entrega|Ver mi entrega/);
+  assert.ok(page.html.includes(page.scenario.submission!.content));
+  assert.match(page.html, /Descargar Observación anterior.pdf/);
 });
 for (const name of ["linked", "graded", "closed"]) {
   test(`${name}: page retains the same component boundary and supplies read-only content`, async () => {
@@ -50,6 +57,11 @@ for (const name of ["linked", "graded", "closed"]) {
     assert.match(page.html, /<input[^>]*type="file"[^>]*disabled/i);
     if (name === "graded") assert.match(page.html, /Tu nota/);
     if (name === "linked") assert.match(page.html, /https:\/\/example.test\/trabajo-guardado/);
+    if (name !== "closed") {
+      assert.match(page.html, /Tarea entregada/);
+      assert.match(page.html, /Revisar entrega/);
+      assert.doesNotMatch(page.html, /Editar entrega|Pasos para entregar tu tarea/);
+    } else assert.doesNotMatch(page.html, /Tarea entregada/);
   });
 }
 test("pending attachments remain separate from the saved submission", async () => {

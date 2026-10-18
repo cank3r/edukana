@@ -8,7 +8,7 @@ import { SUBMISSION_MAX_FILES } from "@/lib/uploads";
 import type { SubmissionFile } from "@/server/courses/submission-files";
 
 import { SubmissionEditor, primary, secondary, type SubmissionDraft } from "./SubmissionEditor";
-import { SubmissionProgress, SubmissionReview, SubmissionConfirmation, SubmissionSent,
+import { SubmissionProgress, SubmissionConfirmation,
   SubmissionSummary, SubmissionSuccess, snapshotKey, type SubmissionSnapshot } from "./SubmissionReview";
 
 const empty: FileActionState = { ok: false, message: "" };
@@ -31,38 +31,38 @@ export function FileList({ files, title }: { files: SubmissionFile[]; title: str
   );
 }
 
-/** One mounted form and one draft across preparation, review and delivery. */
+/** One draft, one confirmation; persisted submissions start at the finished state. */
 export function SubmitWithFiles({ assignmentId, content, link, resubmitting, currentFiles, pendingFiles,
-  guideContext, canSubmit = true, savedSummary, readOnlyContent, assignmentHref }: {
+  guideContext, canSubmit = true, savedSummary, readOnlyContent, assignmentHref, tasksHref }: {
   assignmentId: string; content: string; link: string; resubmitting: boolean;
   currentFiles: SubmissionFile[]; pendingFiles: SubmissionFile[];
   guideContext?: { title: string; instructions: string }; canSubmit?: boolean;
-  savedSummary?: ReactNode; readOnlyContent?: ReactNode; assignmentHref?: string;
+  savedSummary?: ReactNode; readOnlyContent?: ReactNode; assignmentHref?: string; tasksHref?: string;
 }) {
   const id = useId();
   const formRef = useRef<HTMLFormElement>(null), inputRef = useRef<HTMLInputElement>(null);
   const editorRef = useRef<HTMLHeadingElement>(null);
   const reviewHeadingRef = useRef<HTMLHeadingElement>(null), resultRef = useRef<HTMLHeadingElement>(null);
-  const deliveryRef = useRef<HTMLHeadingElement>(null);
   const errorRef = useRef<HTMLDivElement>(null), reviewButtonRef = useRef<HTMLButtonElement>(null);
   const readOnlyRef = useRef<HTMLDivElement>(null);
   const workingRef = useRef<"upload" | "remove" | "submit" | null>(null);
   const allowedRef = useRef(canSubmit), reviewRef = useRef<SubmissionSnapshot | null>(null);
   const [draft, setDraft] = useState<SubmissionDraft>({ content, link });
   const [review, setReview] = useState<SubmissionSnapshot | null>(null);
-  const [stage, setStage] = useState<1 | 2 | 3>(1);
-  const [checkpoint, setCheckpoint] = useState<{ key: string; reviewed: boolean } | null>(null);
-  const [reviewMessage, setReviewMessage] = useState("");
-  const [confirmed, setConfirmed] = useState<SubmissionSnapshot | null>(null);
+  const [stage, setStage] = useState<1 | 2>(1);
+  const [checkpoint, setCheckpoint] = useState<string | null>(null);
+  const [confirmed, setConfirmed] = useState<SubmissionSnapshot | null>(() => resubmitting
+    ? { content, link, files: currentFiles, excluded: [], resubmitting: true } : null);
+  const [editing, setEditing] = useState(!resubmitting);
   const [localError, setLocalError] = useState(""), [showResult, setShowResult] = useState(false);
   const [uploading, setUploading] = useState(false), [removingId, setRemovingId] = useState<string | null>(null);
   const [uploaded, setUploaded] = useState<SubmissionFile[]>([]);
   const [removed, setRemoved] = useState<Set<string>>(new Set()), [leftOut, setLeftOut] = useState<Set<string>>(new Set());
-  type Focus = "editor" | "review" | "delivery" | "result" | "error" | "reviewButton" | "readOnly";
+  type Focus = "editor" | "review" | "result" | "error" | "reviewButton" | "readOnly";
   const [focusRequest, setFocusRequest] = useState<{ target: Focus } | null>(null);
   const focus = (target: Focus) => setFocusRequest({ target });
   useLayoutEffect(() => {
-    const refs = { editor: editorRef, review: reviewHeadingRef, delivery: deliveryRef,
+    const refs = { editor: editorRef, review: reviewHeadingRef,
       result: resultRef, error: errorRef, reviewButton: reviewButtonRef, readOnly: readOnlyRef };
     if (focusRequest) refs[focusRequest.target].current?.focus();
   }, [focusRequest]);
@@ -80,9 +80,9 @@ export function SubmitWithFiles({ assignmentId, content, link, resubmitting, cur
         catch { result = { ok: false, message: "No recibimos una confirmación del servidor." }; }
       }
       setShowResult(true);
-      setStage(3);
+      setStage(2);
       if (result.ok && snapshot) {
-        setConfirmed(snapshot); focus("result");
+        setConfirmed({ ...snapshot, excluded: [] }); setEditing(false); focus("result");
       } else {
         focus("error");
       }
@@ -94,46 +94,43 @@ export function SubmitWithFiles({ assignmentId, content, link, resubmitting, cur
   const kept = currentFiles.filter(file => !leftOut.has(file.id));
   const total = kept.length + ready.length, busy = pending || uploading || removingId !== null;
   const uncertain = showResult && !state.ok;
-  const canEdit = canSubmit && !confirmed && stage === 1;
+  const finished = !!confirmed && !editing;
+  const canEdit = canSubmit && editing && stage === 1;
   const makeSnapshot = (): SubmissionSnapshot => ({ content: draft.content.trim(), link: draft.link.trim(),
-    files: [...kept, ...ready], excluded: currentFiles.filter(file => leftOut.has(file.id)), resubmitting });
+    files: [...kept, ...ready], excluded: currentFiles.filter(file => leftOut.has(file.id)), resubmitting: resubmitting || !!confirmed });
   const liveKey = snapshotKey(makeSnapshot());
-  const prepared = !!confirmed || pending || checkpoint?.key === liveKey;
-  const reviewed = !!confirmed || pending || (prepared && !!checkpoint?.reviewed);
+  const prepared = pending || checkpoint === liveKey;
   // Invalidate before painting if refreshed files changed; equivalent props preserve progress.
-  if (checkpoint && checkpoint.key !== liveKey && !pending && !confirmed) setCheckpoint(null);
+  if (checkpoint && checkpoint !== liveKey && !pending && editing) setCheckpoint(null);
   const changed = draft.content !== content || draft.link !== link || uploaded.length > 0 || pendingFiles.length > 0 || leftOut.size > 0;
   function error(message: string) { setLocalError(message); focus("error"); }
   function edit(destination: "editor" | "reviewButton" = "editor") {
-    if (busy || workingRef.current || !canSubmit || confirmed) return;
+    if (busy || workingRef.current || !canSubmit || finished) return;
     setStage(1); setLocalError(""); focus(destination);
   }
-  function ask(message = "") {
-    if (!canSubmit || confirmed || busy || workingRef.current) return;
+  function startEditing() {
+    if (!canSubmit || busy || workingRef.current || !confirmed) return;
+    setDraft({ content: confirmed.content, link: confirmed.link });
+    // Uploads/discards already happened on the server; cancelling edits must not undo their bookkeeping.
+    setLeftOut(new Set()); setCheckpoint(null);
+    setShowResult(false); setLocalError(""); setEditing(true); setStage(1); focus("editor");
+  }
+  function ask() {
+    if (!canSubmit || finished || busy || workingRef.current) return;
     if (!draft.content.trim() && !draft.link.trim() && total === 0) {
       setStage(1); error("Escribe tu respuesta, pega un enlace o adjunta un archivo antes de entregar."); return;
     }
     if (!formRef.current?.reportValidity()) return;
     const snapshot = makeSnapshot();
     const key = snapshotKey(snapshot);
-    setCheckpoint(current => current?.key === key ? current : { key, reviewed: false });
+    setCheckpoint(key); setShowResult(false);
     setLocalError(""); setReview(snapshot); reviewRef.current = snapshot;
-    setReviewMessage(message); setStage(2); focus("review");
+    setStage(2); focus("review");
   }
-  function continueToDelivery() {
-    if (stage !== 2 || !canSubmit || confirmed || busy || workingRef.current) return;
-    if (!prepared) { ask("Hay cambios. Revisa tu respuesta para continuar."); return; }
-    setCheckpoint({ key: liveKey, reviewed: true }); setShowResult(false); setStage(3); focus("delivery");
-  }
-  function navigate(step: 1 | 2 | 3) {
-    if (busy || workingRef.current) return;
-    if (confirmed) { setStage(step); focus(step === 1 ? "editor" : step === 2 ? "review" : "result"); return; }
-    if (!canSubmit) return;
+  function navigate(step: 1 | 2) {
+    if (busy || workingRef.current || finished || !canSubmit) return;
     if (step === 1) { edit(); return; }
-    if (step === 3 && (uncertain || reviewed)) {
-      setStage(3); focus(uncertain ? "error" : "delivery"); return;
-    }
-    ask(step === 3 ? "Revisa tu respuesta para continuar." : "");
+    ask();
   }
   async function addFiles(list: globalThis.FileList | null) {
     if (!canEdit || busy || workingRef.current) return;
@@ -178,62 +175,57 @@ export function SubmitWithFiles({ assignmentId, content, link, resubmitting, cur
     setLeftOut(current => { const next = new Set(current); if (keep) next.delete(fileId); else next.add(fileId); return next; });
   }
   const editorHidden = !canEdit;
-  const deliveryLabel = confirmed ? "Entregada" : pending ? "Entregando tu tarea"
-    : uncertain ? "Comprueba tu entrega" : "Entrega tu tarea";
   const card = "min-w-0 rounded-xl border border-slate-200 bg-white p-[16px]";
   return <div className="min-w-0 space-y-4" onKeyDown={event => {
     if (event.key !== "Escape" || busy || workingRef.current) return;
-    if (confirmed) return;
-    if (stage === 3 && canSubmit) { event.preventDefault(); navigate(2); }
-    else if (stage === 2 && canSubmit) { event.preventDefault(); edit("reviewButton"); }
+    if (!finished && stage === 2 && canSubmit) { event.preventDefault(); edit("reviewButton"); }
   }}>
-    {(canSubmit || pending || confirmed || uncertain) && <SubmissionProgress active={stage}
-      completed={[prepared, reviewed, !!confirmed]} busy={busy || (!canSubmit && !confirmed)}
-      deliveryLabel={deliveryLabel} onNavigate={navigate} />}
-    {guideContext && stage === 1 && <section className={card} aria-labelledby={`${id}-instructions`}>
+    {!finished && (canSubmit || pending || uncertain) && <SubmissionProgress active={stage}
+      prepared={prepared} busy={busy || !canSubmit} onNavigate={navigate} />}
+    {!finished && guideContext && stage === 1 && <section className={card} aria-labelledby={`${id}-instructions`}>
       <h2 id={`${id}-instructions`} className="text-lg font-bold text-slate-950">Lo que pide tu docente</h2>
       <p className="mt-2 whitespace-pre-wrap text-sm text-slate-800 [overflow-wrap:anywhere]">
         {guideContext.instructions || "Tu docente no escribió instrucciones para esta tarea."}
       </p>
     </section>}
     <section className={card} aria-label="Entrega de la tarea">
-      {!confirmed && !showResult && !pending && savedSummary && <div className="mb-4 text-sm text-slate-700">
+      {!finished && !showResult && !pending && savedSummary && <div className="mb-4 text-sm text-slate-700">
         {resubmitting && <p className="font-semibold text-slate-950">{canSubmit ? "Entrega anterior" : "Tu entrega guardada"}</p>}
         {savedSummary}
       </div>}
-      {!canSubmit && !confirmed && !pending && <div ref={readOnlyRef} tabIndex={-1}>{readOnlyContent}
+      {!canSubmit && !finished && !pending && <div ref={readOnlyRef} tabIndex={-1}>{readOnlyContent}
         {changed && <details className="mt-3">
           <summary className="min-h-11 cursor-pointer py-3 font-semibold focus-visible:!outline-[var(--navy)]">Borrador conservado en esta pantalla</summary>
           <SubmissionSummary snapshot={makeSnapshot()} />
         </details>}
       </div>}
-      {confirmed && (stage === 3
-        ? <SubmissionSuccess message={state.message} headingRef={resultRef} href={assignmentHref} snapshot={confirmed} />
-        : <SubmissionSent snapshot={confirmed} href={assignmentHref} headingRef={stage === 1 ? editorRef : reviewHeadingRef}
-          title={stage === 1 ? "Tu respuesta enviada" : "Resumen enviado"} />)}
-      {uncertain && stage === 3 && <div ref={errorRef} tabIndex={-1} role="alert"
+      {finished && <SubmissionSuccess message={state.ok ? state.message : "Tu docente ya puede ver tu respuesta."}
+        headingRef={resultRef} tasksHref={tasksHref} snapshot={confirmed} savedSummary={resubmitting ? savedSummary : undefined}
+        restriction={!canSubmit ? readOnlyContent : undefined} onEdit={canSubmit ? startEditing : undefined} />}
+      {uncertain && !finished && stage === 2 && <div ref={errorRef} tabIndex={-1} role="alert"
         className="min-w-0 space-y-3 rounded-lg bg-red-50 p-[12px] text-red-900 [overflow-wrap:anywhere]">
         <h3 className="text-lg font-bold">No pudimos confirmar la entrega</h3>
         <p className="text-sm">{state.message}</p>
-        <p className="text-sm">Tu respuesta sigue aquí. Abre la tarea en otra pestaña y compara la respuesta, el enlace
-          y los archivos guardados con lo que acabas de preparar antes de volver a enviar.</p>
+        <p className="text-sm">Tu respuesta y tus archivos se conservan aquí. Puedes corregirlos y volver a intentarlo.
+          Si la conexión falló, comprueba primero si la entrega se guardó.</p>
         {resubmitting && <p className="text-sm">Puede aparecer tu entrega anterior aunque este intento no se haya guardado.</p>}
         <div className="flex flex-wrap gap-2">
           {assignmentHref && <a href={assignmentHref} target="_blank" rel="noopener noreferrer"
-            className={primary}>Comprobar mi entrega<span className="sr-only"> en otra pestaña</span></a>}
-          {canSubmit && <button type="button" className={secondary} onClick={() => edit()}>Volver a mi respuesta</button>}
+            className={secondary}>Comprobar mi entrega<span className="sr-only"> en otra pestaña</span></a>}
+          {canSubmit && <button type="button" className={primary} onClick={() => edit()}>Volver a mi respuesta</button>}
         </div>
       </div>}
       <form ref={formRef} action={action} className="min-w-0 space-y-4" onSubmit={event => {
-        if (!canSubmit || confirmed || busy || workingRef.current || uncertain) { event.preventDefault(); return; }
-        if (stage !== 3 || !review || !reviewed) { event.preventDefault(); ask(); return; }
-        workingRef.current = "submit"; setShowResult(false); focus("delivery");
+        if (!canSubmit || finished || busy || workingRef.current || uncertain) { event.preventDefault(); return; }
+        if (stage !== 2 || !review || !prepared) { event.preventDefault(); ask(); return; }
+        workingRef.current = "submit"; setShowResult(false); focus("review");
       }}>
         <input type="hidden" name="assignmentId" value={assignmentId} />
         {(stage === 1 ? [...kept, ...ready] : review?.files ?? []).map(file =>
           <input key={file.id} type="hidden" name="assetIds" value={file.id} />)}
         <div hidden={editorHidden} className="min-w-0 space-y-4">
-          <h3 ref={editorRef} tabIndex={-1} className="text-lg font-bold text-slate-950">Prepara tu respuesta</h3>
+          <h3 ref={editorRef} tabIndex={-1} className="text-lg font-bold text-slate-950">{confirmed ? "Edita tu entrega" : "Prepara tu respuesta"}</h3>
+          {confirmed && <p className="text-sm text-slate-700">Tu entrega anterior sigue guardada. Solo cambiará cuando confirmes «Actualizar entrega».</p>}
           <p className="text-sm text-slate-700">Sigue las indicaciones de tu docente. Puedes escribir, adjuntar archivos o agregar un enlace.
             Antes de enviar, podrás revisar todo.</p>
           <SubmissionEditor id={id} draft={draft} frozen={!canEdit || busy} currentFiles={currentFiles} leftOut={leftOut}
@@ -245,15 +237,16 @@ export function SubmitWithFiles({ assignmentId, content, link, resubmitting, cur
               }
             }} />
           <button ref={reviewButtonRef} type="button" className={primary} onClick={() => ask()} disabled={busy}>Revisar respuesta</button>
+          {confirmed && <button type="button" className={secondary} disabled={busy} onClick={() => {
+            setEditing(false); setShowResult(false); setLocalError(""); focus("result");
+          }}>Cancelar edición</button>}
         </div>
-        {review && !confirmed && stage === 2 && canSubmit && <SubmissionReview snapshot={review}
-          headingRef={reviewHeadingRef} message={prepared ? reviewMessage : "Hay cambios. Revisa tu respuesta para continuar."}
-          onContinue={continueToDelivery} onEdit={() => edit()} />}
-        {review && !confirmed && stage === 3 && !uncertain && (canSubmit || pending) && <SubmissionConfirmation
-          snapshot={review} headingRef={deliveryRef} pending={pending} reviewed={reviewed} onReview={() => ask()} />}
+        {review && !finished && stage === 2 && !uncertain && (canSubmit || pending) && <SubmissionConfirmation
+          snapshot={review} headingRef={reviewHeadingRef} pending={pending} reviewed={prepared}
+          onEdit={() => edit()} onReview={() => ask()} />}
         {uploading && <p role="status" className="text-sm text-slate-800">Subiendo archivos… Espera antes de entregar.</p>}
         {removingId && <p role="status" className="text-sm text-slate-800">Quitando archivo. Espera antes de entregar.</p>}
-        {localError && !(uncertain && stage === 3) && <div ref={errorRef} tabIndex={-1} role="alert"
+        {localError && !(uncertain && stage === 2) && <div ref={errorRef} tabIndex={-1} role="alert"
           className="min-w-0 space-y-2 rounded-lg bg-red-50 p-3 text-sm text-red-900 [overflow-wrap:anywhere]">
           <p>{localError}</p>
         </div>}
