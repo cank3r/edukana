@@ -45,20 +45,15 @@ export default async function AssignmentPage({ params, searchParams }: { params:
     const { assignment, submission } = data;
     const files = await submissionFilesForStudent({ id: user.id, institutionId: user.institutionId }, assignment.id);
     return (
-      <div className="mx-auto max-w-3xl space-y-6 p-4 sm:p-8">
+      <div className="mx-auto min-w-0 max-w-3xl space-y-6 p-[16px] sm:p-8">
         <header>
-          <h1 className="text-2xl font-bold" style={{ color: "var(--navy)" }}>{assignment.title}</h1>
+          <h1 className="text-2xl font-bold [overflow-wrap:anywhere]" style={{ color: "var(--navy)" }}>{assignment.title}</h1>
           <p className="mt-1 text-sm text-slate-600">
             {dueLabel(assignment.dueDate, now, zone)}
             {assignment.dueDate && assignment.dueDate < now ? ` (${formatDateTime(assignment.dueDate, zone)})` : ""} · Vale {assignment.maxScore} puntos
             {assignment.dueDate ? (assignment.allowLate ? " · Acepta entregas tarde" : " · No acepta entregas tarde") : ""}
           </p>
         </header>
-
-        <section className={card} aria-labelledby="instrucciones">
-          <h2 id="instrucciones" className="text-lg font-bold text-slate-950">Instrucciones</h2>
-          <p className="mt-2 whitespace-pre-wrap break-words text-sm text-slate-800">{assignment.instructions || "Tu docente no escribió instrucciones para esta tarea."}</p>
-        </section>
 
         {submission?.graded && (
           <section className={card} aria-labelledby="mi-nota">
@@ -69,9 +64,12 @@ export default async function AssignmentPage({ params, searchParams }: { params:
           </section>
         )}
 
-        <section className={card} aria-labelledby="mi-entrega">
-          <h2 id="mi-entrega" className="text-lg font-bold text-slate-950">Tu entrega</h2>
-          {submission ? (
+        <SubmitWithFiles key={assignment.id} assignmentId={assignment.id}
+          content={submission?.content ?? ""} link={submission?.link ?? ""}
+          resubmitting={Boolean(submission)} currentFiles={files.current} pendingFiles={files.pending}
+          guideContext={{ title: assignment.title, instructions: assignment.instructions }}
+          canSubmit={data.canSubmit} assignmentHref={`${list}/${assignment.id}`} tasksHref={list}
+          savedSummary={submission ? (
             <p className="mt-1 text-sm text-slate-600">
               Entregada el {formatDateTime(submission.submittedAt, zone)}{submission.late ? " (tarde)" : ""}
               {submission.previousVersions > 0 ? ` La has cambiado ${submission.previousVersions} ${submission.previousVersions === 1 ? "vez" : "veces"}.` : ""}
@@ -79,16 +77,12 @@ export default async function AssignmentPage({ params, searchParams }: { params:
           ) : (
             <p className="mt-1 text-sm text-slate-600">Aún no has entregado esta tarea.</p>
           )}
-          {data.canSubmit ? (
-            <SubmitWithFiles assignmentId={assignment.id} content={submission?.content ?? ""} link={submission?.link ?? ""} resubmitting={Boolean(submission)} currentFiles={files.current} pendingFiles={files.pending} />
-          ) : (
+          readOnlyContent={
             <>
-              {submission && <Work content={submission.content} links={submission.link ? [submission.link] : []} />}
-              <FileList files={files.current} title="Archivos entregados" />
               <p className="mt-3 rounded-lg bg-slate-50 p-3 text-sm text-slate-700">{data.cannotSubmitReason}</p>
             </>
-          )}
-        </section>
+          }
+        />
       </div>
     );
   }
