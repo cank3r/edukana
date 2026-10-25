@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
   BarChart2, BookOpen, Building2, Calendar, ChevronRight, CreditCard, GraduationCap,
-  LayoutDashboard, LogOut, Megaphone, Menu, Settings, UserPlus, Users,
+  LayoutDashboard, LogOut, Megaphone, Menu, Settings, UserCircle, UserPlus, Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { navigationForRole } from "@/lib/ux";
@@ -57,6 +57,7 @@ export default function Sidebar({ user, capabilities }: { user: SidebarUser; cap
               })}
             </nav>
             {(user.institutionCount ?? 1) > 1 && <Link href="/elegir-institucion" className="mt-2 flex min-h-11 items-center gap-3 rounded-lg border-t border-slate-200 px-3 py-2 text-base font-semibold text-slate-700 hover:bg-slate-100"><Building2 size={20} aria-hidden="true" /> Cambiar de institución</Link>}
+            <Link href="/dashboard/perfil" onClick={(event) => event.currentTarget.closest("details")?.removeAttribute("open")} className="mt-2 flex min-h-11 items-center gap-3 rounded-lg border-t border-slate-200 px-3 py-2 text-base font-semibold text-slate-700 hover:bg-slate-100"><UserCircle size={20} aria-hidden="true" /> Mi perfil</Link>
             <button onClick={() => signOut({ callbackUrl: "/login" })} className="mt-2 flex min-h-11 w-full items-center gap-3 rounded-lg border-t border-slate-200 px-3 py-2 text-base font-semibold text-slate-700 hover:bg-slate-100">
               <LogOut size={20} aria-hidden="true" /> Cerrar sesión
             </button>
@@ -95,10 +96,10 @@ export default function Sidebar({ user, capabilities }: { user: SidebarUser; cap
           className="flex w-full items-center justify-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-400 transition-all hover:bg-white/5 hover:text-white md:justify-start">
           <LogOut size={18} /><span className="hidden md:block">Cerrar sesión</span>
         </button>
-        <div className="hidden items-center gap-3 rounded-lg px-3 py-2.5 md:flex" style={{ background: "rgba(255,255,255,0.04)" }}>
+        <Link href="/dashboard/perfil" title="Mi perfil" aria-label={`Mi perfil: ${user.name ?? ""}`} className="hidden items-center gap-3 rounded-lg px-3 py-2.5 transition-all hover:bg-white/10 md:flex" style={{ background: "rgba(255,255,255,0.04)" }}>
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ background: "var(--blue)" }}>{user.name?.charAt(0).toUpperCase() ?? "U"}</div>
           <div className="min-w-0"><p className="truncate text-sm font-medium text-white">{user.name}</p><p className="truncate text-xs" style={{ color: "#6B7DA8" }}>{user.email}</p></div>
-        </div>
+        </Link>
       </div>
       </aside>
     </>
