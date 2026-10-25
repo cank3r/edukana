@@ -4,6 +4,7 @@ import { getEffectiveCapabilities } from "@/lib/authorization";
 import { courseWhereForScope, resolveCourseReadScope } from "@/lib/course-scope";
 import { getCommunityAnnouncementWhere } from "@/lib/announcement-data";
 import { db } from "@/lib/db";
+import { FirstSteps } from "./FirstSteps";
 import { AlertCircle, BookOpen, CalendarCheck, ChevronRight, CreditCard, Megaphone, Users } from "lucide-react";
 
 const roleLabel = { SUPER_ADMIN: "Súper administrador", ADMIN: "Administrador", COORDINATOR: "Coordinador", TEACHER: "Docente", STUDENT: "Estudiante", PARENT: "Tutor" } as const;
@@ -74,6 +75,7 @@ export default async function DashboardPage() {
   return (
     <div className="mx-auto max-w-6xl p-4 sm:p-8">
       <header className="mb-8"><p className="mb-1 text-sm text-slate-600">Hola, {user.name?.split(" ")[0]}</p><h1 className="text-2xl font-bold" style={{ color: "var(--navy)" }}>¿Qué necesitas hacer hoy?</h1><span className="mt-2 inline-block rounded-full bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700">{roleLabel[user.role]}</span></header>
+      {capabilities.has("people.manage") && capabilities.has("tenant.settings.manage") && <FirstSteps institutionId={iid} />}
       <DashboardSection title="Requiere tu atención" description="Pendientes basados en la información actual de tu institución.">{attention.length > 0 ? <div className="grid gap-3 sm:grid-cols-2">{attention.map((item) => <TaskCard item={item} key={item.title} />)}</div> : <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4"><p className="font-semibold text-emerald-900">Todo al día</p><p className="text-sm text-emerald-800">No tienes pendientes que requieran atención ahora.</p></div>}</DashboardSection>
       <DashboardSection title="Continuar" description="Accede directamente a tus tareas más frecuentes."><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{continueItems.map((item) => <TaskCard item={item} key={item.title} />)}</div></DashboardSection>
       <DashboardSection title="Resumen" description="Una vista rápida con enlaces a cada detalle."><div className="grid gap-3 sm:grid-cols-3">{summary.map((item) => <Link className="rounded-xl border border-slate-200 bg-white p-5 hover:border-blue-300 hover:shadow-sm" href={item.href} key={item.label}><p className="text-2xl font-bold text-slate-900">{item.value}</p><p className="text-sm text-slate-600">{item.label}</p></Link>)}</div></DashboardSection>
