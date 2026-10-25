@@ -295,11 +295,13 @@ test("piloto canónico desplegado funciona de extremo a extremo", async ({ page 
     await logout(page);
     await login(page, pilot.users.admin.email);
     await gotoApp(page, "/dashboard/comunidad");
-    await page.getByText("Crear anuncio", { exact: true }).click();
+    await page.getByText("Publicar un aviso", { exact: true }).click();
     await page.getByLabel("Título").fill(announcementTitle);
-    await page.getByLabel("Mensaje").fill("## Información importante\n\n- Revisa la actividad del curso piloto.\n- Conserva este aviso para referencia.");
-    const targetCourses = page.locator("fieldset").filter({ hasText: "Cursos destinatarios" });
+    await page.getByLabel("Mensaje", { exact: true }).fill("## Información importante\n\n- Revisa la actividad del curso piloto.\n- Conserva este aviso para referencia.");
+    await page.getByRole("radio", { name: /Elegir con más detalle/ }).check();
+    const targetCourses = page.locator("fieldset").filter({ hasText: "Cursos que lo reciben" });
     await selectPickerCourseByCode(targetCourses, course.code);
+    await page.getByText("Opciones avanzadas", { exact: true }).click();
     const relatedCourses = page.locator("fieldset").filter({ hasText: "Cursos relacionados" });
     await selectPickerCourseByCode(relatedCourses, course.code);
     await page.getByLabel("Botón o enlace destacado").fill("https://example.com/piloto");
@@ -311,10 +313,10 @@ test("piloto canónico desplegado funciona de extremo a extremo", async ({ page 
     await writeFile(imagePath, Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Wl2nH0AAAAASUVORK5CYII=", "base64"));
     await page.locator('input[type="file"][accept*="image/png"]').setInputFiles(imagePath);
     await expect(page.getByRole("button", { name: "Retirar" })).toBeVisible({ timeout: 60_000 });
-    await page.getByRole("button", { name: "Revisar anuncio" }).click();
-    await expect(page.getByRole("heading", { name: "Confirma antes de publicar" })).toBeVisible();
-    await page.getByRole("button", { name: "Confirmar publicación" }).click();
-    await expect(page.getByText("Anuncio publicado correctamente.")).toBeVisible();
+    await page.getByRole("button", { name: "Revisar y publicar" }).click();
+    await expect(page.getByRole("heading", { name: "Revisa antes de publicar" })).toBeVisible();
+    await page.getByRole("button", { name: "Publicar aviso", exact: true }).click();
+    await expect(page.getByText("Aviso publicado. Ya aparece en la lista de abajo.")).toBeVisible();
 
     for (const user of [pilot.users.teacher, pilot.users.student, pilot.users.parent]) {
       await logout(page);
