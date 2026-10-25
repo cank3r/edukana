@@ -48,6 +48,83 @@ jobs:
       - run: { name: Auditar dependencias de producción, command: npm audit --omit=dev --audit-level=high }
       - run: { name: Verificar integridad del diff, command: git diff --check origin/master...HEAD }
 
+  # Recorrido en navegador: levanta la app compilada sobre una base sembrada y visita las pantallas
+  # del administrador, el docente y el estudiante. No bloquea a `validate`; corre en paralelo.
+  browser-smoke:
+    docker:
+      - image: cimg/node:22.20
+      - image: cimg/postgres:16.4
+        environment:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: edukana
+    environment:
+      DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/edukana
+      DIRECT_URL: postgresql://ci:ci@127.0.0.1:5432/edukana
+      AUTH_SECRET: circleci-build-only-secret-at-least-32-characters
+      CERTIFICATE_SECRET: circleci-certificate-secret-at-least-32-characters
+      AUTH_URL: http://127.0.0.1:3000
+      APP_URL: http://127.0.0.1:3000
+      AUTH_TRUST_HOST: "true"
+      LOCAL_STORAGE_ROOT: /tmp/edukana-smoke-storage
+      LOCAL_STORAGE_SECRET: circleci-local-storage-secret-at-least-32-characters
+      EDUKANA_INTEGRATION_DB: "1"
+      SMOKE_BASE_URL: http://127.0.0.1:3000
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - npm-v2-{{ checksum "package-lock.json" }}
+            - npm-v2-
+      - run: { name: Instalar dependencias, command: npm ci }
+      - run: { name: Instalar Chromium para Playwright, command: npx playwright install --with-deps chromium }
+      - run: { name: Generar Prisma Client, command: npx prisma generate }
+      - run:
+          name: Migrar PostgreSQL temporal desde cero
+          command: |
+            dockerize -wait tcp://127.0.0.1:5432 -timeout 60s
+            npx prisma migrate deploy
+      - run: { name: Sembrar el Instituto Demo, command: npm run test:smoke:seed }
+      - run: { name: Compilar producción, command: npm run build }
+      - run:
+          name: Arrancar la aplicación
+          background: true
+          command: |
+            mkdir -p smoke-artifacts "$LOCAL_STORAGE_ROOT"
+            npm run start -- -H 127.0.0.1 -p 3000 > smoke-artifacts/server.log 2>&1
+      - run:
+          name: Esperar a que la aplicación responda
+          command: |
+            for i in $(seq 1 60); do
+              if curl -fsS -o /dev/null http://127.0.0.1:3000/login; then echo "Lista tras $i intentos"; exit 0; fi
+              sleep 2
+            done
+            echo "La aplicación no respondió"; tail -n 50 smoke-artifacts/server.log; exit 1
+      - run: { name: Recorrido en navegador, command: npm run test:smoke }
+      - run:
+          name: Mostrar el informe del recorrido
+          when: always
+          command: cat smoke-artifacts/smoke-report.md || echo "No se generó el informe."
+      - run:
+          name: Texto de las pantallas en móvil (administrador)
+          when: always
+          command: tail -n +1 smoke-artifacts/texts/movil/*-administrador-*.txt || true
+      - run:
+          name: Texto de las pantallas en móvil (docente)
+          when: always
+          command: tail -n +1 smoke-artifacts/texts/movil/*-docente-*.txt || true
+      - run:
+          name: Texto de las pantallas en móvil (estudiante)
+          when: always
+          command: tail -n +1 smoke-artifacts/texts/movil/*-estudiante-*.txt || true
+      - store_test_results:
+          when: always
+          path: smoke-artifacts/junit
+      - store_artifacts:
+          when: always
+          path: smoke-artifacts
+          destination: smoke
+
 workflows:
   validate-real-mvp:
-    jobs: [validate]
+    jobs: [validate, browser-smoke]
