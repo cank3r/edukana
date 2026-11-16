@@ -31,7 +31,7 @@ Ningún harness nuevo, código, schema, migración, cambio de entorno o implemen
 | G-READY | Cero HD-01..26 fundacional abierto + cinco aprobaciones same-commit + autoridad HD-24 | T04–T07 | Transición documental separada |
 | T04 harness/evidence | G-READY | T05–T11 | Solo en claim de implementación |
 | T05 frontera S1 transicional | G-READY + T04 + HD-01/02/04/26 | T05A | Host, sesión legacy viva y contexto transicional; no crea identidad S2 |
-| T05A integración post-S2 | T05 + identity/Membership producer S2 DONE + HD-04/05/12/15 | T06/T07/T08/T09 | Integra el `User` existente ya evolucionado a identidad global y los modelos Membership/ProviderAccount/AuthSession producidos por S2 |
+| T05A integración post-S2 | T05 + identity/Membership producer S2 DONE + HD-04/05/12/15 | T06/T07/T08/T09 | Integra `User` global in-place, UserIdentityRemap, Membership/PersonProfile/ProviderAccount/AuthSession y edge manifest producidos por S2 |
 | T06 authz/navigation/atomicity | T05A + T04 | T07/T11 | Código futuro autorizado |
 | T07 DAL/auth/Storage | T05A + T06 | T09/T11 | Código futuro autorizado |
 | T08 DB expand/backfill | G-READY + T01 + T04 + T05A + identity/Membership producer S2 DONE + HD-05..15 | T09 | Schema/migration futura autorizada; spec00 integra, no posee el modelo identity |
@@ -263,9 +263,10 @@ password field/log o revocation fuera de SLA.
 
 ## T05A · Integración de sesión post-S2
 
-- [ ] Iniciar solo cuando la spec S2 haya evolucionado la tabla `User` existente, conservando IDs, hasta convertirla en
-  la única identidad global y entregue `Membership(institutionId,userId,...)`, role assignments, `ProviderAccount` y
-  `AuthSession` como productor `DONE`, con claves y contrato de compatibilidad aprobados.
+- [ ] Iniciar solo cuando la spec S2 haya evolucionado la tabla `User` existente hasta convertirla en la única identidad
+  global, conserve un `User.id` fuente canónico por clase, registre todos los IDs fuente en `UserIdentityRemap` y entregue
+  `Membership(institutionId,userId,...)`, role assignments, `ProviderAccount`, `AuthSession`, `PersonProfile`, edge
+  manifest y oráculos de design §14.2.1 como productor `DONE`, con claves y compatibilidad aprobadas.
 - [ ] Integrar `getRequestContext()` y todas las superficies con esos modelos sin duplicarlos, crear otra raíz de identidad
   ni modificar su ownership.
 - [ ] Implementar la matriz final `HD-04/HD-05/HD-15`: token N-1 `sub/idn/sv/role/institutionId`, mapping único hacia
@@ -329,6 +330,12 @@ S2 desde este claim.
 - [ ] Crear una migración nueva; no reescribir las 16 existentes.
 - [ ] Consumir el modelo Membership/roles/scopes producido y marcado DONE por S2/specs de identidad; spec00 no crea ni
   posee ese agregado. Integrar únicamente candidate keys, tenant columns y constraints de frontera aprobados.
+- [ ] Exigir en el handoff S2 el manifest de design §14.2.1: clases `Identity`/email, ranking canónico versionado,
+  `UserIdentityRemap` para todo source ID, autoridad de email/credential/status/sessionVersion, Membership/PersonProfile,
+  edge manifest completo de cada FK a `users.id`, quarantine y rollback N/N-1.
+- [ ] Verificar los oráculos exactos del handoff: source users=remaps, clases resueltas=Users canónicos, memberships y
+  perfiles reconciliados, conteo por cada FK antes/después, checksums iguales y cero remap/FK/email/provider pendientes.
+  Cualquier alias, colisión o fila sin explicación bloquea integración; T08 no cambia el algoritmo ni el agregado S2.
 - [ ] Por edge: crear/verificar parent UNIQUE `(institutionId,id)` low-lock, child index tenant-first, attach candidate
   key, add composite FK `NOT VALID` si aplica y validar solo tras cero null/orphan/mixed. Preservar FK simples y acciones
   ON DELETE/ON UPDATE durante N/N-1; retirar duplicados solo post-cutover+retention+EXPLAIN.

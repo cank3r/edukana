@@ -226,7 +226,7 @@ implementable; no autoriza schema ni migración.
 
 ```text
 User
-  -- única raíz de identidad; evoluciona in-place desde User legacy y conserva sus IDs
+  -- única raíz; evoluciona in-place desde User legacy; conserva un ID fuente canónico por clase y remapea los demás
   id PK
   emailOriginal
   emailCanonical UNIQUE (mecanismo/version HD-12)
@@ -234,6 +234,15 @@ User
   sessionVersion integer NOT NULL
   status ACTIVE|SUSPENDED|DELETED
   createdAt, updatedAt
+
+UserIdentityRemap
+  legacyUserId PK
+  canonicalUserId NOT NULL FK User
+  sourceInstitutionId NOT NULL FK Institution
+  identityId nullable  -- evidencia transitoria, no raíz target
+  migrationVersion, reason, sourceHash, createdAt
+  INDEX (canonicalUserId, sourceInstitutionId)
+  -- append-only; cubre también canonicalUserId=legacyUserId
 
 ProviderAccount
   id PK
@@ -305,10 +314,12 @@ con esta opción en un contrato READY.
 Google/Microsoft solo crean identidad con claims verificados aprobados y `emailCanonical` libre. Una colisión nunca enlaza:
 requiere autenticación del método existente y reautenticación reciente. Provider email change no rekeyea ni fusiona.
 Unlink conserva un método usable, revoca tokens, incrementa `sessionVersion` y audita. La tabla `User` existente es la
-única raíz: conserva IDs, se expande in-place y deja `institutionId/role` como campos legacy durante N/N-1. Membership se
-backfillea con `(institutionId,userId,...)`; `ProviderAccount`, `AuthSession` y recovery se adaptan aditivamente desde
-`Account`/`Session`/tokens hacia ese mismo `User`, con shadow parity. No se crea otra tabla raíz de usuario. Rollback
-apaga proveedores/linking sin borrar vínculos; takeover recovery y last-method tienen oráculos.
+única raíz y se expande in-place. Para cada clase de identidad resuelta, el algoritmo versionado conserva exactamente un
+`User.id` fuente como canónico y escribe `UserIdentityRemap` para todos los IDs fuente, incluido el canónico. Las
+Membership apuntan al ID canónico y conservan `sourceInstitutionId`; los campos `institutionId/role` legacy permanecen
+durante N/N-1. `ProviderAccount`, `AuthSession`, recovery y todos los FK a `User` se adaptan mediante ese ledger y shadow
+parity. No se crea otra tabla raíz de usuario ni se descarta un ID fuente. Rollback apaga proveedores/linking y vuelve a
+lecturas legacy antes del cutover sin borrar remaps; takeover recovery y last-method tienen oráculos.
 
 ### 7.2 Scope tipado
 
@@ -558,7 +569,7 @@ revocación concurrente e identity-store failure. Hasta entonces, el diseño es 
 type RequestContext = {
   authority: HostAuthority;
   correlationId: string;
-  globalUser: { id: string; sessionVersion: number; status: "ACTIVE" } | null;
+  user: { id: string; sessionVersion: number; status: "ACTIVE" } | null;
   institution: { id: string; status: string; plan: string } | null;
   membership: { id: string; status: "ACTIVE"; version: number } | null;
   activeRole: { assignmentId: string; roleId: string; version: number; scopeId: string } | null;
@@ -694,7 +705,10 @@ La lista se amplía desde el schema inventariado. Ninguna fila puede omitirse po
 
 | Tabla destino | Fuentes autoritativas candidatas | Igualdades obligatorias | Categoría de anomalía |
 |---|---|---|---|
-| `Membership` | cada `User` existente; `Identity` solo como evidencia transitoria de reconciliación cuando exista | conservar `User.id`; `(institutionId,userId)` deriva de pertenencia legacy única y colisiones de email se resuelven por la política aprobada | missing_identity_mapping, email_collision, duplicate_membership |
+| `User` global in-place | `users` legacy + `Identity` transitoria + `Account`/`Session` | una clase resuelta produce un ID canónico; email/credential/status/sessionVersion siguen autoridad versionada; ningún source ID queda sin remap | identity_without_user, user_without_identity, shared_identity_conflict, email_mismatch, canonical_email_collision, credential_conflict, unknown_status |
+| `UserIdentityRemap` | cada `User.id` fuente | exactamente una fila por ID fuente; `canonicalUserId` pertenece a su clase y existe; source hash/checksum estable | duplicate_source_mapping, cross_class_target, missing_canonical_user |
+| `Membership` | cada pertenencia `User(institutionId,role,status)` legacy + `UserIdentityRemap` | una Membership por `(institutionId,canonicalUserId)`; rol/status/scope se transforman por matriz aprobada; duplicado intra-Institution se resuelve o cuarentena | missing_identity_mapping, duplicate_membership, role_mapping_unknown, scope_ambiguous |
+| `PersonProfile` | campos personales de cada `User` legacy + `UserIdentityRemap` | `(institutionId,canonicalUserId)` conserva nombre/teléfono/avatar y divergencias institucionales sin sobrescribir otra Institution | duplicate_profile, profile_field_conflict, missing_membership |
 | `CourseModule` | `Course` | module.courseId→course.id; tenant=course.institutionId | missing_course, duplicate_parent |
 | `Enrollment` | `Course` + student/User | course.tenant=student.tenant=target tenant | missing_course, missing_student, mixed_tenant |
 | `Assignment` | `Course` | assignment.courseId→course.id | missing_course, existing_tenant_mismatch |
@@ -703,6 +717,51 @@ La lista se amplía desde el schema inventariado. Ninguna fila puede omitirse po
 | `ExamAnswer` | `ExamAttempt` + `QuestionBankItem` | attempt.tenant=item.tenant | missing_attempt, missing_item, mixed_tenant |
 | `OrganizationalUnitMembership` | explicit Institution + Unit + User/Membership | row.tenant=unit.tenant=membership.tenant | missing_unit, missing_membership, mixed_tenant |
 | `AuditEvent` desde `AuditLog` legacy | AuditLog + actor/User + entity/operación + control-plane registry | derivar target tenant solo con una fuente única; null solo para clase platform/global aprobada | missing_actor, ambiguous_target, invalid_global_class, retention_unknown |
+
+#### 14.2.1 Consolidación in-place de `User` — CANDIDATE `HD-12`
+
+El manifest no asume que una fila institucional equivale a una identidad global. Antes de escribir, congela una versión
+de canonicalización y construye clases de equivalencia reproducibles:
+
+1. Usuarios con el mismo `identityId` no nulo forman una clase. Una `Identity` sin `User` es anomalía; dos `Identity`
+   distintas que normalizan al mismo email son `canonical_email_collision` y nunca se fusionan por orden de consulta.
+2. Usuarios sin `Identity` se agrupan por email canónico solo si el algoritmo aprobado produce exactamente una clase y
+   sus credenciales no divergen. Email inválido, divergencia o colisión con otra clase entra en cuarentena y niega login;
+   no hay merge automático por proveedor ni por similitud de nombre.
+3. Dentro de una clase resuelta, la opción candidata conserva como `canonicalUserId` el menor tuple
+   `(createdAt UTC, id bytewise)`; ningún criterio depende del orden del query. `HD-12` debe aprobar o reemplazar este
+   ranking antes de READY. Cada source ID, incluido el canónico, recibe una fila inmutable `UserIdentityRemap` con hash.
+4. Email global proviene de `Identity.email` cuando existe y coincide con la canonicalización de cada `User.email` de
+   la clase; sin Identity, proviene del único email canónico común. El credential verifier proviene de
+   `Identity.passwordHash` cuando existe; si falta, debe haber como máximo un valor no nulo distinto en `User.password`.
+   Conflicto de email o credencial se pone en cuarentena, nunca se elige uno. El estado usa la precedencia conservadora
+   `SUSPENDED > INACTIVE > ACTIVE`; valor desconocido se bloquea. En el cutover,
+   `sessionVersion = max(Identity.sessionVersion, User.sessionVersion de la clase) + 1`, con overflow bloqueante, para
+   invalidar sesiones previas. `User.name`, `phone`, `avatarUrl` y demás variantes por Institution se preservan en
+   `PersonProfile`, no se resuelven sobrescribiendo una Institution con otra.
+5. Cada FK a `users.id` se enumera desde `pg_catalog` y el schema Prisma en un edge manifest versionado. Expand agrega su
+   referencia canónica paralela; backfill la obtiene solo de `UserIdentityRemap`; shadow parity compara ambas. Account,
+   Session, recovery y referencias de dominio conservan sus columnas legacy hasta cero pendientes. Conflictos de
+   unicidad de proveedor, sesión o Membership se cuarentenan. Ninguna fila fuente se borra en expand/backfill.
+
+Oráculos obligatorios antes de cutover:
+
+```text
+sourceUserCount = userIdentityRemapCount
+resolvedIdentityClassCount = canonicalUserCount
+sourceInstitutionMembershipCount = membershipCount + quarantinedDuplicateMembershipCount
+para cada FK edge: sourceReferenceCount = canonicalReferenceCount + quarantinedReferenceCount
+unresolvedRemapCount = danglingCanonicalIdCount = crossClassRemapCount = 0
+canonicalEmailDuplicateCount = providerAccountDuplicateCount = pendingLegacyFkCount = 0
+sourceProjectionChecksumV1(User + Identity + Account + Session) =
+  targetProjectionChecksumV1(canonical User + remap + Membership + PersonProfile + quarantine)
+```
+
+Ambas proyecciones declaran columnas ordenadas, IDs remapeados, null explícito, normalización y representación de
+quarantine para que la igualdad compare la misma información lógica. Cada igualdad se registra por migrationId y
+checkpoint con conteos y SHA-256 antes/después. Toda cuarentena debe quedar en cero o tener resolución humana individual
+y auditable antes de M4/cutover. Rollback pre-cutover vuelve a lecturas legacy mediante el remap inverso sin borrar
+columnas, aliases ni evidencia. Después de cutover aplica la clasificación forward-fix de `HD-15`.
 
 Cada entry declara:
 

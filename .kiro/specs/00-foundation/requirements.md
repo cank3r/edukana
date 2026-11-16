@@ -191,10 +191,13 @@ producción, no la promoción de la fundación.
 #### R-03.11–R-03.16 · Password, Google y Microsoft sin linking implícito
 
 11. **CANDIDATE `HD-12`:** `ProviderAccount` pertenece a `User`, nunca a una Membership, y es globalmente único por
-   `(provider, providerAccountId)`. La tabla `User` existente conserva sus IDs y se expande en el lugar hasta ser global;
-   `Membership(institutionId,userId,...)` se backfillea desde `User.institutionId/role`. `Account`, `Session` y recovery
-   se adaptan a esa misma raíz mediante expansión, comparación y compatibilidad N/N-1. Ningún FK ni campo legacy se
-   retira durante expansión y está prohibido crear una segunda raíz de identidad.
+   `(provider, providerAccountId)`. La tabla `User` existente es el único destino físico y se expande en el lugar hasta
+   ser global; no se crea otra raíz. Cuando varias filas legacy representan la misma identidad, una regla versionada elige
+   exactamente un `User.id` fuente como ID canónico y registra cada otro ID en un ledger append-only
+   `UserIdentityRemap(legacyUserId,canonicalUserId,sourceInstitutionId,migrationVersion)`. Ningún ID fuente desaparece sin
+   remap verificable. `Membership(institutionId,userId,...)` se backfillea por pertenencia legacy hacia el ID canónico;
+   `Account`, `Session`, recovery y cada FK existente a `User` se remapean mediante el mismo ledger durante expansión y
+   compatibilidad N/N-1. Ningún FK ni campo legacy se retira antes de paridad, cero referencias pendientes y cutover.
 12. Google y Microsoft solo pueden autenticar con el conjunto de claims verificados que `HD-12` apruebe por proveedor.
    Un email de proveedor nuevo puede crear identidad únicamente cuando su `emailCanonical` está libre.
 13. Si `emailCanonical` ya pertenece a otra identidad, el proveedor nunca se auto-enlaza ni fusiona cuentas. La persona
@@ -746,8 +749,10 @@ identidades, roles, scopes, relaciones y estados; “representativo” sin manif
 4. Server Action, API y job falsificados, con oráculo por superficie y cero side effects.
 5. Otro usuario, relación/scope ausente, cross-tenant y tupla mixta en INSERT/UPDATE.
 6. Revocación, `sessionVersion`, cambio concurrente de rol y TOCTOU durante una mutación.
-7. Roles custom/templates y transición legacy: matriz `SUPER_ADMIN|ADMIN|COORDINATOR|TEACHER|STUDENT|PARENT` hacia
-   roles objetivo, alta explícita de roles sin equivalente, y FK cross-tenant de rol/target falla en INSERT/UPDATE.
+7. Identidad y roles: clases con varios `User` por `Identity`, usuarios sin `Identity`, Identity sin User, email/hash
+   divergente, colisión canónica, selección determinista de canonicalUserId, `UserIdentityRemap`, Membership/PersonProfile,
+   remap de cada FK y conteos/checksums exactos; además matriz `SUPER_ADMIN|ADMIN|COORDINATOR|TEACHER|STUDENT|PARENT`
+   hacia roles objetivo, alta explícita de roles sin equivalente y FK cross-tenant de rol/target falla en INSERT/UPDATE.
 8. RLS generado por manifest para cada tabla/operación concedida, como rol app.
 9. Rol app versus owner/migrator y ausencia de rollback a privilegio inseguro.
 10. Auth repository: tenant/support/reporting no enumeran identidad ni leen `passwordHash`.
@@ -796,9 +801,11 @@ satisface los demás gates. Una implementación futura tampoco puede aceptarse h
 6. Los 16 estados post-migración y el demo actual tengan disposition `SUPPORTED|EXCLUDED` con evidencia; cada supported
    migre y haga rollback dual con conteos/checksums exactos e interrupción reproducible, incluida reconciliación alpha si aplica.
 7. Locks, timeouts, lotes, retries, write pause, ventana y abort thresholds estén dentro del presupuesto completo de R-10.15.
-8. Revocación falla cerrada en la primera petición nueva de página, action, API, job actuando por una persona y
-   `/api/auth/session`; la matriz N/N-1 de `HD-04/HD-05/HD-15` prueba cada claim, mapping, reissue, drain y cutover sin
-   usar role/Institution del token como autoridad.
+8. La evolución in-place de `User` demuestre source users=remaps, clases resueltas=Users canónicos, Membership y
+   PersonProfile completos, conteos iguales por cada FK remapeada, checksums source=target+quarantine y cero colisiones/
+   referencias pendientes antes de cutover. Después, revocación falla cerrada en la primera petición nueva de página,
+   action, API, job actuando por una persona y `/api/auth/session`; la matriz N/N-1 de `HD-04/HD-05/HD-12/HD-15` prueba
+   cada claim, mapping, reissue, drain y cutover sin usar role/Institution del token como autoridad.
 9. El SHA exacto pase el release manifest; todo check requerido termina SUCCESS y deployment identity coincide con commit.
 10. Los artefactos de **evidencia de release** tienen hash/provenance, redacción verificada y retención aprobada no menor
     de 14 días. Los artefactos de **exportación de reportes** dejan de estar disponibles exactamente a 30 días incluso
