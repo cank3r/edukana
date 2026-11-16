@@ -16,6 +16,9 @@ const assignment = {
 const course = { id: "course-fixture", institution: { timezone: "UTC" } };
 const user = () => ({ id: "viewer-fixture", institutionId: "institution-fixture", role });
 const navigation = { notFound: () => { throw new Error("NOT_FOUND"); }, redirect: () => { throw new Error("REDIRECT"); } };
+const submissionComponents = loadWithStubs("src/app/dashboard/aula/[courseId]/tareas/[assignmentId]/SubmissionFiles.tsx", {
+  "@/server/actions/files": { submitWithFilesAction: async () => { throw new Error("SSR must not submit"); } },
+});
 const assignmentPage = loadWithStubs("src/app/dashboard/aula/[courseId]/tareas/[assignmentId]/page.tsx", {
   "@/lib/auth": { auth: async () => ({user: user()}) },
   "@/lib/authorization": { getEffectiveCapabilities: async () => new Set(["course.view"]) },
@@ -30,7 +33,7 @@ const assignmentPage = loadWithStubs("src/app/dashboard/aula/[courseId]/tareas/[
     submissionFilesForStudent: async () => ({current:[],pending:[]}), submissionFilesForManager: async () => [],
   },
   "../AssignmentTools": { GradeForm: () => null },
-  "./SubmissionFiles": { FileList: () => null, SubmitWithFiles: () => null },
+  "./SubmissionFiles": submissionComponents,
 });
 const renderAssignment = async () => renderToStaticMarkup(await assignmentPage.default({
   params: Promise.resolve({courseId:course.id,assignmentId:assignment.id}), searchParams:Promise.resolve({}),
@@ -40,7 +43,7 @@ beforeEach(() => {role="STUDENT"; available=true; assignment.instructions=instru
 test("student task page displays complete instructions and the existing resource text", async () => {
   const html = await renderAssignment();
   assert.ok(html.includes(instructions));
-  assert.match(html, /aria-labelledby="instrucciones"/);
+  assert.match(html, /aria-labelledby="[^"]+-instructions"/);
 });
 
 test("teacher task page displays the same instructions used to assess submissions", async () => {
