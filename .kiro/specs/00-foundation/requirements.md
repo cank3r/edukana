@@ -3,7 +3,7 @@
 **Estado:** DRAFT-CANDIDATE
 **Base autoritativa auditada:** `origin/todo/tanda-4` en `d16502906aaba04f7fdad2323a1152f3efeb1794`
 **Baseline documental pre-Phase B:** PR #130 en `bdb1a9d8844af7bc2e2817903d9dd37492a79523`
-**Candidato actual:** diff local autorizado, aún sin commit inmutable; sus hashes y revisiones exactas se registrarán después de un commit separado autorizado.
+**Candidato actual:** bytes de la rama de PR #130; cada revisión reusable debe registrar el SHA exacto observado en GitHub.
 **Fecha de evidencia:** 2026-11-16
 **Claim:** `SPEC00-TRUSTED-BOUNDARY-20261115`
 **Autoridad:** propuesta documental; no autoriza implementación, migración, merge ni despliegue.
@@ -27,9 +27,12 @@
    la fila propia de coordinación, inspección de repositorio y PR, y recolección **read-only** expresamente autorizada de
    roles, pooler, conteos, anomalías, tamaños, backups y límites operativos. Ninguna actividad pre-READY puede escribir
    código, schema, migraciones, datos, Storage, configuración o infraestructura.
-6. El paquete permanece **DRAFT-CANDIDATE** mientras exista una decisión técnica `HD-*` abierta, falte evidencia o falte
-   una aprobación humana independiente sobre arquitectura, seguridad, migraciones/datos, producto/UX y testabilidad.
-   Las decisiones humanas registradas en §5.1 fijan valores de producto y operación, pero no sustituyen ese cierre.
+6. El paquete permanece **DRAFT-CANDIDATE** mientras exista una decisión fundacional `HD-01..HD-26` abierta, falte
+   evidencia fundacional o falte una aprobación humana independiente sobre arquitectura, seguridad, migraciones/datos,
+   producto/UX y testabilidad de esta frontera. `HD-27..HD-41` son gates de specs productoras, recorridos y reportería:
+   permanecen abiertos en sus handoffs y bloquean esos nodos y producción, pero no crean una dependencia circular para
+   la transición READY de la fundación. Las decisiones humanas registradas en §5.1 fijan valores de producto y operación,
+   pero no sustituyen ningún cierre técnico.
 7. READY exige un cambio posterior, separado y autorizado. READY será prerrequisito explícito de todo harness nuevo,
    código de producto, DDL, migración o cambio operacional.
 8. PR #129 es evidencia acotada de presentación de tareas. No acredita ni modifica este contrato fundacional.
@@ -125,12 +128,14 @@ para el diseño posterior, pero no prueban viabilidad, no cierran por sí solas 
 | AHD-07 | Registro y marketplace | Registro institucional solo por invitación; marketplace público. | Flujos de cuenta/checkout, antiabuso, cuotas, privacidad y autoridad (`HD-03`, T02/T05). |
 | AHD-08 | Matriz cliente | Web responsive y PWA con matriz móvil completa. | Browsers, OS, dispositivos, AT, versiones y evidencia humana (`HD-23`, T02/T11). |
 | AHD-09 | Disponibilidad | 99,9 % mensual. | SLI, exclusiones, error budget, fuentes, alertas y retención (`HD-20`, T02/T11). |
-| AHD-10 | Autenticación | Contraseña, Google y Microsoft. | Normalización/linking/colisiones (`HD-12`), revocación (`HD-04`), recovery y configuración segura; T02/T05/T11. |
+| AHD-10 | Autenticación | Contraseña, Google y Microsoft. | Normalización/linking/colisiones (`HD-12`), revocación (`HD-04`), recovery y configuración segura; T02/T05A/T11. |
 
 ## 6. Requisitos normativos
 
-Las opciones aún sujetas a una decisión humana se marcan **CANDIDATE**. No forman un contrato READY hasta registrar
-opción, autoridad y fecha en `design.md` y regenerar requisitos, diseño, tareas y oráculos coherentes.
+Las opciones fundacionales `HD-01..HD-26` aún sujetas a decisión humana se marcan **CANDIDATE** y bloquean G-READY
+hasta registrar opción, autoridad y fecha en `design.md` y regenerar requisitos, diseño, tareas y oráculos coherentes. Las
+opciones downstream `HD-27..HD-41` se mantienen CANDIDATE como handoffs acotados; bloquean su spec dueña, sus nodos y
+producción, no la promoción de la fundación.
 
 ### R-01 · Autoridad de host y bootstrap cerrado
 
@@ -147,9 +152,11 @@ opción, autoridad y fecha en `design.md` y regenerar requisitos, diseño, tarea
    de los demás datos de Institution. Toda transición de lifecycle actualiza esa proyección y su versión en la misma
    transacción que el estado fuente y el AuditEvent/outbox. El owner-definer posee únicamente la tabla de mapeo y la
    función, y ningún otro dato tenant.
-8. La función solo devuelve `institutionId`, `canonicalHost`, `domainStatus` e `institutionRoutingStatus`; no devuelve
-   marca, identidad, membership, plan, correo ni datos académicos. Cero o más de una coincidencia, estado no enrutable o
-   versiones contradictorias producen resultado cerrado.
+8. La función devuelve un único DTO interno `ResolvedInstitutionRoute` con `institutionId`, `canonicalHost`,
+   `domainStatus`, `institutionRoutingStatus` y `routingVersion`. La autoridad pública `TENANT` se deriva de ese DTO y
+   omite `domainStatus`, `institutionRoutingStatus` y `routingVersion`; no expone marca, identidad, membership, plan,
+   correo ni datos académicos. Cero o más de una coincidencia, estado no enrutable o versión ausente/contradictoria
+   producen resultado cerrado.
 9. El caller resolver es no-owner y `NOBYPASSRLS`; solo puede ejecutar la función. La función no expone un cliente general
    de plataforma y registra métricas agregadas sin PII; cambios de dominio o lifecycle sí generan auditoría.
 10. Mientras `HD-11/HD-26` no aprueben un mecanismo distribuido de consistencia, autoridad de host no usa cache positiva
@@ -228,10 +235,12 @@ opción, autoridad y fecha en `design.md` y regenerar requisitos, diseño, tarea
 ### R-05 · Autorización central y orden vinculante
 
 1. Los prerrequisitos de autenticación se evalúan primero: autoridad de host, identidad viva y Membership viva.
-2. `can()` sigue exactamente: **Institution activa → módulo/plan disponible → capability → scope → relación → estado del
-   recurso → política de operación**.
-3. Cada página, acción, API, job, función DAL y destino de navegación declara esas dimensiones; cualquier superficie o
-   dimensión ausente deniega.
+2. `can()` aplica después una política de lifecycle por operación: las operaciones de negocio requieren Institution
+   `ACTIVE`; `SUSPENDED` y `CANCELLED` niegan por defecto y solo admiten operaciones de recovery incluidas en la allowlist
+   mínima de R-13/`HD-25`, cada una con capability, reautorización y auditoría propias. Tras ese gate evalúa exactamente:
+   **módulo/plan disponible → capability → scope → relación → estado del recurso → política de operación**.
+3. Cada página, acción, API, job, función DAL y destino de navegación declara lifecycle/operación y las demás dimensiones;
+   cualquier superficie o dimensión ausente deniega.
 4. Una URL/ID ajeno devuelve 404 sin revelar existencia. UI oculta no sustituye la decisión del servidor.
 5. `FINANCE` no lee académico; `TEACHER` y `ACADEMIC_LEAD` no leen finanzas por rutas indirectas.
 6. `GUARDIAN` sin vínculo activo puede leer solo su propio perfil y avisos generales autorizados. Todo dato de un hijo
@@ -248,9 +257,11 @@ opción, autoridad y fecha en `design.md` y regenerar requisitos, diseño, tarea
 
 11. `HD-17` permanece abierto. Solo un principal de plataforma activo con `platform.support.impersonate` puede solicitar
    una sesión con Institution, Membership/asignación objetivo, motivo de 20–500 caracteres, ticket, duración y modo de
-   autoridad. `OWNER_CONSENT` exige un registro append-only de aprobación vigente del OWNER; `BREAK_GLASS` exige dos
-   registros de aprobadores de plataforma independientes y nunca concede counseling. Cada approval liga approver,
-   sesión, mode, scope hash, decisión, creación, expiración/revocación y correlation ID mediante FK.
+   autoridad. `OWNER_CONSENT` exige una aprobación append-only vigente del OWNER; `BREAK_GLASS` exige dos aprobaciones
+   append-only de plataforma independientes y nunca concede counseling. Cada aprobación liga approver, sesión, mode,
+   scope hash, decisión, creación, expiración y correlation ID mediante FK. Una revocación posterior se representa con
+   una fila append-only separada que referencia la aprobación; nunca muta ni duplica la aprobación original. La policy
+   deriva vigencia de aprobación, expiración y ausencia de revocación en cada request.
 12. `expiresAt = min(createdAt + requestedDuration, createdAt + 1800 s)` se impone con constraint DB. No hay extensión ni
    renovación; una nueva sesión requiere nueva autoridad. Cada operador puede tener como máximo una sesión activa.
 13. Permisos efectivos son la intersección del rol/asignación objetivo vigente, estado de Institution y allowlist
@@ -438,9 +449,15 @@ opción, autoridad y fecha en `design.md` y regenerar requisitos, diseño, tarea
 
 9. El release manifest congela N contra la fecha candidata y registra versiones completas. PWA exige HTTPS, manifest
    scoped, `start_url`, standalone, colores, iconos 192/512 y maskable, service worker controlador y update determinista.
-   Offline solo abre shell y lecciones de texto previamente autorizadas con `lastUpdated`; login, contenido no cacheado,
-   exports, notas, pagos y mutaciones sensibles fallan claramente y no se encolan. Logout, revocación, cambio de rol,
-   suspensión y cancelación purgan caches protegidos.
+   Offline solo abre shell y lecciones de texto previamente autorizadas con `lastUpdated` bajo una
+   **authorization lease CANDIDATE de `HD-36`** ligada a GlobalUser, sesión, Institution, recurso+versión y dispositivo.
+   La lease tiene `issuedAt` y `expiresAt`; su duración final queda abierta y no se infiere en esta spec. Un reloj local
+   atrasado, rollback de reloj o imposibilidad de demostrar tiempo confiable invalida la lease. Login, contenido no
+   cacheado, exports, notas, pagos y toda mutación sensible fallan claramente y no se encolan. Logout y cambios de
+   sesión/rol/relación/Institution/lifecycle observados localmente purgan o inutilizan criptográficamente el contenido
+   protegido antes de volver a mostrarlo. Una revocación ocurrida mientras el dispositivo está desconectado impide renovar
+   la lease y se aplica en el próximo check online confiable; el acceso residual offline nunca supera `expiresAt`. Un cambio
+   de versión del recurso también invalida en el próximo check y no puede extender una lease existente.
 10. **CANDIDATE `HD-25`:** la matriz de Institution siguiente no es autoridad hasta aprobación de producto, privacidad,
     seguridad, billing y retención:
 
@@ -558,7 +575,18 @@ filters, impersonation y service jobs no heredan acceso. `report.export` no conc
     lectura, headings, tablas, etiquetas, contraste, reflow aplicable y metadata; ambos formatos conservan la misma
     proyección y semántica.
 13. Vistas guardadas y schedules almacenan parámetros validados, versión del reporte, timezone, owner y destinatarios
-    autorizados. Antes de cada ejecución y entrega se reautoriza; deshabilitar actor, permiso o reporte detiene el schedule.
+    autorizados. **CANDIDATE `HD-41`:** cada ocurrencia se identifica de forma única por
+    `(scheduleId, scheduleVersion, occurrenceAtUtc)`. La versión congela timezone y regla civil; la política final debe
+    elegir explícitamente qué hacer con horas inexistentes y horas repetidas por DST, ejecuciones perdidas durante
+    downtime, catch-up, solapamiento y máximo de concurrencia. Retries conservan la misma ocurrencia y no crean otra.
+    Una edición crea una versión nueva con `effectiveAtUtc`: ocurrencias anteriores permanecen en la versión anterior y
+    las posteriores usan solo la nueva; cancelación impide claims nuevos sin convertir un claim ya confirmado en una
+    entrega autorizada. La ocurrencia congela un snapshot de destinatarios para trazabilidad, pero cada destinatario se
+    reautoriza inmediatamente antes de generar su proyección y antes de entregar. Cada entrega usa una clave idempotente
+    por `(scheduleId, scheduleVersion, occurrenceAtUtc, recipientId, channel, reportArtifactVersion)` y no se duplica bajo
+    retry o worker concurrente. Las opciones concretas de DST, missed-run, overlap, cutover y cancelación siguen abiertas
+    hasta aprobación de `HD-41`; la ausencia de una opción bloquea spec 14 READY. Deshabilitar actor, permiso o reporte
+    detiene el schedule.
 14. La suite negativa cubre URL directa, `reportId`, job ID, artifact ID, saved-view ID y schedule ID falsificados o
     ajenos; otro usuario, rol o Institution; filtros/fields no permitidos e inferencia por filtros ocultos; descarga
     expirada/cancelada; retry concurrente; y asegura 404/denegación, cero filas, cero entrega, cero artefactos nuevos y
@@ -666,10 +694,14 @@ fixtures, asignación de clientes y owner humano; ninguna fila puede aceptarse p
 
 | Actor | Estado inicial y acciones visibles | Outputs persistidos y comprobación | Negativas/degradación y evidencia |
 |---|---|---|---|
-| ADMIN | Autentica en Institution activa; desde inicio abre estructura académica, crea/selecciona Course reusable y Offering, asigna staff, matricula grupo, publica semana híbrida, resuelve una excepción de ClassSession, revisa cierre de asistencia/notas, comunica y solicita reportes autorizados. Las rutas exactas salen de los registries READY de D02-D10. | Course y Offering quedan separados; staff/enrollments/sessions/audit/outbox persisten; report request referencia producers/versiones. Reload y sesión fresca muestran el mismo resultado y ninguna operación depende de un toast. | Último OWNER, autoelevación, role/scope ajeno, cross-user/Offering/Institution IDs, capacity race, revoked/suspended/cancelled, stale form, lost response y 320/360/offline. Owner de aceptación y cliente exacto quedan en `HD-37/HD-23`. |
-| TEACHER | Autentica; abre Today, entra a Offering/ClassSession asignada, publica contenido/archivo, crea tarea y examen, observa submission/attempt, toma asistencia de 30 estudiantes, califica/corrige con motivo, publica/recalcula, comunica y consulta reporte de su scope. | Versiones de contenido, attempts, answer acknowledgements, attendance corrections, grade snapshot/revisions, messages y AuditEvent/outbox persisten tras reload y sesión fresca; archivo se reautoriza. | Offering/session no asignada, estudiante/attempt ajeno, close/reopen no autorizado, stale roster, duplicate/lost response, revoked relation, otro tenant, offline sin write queued; objetivo de asistencia <1 min y clientes asignados por `HD-37/23`. |
+| ADMIN | Autentica en Institution activa; desde inicio abre estructura académica, crea/selecciona Course reusable y Offering, asigna staff, matricula grupo, publica semana híbrida, resuelve una excepción de ClassSession, revisa cierre de asistencia/notas y comunica. Las rutas exactas salen de los registries READY de D02-D10. | Course y Offering quedan separados; staff/enrollments/sessions/audit/outbox persisten. Reload y sesión fresca muestran el mismo resultado y ninguna operación depende de un toast. | Último OWNER, autoelevación, role/scope ajeno, cross-user/Offering/Institution IDs, capacity race, revoked/suspended/cancelled, stale form, lost response y 320/360/offline. Owner de aceptación y cliente exacto quedan en `HD-37/HD-23`. |
+| TEACHER | Autentica; abre Today, entra a Offering/ClassSession asignada, publica contenido/archivo, crea tarea y examen, observa submission/attempt, toma asistencia de 30 estudiantes, califica/corrige con motivo, publica/recalcula y comunica. | Versiones de contenido, attempts, answer acknowledgements, attendance corrections, grade snapshot/revisions, messages y AuditEvent/outbox persisten tras reload y sesión fresca; archivo se reautoriza. | Offering/session no asignada, estudiante/attempt ajeno, close/reopen no autorizado, stale roster, duplicate/lost response, revoked relation, otro tenant, offline sin write queued; objetivo de asistencia <1 min y clientes asignados por `HD-37/23`. |
 | STUDENT | Autentica; Today muestra ubicación/join en ≤2 acciones; abre contenido/archivo autorizado, entrega tarea con retry seguro, inicia/autoguarda/reconecta/finaliza examen, consulta calendario/mensajes y solo notas publicadas más asistencia/progreso propio. | SubmissionAttempt y ExamAttempt conservan IDs/versiones; status lookup resuelve respuesta perdida; respuestas confirmadas, progreso y estado publicado persisten tras reload/sesión fresca sin duplicar. | Otro estudiante, sin Enrollment, Offering cerrada, artifact/file ajeno, answer stale, retry concurrente, unpublished grade, revoked/suspended/cancelled, cross-tenant y offline/reconnect conforme R-04/R-13. |
 | GUARDIAN | Autentica; abre `/dashboard/hijos`, selecciona `/dashboard/hijos/[studentId]` vinculado, consulta schedule/ClassSession, asistencia, tareas, notas publicadas, archivos, anuncios/mensajes permitidos y envía una justificación de asistencia si el productor la autoriza. | Solo proyección del hijo/área autorizados; justificación, audit/outbox y estado resultante persisten tras reload/sesión fresca; selector y flujo cumplen teclado/AT. | Sin vínculo conserva solo perfil/avisos generales; vínculo o área revocados, otro hijo, dato counseling/peer, direct IDs, otro tenant, response loss, suspended/cancelled y offline sin cola sensible. |
+
+Los recorridos base terminan en los productores D02–D10 y no solicitan ni consultan reportes. Las extensiones de recorrido
+para reportería se definen y aceptan únicamente después de D14 READY y D15 implementado; D17 las prueba sin convertirlas
+en prerrequisito de D11/`HD-37`.
 
 Cada recorrido registra start fixture, route/surface IDs, acciones, row/object/outbox/audit deltas, reload/fresh-session,
 identidades negativas, viewport/browser/OS/AT, tester/owner, exact SHA y artefactos en el manifest de R-14. Un productor
@@ -745,10 +777,12 @@ Para cada negativa, el manifest declara como mínimo:
 ## 11. Criterios medibles de aceptación
 
 El paquete no puede proponerse como READY hasta registrar G0 por mecanismo autoritativo o excepción trazable, cerrar
-`HD-01..HD-41`, actualizar cláusulas condicionales, completar el manifest de trazabilidad pre-READY y obtener aprobaciones
-humanas sobre el contrato resultante. La decisión de revocación viva está aprobada, pero `HD-04` permanece abierto por su
-adaptador N/N-1 dependiente de `HD-05/HD-15`. La excepción G0 del 2026-11-16 ya permite esta iteración documental y su
-handoff `S0-GOV`, pero no satisface los demás gates. Una implementación futura tampoco puede aceptarse hasta que:
+`HD-01..HD-26`, actualizar cláusulas condicionales fundacionales, completar el manifest de trazabilidad pre-READY y
+obtener aprobaciones humanas sobre el contrato fundacional resultante. `HD-27..HD-41` permanecen abiertos como gates de
+sus specs productoras, recorridos, PWA y reportería; bloquean esos nodos y producción, pero no la puerta acíclica de la
+fundación. La decisión de revocación viva está aprobada, pero `HD-04` permanece abierto por su adaptador N/N-1 dependiente
+de `HD-05/HD-15`. La excepción G0 del 2026-11-16 ya permite esta iteración documental y su handoff `S0-GOV`, pero no
+satisface los demás gates. Una implementación futura tampoco puede aceptarse hasta que:
 
 1. Un manifest cubra 100 % de páginas, layouts, navegación, actions, APIs, jobs y DAL con policy ID.
 2. Existan cero imports Prisma fuera de allowlists tenant/auth/platform/migration aprobadas.

@@ -3,7 +3,7 @@
 **Estado:** DRAFT-CANDIDATE
 **Base autoritativa auditada:** `d16502906aaba04f7fdad2323a1152f3efeb1794` (`origin/todo/tanda-4`)
 **Baseline documental pre-Phase B:** PR #130 en `bdb1a9d8844af7bc2e2817903d9dd37492a79523`
-**Candidato actual:** diff local autorizado, aún sin commit inmutable; un commit posterior autorizado debe fijar sus bytes antes del rerun de reviews.
+**Candidato actual:** bytes de la rama de PR #130; cada revisión reusable debe registrar el SHA exacto observado en GitHub.
 **Fecha de evidencia:** 2026-11-16
 **Implementación:** prohibida hasta una transición humana y separada a READY.
 
@@ -14,7 +14,9 @@ confiable. La autenticación establece prerrequisitos; la autorización funciona
 
 ```text
 HostAuthority → GlobalUser vivo → Membership viva
-  → Institution activa → módulo/plan → capability → scope → relación → estado → política de operación
+  → policy de lifecycle por operación
+      (negocio: ACTIVE; recovery: allowlist explícita para SUSPENDED/CANCELLED)
+  → módulo/plan → capability → scope → relación → estado → política de operación
 ```
 
 La misma decisión se aplica a navegación, página, action, API, job, DAL, constraint y RLS. RLS es una segunda barrera;
@@ -125,9 +127,13 @@ ningún `HD-*` completo ni la spec en READY.
 | AHD-09 | SLO de disponibilidad 99,9 % mensual. | `HD-20` | SLI, exclusiones, error budget, fuentes y alertas. |
 | AHD-10 | Autenticación con contraseña, Google y Microsoft. | `HD-12/HD-04` + identity/auth | Normalización/linking/colisiones, recovery, revocación y configuración segura. |
 
-## 5. Decisiones técnicas: HD-01..HD-41 bloquean READY
+## 5. Decisiones técnicas: HD-01..HD-26 bloquean READY fundacional; HD-27..HD-41 gobiernan nodos posteriores
 
-La decisión semántica de revalidar en la primera petición está aprobada por `current-state.md`, pero `HD-04` vuelve a
+La puerta de esta spec solo posee `HD-01..HD-26`. `HD-27..HD-41` se conservan aquí como contratos de handoff y stop
+conditions para Course/Offering, aula, recorridos, PWA y reportería; deben cerrarse en sus specs dueñas antes de ejecutar
+cada nodo y antes de producción, pero no son prerrequisitos de la transición READY fundacional.
+
+La decisión semántica de revalidar en la primera petición está aprobada por `current-state.md`, pero `HD-04` permanece
 **OPEN_BLOCKING**: la base emite/consume claims legacy `sub`, `idn`, `sv`, `role` e `institutionId`, mientras el target
 requiere Membership y asignación aún abiertas en `HD-05`; `HD-15` tampoco fija coexistencia, drain ni cutover. No existe
 cierre implementable hasta una matriz claim-by-claim y sus pruebas mixtas. La tabla conserva todas las decisiones abiertas.
@@ -181,29 +187,35 @@ cierre implementable hasta una matriz claim-by-claim y sus pruebas mixtas. La ta
 ```text
 G0 claim visible en coordinación autoritativa o excepción trazable
   → F0 paquete DRAFT-CANDIDATE
-      → E0 inventario read-only autorizado y pruebas de viabilidad sin mutación
-          → H0 HD-01..HD-41 cerradas, incluida compatibilidad HD-04
-              → F1 revisiones independientes sobre decisiones cerradas
-                  → READY transición humana separada
-                      → I0 frontera app y harness
-                      → O0 evidencia/operaciones
-I0 → D0 expand/backfill/roles/RLS
-I0 + D0 → A0 spec S3 Course/Offering
+      → E0 evidencia fundacional read-only autorizada
+          → H0 HD-01..HD-26 fundacionales cerradas, incluida compatibilidad contractual HD-04
+              → F1 cinco revisiones independientes del contrato fundacional
+                  → G-READY transición humana separada
+                      → I0 frontera S1 transicional y harness
+                          → S2 identidad/Membership productora
+                              → I1 integración de sesión post-S2
+                                  → O0 evidencia/operaciones fundacionales
+I1 + O0 → D0 expand/backfill/roles/RLS de frontera
+I1 + D0 → A0 spec S3 Course/Offering
 A0 → C0 spec S4 ClassSession
-A0 + C0 → L0 ciclos de aula
+A0 + C0 → L0 ciclos de aula y recorridos
 D0 + L0 + O0 → Q0 release evidence
 Q0 → P0 aceptación preproducción exact-SHA
 P0 → R0 revisión/release humana
-Todos los producers DONE + manifest de dependencias → REP14 handoff a spec 14 dedicada
+Productores DONE + manifest de dependencias → REP14 handoff a spec 14 dedicada
 ```
 
 - G0 tiene una excepción trazable del 2026-11-16 limitada a la fila SPEC00 y al handoff `S0-GOV`; no equivale a READY.
 - F0 puede iterarse en la rama documental autorizada sin ampliar la excepción G0.
-- E0 solo contiene lectura autorizada y evidencia redactada. Puede resolver `HD-09/10/13/14/21/22` sin escribir datos.
-- F1 sucede después de H0 para que los revisores evalúen elecciones reales, no placeholders.
+- E0 solo contiene lectura autorizada y evidencia redactada requerida para decisiones `HD-01..HD-26`. Puede resolver
+  partes de `HD-09/10/13/14/21/22` sin escribir datos; la evidencia externa todavía no disponible mantiene el HD afectado
+  abierto, pero no arrastra decisiones de productores posteriores a la fundación.
+- F1 sucede después de H0 para que los revisores evalúen elecciones fundacionales reales, no placeholders.
+- `HD-27..HD-41` se cierran después de G-READY en las specs dueñas indicadas por el DAG. Cada uno bloquea su nodo,
+  sus consumidores y producción, no H0.
 - REP14 no habilita implementación: requiere que todas las specs que producen datos consumidos por reportes estén `DONE`,
   un manifest cerrado y el claim/revisión/READY propios de la spec 14.
-- READY es un nodo explícito y prerrequisito de todo harness, código, DDL, migración o configuración.
+- G-READY es un nodo explícito y prerrequisito de todo harness, código, DDL, migración o configuración fundacional.
 
 ## 7. Modelo de datos candidato y enforceable
 
@@ -372,24 +384,40 @@ ImpersonationSession
   operationAllowlistVersion
   reason, ticketId
   status REQUESTED|APPROVED|ACTIVE|REVOKED|EXPIRED|ENDED
-  startedAt, expiresAt, revokedAt, endedAt
+  createdAt, startedAt, expiresAt, revokedAt, endedAt
   revocationReason nullable
   correlationId
   CHECK expiresAt <= createdAt + interval '1800 seconds'
+  UNIQUE (targetInstitutionId, id)
   UNIQUE active row per operator (partial index)
   FK (targetInstitutionId,targetMembershipId) → Membership(institutionId,id)
   FK (targetInstitutionId,targetRoleAssignmentId) → MembershipRoleAssignment(institutionId,id)
 
 ImpersonationApproval
   id PK
-  impersonationSessionId NOT NULL FK ImpersonationSession
+  targetInstitutionId NOT NULL
+  impersonationSessionId NOT NULL
   approverGlobalUserId NOT NULL FK GlobalUser
   approverKind INSTITUTION_OWNER|PLATFORM
-  decision APPROVED|REJECTED|REVOKED
-  approvedScopeHash, createdAt, expiresAt, revokedAt nullable
-  UNIQUE (impersonationSessionId, approverGlobalUserId, approverKind)
+  decision APPROVED|REJECTED
+  approvedScopeHash, createdAt, expiresAt
+  correlationId
+  UNIQUE (targetInstitutionId, id)
+  UNIQUE (targetInstitutionId, impersonationSessionId, approverGlobalUserId, approverKind)
+  FK (targetInstitutionId, impersonationSessionId) → ImpersonationSession(targetInstitutionId,id)
   -- append-only; policy exige 1 OWNER_CONSENT o 2 PLATFORM distintos antes de ACTIVE
-  -- per-request intersection y denylist de R-05.11..17; approvals inmutables referenciadas
+
+ImpersonationApprovalRevocation
+  id PK
+  targetInstitutionId NOT NULL
+  impersonationApprovalId NOT NULL
+  revokedByGlobalUserId NOT NULL FK GlobalUser
+  reason, createdAt, correlationId
+  UNIQUE (targetInstitutionId, impersonationApprovalId)
+  FK (targetInstitutionId, impersonationApprovalId) → ImpersonationApproval(targetInstitutionId,id)
+  -- append-only; revocar inserta esta fila y nunca modifica la aprobación
+  -- constraint trigger/policy exige decision=APPROVED y misma Institution
+  -- policy relee approval+expiry+revocation por request; revocation gana ante concurrencia
 
 AuditEvent
   id PK
@@ -453,8 +481,9 @@ La función candidata:
 - el caller `edukana_host_resolver` es no-owner/NOBYPASSRLS, carece de SELECT directo y solo recibe EXECUTE;
 - fija `search_path` explícito a `pg_catalog` y schema de la función;
 - usa SQL estático, igualdad exacta sobre `hostCanonical`, dominio `VERIFIED` y routing state permitido;
-- devuelve `institutionId`, `canonicalHost`, `domainStatus`, `institutionRoutingStatus` y una versión solo para validación
-  interna de cache; la respuesta pública de autoridad no expone otros campos;
+- devuelve siempre el DTO interno único `ResolvedInstitutionRoute` con `institutionId`, `canonicalHost`,
+  `domainStatus`, `institutionRoutingStatus` y `routingVersion`; la autoridad pública derivada no expone los tres últimos
+  campos ni otros datos;
 - devuelve cero filas ante unknown/revoked/no-routable y error cerrado ante duplicado o versión contradictoria;
 - no acepta Institution ID, slug, query o body como fallback;
 - no devuelve branding, membership o PII ni habilita un cliente general de plataforma.
@@ -466,6 +495,14 @@ por intento. Se prueban sync transaccional de la proyección, ausencia de cache 
 ### 8.2 Algoritmo de autoridad de host
 
 ```ts
+type ResolvedInstitutionRoute = Readonly<{
+  institutionId: string;
+  canonicalHost: string;
+  domainStatus: "VERIFIED";
+  institutionRoutingStatus: "ACTIVE" | "SUSPENDED" | "CANCELLED";
+  routingVersion: number;
+}>;
+
 type HostAuthority =
   | { kind: "PLATFORM"; canonicalHost: string }
   | { kind: "TENANT"; institutionId: string; canonicalHost: string; source: "SUBDOMAIN" | "CUSTOM" }
@@ -540,8 +577,10 @@ type RequestContext = {
 `cache()` memoiza solo dentro del request. `withTenantData(ctx, fn)` abre la interactive transaction, fija
 `app.institution_id`, verifica su valor y entrega un transaction client que no escapa.
 
-`can()` evalúa Institution → module/plan → capability → scope → relationship → resource state → operation policy. El DAL
-carga una proyección mínima para la decisión. Navigation y transport comparten `policyId`.
+`can()` evalúa primero la policy de lifecycle registrada para la operación: negocio exige `ACTIVE`; recovery en
+`SUSPENDED`/`CANCELLED` solo procede por la allowlist mínima de `HD-25`, con capability y auditoría separadas. Después
+evalúa module/plan → capability → scope → relationship → resource state → operation policy. El DAL carga una proyección
+mínima para la decisión. Navigation y transport comparten `policyId`.
 
 Para una escritura sensible, el callback transaccional vuelve a leer y condiciona por versiones/estado de identidad,
 Membership, assignment y recurso. El diseño físico aprobado elige:
@@ -811,9 +850,11 @@ artifactOrPending=PENDING, status=BLOCKED, externalDependencies, stopCondition
 | R-16.1..R-16.8 | DAG: document+manifest validation; producer state/ownership/dependencies/exact SHA | `NOT_YET_IMPLEMENTED`; HD-27..41 |
 
 T03 valida la expansión determinista contra los números reales de requirements, cero IDs ausentes/duplicados y que ningún
-owner, comando o artefacto inexistente se presente como real. Al aprobar una decisión, la fila afectada sustituye el perfil
-por fixture/oráculos/deltas específicos antes de READY. T04 implementa harnesses solo después de READY, pero no crea ni
-pospone la cobertura contractual.
+owner, comando o artefacto inexistente se presente como real. Para G-READY, las filas fundacionales ligadas a
+`HD-01..HD-26` sustituyen perfiles por fixtures/oráculos/deltas específicos. Las filas cuyo cierre depende exclusivamente
+de `HD-27..HD-41` permanecen explícitamente `DEFERRED_TO_OWNER_SPEC`, con nodo dueño y stop condition, y no se cuentan
+como evidencia fundacional ni como PASS; deberán cerrarse antes de ejecutar su nodo y antes de producción. T04 implementa
+harnesses fundacionales solo después de G-READY y no elimina la cobertura contractual posterior.
 
 ## 16. UI, recorridos y accesibilidad
 
@@ -838,6 +879,15 @@ type AccessViewState =
 ```
 
 - OFFLINE nunca encola una mutación sensible ni muestra éxito.
+- **Authorization lease CANDIDATE (`HD-36`):** solo shell y lecciones de texto ya autorizadas pueden almacenarse cifradas
+  para offline. Cada entrada queda ligada a GlobalUser, session ID/version, Institution, resource ID/version y device ID,
+  con `issuedAt`/`expiresAt`; la duración permanece abierta hasta decisión aprobada y no se inventa aquí.
+- La apertura offline verifica integridad, binding, versión y tiempo confiable. Reloj atrasado, rollback de reloj o falta de
+  una señal temporal confiable invalida la lease. Logout y cambios de sesión/rol/relación/tenant/lifecycle observados
+  localmente purgan o inutilizan criptográficamente cache, índices y previews. Una revocación remota durante desconexión
+  impide renovar y se aplica en el próximo check online confiable; el acceso residual queda acotado por `expiresAt`.
+  Cambiar la versión del recurso tampoco extiende la lease existente. Login, exports, notas, pagos, archivos no cacheados
+  y writes sensibles requieren red; jamás usan background sync.
 - CONFLICT nunca auto-merge; conserva solo input que no pertenece a contexto anterior.
 - SUCCESS sigue a commit confirmado y se verifica tras reload/sesión fresca.
 - ERROR muestra “Código de referencia: {correlationId}” y control accesible para copiar.
@@ -969,7 +1019,14 @@ Restore aplica hold/tombstones antes de abrir acceso.
 Cada download y delivery reautoriza actor/sesión, Institution, capabilities, scope, estado, clasificación y expiración.
 Los formatos mínimos son CSV con encoding/esquema versionado y PDF accesible con estructura, lectura, tablas, etiquetas,
 contraste y metadata verificadas. Saved views y schedules guardan owner, versión, parámetros validados, timezone y
-recipients autorizados; cada ejecución y entrega reautoriza y se detiene ante revocación.
+recipients autorizados. Bajo el contrato **CANDIDATE `HD-41`**, una ocurrencia tiene identidad única
+`(scheduleId,scheduleVersion,occurrenceAtUtc)`: retries y recovery reutilizan esa identidad. La versión congela timezone y
+regla civil; `HD-41` debe escoger explícitamente semántica para gaps/folds DST, missed runs durante downtime, catch-up,
+overlap y concurrencia. Editar crea una versión nueva con `effectiveAtUtc`, sin reasignar ocurrencias anteriores; cancelar
+impide claims nuevos. La ocurrencia conserva un recipient snapshot para trazabilidad, pero generación y delivery
+reautorizan a cada destinatario. Cada envío tiene idempotency key
+`(scheduleId,scheduleVersion,occurrenceAtUtc,recipientId,channel,reportArtifactVersion)`. Ninguna opción concreta de
+DST/missed-run/overlap/edit-cutover/cancelación se presume antes del cierre de `HD-41`.
 
 REP14 define una matriz `operación × resultado × AuditEvent` para lectura sensible, solicitud, generación, descarga,
 delivery, cancelación, retry, expiración, saved views, schedules y denegaciones. Cada evento aplicable registra actor
@@ -1001,7 +1058,7 @@ Este DAG solo registra dependencias en spec 00. No modifica ni promueve specs 05
 | D08 gradebook | D06+D07; `HD-32` | Cálculo versionado, publicación snapshot, close/reopen y reconciliación | Resultado publicado cambia sin recalculation auditada |
 | D09 attendance | D03+D04; `HD-33` | Attendance sobre ClassSession/daily mode aprobado con correcciones inmutables | Course/date ambiguo o borrado de evidencia |
 | D10 communication | D04+D05+D06+D07+D08+D09; `HD-34` | Announcement/Message/Notification con files/calendar context, recipient policy, mutationId/status lookup y outbox atómico | Best-effort post-commit, política ausente o exposición de file/calendar |
-| D11 four journeys | D03..D10; `HD-37`; requirements §8 | Cuatro contratos completos: ADMIN crea Course/Offering→staff/enrollment→hybrid week→report; TEACHER session→content/files→assignment/exam→attendance→grade/message/report; STUDENT Today→content→submission/exam reconnect→calendar/messages/published results; GUARDIAN child→schedule/attendance/assessment/grades/files/comms→justification. Todos con persistencia/fresh session y negativas. | Ruta/fixture/client/owner no congelados, SQL manual, datos ocultos o SHA distinto |
+| D11 four journeys | D03..D10; `HD-37`; requirements §8 | Cuatro contratos base sin reportería: ADMIN crea Course/Offering→staff/enrollment→hybrid week→attendance/grade close→communication; TEACHER session→content/files→assignment/exam→attendance→grade/correction→message; STUDENT Today→content→submission/exam reconnect→calendar/messages/published results; GUARDIAN child→schedule/attendance/assessment/grades/files/comms→justification. Todos con persistencia/fresh session y negativas. Las extensiones de reporte pertenecen a D17 después de D14/D15. | Ruta/fixture/client/owner no congelados, SQL manual, datos ocultos o SHA distinto |
 | D12 resilience/AT/PWA | D11; `HD-23/HD-36` | Estados degradados, 320/360 px, 200 %, keyboard/AT y offline seguro | Write queued offline, cache stale o AT humano faltante |
 | D13 producer manifest | D01..D10; admissions/finance/usage/audit productores DONE; `HD-38` | Nueve familias con report IDs, sources, fields, sensitivity, freshness, lineage y reconciliation | Productor no DONE o familia/campo omitido |
 | D14 spec14 READY | D13 | Claim, cinco revisiones y transición READY propios de spec 14 | Editar spec 14 bajo SPEC00 o implementar desde DRAFT |
@@ -1053,13 +1110,14 @@ The package of evidence separates:
 - **inferences:** runtime/data hypotheses awaiting evidence;
 - **candidate choices:** proposed but not approved;
 - **human inputs approved:** `AHD-01..AHD-10`, con aprobador, evidencia durable, valor y fecha;
-- **technical decisions:** la revalidación viva está aprobada, pero `HD-01..HD-41`, incluido `HD-04` por compatibilidad,
-  permanecen abiertos hasta owner, evidence, compatibility y rollback;
+- **technical decisions:** la revalidación viva está aprobada; `HD-01..HD-26`, incluido `HD-04` por compatibilidad,
+  bloquean G-READY hasta owner, evidence, compatibility y rollback. `HD-27..HD-41` permanecen abiertos en sus specs
+  dueñas y bloquean sus nodos y producción, no la promoción fundacional;
 - **review resolutions:** each objective finding mapped to a clause and check. Las cinco revisiones iniciales sobre el diff
   local dieron NEEDS_FIX; después de un commit candidato autorizado deben repetirse todas las lanes afectadas sobre ese
   mismo SHA. `bdb1a9d` es baseline pre-edit, no identidad de los bytes locales actuales.
 
-Promotion order is G0 → F0 → E0 → H0 → F1 → READY. La excepción G0 del 2026-11-16 permite únicamente F0 y
+Promotion order is G0 → F0 → E0 → H0 (`HD-01..HD-26`) → F1 → G-READY. La excepción G0 del 2026-11-16 permite únicamente F0 y
 el handoff `S0-GOV`; no salta E0, H0, F1 ni READY. Approving this design or opening a draft PR does not authorize
 implementation, migration, merge, deployment, database access or production release. Reporting además permanece
 bloqueado hasta el handoff `REP14`, todos sus productores `DONE` y la aprobación independiente de la spec 14.

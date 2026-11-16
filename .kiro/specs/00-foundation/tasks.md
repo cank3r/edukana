@@ -3,7 +3,7 @@
 **Estado:** DRAFT-CANDIDATE
 **Base autoritativa auditada:** `origin/todo/tanda-4` en `d16502906aaba04f7fdad2323a1152f3efeb1794`
 **Baseline documental pre-Phase B:** PR #130 en `bdb1a9d8844af7bc2e2817903d9dd37492a79523`
-**Candidato actual:** diff local autorizado sin commit inmutable; no puede recibir approval exact-SHA hasta commit posterior autorizado.
+**Candidato actual:** bytes de la rama de PR #130; cada approval reusable debe registrar el SHA exacto observado en GitHub.
 **Ejecución:** T00–T03 permiten solo gobierno, documentación, revisión y evidencia read-only expresamente autorizada.
 Ningún harness nuevo, código, schema, migración, cambio de entorno o implementación es ejecutable antes de G-READY.
 
@@ -28,13 +28,14 @@ Ningún harness nuevo, código, schema, migración, cambio de entorno o implemen
 | T01 inventario read-only | T00 + autorización exacta del origen | T02 | Ninguna mutación del origen |
 | T02 decisiones humanas | T01 | T03 | Solo decision log/documentos |
 | T03 revisión y transición | T02 + excepción G0 vigente + manifest de trazabilidad pre-READY | G-READY | Solo documentos y review evidence |
-| G-READY | Cero HD-01..41 abierto + cinco aprobaciones same-commit + autoridad HD-24 | T04–T09 | Transición documental separada |
+| G-READY | Cero HD-01..26 fundacional abierto + cinco aprobaciones same-commit + autoridad HD-24 | T04–T07 | Transición documental separada |
 | T04 harness/evidence | G-READY | T05–T11 | Solo en claim de implementación |
-| T05 host/sesión/contexto | G-READY + T04 + HD-01/02/04/26 | T06/T07/T09 | Código futuro autorizado |
-| T06 authz/navigation/atomicity | T05 + T04 | T07/T11 | Código futuro autorizado |
-| T07 DAL/auth/Storage | T05 + T06 | T09/T11 | Código futuro autorizado |
-| T08 DB expand/backfill | G-READY + T01 + T04 + identity/Membership producer S2 DONE + HD-05..15 | T09 | Schema/migration futura autorizada; spec00 integra, no posee el modelo identity |
-| T09 roles DB/RLS | T05–T08 + pooler proof | T10/T11 | DDL futura autorizada |
+| T05 frontera S1 transicional | G-READY + T04 + HD-01/02/04/26 | T05A | Host, sesión legacy viva y contexto transicional; no crea identidad S2 |
+| T05A integración post-S2 | T05 + identity/Membership producer S2 DONE + HD-04/05/12/15 | T06/T07/T08/T09 | Integra GlobalUser/Membership/ProviderAccount/AuthSession ya producidos por S2 |
+| T06 authz/navigation/atomicity | T05A + T04 | T07/T11 | Código futuro autorizado |
+| T07 DAL/auth/Storage | T05A + T06 | T09/T11 | Código futuro autorizado |
+| T08 DB expand/backfill | G-READY + T01 + T04 + T05A + identity/Membership producer S2 DONE + HD-05..15 | T09 | Schema/migration futura autorizada; spec00 integra, no posee el modelo identity |
+| T09 roles DB/RLS | T05A + T06 + T07 + T08 + pooler proof | T10/T11 | DDL futura autorizada |
 | T10 contract | T09 + stable window + restore | T11 | Irreversible approval separada |
 | T11 acceptance/release evidence | T04–T10 + operations gates | T12 | Solo entorno HD-22 autorizado |
 | T12 handoff S3 | T11 + spec 00 implementada/aceptada | Spec S3 | Documentación separada |
@@ -42,14 +43,17 @@ Ningún harness nuevo, código, schema, migración, cambio de entorno o implemen
 
 ```text
 T00 → T01 → T02 → T03 → G-READY
-G-READY → T04 → T05 → T06 → T07
-G-READY + T01 + T04 + identity/Membership S2 DONE → T08
-T05 + T06 + T07 + T08 → T09 → T10
+G-READY → T04 → T05(S1 transicional) → identity/Membership S2 → T05A(integración post-S2)
+T05A → T06 → T07
+G-READY + T01 + T04 + T05A → T08
+T05A + T06 + T07 + T08 → T09 → T10
 T04..T10 → T11 → T12
 all report producers DONE + dependency manifest → T13 → spec 14 claim/review/READY
 ```
 
 G-READY no existe en este candidato y no puede inferirse de la excepción G0, un PR DRAFT, review parcial o test verde.
+Solo `HD-01..HD-26` pertenecen a esa puerta fundacional. `HD-27..HD-41` siguen abiertos en las specs dueñas y bloquean
+sus productores, recorridos, reportería y producción; no pueden usarse para reintroducir un ciclo hacia G-READY.
 T13 tampoco autoriza implementación de reportes.
 
 ## 3. DAG contractual de aula y reportería
@@ -134,8 +138,9 @@ FND foundation + identidad/Membership + estructura
 `AHD-07` invite-only+marketplace público; `AHD-08` responsive web/PWA móvil completa; `AHD-09` 99,9 % mensual;
 `AHD-10` contraseña+Google+Microsoft.
 
-- [ ] Mantener una matriz `AHD → HD → requisito → tarea → evidencia`, incluida `AHD-10→HD-12/HD-04→T05/T11`.
-- [ ] Asignar owner humano y fecha objetivo a la evidencia técnica pendiente de `HD-01..HD-03` y `HD-05..HD-41`.
+- [ ] Mantener una matriz `AHD → HD → requisito → tarea → evidencia`, incluida `AHD-10→HD-12/HD-04→T05A/T11`.
+- [ ] Asignar owner humano y fecha objetivo a la evidencia técnica pendiente de `HD-01..HD-26`; registrar owner de spec
+  y nodo de handoff para `HD-27..HD-41` sin pretender cerrarlos desde la fundación.
 - [ ] Para cada HD, separar valor humano aprobado de evidencia, rationale, approver/date, compatibility y rollback pendientes.
 - [ ] Elegir un solo modelo Membership/role y un solo modelo scope con FKs enforceable.
 - [ ] Cerrar global allowlist, composite-FK exceptions, canonical email y ProviderAccount Google/Microsoft: verified claims,
@@ -151,22 +156,27 @@ FND foundation + identidad/Membership + estructura
   max DB, one-active, revocation, terminal states, audit y concurrency.
 - [ ] Cerrar suspended/cancelled/read-only matrix separada de archive y retention; hold preserva sin ampliar acceso.
 - [ ] Someter a aprobación los candidatos SLI-1, REC-1, WEB-1, INST-1 y REL-1 sin confundir contrato con evidencia.
-- [ ] Cerrar `HD-27..HD-37`: Course/Offering, enrollment/staff, ClassSession, assignments, exams, grades, attendance,
-  communication, calendar, PWA/offline y cuatro role journeys, siempre con compatibilidad y rollback/forward-fix.
-- [ ] Cerrar `HD-38..HD-41`: nueve familias, seguridad por operación/campo/filtro, snapshot/freshness/lineage/
-  reconciliation y jobs/artifacts/saved views/schedules/delivery.
+- [ ] Entregar `HD-27..HD-37` abiertos a sus specs dueñas con criterios de decisión: Course/Offering,
+  enrollment/staff, ClassSession, assignments, exams, grades, attendance, communication, calendar, PWA/offline y cuatro
+  role journeys. Cada nodo los cierra con su compatibilidad y rollback/forward-fix antes de ejecutarse.
+- [ ] Entregar `HD-38..HD-41` abiertos a spec 14 con criterios de decisión: nueve familias, seguridad por
+  operación/campo/filtro, snapshot/freshness/lineage/reconciliation y jobs/artifacts/saved views/schedules/delivery.
+  Spec 14 los cierra antes de su READY; no bloquean G-READY fundacional.
 - [ ] Regenerar requisitos, modelo, matrices, tasks y oracles para eliminar ramas condicionales incompatibles.
 
 **Owner futuro:** autoridades de dominio y `HD-24`, no el writer por inferencia.
 **Salida:** decision log cerrado y candidato internamente único.
-**Stop:** HD abierta, approver/date ausente, opción no implementable, steering conflict o riesgo aceptado sin owner/expiry.
+**Stop:** `HD-01..HD-26` abierta, handoff sin owner/nodo para `HD-27..HD-41`, approver/date ausente, opción
+fundacional no implementable, steering conflict o riesgo aceptado sin owner/expiry.
 
 ## T03 · Revisar contrato resuelto y crear G-READY
 
 - [ ] Validar antes de READY la expansión lógica de design §15.4 contra cada cláusula R-01..R-16: cero IDs
   ausentes/duplicados y cada fila con requirement/policy/test IDs, layer, fixture, positive/negative oracle, exact
   side-effect/audit deltas, owner, command o `NOT_YET_IMPLEMENTED`, artifact, status, external dependency y stop.
-  Reemplazar perfiles generales por valores específicos al cerrar cada HD; nunca conservar `UNASSIGNED/PENDING` en READY.
+  Reemplazar perfiles generales fundacionales por valores específicos al cerrar `HD-01..HD-26`; en G-READY no puede
+  quedar `UNASSIGNED/PENDING` para esas filas. Las filas dependientes solo de `HD-27..HD-41` usan
+  `DEFERRED_TO_OWNER_SPEC` con owner/nodo/stop explícitos, nunca un PASS ficticio.
 - [x] Registrar las cinco revisiones iniciales del diff local como `NEEDS_FIX`; no tratarlas como approval exact-SHA.
 - [ ] Después de un commit candidato autorizado, repetir cada lane afectada contra el mismo SHA y resolver sus P0/P1.
 - [ ] Obtener revisión independiente de arquitectura sobre las decisiones ya cerradas.
@@ -185,7 +195,8 @@ FND foundation + identidad/Membership + estructura
 
 **Owner futuro:** autoridad `HD-24`; reviewers distintos del writer.
 **Salida:** cinco verdicts trazables y commit de transición documental separado.
-**Stop:** G0 pendiente, HD abierta, reviewer no independiente, P0/P1, aprobación sobre versión anterior o identidad/fecha ausente.
+**Stop:** G0 pendiente, `HD-01..HD-26` abierta, handoff downstream sin dueño/stop condition, reviewer no
+independiente, P0/P1, aprobación sobre versión anterior o identidad/fecha ausente.
 
 ## G-READY · Puerta explícita
 
@@ -194,9 +205,12 @@ Condiciones simultáneas:
 - G0 visible por mecanismo autoritativo o excepción trazable limitada; para este candidato aplica la excepción del 2026-11-16.
 - La decisión de revalidación viva está aprobada, pero `HD-04` permanece OPEN_BLOCKING hasta que `HD-05/HD-15`
   cierren el adaptador claim-by-claim, reissue, drain, cutover y rollback sin autoridad stale.
-- `HD-01..HD-41` deben estar cerradas con evidencia/owner/date.
+- `HD-01..HD-26` deben estar cerradas con evidencia/owner/date.
+- `HD-27..HD-41` deben tener spec/nodo dueño, dependencia y stop condition explícitos. Permanecen abiertos y bloquean su
+  ejecución y producción, pero no cuentan como defectos de cierre de G-READY.
 - El manifest de trazabilidad pre-READY contiene una fila completa por cada cláusula normativa, sin comandos inventados.
-- Requisitos, diseño, tasks, fixtures y oracles describen una sola opción.
+- Requisitos, diseño, tasks, fixtures y oracles describen una sola opción para `HD-01..HD-26`; los handoffs
+  `HD-27..HD-41` pueden conservar alternativas CANDIDATE delimitadas con spec dueña y stop condition.
 - Reviews architecture/security/migration/product-UX/testability aprueban el mismo commit.
 - Owner y revisor independiente identificados según `HD-24` firman la transición DRAFT-CANDIDATE→READY en cambio separado.
 
@@ -220,33 +234,56 @@ Hasta entonces, T04–T12 están bloqueadas.
 **Salida:** fixture, traceability, policy-operation y release manifests.
 **Stop:** nondeterminism, hidden manual fixture, mock de boundary, owner DB, skip no aprobado o artifact sin SHA/hash.
 
-## T05 · Host, sesión y request context
+## T05 · Frontera S1 transicional de host, sesión legacy y request context
 
 - [ ] Implementar `HostAuthority` triestado sin `null` ambiguo.
 - [ ] Implementar adapter exacto de proxy/header/hop `HD-26`; contradiction produce UNKNOWN.
-- [ ] Implementar resolver preauth mínimo sobre `InstitutionDomain.institutionRoutingStatus/routingVersion`, con
-  role/function/grants/search_path y sync transaccional revisados; authority cache queda off hasta aprobación HD-11/26.
+- [ ] Implementar resolver preauth mínimo con el único DTO interno
+  `ResolvedInstitutionRoute(institutionId,canonicalHost,domainStatus,institutionRoutingStatus,routingVersion)`,
+  role/function/grants/search_path y sync transaccional revisados; la autoridad pública omite estados/version y authority
+  cache queda off hasta aprobación HD-11/26.
+- [ ] Probar que función, adaptador DB y cualquier cache futura producen los cinco campos del DTO interno y que falta,
+  rename o contradicción de `routingVersion` falla cerrado; la proyección pública no serializa estados/version.
 - [ ] Probar interleaving de resolve con suspend/cancel/reactivate/revoke: ningún request post-commit usa estado stale;
   si se habilita cache futura, probar ack distribuido antes de confirmar el cambio.
 - [ ] Devolver 404 UNKNOWN antes de branding/login/session/tenant lookup.
 - [ ] Deshabilitar signup por config ausente/inválida.
-- [ ] Implementar `getRequestContext()` per-request, sin global transaction client.
-- [ ] Unificar live revalidation para `/api/auth/session`, pages, actions, APIs y jobs.
-- [ ] Implementar la matriz `HD-04/HD-05/HD-15`: token N-1 `sub/idn/sv/role/institutionId`, mapping único,
-  missing/ambiguous deny, version-zero prerequisites, emisión/consumo N/N-1, reissue, drain, cutover y rollback.
-- [ ] Migrar Auth.js a ProviderAccount/AuthSession global aditivamente; habilitar password/Google/Microsoft solo tras
+- [ ] Implementar `getRequestContext()` per-request transicional contra `User`/`Identity` legacy, sin global transaction
+  client y sin crear `GlobalUser`, `Membership`, `ProviderAccount` ni `AuthSession`.
+- [ ] Unificar live revalidation legacy para `/api/auth/session`, pages, actions, APIs y jobs: los claims
+  `role`/`institutionId` son solo hints comparados con autoridad server-side y nunca autorizan.
+- [ ] Implementar cookie y one-use hashed transition ticket ligado al identificador legacy único durante S1.
+- [ ] Probar missing/ambiguous legacy mapping, revocación, replay, theft, concurrent redemption, CSRF, open redirect y
+  session fixation.
+
+**Owner futuro:** writer S1 de host/session/contexto transicional; no posee el agregado de identidad S2.
+**Salida:** frontera S1 fail-closed, host/session matrix y HTTP/DB evidence sin modelo identity nuevo.
+**Stop:** client slug fallback, general platform client, untrusted header, cache cross-request, creación de modelos S2,
+password field/log o revocation fuera de SLA.
+
+## T05A · Integración de sesión post-S2
+
+- [ ] Iniciar solo cuando la spec S2 entregue `GlobalUser`, `Membership`, role assignments, `ProviderAccount` y
+  `AuthSession` como productor `DONE`, con claves y contrato de compatibilidad aprobados.
+- [ ] Integrar `getRequestContext()` y todas las superficies con esos modelos sin duplicarlos ni modificar su ownership.
+- [ ] Implementar la matriz final `HD-04/HD-05/HD-15`: token N-1 `sub/idn/sv/role/institutionId`, mapping único hacia
+  GlobalUser/Membership/asignación, missing/ambiguous deny, version-zero prerequisites, emisión/consumo N/N-1, reissue,
+  drain, cutover y rollback. `role`/`institutionId` legacy nunca son fallback de autoridad.
+- [ ] Migrar los consumidores Auth.js al contrato S2 aditivamente; habilitar password/Google/Microsoft solo tras
   verified-claim, collision/no-auto-link, reauth-link, email-change, unlink/last-method, token-revoke, takeover,
   sessionVersion/audit y feature-rollback tests de `HD-12`.
-- [ ] Implementar cookie y one-use hashed transition ticket según decisión.
-- [ ] Probar replay, theft, concurrent redemption, CSRF, open redirect y session fixation.
+- [ ] Reemitir cookie/ticket con localizadores S2 y probar mixed-version, identity-store failure, concurrent revocation,
+  drain y rollback en `/api/auth/session`, pages, actions, APIs y jobs.
 
-**Owner futuro:** auth/context writer único.
-**Salida:** ADR ratificado, host/session matrix y HTTP/DB evidence.
-**Stop:** client slug fallback, general platform client, untrusted header, cache cross-request, password field/log o revocation fuera de SLA.
+**Owner futuro:** integrador auth/context post-S2, distinto del productor S2 salvo claim explícito sin solape.
+**Salida:** sesión objetivo integrada, matriz N/N-1 y evidencia de cutover/rollback.
+**Stop:** S2 no DONE, contrato físico ambiguo, identidad duplicada, claim legacy usado como autoridad o cambio al agregado
+S2 desde este claim.
 
 ## T06 · Autorización, navegación y mutaciones atómicas
 
-- [ ] Implementar orden Institution→module/plan→capability→scope→relationship→state→operation.
+- [ ] Implementar policy de lifecycle por operación: negocio exige `ACTIVE`; recovery en `SUSPENDED`/`CANCELLED` solo
+  usa allowlist mínima, capability y auditoría propias; después module/plan→capability→scope→relationship→state→operation.
 - [ ] Consolidar closed capability catalog sin cambiar semantics por inferencia.
 - [ ] Registrar layouts/pages/navigation/tabs/breadcrumbs/search/prefetch/actions/APIs/DAL/jobs/platform.
 - [ ] Denegar build/runtime para surface ausente y devolver concealment 404.
@@ -257,6 +294,8 @@ Hasta entonces, T04–T12 están bloqueadas.
 - [ ] Aplicar counseling-only y audited break-glass separado de ordinary impersonation.
 - [ ] Implementar impersonation `HD-17`: authority approvals, target assignment, DB max 1800 s, one-active,
   permission intersection, immutable allow/deny lists, per-request revocation, terminal states y complete AuditEvent.
+- [ ] Probar que revocar inserta una única `ImpersonationApprovalRevocation`, conserva byte-for-byte la aprobación,
+  rechaza revocación de `REJECTED`, segunda revocación y FK cross-Institution, y que revoke/read concurrente deniega.
 - [ ] Probar clock boundaries, every allowed/denied operation y concurrent revoke/read con cero efectos tardíos.
 - [ ] Aplicar mutationId+canonical payload hash+original-result replay+status lookup+bounded retry a cada productor de
   R-16; atomizar AuditEvent/outbox y verificar exact deltas para duplicate/conflict/lost-response/cross-tenant.
@@ -338,13 +377,19 @@ Hasta entonces, T04–T12 están bloqueadas.
 
 ## T11 · UX, journeys, recovery y exact-SHA acceptance
 
-- [ ] Ejecutar completos los cuatro journeys de requirements §8: ADMIN Course/Offering→staff/enrollment→hybrid week→
-  attendance/grade close→communication→report; TEACHER session→content/files→assignment/exam→attendance→grade/
-  correction→message/report; STUDENT Today→content→submission retry→exam autosave/reconnect→calendar/messages/results;
-  GUARDIAN child→schedule/attendance/assessment/grades/files/comms→justification. Registrar start fixture, routes,
-  persisted rows/objects/audit/outbox, reload/fresh-session y negative identities.
+- [ ] Ejecutar completos los cuatro recorridos base de requirements §8, sin reportería: ADMIN Course/Offering→staff/
+  enrollment→hybrid week→attendance/grade close→communication; TEACHER session→content/files→assignment/exam→
+  attendance→grade/correction→message; STUDENT Today→content→submission retry→exam autosave/reconnect→calendar/
+  messages/results; GUARDIAN child→schedule/attendance/assessment/grades/files/comms→justification. Registrar start
+  fixture, routes, persisted rows/objects/audit/outbox, reload/fresh-session y negative identities.
+- [ ] Ejecutar las extensiones de recorrido de reportes solo en D17/T13 después de spec 14 READY y de registry/query
+  implementados; nunca usarlas para aceptar D11/`HD-37`.
 - [ ] Probar loading/empty/retry/404/read-only/archive/conflict/offline/success/revoked y la matriz completa
   SUSPENDED/CANCELLED/ARCHIVED de R-13, `MODULE_OR_PLAN_DENIED` y `PLAN_LIMIT_REACHED`.
+- [ ] Probar la authorization lease offline de `HD-36`: binding a user/session/Institution/resource-version/device,
+  expiración sin duración inventada, reloj atrasado/rollback/untrusted time, purge local en logout/cambio observado,
+  revocación remota aplicada al próximo check y acceso residual nunca posterior a `expiresAt`, además de cero writes/
+  background sync sensibles.
 - [ ] Para mutaciones de cada journey, probar duplicate, conflicting payload, lost response/status lookup, concurrent retry,
   revoke y cross-tenant con exact row/AuditEvent/outbox/Storage/delivery deltas.
 - [ ] Confirmar guardian no-link profile/announcements y linked-child area matrix.
@@ -399,8 +444,13 @@ Hasta entonces, T04–T12 están bloqueadas.
   retrieval legal, si se aprueba, usa path/capability/doble aprobación/TTL/audit separados.
 - [ ] Entregar matriz `operación × resultado × AuditEvent` con actor real/efectivo, impersonación, Institution,
   reporte/versión, snapshot, parámetros redactados, destino, resultado y correlation ID.
-- [ ] Entregar formatos CSV/PDF accesible, saved views, schedules y negativas de URL/ID/user/role/cross-tenant,
-  filtros ocultos, revocación posterior, plan limit y artefacto expirado/cancelado.
+- [ ] Entregar formatos CSV/PDF accesible, saved views y negativas de URL/ID/user/role/cross-tenant, filtros
+  ocultos, revocación posterior, plan limit y artefacto expirado/cancelado.
+- [ ] Entregar a `HD-41` un contrato CANDIDATE de schedules con unicidad
+  `(scheduleId,scheduleVersion,occurrenceAtUtc)`, timezone/regla civil versionados, opciones explícitas para DST gap/fold,
+  missed-run/downtime/catch-up, overlap/concurrencia, retry de la misma ocurrencia, edit cutover por `effectiveAtUtc`,
+  cancelación, recipient snapshot+reautorización y delivery idempotency por destinatario/canal/artefacto. Spec 14 debe
+  escoger las opciones antes de READY; este handoff no las aprueba.
 - [ ] Abrir claim separado para spec 14 y exigir sus cinco responsabilidades de revisión y transición READY antes de
   cualquier implementación.
 - [ ] Mantener fuera de este claim todo código, query, report, export, job, artifact, vista o schedule.
