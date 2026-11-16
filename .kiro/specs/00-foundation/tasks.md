@@ -31,7 +31,7 @@ Ningún harness nuevo, código, schema, migración, cambio de entorno o implemen
 | G-READY | Cero HD-01..26 fundacional abierto + cinco aprobaciones same-commit + autoridad HD-24 | T04–T07 | Transición documental separada |
 | T04 harness/evidence | G-READY | T05–T11 | Solo en claim de implementación |
 | T05 frontera S1 transicional | G-READY + T04 + HD-01/02/04/26 | T05A | Host, sesión legacy viva y contexto transicional; no crea identidad S2 |
-| T05A integración post-S2 | T05 + identity/Membership producer S2 DONE + HD-04/05/12/15 | T06/T07/T08/T09 | Integra `User` global in-place, UserIdentityRemap, Membership/PersonProfile/ProviderAccount/AuthSession y edge manifest producidos por S2 |
+| T05A integración post-S2 | T05 + identity/Membership producer S2 DONE + HD-04/05/12/15 | T06/T07/T08/T09 | Integra User global in-place, source/remap/consolidation/anomaly ledgers, Membership/PersonProfile/ProviderAccount/AuthSession y edge manifest producidos por S2 |
 | T06 authz/navigation/atomicity | T05A + T04 | T07/T11 | Código futuro autorizado |
 | T07 DAL/auth/Storage | T05A + T06 | T09/T11 | Código futuro autorizado |
 | T08 DB expand/backfill | G-READY + T01 + T04 + T05A + identity/Membership producer S2 DONE + HD-05..15 | T09 | Schema/migration futura autorizada; spec00 integra, no posee el modelo identity |
@@ -177,6 +177,8 @@ fundacional no implementable, steering conflict o riesgo aceptado sin owner/expi
   Reemplazar perfiles generales fundacionales por valores específicos al cerrar `HD-01..HD-26`; en G-READY no puede
   quedar `UNASSIGNED/PENDING` para esas filas. Las filas dependientes solo de `HD-27..HD-41` usan
   `DEFERRED_TO_OWNER_SPEC` con owner/nodo/stop explícitos, nunca un PASS ficticio.
+- [ ] Parsear `IFX-1` de design §14.2.2, recalcular sus ocho SHA-256 sobre UTF-8 sin newline y verificar que cada caso
+  enlaza requisito, test ID, categoría, owner y stop condition sin modificar los outputs esperados.
 - [x] Registrar las cinco revisiones iniciales del diff local como `NEEDS_FIX`; no tratarlas como approval exact-SHA.
 - [ ] Después de un commit candidato autorizado, repetir cada lane afectada contra el mismo SHA y resolver sus P0/P1.
 - [ ] Obtener revisión independiente de arquitectura sobre las decisiones ya cerradas.
@@ -220,6 +222,8 @@ Hasta entonces, T04–T12 están bloqueadas.
 
 - [ ] Crear machine-readable fixture manifest para los 16 estados post-migración y demo actual, cada uno con
   `SUPPORTED|EXCLUDED`, fixed IDs, UTC clock, timezone/locale y random seed; no omitir estados fallidos.
+- [ ] Materializar `IFX-1` sin cambiar sus outputs/hashes y expandirlo con una fila por cada FK a `users.id`, la FK
+  saliente Institution, interruption checkpoints y hashes PostgreSQL por tabla/edge.
 - [ ] Definir exact rows/states/roles/scopes/relationships/anomalies y file bytes/SHA-256.
 - [ ] Crear namespace por run y teardown que pruebe cero residual rows/objects.
 - [ ] Separar unit, HTTP integration, DB-policy y E2E exact-SHA.
@@ -239,11 +243,12 @@ Hasta entonces, T04–T12 están bloqueadas.
 - [ ] Implementar `HostAuthority` triestado sin `null` ambiguo.
 - [ ] Implementar adapter exacto de proxy/header/hop `HD-26`; contradiction produce UNKNOWN.
 - [ ] Implementar resolver preauth mínimo con el único DTO interno
-  `ResolvedInstitutionRoute(institutionId,canonicalHost,domainStatus,institutionRoutingStatus,routingVersion)`,
+  `ResolvedInstitutionRoute(institutionId,canonicalHost,domainKind,domainStatus,institutionRoutingStatus,routingVersion)`,
   role/function/grants/search_path y sync transaccional revisados; la autoridad pública omite estados/version y authority
   cache queda off hasta aprobación HD-11/26.
-- [ ] Probar que función, adaptador DB y cualquier cache futura producen los cinco campos del DTO interno y que falta,
-  rename o contradicción de `routingVersion` falla cerrado; la proyección pública no serializa estados/version.
+- [ ] Probar que función, adaptador DB y cualquier cache futura producen los seis campos del DTO interno y que falta,
+  rename o contradicción de `domainKind`/`routingVersion` falla cerrado; la proyección pública deriva `source` solo de
+  `domainKind` y no serializa estados/version.
 - [ ] Probar interleaving de resolve con suspend/cancel/reactivate/revoke: ningún request post-commit usa estado stale;
   si se habilita cache futura, probar ack distribuido antes de confirmar el cambio.
 - [ ] Devolver 404 UNKNOWN antes de branding/login/session/tenant lookup.
@@ -264,7 +269,7 @@ password field/log o revocation fuera de SLA.
 ## T05A · Integración de sesión post-S2
 
 - [ ] Iniciar solo cuando la spec S2 haya evolucionado la tabla `User` existente hasta convertirla en la única identidad
-  global, conserve un `User.id` fuente canónico por clase, registre todos los IDs fuente en `UserIdentityRemap` y entregue
+  global, conserve un `User.id` fuente canónico por clase, entregue source/remap/consolidation/anomaly ledgers tipados,
   `Membership(institutionId,userId,...)`, role assignments, `ProviderAccount`, `AuthSession`, `PersonProfile`, edge
   manifest y oráculos de design §14.2.1 como productor `DONE`, con claves y compatibilidad aprobadas.
 - [ ] Integrar `getRequestContext()` y todas las superficies con esos modelos sin duplicarlos, crear otra raíz de identidad
@@ -299,7 +304,9 @@ S2 desde este claim.
   permission intersection, immutable allow/deny lists, per-request revocation, terminal states y complete AuditEvent.
 - [ ] Probar que revocar inserta una única `ImpersonationApprovalRevocation`, conserva byte-for-byte la aprobación,
   rechaza revocación de `REJECTED`, segunda revocación y FK cross-Institution, y que revoke/read concurrente deniega.
-- [ ] Probar clock boundaries, every allowed/denied operation y concurrent revoke/read con cero efectos tardíos.
+- [ ] Probar clock boundaries, `requestedDurationSeconds` 0/1/300/1800/1801, rechazo de expiresAt distinto a lo
+  solicitado y de UPDATE posterior a createdAt/duration/expiresAt, every allowed/denied operation y concurrent
+  revoke/read con cero efectos tardíos.
 - [ ] Aplicar mutationId+canonical payload hash+original-result replay+status lookup+bounded retry a cada productor de
   R-16; atomizar AuditEvent/outbox y verificar exact deltas para duplicate/conflict/lost-response/cross-tenant.
 - [ ] Aplicar suspended/cancelled matrix `HD-25` sin conflation con archive.
@@ -331,14 +338,22 @@ S2 desde este claim.
 - [ ] Consumir el modelo Membership/roles/scopes producido y marcado DONE por S2/specs de identidad; spec00 no crea ni
   posee ese agregado. Integrar únicamente candidate keys, tenant columns y constraints de frontera aprobados.
 - [ ] Exigir en el handoff S2 el manifest de design §14.2.1: clases `Identity`/email, ranking canónico versionado,
-  `UserIdentityRemap` para todo source ID, autoridad de email/credential/status/sessionVersion, Membership/PersonProfile,
-  edge manifest completo de cada FK a `users.id`, quarantine y rollback N/N-1.
-- [ ] Verificar los oráculos exactos del handoff: source users=remaps, clases resueltas=Users canónicos, memberships y
-  perfiles reconciliados, conteo por cada FK antes/después, checksums iguales y cero remap/FK/email/provider pendientes.
-  Cualquier alias, colisión o fila sin explicación bloquea integración; T08 no cambia el algoritmo ni el agregado S2.
+  immutable source snapshots, `UserIdentityRemap`, `UserIdentityConsolidation` con sessionVersion frozen, quarantine tipada+resoluciones para todo
+  source ID, autoridad separada de User.status/Membership.status, Membership/PersonProfile, edge manifest de cada FK
+  entrante a `users.id` y de `users.institutionId→Institution`, además de rollback N/N-1 exacto.
+- [ ] Verificar oráculos exactos: source users=remaps+Users en anomalías OPEN; antes de cutover source users=remaps y
+  OPEN=0; clases resueltas=consolidations frozen=Users canónicos; User.status global y Membership.status separados;
+  conteo por cada FK antes/después; sourceSessionVersionMax+1=frozen=applied bajo retry; checksums incluyen auth/recovery/
+  cada edge; FK Institution RESTRICT y cero remap/FK/email/provider pendientes. Cualquier alias, colisión o fila sin
+  explicación bloquea integración; T08 no cambia algoritmo ni agregado S2.
+- [ ] Probar rollback pre-cutover después de cada write N permitida: las filas legacy dual-written conservan IDs,
+  Institution, role/status/profile, credential/sessionVersion y FK counts; identidades/Memberships nuevas tienen forma
+  legacy-compatible; read N-1 produce los mismos authz/results/checksums. No invertir many-to-one al rollback.
 - [ ] Por edge: crear/verificar parent UNIQUE `(institutionId,id)` low-lock, child index tenant-first, attach candidate
   key, add composite FK `NOT VALID` si aplica y validar solo tras cero null/orphan/mixed. Preservar FK simples y acciones
-  ON DELETE/ON UPDATE durante N/N-1; retirar duplicados solo post-cutover+retention+EXPLAIN.
+  ON DELETE/ON UPDATE durante N/N-1 salvo cambiar `users.institutionId→Institution` de CASCADE a RESTRICT antes de
+  autoridad cross-Institution; probar DELETE denegado con cero cascada. Retirar los demás duplicados solo
+  post-cutover+retention+EXPLAIN.
 - [ ] Versionar manifest completo generado, incluidos CourseModule, Enrollment, Assignment, Submission, ExamQuestion,
   ExamAnswer, OrganizationalUnitMembership y AuditLog→AuditEvent con clasificación global/tenant/quarantine.
 - [ ] Cargar por stable PK/checkpoint/idempotency key y quarantine typed anomalies.

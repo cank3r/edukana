@@ -153,10 +153,11 @@ producción, no la promoción de la fundación.
    transacción que el estado fuente y el AuditEvent/outbox. El owner-definer posee únicamente la tabla de mapeo y la
    función, y ningún otro dato tenant.
 8. La función devuelve un único DTO interno `ResolvedInstitutionRoute` con `institutionId`, `canonicalHost`,
-   `domainStatus`, `institutionRoutingStatus` y `routingVersion`. La autoridad pública `TENANT` se deriva de ese DTO y
-   omite `domainStatus`, `institutionRoutingStatus` y `routingVersion`; no expone marca, identidad, membership, plan,
-   correo ni datos académicos. Cero o más de una coincidencia, estado no enrutable o versión ausente/contradictoria
-   producen resultado cerrado.
+   `domainKind`, `domainStatus`, `institutionRoutingStatus` y `routingVersion`. `domainKind` es
+   `SUBDOMAIN|CUSTOM` y deriva exactamente `HostAuthority.TENANT.source`; no existe heurística posterior. La autoridad
+   pública `TENANT` omite `domainStatus`, `institutionRoutingStatus` y `routingVersion`; no expone marca, identidad,
+   membership, plan, correo ni datos académicos. Cero o más de una coincidencia, kind/versión ausente o contradictoria o
+   estado no enrutable produce resultado cerrado.
 9. El caller resolver es no-owner y `NOBYPASSRLS`; solo puede ejecutar la función. La función no expone un cliente general
    de plataforma y registra métricas agregadas sin PII; cambios de dominio o lifecycle sí generan auditoría.
 10. Mientras `HD-11/HD-26` no aprueben un mecanismo distribuido de consistencia, autoridad de host no usa cache positiva
@@ -193,11 +194,17 @@ producción, no la promoción de la fundación.
 11. **CANDIDATE `HD-12`:** `ProviderAccount` pertenece a `User`, nunca a una Membership, y es globalmente único por
    `(provider, providerAccountId)`. La tabla `User` existente es el único destino físico y se expande en el lugar hasta
    ser global; no se crea otra raíz. Cuando varias filas legacy representan la misma identidad, una regla versionada elige
-   exactamente un `User.id` fuente como ID canónico y registra cada otro ID en un ledger append-only
-   `UserIdentityRemap(legacyUserId,canonicalUserId,sourceInstitutionId,migrationVersion)`. Ningún ID fuente desaparece sin
-   remap verificable. `Membership(institutionId,userId,...)` se backfillea por pertenencia legacy hacia el ID canónico;
+   exactamente un `User.id` fuente como ID canónico. Cada ID fuente se captura primero en un snapshot inmutable;
+   una clase resuelta recibe `UserIdentityRemap(migrationVersion,legacyUserId,canonicalUserId,sourceInstitutionId)` y una
+   clase no resuelta queda ligada a `IdentityMigrationAnomaly` tipada, sin remap, hasta resolución. Ningún ID fuente
+   desaparece: antes de cutover cada User debe tener exactamente un remap y cero anomalías OPEN. `Membership(institutionId,userId,...)` se backfillea por pertenencia legacy hacia el ID canónico;
    `Account`, `Session`, recovery y cada FK existente a `User` se remapean mediante el mismo ledger durante expansión y
-   compatibilidad N/N-1. Ningún FK ni campo legacy se retira antes de paridad, cero referencias pendientes y cutover.
+   compatibilidad N/N-1. `User.status` global proviene solo de `Identity.status` o de una acción global auditada; cada
+   `User.status` institution-scoped legacy alimenta únicamente `Membership.status`. Sin Identity, la cuenta global inicia
+   `INACTIVE` hasta recovery verificado. Antes de autorizar Membership cross-Institution, la FK legacy
+   `users.institutionId→Institution` deja de usar CASCADE y pasa a RESTRICT; Institution no se borra físicamente durante
+   coexistencia. El target de `sessionVersion` se congela en un ledger único y retries reutilizan ese valor. Ningún FK ni
+   campo legacy se retira antes de paridad, cero referencias pendientes y cutover.
 12. Google y Microsoft solo pueden autenticar con el conjunto de claims verificados que `HD-12` apruebe por proveedor.
    Un email de proveedor nuevo puede crear identidad únicamente cuando su `emailCanonical` está libre.
 13. Si `emailCanonical` ya pertenece a otra identidad, el proveedor nunca se auto-enlaza ni fusiona cuentas. La persona
@@ -268,8 +275,11 @@ producción, no la promoción de la fundación.
    scope hash, decisión, creación, expiración y correlation ID mediante FK. Una revocación posterior se representa con
    una fila append-only separada que referencia la aprobación; nunca muta ni duplica la aprobación original. La policy
    deriva vigencia de aprobación, expiración y ausencia de revocación en cada request.
-12. `expiresAt = min(createdAt + requestedDuration, createdAt + 1800 s)` se impone con constraint DB. No hay extensión ni
-   renovación; una nueva sesión requiere nueva autoridad. Cada operador puede tener como máximo una sesión activa.
+12. `requestedDurationSeconds` se persiste inmutable y se restringe a `1..1800`. La base impone
+   `expiresAt = createdAt + requestedDurationSeconds * interval '1 second'`, equivalente a
+   `min(createdAt + requestedDuration, createdAt + 1800 s)` por el CHECK del rango. Una solicitud de cinco minutos no
+   puede convertirse en treinta. No hay extensión ni renovación; una nueva sesión requiere nueva autoridad. Cada
+   operador puede tener como máximo una sesión activa.
 13. Permisos efectivos son la intersección del rol/asignación objetivo vigente, estado de Institution y allowlist
    inmutable versionada: `support.dashboard.summary.read`, `support.institution.profile.read`,
    `support.navigation.read`, `support.system.health.read` y `support.audit.metadata.read`.
@@ -378,8 +388,10 @@ producción, no la promoción de la fundación.
 14. Por relación, el rollout crea/verifica primero el índice padre candidato `UNIQUE(institutionId,id)` con el método de
     bajo lock aprobado; luego índice hijo `(institutionId,parentId,...)`; adjunta candidate key; agrega FK compuesta
     inicialmente no validada cuando PostgreSQL lo permita; y valida solo con null/orphan/mixed counts en cero. FKs
-    simples y acciones `ON DELETE/ON UPDATE` existentes se preservan durante N/N-1; solo se retiran tras cutover,
-    revisión de retención y evidencia `EXPLAIN`.
+    simples y acciones `ON DELETE/ON UPDATE` existentes se preservan durante N/N-1 salvo la excepción obligatoria
+    `users.institutionId→Institution`: su `ON DELETE CASCADE` se reemplaza por `RESTRICT` antes de autoridad
+    cross-Institution y el DELETE físico de Institution queda prohibido. Los demás duplicados solo se retiran tras
+    cutover, revisión de retención y evidencia `EXPLAIN`.
 15. `HD-14` registra por entorno: `lock_timeout` y `statement_timeout` separados para metadata DDL, índices concurrentes y
     validación; lote inicial/mínimo/máximo y objetivo de duración transaccional; SQLSTATE retryables, backoff y máximo de
     intentos; write-pause, ventana de mantenimiento, umbrales de abort y medidas de tamaño/tráfico que justifican cada
@@ -749,10 +761,12 @@ identidades, roles, scopes, relaciones y estados; “representativo” sin manif
 4. Server Action, API y job falsificados, con oráculo por superficie y cero side effects.
 5. Otro usuario, relación/scope ausente, cross-tenant y tupla mixta en INSERT/UPDATE.
 6. Revocación, `sessionVersion`, cambio concurrente de rol y TOCTOU durante una mutación.
-7. Identidad y roles: clases con varios `User` por `Identity`, usuarios sin `Identity`, Identity sin User, email/hash
-   divergente, colisión canónica, selección determinista de canonicalUserId, `UserIdentityRemap`, Membership/PersonProfile,
-   remap de cada FK y conteos/checksums exactos; además matriz `SUPER_ADMIN|ADMIN|COORDINATOR|TEACHER|STUDENT|PARENT`
-   hacia roles objetivo, alta explícita de roles sin equivalente y FK cross-tenant de rol/target falla en INSERT/UPDATE.
+7. Identidad y roles: clases con varios `User` por `Identity`, usuarios sin `Identity`, Identity sin User, email/
+   credencial divergente, colisión canónica, selección determinista de canonicalUserId, remap/consolidation/anomaly
+   ledgers tipados, User.status global separado de Membership.status, target sessionVersion retry-safe, Membership/
+   PersonProfile, cada FK entrante y la FK saliente Institution, cuarentena/resolución, rollback pre-cutover y conteos/
+   checksums exactos. Además cubre la matriz `SUPER_ADMIN|ADMIN|COORDINATOR|TEACHER|STUDENT|PARENT` hacia roles
+   objetivo, alta explícita de roles sin equivalente y FK cross-tenant de rol/target falla en INSERT/UPDATE.
 8. RLS generado por manifest para cada tabla/operación concedida, como rol app.
 9. Rol app versus owner/migrator y ausencia de rollback a privilegio inseguro.
 10. Auth repository: tenant/support/reporting no enumeran identidad ni leen `passwordHash`.
@@ -801,11 +815,14 @@ satisface los demás gates. Una implementación futura tampoco puede aceptarse h
 6. Los 16 estados post-migración y el demo actual tengan disposition `SUPPORTED|EXCLUDED` con evidencia; cada supported
    migre y haga rollback dual con conteos/checksums exactos e interrupción reproducible, incluida reconciliación alpha si aplica.
 7. Locks, timeouts, lotes, retries, write pause, ventana y abort thresholds estén dentro del presupuesto completo de R-10.15.
-8. La evolución in-place de `User` demuestre source users=remaps, clases resueltas=Users canónicos, Membership y
-   PersonProfile completos, conteos iguales por cada FK remapeada, checksums source=target+quarantine y cero colisiones/
-   referencias pendientes antes de cutover. Después, revocación falla cerrada en la primera petición nueva de página,
-   action, API, job actuando por una persona y `/api/auth/session`; la matriz N/N-1 de `HD-04/HD-05/HD-12/HD-15` prueba
-   cada claim, mapping, reissue, drain y cutover sin usar role/Institution del token como autoridad.
+8. La evolución in-place de `User` demuestre source users=remaps+open anomaly users y, antes de cutover, OPEN=0 y
+   source users=remaps; clases resueltas=consolidations frozen=Users canónicos; Membership/PersonProfile completos;
+   User.status global no deriva de estados institucionales; target sessionVersion es inmutable bajo retry; cada FK
+   entrante conserva conteo, la FK Institution usa RESTRICT sin cascada, y el checksum source equivale a target auth+
+   domain+quarantine. Rollback pre-cutover usa filas legacy dual-written y reproduce rows/sessions/authz. Después,
+   revocación falla cerrada en la primera petición nueva de página, action, API, job actuando por una persona y
+   `/api/auth/session`; la matriz N/N-1 de `HD-04/HD-05/HD-12/HD-15` prueba cada claim, mapping, reissue, drain y cutover
+   sin usar role/Institution del token como autoridad.
 9. El SHA exacto pase el release manifest; todo check requerido termina SUCCESS y deployment identity coincide con commit.
 10. Los artefactos de **evidencia de release** tienen hash/provenance, redacción verificada y retención aprobada no menor
     de 14 días. Los artefactos de **exportación de reportes** dejan de estar disponibles exactamente a 30 días incluso
