@@ -52,11 +52,14 @@ Se conserva `Institution`/`institutionId`. Course/Offering, ClassSession y ciclo
 - La fila `SPEC00-TRUSTED-BOUNDARY-20261115` fue publicada primero en la rama de propuesta mediante
   `fa060c57aba48ca9668f617af1751a823bd1cfc4`.
 - Ese commit **no** es ancestro de `origin/todo/tanda-4`; un escritor que consulte solo la rama autoritativa no ve la
-  reserva. Por ello G0 está **PENDIENTE**, no satisfecho.
-- La asignación del 2026-11-15 autoriza la revisión documental y un PR DRAFT en esta rama aislada, pero no autoriza
-  modificar la rama base, implementar ni promover a READY.
-- Antes de READY, un coordinador debe publicar la reserva por el mecanismo autoritativo o documentar una excepción
-  trazable que haga visible el alcance a escritores competidores.
+  reserva.
+- El propietario del workspace autorizó **“Autoriza excepción G0 y dependencias”** el 2026-11-16; la cuenta GitHub que
+  publica dejó identidad, fecha, texto y alcance en [PR #130, comentario 6927885328](https://github.com/cank3r/edukana/pull/130#issuecomment-6927885328).
+  La excepción satisface G0 solo para la fila SPEC00 existente, esta iteración documental y un handoff limitado `S0-GOV`.
+- La excepción no publica el claim en la rama base y no autoriza READY, implementación, harness, merge, deploy, Preview,
+  producción, Supabase, Storage, migraciones, protección de ramas, debilitamiento de auditoría ni el checkout principal.
+- El paquete continúa **DRAFT-CANDIDATE**. Las decisiones humanas aprobadas fijan inputs, pero la evidencia técnica,
+  decisiones restantes y revisiones independientes continúan bloqueando READY.
 
 ## 4. Registro de decisiones
 
@@ -91,13 +94,33 @@ Se conserva `Institution`/`institutionId`. Course/Offering, ClassSession y ciclo
 Una propuesta CANDIDATE no puede aparecer como decisión “resuelta”. Al cerrar un `HD-*`, se registra opción, autoridad,
 fecha, compatibilidad y rollback; después se actualizan los tres documentos y los revisores evalúan esos valores.
 
+### 4.3 Decisiones humanas aprobadas el 2026-11-16
+
+Estos valores fueron aprobados por el propietario del workspace como inputs humanos vinculantes y quedaron publicados
+con identidad, fecha y valores en [PR #130, comentario 6928063312](https://github.com/cank3r/edukana/pull/130#issuecomment-6928063312).
+Permanecen separados de la clausura técnica: no demuestran viabilidad, no aportan evidencia de entorno y no convierten
+ningún `HD-*` completo ni la spec en READY.
+
+| ID | Valor humano aprobado | Gate relacionado | Evidencia técnica todavía requerida |
+|---|---|---|---|
+| AHD-01 | RPO 1 h y RTO 4 h. | `HD-21` | Restore drill DB+Storage, autoridad y medición. |
+| AHD-02 | Exportaciones se retienen 30 días; datos operacionales, 90 días y luego purge. | `HD-16` | Clasificación, legal hold, cascadas, cancelación y prueba auditada de purge. |
+| AHD-03 | Impersonación por máximo 30 minutos. | `HD-17` | Roles, motivo, operations allowlist, revocación, banner y auditoría. |
+| AHD-04 | Cada transición exige owner y revisor independiente. | `HD-24` | Identidades, separación de funciones y mecanismo enforceable. |
+| AHD-05 | Staging dedicado de pago en US East. | `HD-22` | Proyecto/tenant/bucket/operadores exactos y aislamiento probado. |
+| AHD-06 | Dominio `edukana.com`; consola `app.edukana.com`; selector sin datos tenant. | `HD-01/HD-26` | DNS, host/proxy, cookies/ticket y proyección control-plane. |
+| AHD-07 | Registro institucional solo por invitación; marketplace público. | `HD-03` | Flujos, antiabuso, cuotas, privacidad y separación de autoridad. |
+| AHD-08 | Matriz completa responsive web/PWA móvil. | `HD-23` | Browsers, OS, dispositivos, AT y evidencia humana. |
+| AHD-09 | SLO de disponibilidad 99,9 % mensual. | `HD-20` | SLI, exclusiones, error budget, fuentes y alertas. |
+| AHD-10 | Autenticación con contraseña, Google y Microsoft. | `HD-12/HD-04` + identity/auth | Normalización/linking/colisiones, recovery, revocación y configuración segura. |
+
 ## 5. Decisiones humanas abiertas que bloquean READY
 
 | ID | Decisión requerida | Evidencia/resultado que debe registrarse |
 |---|---|---|
-| HD-01 | ¿La raíz de plataforma acepta sesión tenant y qué datos mínimos muestra? | Campos permitidos, cookie/ticket, UX y negativas. |
+| HD-01 | ¿Cómo opera la consola `app.edukana.com` y la transición al espacio, sin exponer datos tenant en el selector? | Campos control-plane permitidos, cookie/ticket, UX y negativas; el dominio y la prohibición de datos tenant ya están aprobados en AHD-06. |
 | HD-02 | ¿Todo host no asignado/revocado devuelve 404 antes de auth/data? | Casos routed-obsolete, cache y canonicalización. |
-| HD-03 | ¿Se autoriza signup independiente? | Feature/plan, verificación, antiabuso, cuota y default-off. |
+| HD-03 | ¿Cómo se implementan registro institucional invite-only y marketplace público sin confundir sus autoridades? | Invitación, antiabuso, cuota, privacidad y default-off; AHD-07 ya prohíbe signup institucional anónimo. |
 | HD-04 | ¿Cuál es el plazo de revocación, incluido `/api/auth/session`? | Valor medido y riesgo aceptado si no es primera petición. |
 | HD-05 | ¿Cuál es el modelo físico Membership/roles? | Una representación enforceable, migración y selección activa. |
 | HD-06 | ¿Qué scopes exige el piloto y qué roles son institution-wide? | Lista cerrada y matriz por rol. |
@@ -110,15 +133,15 @@ fecha, compatibilidad y rollback; después se actualizan los tres documentos y l
 | HD-13 | ¿Qué predecesores poblados se soportan? | SHAs/migrations y fixture por estado. |
 | HD-14 | ¿Qué budgets de lock/timeout/lote/write-pause aplican? | Valores por entorno. |
 | HD-15 | ¿Qué versiones coexisten y cuándo termina rollback? | Matriz N/N-1, duración y evento de cutover. |
-| HD-16 | ¿Qué retención, cancelación, purge y legal hold aplican? | Política por clase de datos y archivos. |
-| HD-17 | ¿Cómo se autoriza plataforma e impersonación? | Roles/allowlist, TTL, motivo, banner y operaciones. |
+| HD-16 | ¿Cómo se aplican, exceptúan y prueban la retención y el purge aprobados? | Export 30 d; operacional 90 d y purge; clasificación, legal hold, cancelación, cascadas y prueba auditada pendientes. |
+| HD-17 | ¿Cómo se autoriza plataforma e impersonación dentro del máximo aprobado de 30 min? | Roles/allowlist, motivo, banner, revocación, operaciones y auditoría. |
 | HD-18 | ¿RLS completo es obligatorio antes del piloto? | Cualquier excepción con risk owner y vencimiento. |
 | HD-19 | ¿Qué protección, checks, approvals y bypass se exigen? | Mecanismo enforceable y auditoría. |
-| HD-20 | ¿Qué SLO/alertas/retención/redacción gatean aceptación? | Umbrales sobre semántica de SLI definida. |
-| HD-21 | ¿Qué RPO/RTO y autoridad de restore/rollback se aceptan? | Umbrales y aprobador. |
-| HD-22 | ¿Qué preproducción, bucket, tenant y operador están autorizados? | Identidades exactas sin secretos. |
-| HD-23 | ¿Qué browser/OS/AT exige aceptación? | Matriz humana además de automatización. |
-| HD-24 | ¿Quién autoriza READY, implementación, merge, migración, deploy y release? | Una autoridad por transición. |
+| HD-20 | ¿Qué semántica de SLI y alertas demuestra 99,9 % mensual? | Numerador/denominador, exclusiones, error budget, fuentes, alertas, retención y redacción. |
+| HD-21 | ¿Cómo se demuestra RPO 1 h y RTO 4 h y quién autoriza restore/rollback? | Drill medido DB+Storage, fingerprints, aprobador, no mutación y cleanup. |
+| HD-22 | ¿Cuáles son las identidades exactas del staging dedicado de pago en US East? | Proyecto, bucket, tenant, operadores y aislamiento exactos, sin secretos. |
+| HD-23 | ¿Qué browsers, OS, dispositivos y AT completan la matriz responsive web/PWA móvil aprobada? | Versiones, combinaciones y evidencia humana además de automatización. |
+| HD-24 | ¿Quiénes son owner y revisor independiente y cómo autorizan cada transición? | Identidad y mecanismo enforceable separados para READY, implementación, merge, migración, deploy y release. |
 | HD-25 | ¿Qué actores/operaciones leen o exportan en SUSPENDED/CANCELLED? | Matriz separada de archive y de retención `HD-16`. |
 | HD-26 | ¿Cuál es la topología proxy/host confiable? | Header exacto, hop count, allowlist, contradicción y entorno. |
 
@@ -140,11 +163,15 @@ A0 + C0 → L0 ciclos de aula
 D0 + L0 + O0 → Q0 release evidence
 Q0 → P0 aceptación preproducción exact-SHA
 P0 → R0 revisión/release humana
+Todos los producers DONE + manifest de dependencias → REP14 handoff a spec 14 dedicada
 ```
 
-- F0 puede iterarse en la rama documental autorizada, pero no puede superar G0.
+- G0 tiene una excepción trazable del 2026-11-16 limitada a la fila SPEC00 y al handoff `S0-GOV`; no equivale a READY.
+- F0 puede iterarse en la rama documental autorizada sin ampliar la excepción G0.
 - E0 solo contiene lectura autorizada y evidencia redactada. Puede resolver `HD-09/10/13/14/21/22` sin escribir datos.
 - F1 sucede después de H0 para que los revisores evalúen elecciones reales, no placeholders.
+- REP14 no habilita implementación: requiere que todas las specs que producen datos consumidos por reportes estén `DONE`,
+  un manifest cerrado y el claim/revisión/READY propios de la spec 14.
 - READY es un nodo explícito y prerrequisito de todo harness, código, DDL, migración o configuración.
 
 ## 7. Modelo de datos candidato y enforceable
@@ -298,7 +325,8 @@ AuditEvent
 ```
 
 Una acción de soporte sobre una Institution conserva ambos: principal real y target. Grants runtime permiten INSERT por
-helper, no UPDATE/DELETE. Outbox registra efectos externos luego del commit local.
+helper, no UPDATE/DELETE. La mutación, AuditEvent y **fila de outbox** se insertan y confirman dentro de una misma
+transacción; solo el dispatcher ejecuta el efecto externo después del commit, con claim e idempotencia propios.
 
 ### 7.4 Relaciones tenant-aware e índices
 
@@ -586,6 +614,7 @@ type AccessViewState =
   | { kind: "SUSPENDED_INSTITUTION" }
   | { kind: "CANCELLED_INSTITUTION" }
   | { kind: "MODULE_OR_PLAN_DENIED"; fallback: SafeAction }
+  | { kind: "PLAN_LIMIT_REACHED"; contact?: SafeAction }
   | { kind: "NOT_FOUND" }
   | { kind: "RETRYABLE_ERROR"; correlationId: string };
 ```
@@ -595,6 +624,8 @@ type AccessViewState =
 - SUCCESS sigue a commit confirmado y se verifica tras reload/sesión fresca.
 - ERROR muestra “Código de referencia: {correlationId}” y control accesible para copiar.
 - Guardian sin vínculo conserva perfil propio y avisos generales; no consulta hijos.
+- `PLAN_LIMIT_REACHED` muestra una banda distinta de módulo/plan deshabilitado, no reintenta el alta y ofrece contacto
+  solo cuando la persona tiene acceso a un canal autorizado.
 - Archive, suspended y cancelled son estados distintos; `HD-25` define la matriz no resuelta.
 - Los recorridos de ADMIN, TEACHER, STUDENT y GUARDIAN usan las rutas acotadas de `requirements.md` §8.
 
@@ -620,20 +651,85 @@ key en bundles, responses, logs y artifacts.
 ### 18.1 SLI semantics
 
 Cada SLI define event source, eligible population, numerator, denominator, exclusions, time window, percentile y dimensions.
-El error budget es `1 - successful_eligible / eligible` sobre la ventana aprobada. `HD-20` fija números. Synthetic alert
-injection registra timestamps de generación, detección y notificación, route, correlation ID y redacción.
+El presupuesto permitido para 99,9 % es `1 - 0.999 = 0.001`; el error observado es
+`failed_eligible / eligible`, el consumo es `error_observado / 0.001` y el presupuesto restante es
+`max(0, 1 - consumo)`. `HD-20` todavía debe fijar qué eventos componen el SLI y sus exclusiones. Synthetic alert injection registra
+timestamps de generación, detección y notificación, route, correlation ID y redacción.
 
 ### 18.2 Restore drill
 
 El drill aislado registra backup IDs/times, source/destination fingerprints, DB rows y Storage object counts/hashes,
-auth/authz smoke, achieved RPO/RTO, start/end, source read-only proof, cleanup y approver. No escribe el origen. `HD-21`
-fija umbrales; `HD-22` identifica destino.
+auth/authz smoke, achieved RPO/RTO, start/end, source read-only proof, cleanup y approver. No escribe el origen. Debe
+demostrar RPO ≤ 1 h y RTO ≤ 4 h. `HD-21` conserva pendientes la autoridad y evidencia del drill; `HD-22` debe identificar
+el staging dedicado de pago en US East y sus recursos exactos.
 
 ### 18.3 Release manifest
 
 El manifest versionado enumera exact commit/deployment, commands, Node/Postgres/Prisma/Playwright/browser/runner versions,
 required check names, terminal status, zero-skip policy, retries/flaky policy, dependency severity threshold/exceptions,
 artifact paths/hashes/provenance/retention y reviewer identity. No se considera verde un check pendiente, omitido o de otro SHA.
+
+### 18.4 Frontera de reportería para handoff a spec 14
+
+Esta sección diseña el límite; no implementa reportes ni modifica la spec 14.
+
+**Registro y autorización.** Un `ReportRegistry` versionado define por `reportId` el owner, familia, dominios
+productores, permisos vigentes, parámetros, estados, formatos, proyecciones de salida y sensibilidad por campo. El
+catálogo mínimo no puede omitir académico, asistencia, evaluación, progreso/finalización, carga docente, admisiones,
+finanzas por moneda, uso/límites ni auditoría/seguridad; para cada familia fija productor, campos, granularidad,
+dimensiones, owner y reconciliación. Cada versión allowlista filtros, ordenamientos y agrupaciones con tipo, operador,
+límite, default, normalización y sensibilidad para impedir inferencias por campos ocultos.
+
+El policy path es único:
+
+```text
+RequestContext o ServiceContext registrado
+  → report.academic | report.finance | report.sales
+  → report.export para export/schedule/delivery mientras no exista otro permiso aprobado
+  → scope y relación
+  → DAL tenant con proyección allowlisted
+  → RLS por Institution
+```
+
+Ningún ID, URL, filtro, vista guardada, schedule o parámetro cliente crea autoridad. El permiso de dominio no concede
+exportación, y el permiso de exportación no concede entrega posterior.
+
+**Exactitud temporal y financiera.** Cada ejecución fija versión del reporte y agregado, parámetros canónicos, timezone,
+semántica `asOf` e intervalos, y un snapshot/watermark común para todas sus secciones. Los agregados son deterministas.
+Importes de monedas distintas nunca se suman; se separan por moneda o se convierten mediante una tabla versionada con
+fuente y timestamp explícitos. Freshness, linaje y reconciliación publican fuentes, transformaciones, conteos, sumas,
+excepciones y diferencias; una diferencia no aprobada bloquea el estado publicable.
+
+**Jobs y artefactos.** Exportar crea un job asíncrono, auditado e idempotente. Su clave usa serialización canónica
+versionada de Institution, actor, `reportId`/versión, parámetros, snapshot y formato; se guarda con payload hash y
+`UNIQUE(institutionId,idempotencyKey)`. El claim transaccional produce a lo sumo un job/artefacto y la misma key con otro
+payload da `CONFLICT`.
+
+La máquina válida es `QUEUED→RUNNING|CANCELLED`, `RUNNING→SUCCEEDED|FAILED|CANCELLED`, `FAILED→QUEUED` bajo retry
+acotado y `SUCCEEDED→EXPIRED`; `CANCELLED`/`EXPIRED` son terminales. El worker mantiene lease/heartbeat y recupera un
+`RUNNING` abandonado sin duplicar; una cancelación confirmada impide éxito tardío. El progreso es monotónico. Solo
+`SUCCEEDED` produce un artefacto privado completo con checksum, tamaño, owner, Institution, sensibilidad y expiración;
+no se registra URL firmada. La retención del artefacto exportado es exactamente 30 días salvo legal hold. Los 90 días
+solo aplican a datos operacionales incluidos en una matriz aprobada; evidencia académica y clases sin clasificación se
+excluyen del purge. Legal hold registra alcance, motivo, autoridad, inicio/liberación y evita que restore resucite purges.
+
+Cada download y delivery reautoriza actor/sesión, Institution, capabilities, scope, estado, clasificación y expiración.
+Los formatos mínimos son CSV con encoding/esquema versionado y PDF accesible con estructura, lectura, tablas, etiquetas,
+contraste y metadata verificadas. Saved views y schedules guardan owner, versión, parámetros validados, timezone y
+recipients autorizados; cada ejecución y entrega reautoriza y se detiene ante revocación.
+
+REP14 define una matriz `operación × resultado × AuditEvent` para lectura sensible, solicitud, generación, descarga,
+delivery, cancelación, retry, expiración, saved views, schedules y denegaciones. Cada evento aplicable registra actor
+real/efectivo, impersonación/motivo, Institution, reporte/versión, snapshot, parámetros canónicos redactados, destino,
+resultado y correlation ID; cada oracle también declara cuándo no debe emitirse evento.
+
+**Pruebas negativas.** La suite altera URL, `reportId`, job/artifact/saved-view/schedule IDs, user, role, Institution,
+fields, filters, states y expiración. Verifica 404/denial, cero rows/objects/delivery, retry no duplicado, artefacto parcial
+no descargable y AuditEvent requerido o prohibido. Las pruebas corren como rol app con DAL/RLS, nunca owner.
+
+**Gate de dependencia.** El handoff `REP14` solo se prepara cuando un manifest enumera todos los campos y agregados y
+cada spec productora correspondiente está `DONE`. La spec 14 necesita claim, revisiones y transición READY propios antes
+de implementar registro, queries, jobs, artifacts, saved views o schedules. Este gate es bloqueante para producción.
 
 ## 19. Threat model
 
@@ -656,6 +752,9 @@ artifact paths/hashes/provenance/retention y reviewer identity. No se considera 
 | Counseling disclosure | Dedicated policy; break-glass only. | owner/support/export denied. |
 | Audit tampering | Append-only grants, real/effective actors. | update/delete denied. |
 | PII/minor data | Minimal DTO and field redaction. | artifact/error scanner. |
+| Report cross-tenant/field disclosure | Registry, output projection, capabilities y DAL/RLS. | URL/ID/user/role/tenant/field negatives. |
+| Inconsistent or false aggregate | Versioned deterministic aggregate, common watermark, currency separation, lineage y reconciliation. | fixed-fixture totals, as-of/timezone and producer reconciliation. |
+| Export replay or stale authorization | Async idempotent job, private checksummed artifact y reauthorization per download/delivery. | concurrent retry, revoke, expire, cancel and partial-artifact negatives. |
 | Expensive backfill | Budgets, batches, checkpoints, cancel. | scaled fixture and forced interruption. |
 | Unsafe rollback | Safe role/policy or forward-fix-only. | role properties and post-rollback proof. |
 
@@ -666,8 +765,11 @@ The package of evidence separates:
 - **verified facts:** file, symbol, migration, test or SHA;
 - **inferences:** runtime/data hypotheses awaiting evidence;
 - **candidate choices:** proposed but not approved;
-- **human decisions:** `HD-01..HD-26` with owner, evidence, value and date;
+- **human inputs approved:** `AHD-01..AHD-10`, con aprobador, evidencia durable, valor y fecha;
+- **technical decisions pending:** `HD-01..HD-26`, con owner, evidence, compatibility y rollback antes de cerrarse;
 - **review resolutions:** each objective finding mapped to a clause and check.
 
-Promotion order is G0 → F0 → E0 → H0 → F1 → READY. Approving this design or opening a draft PR does not authorize
-implementation, migration, merge, deployment, database access or production release.
+Promotion order is G0 → F0 → E0 → H0 → F1 → READY. La excepción G0 del 2026-11-16 permite únicamente F0 y
+el handoff `S0-GOV`; no salta E0, H0, F1 ni READY. Approving this design or opening a draft PR does not authorize
+implementation, migration, merge, deployment, database access or production release. Reporting además permanece
+bloqueado hasta el handoff `REP14`, todos sus productores `DONE` y la aprobación independiente de la spec 14.

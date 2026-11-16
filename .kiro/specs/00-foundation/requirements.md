@@ -12,18 +12,22 @@
    `.kiro/steering/current-state.md` prevalecen sobre steering o specs DRAFT incompatibles.
 2. `.kiro/steering/spec-governance.md`, `tech.md`, `roles-permissions.md`, `simplicity.md` y este paquete deben
    reconciliarse antes de una transición de estado.
-3. El claim de este trabajo existe en la rama de propuesta, pero no es ancestro de `origin/todo/tanda-4`. Por tanto,
-   el gate de coordinación G0 sigue **PENDIENTE** hasta que la reserva sea visible mediante el mecanismo autoritativo de
-   `TEAM-COORDINATION.md` o exista una excepción del coordinador documentada y trazable.
-4. La asignación del 2026-11-15 autoriza continuar la revisión documental en esta rama aislada y abrir un PR DRAFT;
-   no convierte el claim de rama en claim autoritativo ni satisface G0 para READY o implementación.
+3. El claim de este trabajo existe en la rama de propuesta y no es ancestro de `origin/todo/tanda-4`. El propietario
+   del workspace autorizó **“Autoriza excepción G0 y dependencias”** el 2026-11-16; la cuenta GitHub que publica dejó la
+   evidencia durable en [PR #130, comentario 6927885328](https://github.com/cank3r/edukana/pull/130#issuecomment-6927885328).
+   La excepción satisface G0 únicamente para continuar el paquete documental de la fila existente
+   `SPEC00-TRUSTED-BOUNDARY-20261115` y realizar su handoff limitado `S0-GOV`; no publica el claim en la rama base ni
+   concede autoridad sobre otro alcance.
+4. La excepción G0 no autoriza READY, implementación, harness, merge, deploy, Preview, producción, Supabase, Storage,
+   migraciones, protección de ramas, reducción de auditoría ni cambios en el checkout principal. Tampoco cierra por sí
+   misma dependencias técnicas, decisiones pendientes o revisiones.
 5. Las únicas actividades permitidas antes de READY son: edición/revisión de estos tres documentos, actualización de
    la fila propia de coordinación, inspección de repositorio y PR, y recolección **read-only** expresamente autorizada de
    roles, pooler, conteos, anomalías, tamaños, backups y límites operativos. Ninguna actividad pre-READY puede escribir
    código, schema, migraciones, datos, Storage, configuración o infraestructura.
-6. El paquete permanece **DRAFT-CANDIDATE** mientras G0 esté pendiente, exista una decisión `HD-*` abierta o falte una
-   aprobación humana independiente de arquitectura, seguridad, migraciones, producto y UX sobre los valores ya
-   resueltos.
+6. El paquete permanece **DRAFT-CANDIDATE** mientras exista una decisión técnica `HD-*` abierta, falte evidencia o falte
+   una aprobación humana independiente sobre arquitectura, seguridad, migraciones/datos, producto/UX y testabilidad.
+   Las decisiones humanas registradas en §5.1 fijan valores de producto y operación, pero no sustituyen ese cierre.
 7. READY exige un cambio posterior, separado y autorizado. READY será prerrequisito explícito de todo harness nuevo,
    código de producto, DDL, migración o cambio operacional.
 8. PR #129 es evidencia acotada de presentación de tareas. No acredita ni modifica este contrato fundacional.
@@ -48,6 +52,8 @@ Quedan fuera de esta spec:
 - diseñar Course/Offering, ClassSession o ciclos académicos;
 - rediseñar tareas, exámenes, calificaciones, asistencia o mensajería;
 - habilitar marketplace, pagos en línea o alta de docentes independientes;
+- implementar reportes, agregados, exportaciones, vistas guardadas o programaciones; esta spec solo fija su frontera
+  de seguridad, exactitud, auditoría y handoff bloqueante hacia la spec 14 dedicada;
 - implementar observabilidad general, backups o protección de ramas, salvo fijar evidencia y gates requeridos;
 - cambiar Preview, producción, Supabase, bases de datos, Storage o configuración remota;
 - implementar o corregir PR #129;
@@ -90,6 +96,26 @@ cláusula incompatible pueda dirigir una implementación distinta.
 | `02-identity-auth/requirements.md`, Requisito 5 permite hasta cinco minutos al suspender cuenta. | DRAFT; `HD-04` sigue abierto. | Una sola semántica viva para página, action, API y `/api/auth/session`, con plazo aprobado. | Spec 02 debe adoptar el valor final de `HD-04`. |
 | `03-roles-settings/design.md`, unión de roles y `tenantId`, scope en Membership. | DRAFT; modelo físico no aprobado. | Selección explícita de una asignación activa; roles tenant y scope con FK enforceable. | Spec 03 debe adoptar `HD-05/HD-06` y `Institution`. |
 | `15-ops-privacy-quality/requirements.md`, WCAG 2.1 AA. | DRAFT; steering `tech.md` exige WCAG 2.2 AA. | WCAG 2.2 AA es el objetivo normativo de esta frontera. | Spec 15 debe elevar su cláusula y conservar evidencia humana. |
+
+### 5.1 Decisiones humanas aprobadas; cierre técnico aún pendiente
+
+Las decisiones interactivas del 2026-11-16 quedaron publicadas con identidad, fecha y valores en
+[PR #130, comentario 6928063312](https://github.com/cank3r/edukana/pull/130#issuecomment-6928063312). Son entradas vinculantes
+para el diseño posterior, pero no prueban viabilidad, no cierran por sí solas un `HD-*` y no cambian el estado
+**DRAFT-CANDIDATE**:
+
+| ID | Área | Valor humano aprobado | Gate relacionado y evidencia pendiente |
+|---|---|---|---|
+| AHD-01 | Recovery | RPO 1 h; RTO 4 h. | Restore drill DB+Storage, autoridad, medición y evidencia exact-SHA (`HD-21`, T02/T11). |
+| AHD-02 | Retención | Artefactos de exportación: 30 días. Datos operacionales: 90 días y luego purge. | Matriz por clase, legal hold, cancelación, cascadas y prueba de purge (`HD-16/HD-25`, T02/T10/T13). |
+| AHD-03 | Impersonación | Duración máxima 30 minutos. | Roles/capabilities, motivo, allowlist, revocación, banner y auditoría (`HD-17`, T02/T05/T06). |
+| AHD-04 | Aprobación | Revisor independiente más owner por transición. | Identidades, cinco responsabilidades de revisión y mecanismo enforceable (`HD-19/HD-24`, T03). |
+| AHD-05 | Preproducción | Staging dedicado de pago, región US East. | Proyecto, tenant, bucket, operadores, controles y aislamiento (`HD-22`, T01/T11). |
+| AHD-06 | Dominio y consola | `edukana.com`; consola `app.edukana.com`; selector sin datos tenant. | DNS, host/proxy, cookies/ticket y proyección control-plane (`HD-01/HD-26`, T02/T05). |
+| AHD-07 | Registro y marketplace | Registro institucional solo por invitación; marketplace público. | Flujos de cuenta/checkout, antiabuso, cuotas, privacidad y autoridad (`HD-03`, T02/T05). |
+| AHD-08 | Matriz cliente | Web responsive y PWA con matriz móvil completa. | Browsers, OS, dispositivos, AT, versiones y evidencia humana (`HD-23`, T02/T11). |
+| AHD-09 | Disponibilidad | 99,9 % mensual. | SLI, exclusiones, error budget, fuentes, alertas y retención (`HD-20`, T02/T11). |
+| AHD-10 | Autenticación | Contraseña, Google y Microsoft. | Normalización/linking/colisiones (`HD-12`), revocación (`HD-04`), recovery y configuración segura; T02/T05/T11. |
 
 ## 6. Requisitos normativos
 
@@ -149,8 +175,9 @@ opción, autoridad y fecha en `design.md` y regenerar requisitos, diseño, tarea
    Membership, asignación/rol/scope, relación, estado del recurso, módulos, plan e Institution.
 5. La implementación aprobada debe usar lock de filas, aislamiento serializable u optimistic concurrency con predicados de
    versión. Un cambio concurrente causa cero filas mutadas, cero efectos externos y resultado tipado `CONFLICT`/denegado.
-6. La mutación y su evento de auditoría se confirman atómicamente; los efectos externos usan outbox idempotente después
-   del commit. No se envía correo, archivo, notificación o job si la autorización transaccional falla.
+6. La mutación, su evento de auditoría y la **fila de outbox** se confirman en la misma transacción. Solo el dispatcher
+   procesa efectos externos después del commit; no se envía correo, archivo, notificación o job si la autorización o la
+   escritura transaccional falla.
 
 ### R-05 · Autorización central y orden vinculante
 
@@ -275,15 +302,16 @@ opción, autoridad y fecha en `design.md` y regenerar requisitos, diseño, tarea
    password hashes, tokens, cookies, PII innecesaria ni URLs firmadas.
 4. Se auditan autenticación sensible, cambios de autorización, dominios, tickets, URLs firmadas, exports, acceso de
    emergencia, service-role operations, reparaciones e impersonación.
-5. Mutación y evento local son atómicos. Efectos externos usan outbox y registran resultado sin falsificar atomicidad.
+5. Mutación, evento local y fila de outbox son atómicos. Solo el dispatcher ejecuta efectos externos después del commit
+   y registra resultado sin falsificar atomicidad.
 6. Un actor no puede UPDATE/DELETE sus eventos. Retención/purge/legal hold dependen de `HD-16`.
 7. Counseling usa DAL/policy/proyección separada. Export general, soporte e impersonación ordinaria excluyen estas notas.
 
 ### R-13 · Estados de UI, recorridos y accesibilidad
 
 1. Los estados tipados mínimos son: `LOADING`, `EMPTY`, `READY`, `SUCCESS`, `CONFLICT`, `ARCHIVED_READ_ONLY`,
-   `OFFLINE`, `REVOKED`, `SUSPENDED_INSTITUTION`, `CANCELLED_INSTITUTION`, `MODULE_OR_PLAN_DENIED`, `NOT_FOUND` y
-   `RETRYABLE_ERROR`.
+   `OFFLINE`, `REVOKED`, `SUSPENDED_INSTITUTION`, `CANCELLED_INSTITUTION`, `MODULE_OR_PLAN_DENIED`,
+   `PLAN_LIMIT_REACHED`, `NOT_FOUND` y `RETRYABLE_ERROR`.
 2. Un cambio de Institution/rol descarta datos previos. OFFLINE no muestra éxito ni encola mutaciones sensibles; conserva
    input local seguro cuando no contiene datos de otra Institution y ofrece reintento.
 3. CONFLICT conserva input permitido, no sobrescribe, explica el cambio y exige recargar/revisar. No hay auto-merge sin
@@ -316,7 +344,80 @@ opción, autoridad y fecha en `design.md` y regenerar requisitos, diseño, tarea
    hashes, provenance, retención y revisores.
 8. Ningún Preview, backup, bucket ni credencial se usa sin autorización `HD-22`.
 
+### R-15 · Frontera auditada y bloqueante de reportería
+
+1. La reportería de producción se rige por un registro versionado de reportes. Cada entrada declara `reportId`, versión,
+   owner, familia, dominios productores, propósito, audiencia, permisos, parámetros, proyecciones de salida,
+   sensibilidad, moneda, timezone, semántica `asOf`, watermark, freshness SLO, linaje, reconciliación, formatos y estados.
+   El catálogo mínimo no puede cerrarse omitiendo: académico, asistencia, evaluación, progreso/finalización, carga docente,
+   admisiones, finanzas **por moneda**, uso/límites y auditoría/seguridad. Cada familia fija productor, campos,
+   granularidad, dimensiones, owner y criterio de reconciliación.
+2. El acceso usa exclusivamente el catálogo cerrado vigente: `report.academic`, `report.finance` o `report.sales` para su
+   dominio y `report.export` adicional para exportar. Scheduling y delivery permanecen CANDIDATE de spec 14: hasta que
+   gobernanza apruebe permisos nuevos, requieren `report.export` y una policy más restrictiva registrada; tener acceso a
+   una pantalla, entidad o dominio nunca concede exportación ni entrega.
+3. Cada salida usa una proyección de campos específica y allowlisted. Todo campo tiene clase de sensibilidad y reglas de
+   redacción; identidad, counseling, credenciales y datos de menores conservan sus fronteras más restrictivas. Cada
+   versión también allowlista claves de filtro, orden y agrupación, tipos, operadores, límites, defaults y normalización;
+   un campo no proyectable tampoco puede filtrar, ordenar o agrupar si ello permite inferir existencia, conteo o valor.
+4. Toda consulta sigue el path de policy registrado `request/service context → capability → scope/relación → DAL tenant
+   → RLS`. Ningún motor, export, vista guardada, schedule o reintento acepta `institutionId`, IDs o filtros del cliente
+   como autoridad ni usa acceso directo o cross-tenant.
+5. Está prohibido sumar importes de monedas distintas. Un reporte multi-moneda separa cada moneda o usa conversiones
+   versionadas con fuente, timestamp y regla explícitos; nunca produce un total mixto.
+6. Los agregados son deterministas y versionados. Todas las secciones de una ejecución comparten el mismo snapshot o
+   watermark, y publican timezone, intervalo inclusivo/exclusivo y semántica `asOf` sin mezclar cortes temporales.
+7. Cada resultado declara freshness, fuentes, transformaciones y linaje hasta la versión del agregado. La reconciliación
+   compara conteos, sumas y excepciones con los sistemas productores y bloquea publicación ante diferencias no aprobadas.
+8. Toda exportación corre como job asíncrono, auditado e idempotente. La idempotency key liga Institution, actor efectivo,
+   `reportId`/versión, parámetros en serialización canónica versionada, snapshot y formato; se persiste junto a un hash del
+   payload y `UNIQUE(institutionId,idempotencyKey)`. Un claim transaccional crea a lo sumo un job/artefacto bajo retries
+   concurrentes; reutilizar la clave con otro payload produce `CONFLICT` y cero efectos.
+9. Los artefactos son privados y tienen checksum. Nunca se publican en buckets, rutas o cachés públicas; metadata y
+   auditoría registran hash, tamaño, formato, owner, Institution, clasificación, creación y expiración, nunca una URL firmada.
+10. El job expone progreso monotónico y estados `QUEUED`, `RUNNING`, `SUCCEEDED`, `FAILED`, `CANCELLED` y `EXPIRED`.
+    Transiciones válidas: `QUEUED→RUNNING|CANCELLED`, `RUNNING→SUCCEEDED|FAILED|CANCELLED`,
+    `SUCCEEDED→EXPIRED` y `FAILED→QUEUED` solo mediante retry acotado; `CANCELLED` y `EXPIRED` son terminales.
+    El worker reclama un lease con vencimiento/heartbeat; un `RUNNING` abandonado vuelve a cola o falla según policy sin
+    duplicar artefacto. Cancelación compite mediante transición condicional: después de `CANCELLED` no puede confirmarse
+    `SUCCEEDED`. Ningún estado terminal retrocede y un artefacto parcial nunca puede descargarse ni entregarse.
+11. Cada descarga y cada entrega reautorizan sesión, Institution, Membership/actor, capability, scope, estado del reporte,
+    expiración y clasificación en ese momento. Una autorización válida al crear el job no autoriza una descarga posterior.
+12. Los formatos mínimos son CSV con encoding/esquema documentados y PDF accesible. Las pruebas del PDF cubren orden de
+    lectura, headings, tablas, etiquetas, contraste, reflow aplicable y metadata; ambos formatos conservan la misma
+    proyección y semántica.
+13. Vistas guardadas y schedules almacenan parámetros validados, versión del reporte, timezone, owner y destinatarios
+    autorizados. Antes de cada ejecución y entrega se reautoriza; deshabilitar actor, permiso o reporte detiene el schedule.
+14. La suite negativa cubre URL directa, `reportId`, job ID, artifact ID, saved-view ID y schedule ID falsificados o
+    ajenos; otro usuario, rol o Institution; filtros/fields no permitidos e inferencia por filtros ocultos; descarga
+    expirada/cancelada; retry concurrente; y asegura 404/denegación, cero filas, cero entrega, cero artefactos nuevos y
+    auditoría conforme al oracle.
+15. REP14 entrega una matriz obligatoria `operación × resultado × AuditEvent` para lectura sensible, solicitud, generación,
+    descarga, delivery, cancelación, retry, expiración, saved views, schedules y denegaciones. Cada evento aplicable incluye
+    actor real/efectivo, impersonación/motivo, Institution, `reportId`/versión, snapshot, parámetros canónicos redactados,
+    destino, resultado y correlation ID; el oracle también declara cuándo **no** debe existir evento.
+16. Exportaciones y sus artefactos expiran exactamente a los 30 días aprobados, salvo legal hold autorizado y auditado.
+    Los 90 días aplican solo a clases de datos operacionales incluidas en una matriz aprobada; evidencia académica o clase
+    no clasificada queda excluida del purge por defecto. Legal hold fija alcance, motivo, autoridad, inicio, liberación,
+    auditoría y precedencia, y un restore no puede resucitar datos cuyo purge ya fue confirmado.
+17. Esta frontera bloquea producción. La implementación pertenece a una spec 14 dedicada y no puede iniciar hasta que
+    todas las specs productoras de datos consumidos por el registro estén `DONE`, exista un dependency manifest cerrado y
+    la spec 14 obtenga su propio claim, revisión y transición READY. Este paquete no implementa reportes ni edita spec 14.
+
 ## 7. Matriz mínima de permiso, recurso y estado
+
+La transición desde el enum legacy es explícita y sigue abierta en `HD-05/HD-06`; ningún nombre aproximado concede
+capabilities. El manifest debe cubrir cada fila por separado:
+
+| Rol legacy | Plantilla objetivo candidata | Condición de transición |
+|---|---|---|
+| `SUPER_ADMIN` | `OWNER` o `ADMIN` | Elección explícita; nunca convertir automáticamente en OWNER. |
+| `ADMIN` | `ADMIN` | Membership y asignación tenant con capabilities verificadas. |
+| `COORDINATOR` | `ACADEMIC_LEAD` | Scope tipado obligatorio; sin finanzas. |
+| `TEACHER` | `TEACHER` | Relación activa con cada Offering. |
+| `STUDENT` | `STUDENT` | Enrollment/relación activa; sin datos de pares. |
+| `PARENT` | `GUARDIAN` | Guardianship activa y permisos por área. |
+| Sin equivalente legacy | `REGISTRAR`, `FINANCE`, `ADMISSIONS`, `ASSISTANT`, `HOMEROOM`, `COUNSELOR` y roles de plataforma individuales | Alta explícita; nunca inferida durante backfill. |
 
 `D` = denegar/404; `L` = lectura mínima; `W` = escritura; `RO` = lectura autorizada sin escritura. Cada celda exige
 host, sesión, Institution, módulo/plan, capability, scope, relación, estado y RLS válidos.
@@ -368,6 +469,7 @@ host, sesión, Institution, módulo/plan, capability, scope, relación, estado y
 | SUSPENDED_INSTITUTION | “Esta institución está suspendida. No puedes hacer cambios.” | Acciones según `HD-25`; no promete lectura general. |
 | CANCELLED_INSTITUTION | “Esta institución ya no está activa.” | Export/retención solo según `HD-16/HD-25`. |
 | MODULE_OR_PLAN_DENIED | “Esta función no está disponible para tu institución.” / “Volver al inicio” | Alternativa concreta autorizada; no expone módulo/plan interno. |
+| PLAN_LIMIT_REACHED | “Alcanzaste el límite de tu plan. Contacta a la administración para ampliar la capacidad.” / “Contactar a la administración” | Banda persistente; no intenta el alta ni confunde límite con módulo desactivado. El contacto solo aparece si está autorizado. |
 | UNKNOWN host | “Página no encontrada.” | Ocurre antes de marca, login y sesión. |
 | Signup unavailable | “Por ahora no se pueden crear espacios nuevos.” | Sin formulario ni request de creación. |
 
@@ -382,19 +484,26 @@ identidades, roles, scopes, relaciones y estados; “representativo” sin manif
 4. Server Action, API y job falsificados, con oráculo por superficie y cero side effects.
 5. Otro usuario, relación/scope ausente, cross-tenant y tupla mixta en INSERT/UPDATE.
 6. Revocación, `sessionVersion`, cambio concurrente de rol y TOCTOU durante una mutación.
-7. Roles custom/templates y scopes: FK cross-tenant de rol/target falla en INSERT/UPDATE.
+7. Roles custom/templates y transición legacy: matriz `SUPER_ADMIN|ADMIN|COORDINATOR|TEACHER|STUDENT|PARENT` hacia
+   roles objetivo, alta explícita de roles sin equivalente, y FK cross-tenant de rol/target falla en INSERT/UPDATE.
 8. RLS generado por manifest para cada tabla/operación concedida, como rol app.
 9. Rol app versus owner/migrator y ausencia de rollback a privilegio inseguro.
 10. Auth repository: tenant/support/reporting no enumeran identidad ni leen `passwordHash`.
 11. Counseling: solo COUNSELOR; OWNER/ADMIN/support/export/impersonación ordinaria deniegan; break-glass auditado.
 12. Storage: path, metadata, owner/relación, MIME/size/hash, URL residual y bundle de credencial.
 13. Guardian sin vínculo, revocado, uno/múltiples hijos, área no autorizada y cross-tenant.
-14. Estados conflict/archive/offline/success, reload y sesión fresca en los cuatro recorridos.
+14. Estados conflict/archive/offline/success, module denied/plan limit, reload y sesión fresca en los cuatro recorridos.
 15. Upgrade por predecesor, quarantine, cancelación/reentrada, checksum, dual-write, rollback y forward-fix.
 16. Restore drill DB+Storage sin mutar origen.
 17. WCAG 2.2 AA: 320/360 CSS px, 200 %, teclado, foco, semántica, contraste, text spacing y AT de `HD-23`.
 18. Controles positivos de sesión, guardian portal y submission files.
 19. Si PR #129 entra al SHA futuro, exclusión de adjunto seguida de edición inmediata contra backend real.
+20. Registro de reportes: permiso de dominio/exportación, proyección por salida, sensibilidad, DAL/RLS y negativas de URL,
+    IDs, rol, usuario e Institution.
+21. Agregados: versión determinista, no mixed-currency, snapshot/watermark común, timezone/`asOf`, freshness, linaje y
+    reconciliación contra productores.
+22. Exportaciones: job async auditado/idempotente, estados/progreso/cancelación/retry/expiración, artefacto privado con
+    checksum, reautorización de download/delivery, CSV y PDF accesible, vistas guardadas y schedules.
 
 Para cada negativa, el manifest declara como mínimo:
 
@@ -408,8 +517,10 @@ Para cada negativa, el manifest declara como mínimo:
 
 ## 11. Criterios medibles de aceptación
 
-El paquete no puede proponerse como READY hasta cerrar G0 y `HD-01..HD-26`, actualizar cláusulas condicionales y obtener
-aprobaciones humanas sobre el contrato resultante. Una implementación futura tampoco puede aceptarse hasta que:
+El paquete no puede proponerse como READY hasta registrar G0 por mecanismo autoritativo o excepción trazable, cerrar
+`HD-01..HD-26`, actualizar cláusulas condicionales y obtener aprobaciones humanas sobre el contrato resultante. La
+excepción G0 del 2026-11-16 ya permite esta iteración documental y su handoff `S0-GOV`, pero no satisface los demás gates.
+Una implementación futura tampoco puede aceptarse hasta que:
 
 1. Un manifest cubra 100 % de páginas, layouts, navegación, actions, APIs, jobs y DAL con policy ID.
 2. Existan cero imports Prisma fuera de allowlists tenant/auth/platform/migration aprobadas.
@@ -420,10 +531,21 @@ aprobaciones humanas sobre el contrato resultante. Una implementación futura ta
 7. Locks, timeouts, lotes, write pause y divergencia estén dentro de presupuestos aprobados.
 8. Revocación cumpla `HD-04` en página, action, API y `/api/auth/session` con petición/sesión fresca.
 9. El SHA exacto pase el release manifest; todo check requerido termina SUCCESS y deployment identity coincide con commit.
-10. Artefactos tienen hash/provenance, redacción verificada y retención aprobada no menor de 14 días.
+10. Los artefactos de **evidencia de release** tienen hash/provenance, redacción verificada y retención aprobada no menor
+    de 14 días. Los artefactos de **exportación de reportes** siguen R-15 y expiran exactamente a 30 días salvo legal hold.
 11. Los cuatro recorridos de §8 pasan en entorno aislado `HD-22`, incluida persistencia, Storage y cross-tenant.
 12. SLI/alertas producen evidencia conforme a semántica de R-14 y umbrales `HD-20`.
 13. Restore drill de DB+Storage mide RPO/RTO `HD-21`, conserva origen y limpia destino.
 14. WCAG 2.2 AA y combinaciones `HD-23` tienen evidencia automática y humana.
-15. Arquitectura, seguridad, migración/datos, producto y UX aprueban independientemente, con identidad y fecha.
+15. Cinco responsabilidades aprueban independientemente el mismo commit: arquitectura; seguridad/privacidad;
+    migración/datos; producto/UX/accesibilidad; y testabilidad/release evidence. El revisor independiente aprobado puede
+    cubrir varias responsabilidades solo si registra un veredicto separado y evidencia suficiente para cada una; el
+    owner autoriza después la transición.
 16. La autoridad `HD-24` autoriza por separado READY, implementación, merge, migración, deploy y release.
+17. El SLO aprobado de 99,9 % mensual tiene SLI, exclusiones, error budget, fuentes y alertas verificadas.
+18. El restore drill demuestra RPO ≤ 1 h y RTO ≤ 4 h en staging dedicado de pago en US East, sin mutar el origen.
+19. La matriz completa responsive web/PWA móvil y la autenticación contraseña/Google/Microsoft tienen evidencia técnica y
+    humana; la consola `app.edukana.com` no expone datos tenant antes de seleccionar un espacio autorizado.
+20. Antes de producción, la spec 14 dedicada demuestra R-15 sobre reportes cuyos productores están todos `DONE`; ningún
+    reporte se acepta con total mixed-currency, snapshot inconsistente, lineage/reconciliation incompletos, artefacto
+    público, descarga sin reautorización o negativa cross-tenant ausente.

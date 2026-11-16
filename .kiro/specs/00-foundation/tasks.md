@@ -22,10 +22,10 @@ Ningún harness nuevo, código, schema, migración, cambio de entorno o implemen
 
 | Nodo | Requiere | Habilita | Mutación permitida antes de READY |
 |---|---|---|---|
-| T00 coordinación/candidato | Asignación documental; G0 pendiente hasta mecanismo autoritativo | T01 | Solo tres specs y fila propia |
+| T00 coordinación/candidato | Asignación documental + excepción G0 trazable del 2026-11-16 | T01 | Solo tres specs y fila propia; handoff `S0-GOV` |
 | T01 inventario read-only | T00 + autorización exacta del origen | T02 | Ninguna mutación del origen |
 | T02 decisiones humanas | T01 | T03 | Solo decision log/documentos |
-| T03 revisión y transición | T02 + G0 satisfecho | G-READY | Solo documentos y review evidence |
+| T03 revisión y transición | T02 + excepción G0 vigente | G-READY | Solo documentos y review evidence |
 | G-READY | Cero HD abierto + cinco aprobaciones + autoridad HD-24 | T04–T09 | Transición documental separada |
 | T04 harness/evidence | G-READY | T05–T11 | Solo en claim de implementación |
 | T05 host/sesión/contexto | G-READY + T04 + HD-01/02/04/26 | T06/T07/T09 | Código futuro autorizado |
@@ -36,6 +36,7 @@ Ningún harness nuevo, código, schema, migración, cambio de entorno o implemen
 | T10 contract | T09 + stable window + restore | T11 | Irreversible approval separada |
 | T11 acceptance/release evidence | T04–T10 + operations gates | T12 | Solo entorno HD-22 autorizado |
 | T12 handoff S3 | T11 + spec 00 implementada/aceptada | Spec S3 | Documentación separada |
+| T13 handoff reportes/spec 14 | Manifest de productores + todas las specs productoras `DONE` | Claim/revisión de spec 14 | Solo handoff; cero reportes |
 
 ```text
 T00 → T01 → T02 → T03 → G-READY
@@ -43,23 +44,29 @@ G-READY → T04 → T05 → T06 → T07
 G-READY + T01 + T04 → T08
 T05 + T06 + T07 + T08 → T09 → T10
 T04..T10 → T11 → T12
+all report producers DONE + dependency manifest → T13 → spec 14 claim/review/READY
 ```
 
-G-READY no existe en este candidato y no puede inferirse de un PR DRAFT, review parcial o test verde.
+G-READY no existe en este candidato y no puede inferirse de la excepción G0, un PR DRAFT, review parcial o test verde.
+T13 tampoco autoriza implementación de reportes.
 
 ## T00 · Cerrar gobierno del candidato
 
-- [ ] Confirmar que el worktree, branch y base coinciden con el claim y no son checkout principal/protected/PR existente.
-- [ ] Marcar G0 pendiente mientras el claim no sea visible en `origin/todo/tanda-4` o excepción autoritativa trazable.
-- [ ] Obtener la publicación/exception de coordinación sin empujar esta rama a una rama protegida.
+- [x] Confirmar pre-edición que worktree, branch y upstream coincidían en
+  `dce739270e7edba51f2034e602a4ae6468bbd773` y el árbol estaba limpio; el diff posterior de cuatro archivos no obtiene
+  SHA ni aprobación hasta su commit futuro.
+- [x] Registrar **“Autoriza excepción G0 y dependencias”** del 2026-11-16 con identidad, fecha, texto y alcance en
+  [PR #130, comentario 6927885328](https://github.com/cank3r/edukana/pull/130#issuecomment-6927885328), limitada a la
+  fila SPEC00 existente y el handoff `S0-GOV`.
+- [ ] Publicar el claim mediante el mecanismo autoritativo si una fase futura exige visibilidad fuera de esta excepción.
 - [ ] Revalidar que no existe claim competidor inmediatamente antes de cada revisión con escritura.
-- [ ] Mantener exactamente `requirements.md`, `design.md`, `tasks.md` y la fila propia como límite.
-- [ ] Mantener DRAFT-CANDIDATE y registrar hechos, inferencias, candidates y decisiones por separado.
+- [x] Mantener exactamente `requirements.md`, `design.md`, `tasks.md` y la fila propia como límite.
+- [x] Mantener DRAFT-CANDIDATE y registrar hechos, inferencias, candidates y decisiones humanas por separado.
 - [ ] Reconciliar specs DRAFT 01/02/03/15 por cláusula, sin editarlas desde este claim.
 
 **Owner futuro:** writer/coordinador documental.
 **Salida:** candidato, diff, trazabilidad de reviews y evidencia de coordinación.
-**Stop:** claim competidor, base movida, G0 representado falsamente como satisfecho o archivo fuera de alcance.
+**Stop:** claim competidor, base movida, excepción G0 ampliada más allá de SPEC00/S0-GOV o archivo fuera de alcance.
 
 ## T01 · Inventario read-only pre-READY
 
@@ -80,8 +87,15 @@ G-READY no existe en este candidato y no puede inferirse de un PR DRAFT, review 
 
 ## T02 · Resolver decisiones humanas
 
-- [ ] Asignar owner humano y fecha objetivo a `HD-01..HD-26`.
-- [ ] Para cada HD, registrar opciones, valor elegido, evidencia, rationale, approver/date, compatibility y rollback.
+**Inputs humanos aprobados y trazables en [comentario 6928063312](https://github.com/cank3r/edukana/pull/130#issuecomment-6928063312), sin cierre técnico implícito:**
+`AHD-01` RPO 1 h/RTO 4 h; `AHD-02` export 30 d y operacional 90 d+purge; `AHD-03` impersonación ≤30 min;
+`AHD-04` owner+revisor independiente; `AHD-05` staging dedicado pago US East; `AHD-06` edukana.com/app.edukana.com;
+`AHD-07` invite-only+marketplace público; `AHD-08` responsive web/PWA móvil completa; `AHD-09` 99,9 % mensual;
+`AHD-10` contraseña+Google+Microsoft.
+
+- [ ] Mantener una matriz `AHD → HD → requisito → tarea → evidencia`, incluida `AHD-10→HD-12/HD-04→T05/T11`.
+- [ ] Asignar owner humano y fecha objetivo a la evidencia técnica pendiente de `HD-01..HD-26`.
+- [ ] Para cada HD, separar valor humano aprobado de evidencia, rationale, approver/date, compatibility y rollback pendientes.
 - [ ] Elegir un solo modelo Membership/role y un solo modelo scope con FKs enforceable.
 - [ ] Cerrar global allowlist, composite-FK exceptions, email uniqueness, proxy topology y host behavior.
 - [ ] Cerrar roles/grants/pooler/FORCE RLS y paths de platform/job/export/repair/impersonation.
@@ -101,6 +115,8 @@ G-READY no existe en este candidato y no puede inferirse de un PR DRAFT, review 
 - [ ] Obtener revisión independiente de datos/migration, manifests, rollback y restore.
 - [ ] Obtener revisión independiente de producto/simplicity/accessibility y cuatro journeys.
 - [ ] Obtener revisión independiente de testability/release evidence y exact oracles.
+- [ ] Si una sola persona revisora cubre varias responsabilidades, exigir un veredicto separado, evidencia y fecha por
+  arquitectura; seguridad/privacidad; migración/datos; producto/UX/accesibilidad; y testabilidad/release evidence.
 - [ ] Resolver todo P0/P1 en un nuevo claim documental y rerun de las cinco revisiones afectadas.
 - [ ] Verificar G0, acyclic DAG, clause reconciliation y exact title/status en los tres documentos.
 - [ ] Crear una transición separada a READY solo con autoridad `HD-24`; no incluir implementación.
@@ -113,11 +129,11 @@ G-READY no existe en este candidato y no puede inferirse de un PR DRAFT, review 
 
 Condiciones simultáneas:
 
-- G0 visible por mecanismo autoritativo o excepción trazable.
+- G0 visible por mecanismo autoritativo o excepción trazable limitada; para este candidato aplica la excepción del 2026-11-16.
 - `HD-01..HD-26` cerradas con evidencia/owner/date.
 - Requisitos, diseño, tasks, fixtures y oracles describen una sola opción.
 - Reviews architecture/security/migration/product-UX/testability aprueban el mismo commit.
-- Autoridad `HD-24` firma transición DRAFT-CANDIDATE→READY en cambio separado.
+- Owner y revisor independiente identificados según `HD-24` firman la transición DRAFT-CANDIDATE→READY en cambio separado.
 
 Hasta entonces, T04–T12 están bloqueadas.
 
@@ -240,7 +256,8 @@ Hasta entonces, T04–T12 están bloqueadas.
 ## T11 · UX, journeys, recovery y exact-SHA acceptance
 
 - [ ] Ejecutar cuatro bounded journeys de requirements §8 con positive/negative states.
-- [ ] Probar loading/empty/retry/404/read-only/archive/conflict/offline/success/revoked/suspended/cancelled.
+- [ ] Probar loading/empty/retry/404/read-only/archive/conflict/offline/success/revoked/suspended/cancelled,
+  `MODULE_OR_PLAN_DENIED` y `PLAN_LIMIT_REACHED` con banda/contacto autorizado.
 - [ ] Confirmar guardian no-link profile/announcements y linked-child area matrix.
 - [ ] Confirmar navigation/tabs/search/prefetch no disclose unauthorized data/counts.
 - [ ] Verificar WCAG 2.2 AA: semantics, names/errors, keyboard/focus, live regions, contrast/non-color, text spacing,
@@ -267,3 +284,33 @@ Hasta entonces, T04–T12 están bloqueadas.
 **Owner futuro:** coordinador S3.
 **Salida:** handoff y dependency matrix.
 **Stop:** spec 00 no implementada/aceptada, dependency abierta o overlap schema/migration.
+
+## T13 · Handoff bloqueante a reportería/spec 14
+
+- [ ] Crear un dependency manifest con inventario mínimo obligatorio: académico, asistencia, evaluación,
+  progreso/finalización, carga docente, admisiones, finanzas por moneda, uso/límites y auditoría/seguridad. Por cada
+  `reportId`/versión registrar productor, campos, granularidad, dimensiones, owner, agregado y reconciliación.
+- [ ] Exigir estado `DONE` y evidencia exacta para cada spec productora; actualmente el inventario debe evaluar specs
+  00–15 y cualquier productor añadido después, sin permitir cerrar el manifest omitiendo una familia.
+- [ ] Entregar a spec 14 el `ReportRegistry`, permisos vigentes `report.academic|finance|sales` y `report.export`,
+  proyecciones por salida, sensibilidad y decisiones candidatas de nuevos permisos para schedule/delivery.
+- [ ] Entregar un schema allowlisted de filtros/ordenamientos/agrupaciones con tipos, operadores, límites, defaults,
+  normalización, sensibilidad y oráculos contra inferencia por campos ocultos.
+- [ ] Entregar contratos de DAL/RLS tenant, no mixed-currency, agregados deterministas/versionados, snapshot/watermark
+  común, timezone/`asOf`, freshness, linaje y reconciliación.
+- [ ] Entregar contrato transaccional mutación+AuditEvent+outbox y job async con serialización canónica, payload hash,
+  `UNIQUE(institutionId,idempotencyKey)`, claim atómico, lease/heartbeat, retry acotado y máquina de estados terminal.
+- [ ] Entregar artefactos privados con checksum, expiración exacta de 30 días, legal hold auditado, progreso,
+  cancelación/retry y reautorización por download/delivery.
+- [ ] Entregar matriz `operación × resultado × AuditEvent` con actor real/efectivo, impersonación, Institution,
+  reporte/versión, snapshot, parámetros redactados, destino, resultado y correlation ID.
+- [ ] Entregar formatos CSV/PDF accesible, saved views, schedules y negativas de URL/ID/user/role/cross-tenant,
+  filtros ocultos, revocación posterior, plan limit y artefacto expirado/cancelado.
+- [ ] Abrir claim separado para spec 14 y exigir sus cinco responsabilidades de revisión y transición READY antes de
+  cualquier implementación.
+- [ ] Mantener fuera de este claim todo código, query, report, export, job, artifact, vista o schedule.
+
+**Owner futuro:** owner de spec 14 más revisor independiente, nunca el writer de un productor sin separación de funciones.
+**Salida:** handoff `REP14`, dependency manifest cerrado y evidencia de productores `DONE`.
+**Stop:** productor no `DONE`, campo sin linaje/sensibilidad, moneda/snapshot ambiguos, policy path incompleto, revisión no
+independiente o intento de implementar antes del READY propio de spec 14.
