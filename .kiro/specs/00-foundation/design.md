@@ -233,7 +233,11 @@ User
   passwordHash nullable
   sessionVersion integer NOT NULL
   status ACTIVE|INACTIVE|SUSPENDED|DELETED
+  globalSessionVersionCandidate integer nullable  -- solo expand/N/N-1
+  globalStatusCandidate ACTIVE|INACTIVE|SUSPENDED|DELETED nullable  -- solo expand/N/N-1
   createdAt, updatedAt
+  -- status/sessionVersion existentes siguen siendo legacy institution-scoped hasta cutover;
+  -- N hace shadow con Candidate; cutover cambia autoridad; contract sustituye legacy después de drain
 
 UserIdentitySourceSnapshot
   migrationVersion, legacyUserId
@@ -251,6 +255,15 @@ IdentitySourceSnapshot
   PRIMARY KEY (migrationVersion, identityId)
   -- immutable/redacted; Identity es fuente transitoria, no raíz target
 
+UserIdentityClassPlan
+  migrationVersion, classId
+  canonicalUserId NOT NULL FK User
+  sourceSetHash, createdAt
+  PRIMARY KEY (migrationVersion, classId)
+  UNIQUE (migrationVersion, canonicalUserId)
+  UNIQUE (migrationVersion, classId, canonicalUserId)
+  -- existe antes de remaps; una resolución MAP_TO_CLASS referencia este plan y no consolidation
+
 UserIdentityRemap
   migrationVersion, legacyUserId
   canonicalUserId NOT NULL FK User
@@ -258,59 +271,95 @@ UserIdentityRemap
   classId NOT NULL
   reason, sourceHash, createdAt
   PRIMARY KEY (migrationVersion, legacyUserId)
+  UNIQUE (migrationVersion, legacyUserId, sourceInstitutionId)
   FK (migrationVersion,legacyUserId) → UserIdentitySourceSnapshot(migrationVersion,legacyUserId)
+  FK (migrationVersion,classId,canonicalUserId) → UserIdentityClassPlan(migrationVersion,classId,canonicalUserId)
   INDEX (canonicalUserId, sourceInstitutionId)
   -- append-only; solo clases resueltas; cubre también canonicalUserId=legacyUserId
 
 UserIdentityConsolidation
   classId, migrationVersion
   canonicalUserId NOT NULL FK User
-  sourceSetHash, sourceSessionVersionMax, targetSessionVersion
+  sourceSetHash, sourceSessionVersionMax, initialTargetSessionVersion
   globalStatusSourceIdentityId nullable
-  globalStatus ACTIVE|INACTIVE|SUSPENDED|DELETED
+  initialGlobalStatus ACTIVE|INACTIVE|SUSPENDED|DELETED
   frozenAt NOT NULL, appliedAt nullable
   PRIMARY KEY (migrationVersion, classId)
   UNIQUE (migrationVersion, canonicalUserId)
-  UNIQUE (migrationVersion, classId, canonicalUserId)
+  FK (migrationVersion,classId,canonicalUserId) → UserIdentityClassPlan(migrationVersion,classId,canonicalUserId)
   FK (migrationVersion,globalStatusSourceIdentityId) → IdentitySourceSnapshot(migrationVersion,identityId)
-  CHECK targetSessionVersion = sourceSessionVersionMax + 1 AND sourceSessionVersionMax < 2147483647
-  CHECK globalStatusSourceIdentityId IS NOT NULL OR globalStatus=INACTIVE
-  -- se crea/fija después de drain; retry reutiliza targetSessionVersion, nunca lo recalcula desde User target
+  CHECK initialTargetSessionVersion = sourceSessionVersionMax + 1 AND sourceSessionVersionMax < 2147483647
+  CHECK globalStatusSourceIdentityId IS NOT NULL OR initialGlobalStatus=INACTIVE
+  -- fija solo baseline inicial después de drain; runtime revocations usan UserSessionVersionEvent
+
+UserSessionVersionEvent
+  id PK
+  userId NOT NULL FK User
+  mutationId UNIQUE NOT NULL
+  expectedVersion, newVersion, reason, createdAt
+  CHECK newVersion = expectedVersion + 1 AND expectedVersion < 2147483647
+  UNIQUE (userId, newVersion)
+  -- CAS idempotente; duplicate mutationId devuelve original; durante coexistencia copia newVersion a Identity y cada
+  -- User legacy mapeado en la misma transacción
+
+MembershipSourceRemap
+  migrationVersion, sourceInstitutionId, legacyUserId
+  membershipId NOT NULL
+  canonicalUserId NOT NULL
+  PRIMARY KEY (migrationVersion, sourceInstitutionId, legacyUserId)
+  FK (migrationVersion,legacyUserId,sourceInstitutionId) →
+     UserIdentityRemap(migrationVersion,legacyUserId,sourceInstitutionId)
+  FK (sourceInstitutionId,membershipId,canonicalUserId) → Membership(institutionId,id,userId)
+  -- varias fuentes duplicadas de la misma Institution pueden apuntar a una Membership resuelta
 
 IdentityMigrationAnomaly
   id PK
   migrationVersion
-  category identity_without_user|invalid_email|canonical_email_collision|email_mismatch|credential_conflict|
-           shared_identity_conflict|duplicate_membership|role_mapping_unknown|scope_ambiguous|fk_remap_conflict
+  category identity_without_user|user_without_identity|invalid_email|canonical_email_collision|email_mismatch|
+           credential_conflict|shared_identity_conflict|unknown_status|missing_snapshot|duplicate_snapshot|
+           source_changed_after_freeze|duplicate_source_mapping|cross_class_target|missing_canonical_user|
+           class_not_drained|status_authority_ambiguous|session_version_overflow|target_version_conflict|
+           missing_identity_mapping|duplicate_membership|role_mapping_unknown|scope_ambiguous|duplicate_profile|
+           profile_field_conflict|missing_membership|provider_account_duplicate|auth_session_conflict|
+           recovery_conflict|fk_remap_conflict|anomaly_source_overlap|invalid_resolution|unresolved_source
   sourceSetHash, detailsRedacted, createdAt
+  UNIQUE (migrationVersion, id)
   UNIQUE (migrationVersion, category, sourceSetHash)
   -- sin resolution row = OPEN; metadata append-only
 
 IdentityMigrationAnomalyUser
-  anomalyId NOT NULL FK IdentityMigrationAnomaly
-  migrationVersion, legacyUserId
+  anomalyId, migrationVersion, legacyUserId
   PRIMARY KEY (anomalyId, migrationVersion, legacyUserId)
+  FK (migrationVersion,anomalyId) → IdentityMigrationAnomaly(migrationVersion,id)
   FK (migrationVersion,legacyUserId) → UserIdentitySourceSnapshot(migrationVersion,legacyUserId)
 
 IdentityMigrationAnomalyIdentity
-  anomalyId NOT NULL FK IdentityMigrationAnomaly
-  migrationVersion, identityId
+  anomalyId, migrationVersion, identityId
   PRIMARY KEY (anomalyId, migrationVersion, identityId)
+  FK (migrationVersion,anomalyId) → IdentityMigrationAnomaly(migrationVersion,id)
   FK (migrationVersion,identityId) → IdentitySourceSnapshot(migrationVersion,identityId)
 
 IdentityMigrationAnomalyResolution
-  anomalyId PRIMARY KEY FK IdentityMigrationAnomaly
-  migrationVersion
-  decision MAP_TO_CLASS|EXCLUDE_APPROVED
+  anomalyId, migrationVersion
+  decision MAP_TO_CLASS|MAP_TO_MEMBERSHIP|EXCLUDE_ORPHAN_IDENTITY
   classId nullable
   canonicalUserId nullable FK User
+  membershipId nullable
+  sourceInstitutionId nullable
   approvedByUserId NOT NULL FK User
   reason, createdAt
-  FK (migrationVersion,classId,canonicalUserId) →
-     UserIdentityConsolidation(migrationVersion,classId,canonicalUserId)
-  CHECK ((decision=MAP_TO_CLASS AND classId IS NOT NULL AND canonicalUserId IS NOT NULL)
-      OR (decision=EXCLUDE_APPROVED AND classId IS NULL AND canonicalUserId IS NULL))
-  -- append-only; EXCLUDE_APPROVED requiere autoridad humana HD-24 y solo Identity huérfana sin User
+  PRIMARY KEY (migrationVersion, anomalyId)
+  FK (migrationVersion,anomalyId) → IdentityMigrationAnomaly(migrationVersion,id)
+  FK (migrationVersion,classId,canonicalUserId) → UserIdentityClassPlan(migrationVersion,classId,canonicalUserId)
+  FK (sourceInstitutionId,membershipId) → Membership(institutionId,id)
+  CHECK ((decision=MAP_TO_CLASS AND classId IS NOT NULL AND canonicalUserId IS NOT NULL
+         AND membershipId IS NULL AND sourceInstitutionId IS NULL)
+      OR (decision=MAP_TO_MEMBERSHIP AND classId IS NULL AND canonicalUserId IS NULL
+         AND membershipId IS NOT NULL AND sourceInstitutionId IS NOT NULL)
+      OR (decision=EXCLUDE_ORPHAN_IDENTITY AND classId IS NULL AND canonicalUserId IS NULL
+         AND membershipId IS NULL AND sourceInstitutionId IS NULL))
+  -- append-only deferred constraint trigger valida categoría, misma migrationVersion y source shape;
+  -- EXCLUDE_ORPHAN_IDENTITY exige category=identity_without_user, >=1 Identity source, 0 User sources y HD-24
 
 ProviderAccount
   id PK
@@ -339,6 +388,7 @@ Membership
   createdAt, updatedAt, endedAt nullable
   UNIQUE (institutionId, userId)
   UNIQUE (institutionId, id)
+  UNIQUE (institutionId, id, userId)
   INDEX (institutionId, status, userId)
 
 SystemRoleTemplate
@@ -778,12 +828,14 @@ La lista se amplía desde el schema inventariado. Ninguna fila puede omitirse po
 
 | Tabla destino | Fuentes autoritativas candidatas | Igualdades obligatorias | Categoría de anomalía |
 |---|---|---|---|
-| `User` global in-place | `users` legacy + `Identity` transitoria + `Account`/`Session` | una clase resuelta produce un ID canónico; email/credential/status/sessionVersion siguen autoridad versionada; ningún source ID queda sin remap/anomaly | identity_without_user, user_without_identity, shared_identity_conflict, email_mismatch, canonical_email_collision, credential_conflict, unknown_status |
+| `User` global in-place | `users` legacy + `Identity` transitoria + `Account`/`Session` | status/sessionVersion legacy permanecen para N-1; candidates globales separados hasta cutover; un ID canónico por clase | identity_without_user, user_without_identity, shared_identity_conflict, email_mismatch, canonical_email_collision, credential_conflict, unknown_status |
 | `UserIdentitySourceSnapshot` / `IdentitySourceSnapshot` | cada fila User/Identity antes de backfill | una fila immutable/redacted por `(migrationVersion,sourceId)` y checksum igual a fuente viva en cutoff | missing_snapshot, duplicate_snapshot, source_changed_after_freeze |
-| `UserIdentityRemap` | cada `User.id` fuente resuelto + source snapshot | exactamente una fila por ID fuente resuelto; `canonicalUserId` pertenece a su clase y existe; source hash estable | duplicate_source_mapping, cross_class_target, missing_canonical_user |
-| `UserIdentityConsolidation` | snapshots y remaps de una clase resuelta después de drain | un canonicalUserId, global status source, source sessionVersion max y target frozen retry-safe | class_not_drained, status_authority_ambiguous, session_version_overflow, target_version_conflict |
-| `IdentityMigrationAnomaly*` | source snapshots que no forman clase resuelta | source set tipado/hash único; cada OPEN User sin remap; resolución append-only; OPEN=0 antes de cutover | anomaly_source_overlap, invalid_resolution, unresolved_source |
-| `Membership` | cada pertenencia `User(institutionId,role,status)` legacy + `UserIdentityRemap` | una Membership por `(institutionId,canonicalUserId)`; rol/status/scope se transforman por matriz aprobada; duplicado intra-Institution se resuelve o cuarentena | missing_identity_mapping, duplicate_membership, role_mapping_unknown, scope_ambiguous |
+| `UserIdentityClassPlan` | snapshots de una clase resuelta | existe antes de remaps; sourceSetHash, canonicalUserId y migrationVersion únicos | shared_identity_conflict, cross_class_target, missing_canonical_user |
+| `UserIdentityRemap` | cada `User.id` fuente resuelto + source snapshot + class plan | exactamente una fila por ID fuente resuelto; canonicalUserId pertenece al plan | duplicate_source_mapping, cross_class_target, missing_canonical_user |
+| `UserIdentityConsolidation` | class plan + remaps completos después de drain | baseline inicial de global status/sessionVersion congelado una vez, retry-safe | class_not_drained, status_authority_ambiguous, session_version_overflow, target_version_conflict |
+| `UserSessionVersionEvent` | revocación global posterior al baseline | mutationId único, new=expected+1, CAS y fanout legacy atómico durante N/N-1 | session_version_overflow, target_version_conflict |
+| `IdentityMigrationAnomaly*` | source snapshots que no forman salida válida | catálogo cerrado completo; FKs compuestas por migrationVersion; resolución append-only sin ciclo; OPEN=0 antes de cutover | anomaly_source_overlap, invalid_resolution, unresolved_source |
+| `Membership` + `MembershipSourceRemap` | cada pertenencia `User(institutionId,role,status)` legacy + identity remap | una source-remap por pertenencia; varias pueden apuntar a una Membership única; cardinalidad del collapse explícita | missing_identity_mapping, duplicate_membership, role_mapping_unknown, scope_ambiguous |
 | `PersonProfile` | campos personales de cada `User` legacy + `UserIdentityRemap` | `(institutionId,canonicalUserId)` conserva nombre/teléfono/avatar y divergencias institucionales sin sobrescribir otra Institution | duplicate_profile, profile_field_conflict, missing_membership |
 | `CourseModule` | `Course` | module.courseId→course.id; tenant=course.institutionId | missing_course, duplicate_parent |
 | `Enrollment` | `Course` + student/User | course.tenant=student.tenant=target tenant | missing_course, missing_student, mixed_tenant |
@@ -806,17 +858,21 @@ de canonicalización y construye clases de equivalencia reproducibles:
    no hay merge automático por proveedor ni por similitud de nombre.
 3. Dentro de una clase resuelta, la opción candidata conserva como `canonicalUserId` el menor tuple
    `(createdAt UTC, id bytewise)`; ningún criterio depende del orden del query. `HD-12` debe aprobar o reemplazar este
-   ranking antes de READY. Cada source ID, incluido el canónico, recibe una fila inmutable `UserIdentityRemap` con hash.
+   ranking antes de READY. El resultado crea primero `UserIdentityClassPlan`; después cada source ID, incluido el
+   canónico, recibe `UserIdentityRemap` append-only que referencia ese plan.
 4. Email global proviene de `Identity.email` cuando existe y coincide con la canonicalización de cada `User.email` de
    la clase; sin Identity, proviene del único email canónico común. El credential verifier proviene de
    `Identity.passwordHash` cuando existe; si falta, debe haber como máximo un valor no nulo distinto en `User.password`.
-   Conflicto de email o credencial se pone en cuarentena, nunca se elige uno. `User.status` global nunca se deriva de una
-   suspensión institucional: si existe `Identity`, mapea exactamente `ACTIVE→ACTIVE`, `INACTIVE→INACTIVE` y
+   Conflicto de email o credencial se pone en cuarentena, nunca se elige uno. Durante coexistencia, la columna existente
+   `User.status` conserva significado institution-scoped para N-1; la autoridad global se escribe en la columna aditiva
+   `globalStatusCandidate`. Si existe `Identity`, mapea `ACTIVE→ACTIVE`, `INACTIVE→INACTIVE` y
    `SUSPENDED→SUSPENDED`; sin Identity inicia `INACTIVE` hasta recovery global verificado. `DELETED` solo procede de una
-   acción global explícita y auditada. Cada `User.status` legacy mapea únicamente a su Membership:
-   `ACTIVE→ACTIVE`, `INACTIVE|SUSPENDED→SUSPENDED`; valor desconocido se bloquea. Login exige `User.status=ACTIVE` y al
-   menos una Membership ACTIVE. `User.name`, `phone`, `avatarUrl` y demás variantes por Institution se preservan en
-   `PersonProfile`, no se resuelven sobrescribiendo una Institution con otra.
+   acción global explícita y auditada. Cada `User.status` legacy mapea a su Membership:
+   `ACTIVE→ACTIVE`, `INACTIVE|SUSPENDED→SUSPENDED`; un valor desconocido crea `unknown_status` y bloquea. Antes de
+   cutover N solo shadow-compara `globalStatusCandidate` y legacy sigue autoritativo. En cutover N cambia de forma atómica
+   a global candidate + Membership; después de drain, contract sustituye `User.status` legacy por el global final. Login
+   objetivo exige estado global ACTIVE y al menos una Membership ACTIVE. Variantes `User.name`, `phone`, `avatarUrl` por
+   Institution se preservan en `PersonProfile`.
 5. Cada FK entrante a `users.id` y la FK saliente legacy `users.institutionId→Institution.id` se enumeran desde
    `pg_catalog` y el schema Prisma en un edge manifest versionado. Expand agrega referencias canónicas paralelas;
    backfill las obtiene solo de `UserIdentityRemap`; shadow parity compara ambas. Account, Session, recovery y referencias
@@ -848,32 +904,38 @@ IN Account.userId[CASCADE], Session.userId[CASCADE], Course.teacherId[DEFAULT], 
    denial según policy. El campo/FK solo se retira en contract después de drain, retención y aprobación irreversible.
 7. Después de drenar N-1, la transacción de freeze bloquea todas las filas de la clase y crea una sola
    `UserIdentityConsolidation(migrationVersion,classId)` con
-   `sourceSessionVersionMax=max(Identity.sessionVersion si existe, cada User.sessionVersion)` y
-   `targetSessionVersion=sourceSessionVersionMax+1`. El apply usa compare-and-set: valor source esperado→target; si ya es
-   target devuelve el resultado original, y cualquier tercer valor es `CONFLICT`. Retry lee el target congelado y nunca
-   recalcula desde la fila `User` modificada. Overflow bloquea antes de escribir.
-8. Quarantine usa `IdentityMigrationAnomaly` y joins tipados de User/Identity, no un `sourceType/sourceId` polimórfico.
-   `category` pertenece al enum cerrado de la tabla del manifest; `sourceSetHash` hace idempotente el hallazgo. Sin
-   `IdentityMigrationAnomalyResolution`, el caso está OPEN y cada User asociado carece de remap. Una resolución inmutable
-   `MAP_TO_CLASS` fija class/canonical User y habilita insertar sus remaps; `EXCLUDE_APPROVED` solo puede resolver una
-   Identity huérfana sin User y exige autoridad HD-24. Un User fuente nunca se excluye: antes de cutover debe tener
-   exactamente un remap y cero anomalías OPEN. `quarantined*Count` cuenta fuentes distintas en anomalías OPEN, no filas
-   de join ni anomalías ya resueltas.
+   `sourceSessionVersionMax=max(Identity.sessionVersion si existe, cada User.sessionVersion)` e
+   `initialTargetSessionVersion=sourceSessionVersionMax+1`. El apply hace CAS sobre
+   `globalSessionVersionCandidate`: null/source esperado→target; si ya es target devuelve el resultado original y un
+   tercer valor es `CONFLICT`. Retry lee el target congelado y nunca recalcula desde `User` modificado. Esto fija solo el
+   baseline migratorio. Cada revocación global posterior inserta `UserSessionVersionEvent` con mutationId, expected/new
+   version y CAS; durante coexistencia copia newVersion a todas las filas legacy mapeadas en la misma transacción.
+   Duplicado devuelve el evento original, conflicto cambia cero filas y overflow bloquea antes de escribir.
+8. Quarantine usa `IdentityMigrationAnomaly` y joins tipados a snapshots de User/Identity, no un
+   `sourceType/sourceId` polimórfico. El enum cubre todas las categorías del manifest. Sin resolution, el caso está OPEN
+   y cada User asociado carece de remap. `MAP_TO_CLASS` referencia `UserIdentityClassPlan`, que existe antes de remaps;
+   `MAP_TO_MEMBERSHIP` registra un collapse; `EXCLUDE_ORPHAN_IDENTITY` solo admite category=identity_without_user,
+   una o más Identity source y cero User source, con autoridad HD-24. Composite FKs fijan migrationVersion en anomalía,
+   sources, plan y resolution. Antes de cutover cada User fuente tiene exactamente un remap y cero anomalías OPEN.
 
 Oráculos obligatorios antes de cutover:
 
 ```text
 sourceUserCount = resolvedUserIdentityRemapCount + distinctOpenAnomalyUserCount
 resolvedIdentityClassCount = frozenUserIdentityConsolidationCount = canonicalSelfRemapCount
-sourceInstitutionMembershipCount = membershipCount + distinctOpenAnomalyMembershipSourceCount
+sourceInstitutionMembershipCount = membershipSourceRemapCount + distinctOpenAnomalyMembershipSourceCount
+resolvedMembershipTargetKeyCount = membershipCount
+resolvedCollapsedMembershipSourceExcessCount = membershipSourceRemapCount - membershipCount
 para cada FK entrante: sourceReferenceCount = canonicalReferenceCount + openQuarantinedReferenceCount
 distinctOpenAnomalyUserCount = unresolvedRemapCount = danglingCanonicalIdCount = crossClassRemapCount = 0
 canonicalEmailDuplicateCount = providerAccountDuplicateCount = pendingLegacyFkCount = 0
-sourceSessionVersionMax + 1 = frozenTargetSessionVersion = appliedTargetSessionVersion
+sourceSessionVersionMax + 1 = frozenInitialTargetSessionVersion = appliedGlobalSessionVersionCandidate
+para cada UserSessionVersionEvent: newVersion = expectedVersion + 1 y duplicate(mutationId) no cambia versión
 liveSourceRowChecksumV1(User + Identity) = immutableSourceSnapshotChecksumV1
 semanticSourceProjectionChecksumV1(source snapshots + Account + Session + recovery + cada FK edge) =
-  semanticTargetProjectionChecksumV1(canonical User + consolidation + remap + Membership + PersonProfile +
-  ProviderAccount + AuthSession + recovery target + cada FK canónica + anomaly/resolution projection)
+  semanticTargetProjectionChecksumV1(canonical User + class plan + consolidation + identity/membership remaps +
+  UserSessionVersionEvent + Membership + PersonProfile + ProviderAccount + AuthSession + recovery target +
+  cada FK canónica + anomaly/resolution projection)
 ```
 
 Ambas proyecciones declaran columnas ordenadas, IDs remapeados, null explícito, normalización y representación de
@@ -907,15 +969,15 @@ cases:
       - { edge: Enrollment.studentId, rowId: enrollment-a1, sourceUserId: u-a2 }
       - { edge: Announcement.authorId, rowId: announcement-a1, sourceUserId: u-a1 }
       - { edge: GradeEntryRevision.actorId, rowId: revision-a1, sourceUserId: u-a2 }
-    expectedProjection: "IFX-01|canonical=u-a1|global=ACTIVE|memberships=inst-a:ACTIVE,inst-b:SUSPENDED|remaps=2|providerAccounts=1|authSessions=1|recovery=1|fkRefs=3|open=0|targetSv=8"
-    expectedProjectionSha256: b0674ac8b3e62fb2928b6c44566022444d91319eef348622ed52147f6676d032
+    expectedProjection: "IFX-01|canonical=u-a1|legacyCanonicalStatus=ACTIVE|globalCandidate=ACTIVE|memberships=inst-a:ACTIVE,inst-b:SUSPENDED|remaps=2|providerAccounts=1|authSessions=1|recovery=1|fkRefs=3|open=0|initialTargetSv=8"
+    expectedProjectionSha256: a005a352ef51d5e68ba6ab18315d3b2ad9e24d79ec9940813307e61a73bbcc0f
   - id: IFX-02-unlinked-shared-email
     identities: []
     users:
       - { id: u-b1, institutionId: inst-a, identityId: null, email: bea@example.test, password: cred-h2, status: ACTIVE, sessionVersion: 0, createdAt: 2025-01-01T00:00:00Z }
       - { id: u-b2, institutionId: inst-b, identityId: null, email: bea@example.test, password: cred-h2, status: INACTIVE, sessionVersion: 0, createdAt: 2025-02-01T00:00:00Z }
-    expectedProjection: "IFX-02|canonical=u-b1|global=INACTIVE|memberships=inst-a:ACTIVE,inst-b:SUSPENDED|remaps=2|open=0|targetSv=1"
-    expectedProjectionSha256: 5d2f532304e458f0022537f74780efa79fbc347f6abbc44741085189483e83a2
+    expectedProjection: "IFX-02|canonical=u-b1|legacyCanonicalStatus=ACTIVE|globalCandidate=INACTIVE|memberships=inst-a:ACTIVE,inst-b:SUSPENDED|remaps=2|open=0|initialTargetSv=1"
+    expectedProjectionSha256: 38004fae08d9060ca30e2976f9eb1aefdb14d405c7d5a9533b551e2c32c6c61b
   - id: IFX-03-canonical-email-collision
     identities:
       - { id: idn-c1, email: case@example.test, status: ACTIVE, sessionVersion: 0 }
@@ -945,17 +1007,30 @@ cases:
   - id: IFX-07-session-version-retry
     identities: [{ id: idn-g, email: gia@example.test, status: ACTIVE, sessionVersion: 3 }]
     users: [{ id: u-g1, institutionId: inst-a, identityId: idn-g, email: gia@example.test, password: cred-h6, status: ACTIVE, sessionVersion: 7, createdAt: 2025-01-01T00:00:00Z }]
-    expectedProjection: "IFX-07|canonical=u-g1|sourceSv=7|targetSv=8|retrySv=8|thirdValueConflict=true"
-    expectedProjectionSha256: c4c45d6cf0e681b54fd4120fbbf25346d5e091ac68586afb838736929fe7b7ca
+    expectedProjection: "IFX-07|canonical=u-g1|legacySv=7|initialCandidateSv=8|retryCandidateSv=8|runtimeEventNewSv=9|duplicateRuntimeSv=9|thirdValueConflict=true"
+    expectedProjectionSha256: d3a610807429ac48b051d0e2ad226b5dfac0e9e22f6fec69e313aa82fd6d3d1c
   - id: IFX-08-source-institution-delete
     identities: [{ id: idn-h, email: hal@example.test, status: ACTIVE, sessionVersion: 0 }]
     users: [{ id: u-h1, institutionId: inst-a, identityId: idn-h, email: hal@example.test, password: cred-h7, status: ACTIVE, sessionVersion: 0, createdAt: 2025-01-01T00:00:00Z }]
     additionalMemberships: [{ institutionId: inst-b, canonicalUserId: u-h1, status: ACTIVE }]
     expectedProjection: "IFX-08|canonical=u-h1|sourceInstitution=inst-a|otherMembership=inst-b|deleteDenied=true|userDelta=0|membershipDelta=0|fkDelta=0"
     expectedProjectionSha256: 9c95a40f7cde501fd3579fea66f02c19e077154bf2c9d8e848a16dbc478c0556
+  - id: IFX-09-duplicate-membership-collapse
+    identities: [{ id: idn-i, email: ivy@example.test, status: ACTIVE, sessionVersion: 0 }]
+    users:
+      - { id: u-i1, institutionId: inst-a, identityId: idn-i, email: ivy@example.test, password: cred-h8, status: ACTIVE, sessionVersion: 0, createdAt: 2025-01-01T00:00:00Z }
+      - { id: u-i2, institutionId: inst-a, identityId: idn-i, email: ivy@example.test, password: cred-h8, status: ACTIVE, sessionVersion: 0, createdAt: 2025-01-02T00:00:00Z }
+    expectedProjection: "IFX-09|canonical=u-i1|sourceMemberships=2|membershipSourceRemaps=2|targetMemberships=1|collapseExcess=1|open=0"
+    expectedProjectionSha256: d149c4b98b8d358290f2a2a2300434ee6d85ae766ace031a4d1bc470ec09e120
+  - id: IFX-10-cross-version-anomaly-denial
+    anomaly: { id: anomaly-j, migrationVersion: v1, category: identity_without_user }
+    attemptedIdentitySource: { migrationVersion: v2, identityId: idn-j }
+    attemptedUserSource: { migrationVersion: v1, legacyUserId: u-j1 }
+    expectedProjection: "IFX-10|anomalyVersion=v1|sourceVersion=v2|crossVersionDenied=true|excludeWithUserSourceDenied=true"
+    expectedProjectionSha256: 399d75aa1591236130fd008bc02437219e11c7d053531232a6c8758c50e5428c
 ```
 
-T03 comprueba que el YAML parsea, que los ocho hashes coinciden y que cada categoría/rama tiene requisito, test ID,
+T03 comprueba que el YAML parsea, que los diez hashes coinciden y que cada categoría/rama tiene requisito, test ID,
 owner y stop condition. T04 añade fixtures por cada FK descubierta y hashes PostgreSQL exactos; no puede cambiar outputs
 IFX-1 para hacer pasar una implementación.
 
@@ -975,12 +1050,14 @@ duplica ni omite.
 
 Mientras N-1 sirve tráfico, `legacy_authoritative` gobierna. N dual-writea atómicamente y usa shadow-read sin cambiar
 responses; un catch-up idempotente recurrente absorbe filas creadas por N-1. Para que rollback pre-cutover sea exacto,
-N conserva cada fila legacy: cambios de Membership/status/profile actualizan solo la fila source de esa Institution;
-revocación global fija una versión en `UserIdentityConsolidation` y la copia a cada User mapeado; email/password/linking
-quedan feature-off salvo que el adaptador aprobado pueda escribir Identity, User canónico y todas las filas legacy en la
-misma transacción. Una identidad nueva de N crea antes de responder un User legacy-compatible para su primera
-Institution, self-remap, Membership y PersonProfile; agregar otra Membership crea su fila legacy-compatible y remap.
-Cada operación declara deltas por source ID y prueba rollback con row/checksum/session/authz iguales a N-1.
+N conserva cada fila legacy: cambios de Membership/status/profile actualizan tanto la fila source de esa Institution como
+Membership/PersonProfile; cada revocación global inserta un `UserSessionVersionEvent`, hace CAS de
+`globalSessionVersionCandidate` y copia newVersion a Identity y todas las filas legacy mapeadas en la misma transacción.
+Email/password/linking quedan feature-off salvo que el adaptador aprobado pueda escribir Identity, User canónico y todas
+las filas legacy atómicamente. Una identidad nueva de N crea antes de responder un User legacy-compatible para su primera
+Institution, source snapshot, class plan, self-remap, MembershipSourceRemap, Membership y PersonProfile; agregar otra
+Membership crea su fila/snapshot/remaps legacy-compatible. Cada operación declara deltas por source ID y prueba rollback
+con rows/checksums/session/authz iguales a N-1.
 
 Antes de cutover se drena N-1, se congela el ledger de sessionVersion y se cumple una stable window **CANDIDATE de 24 h**
 con cero divergencia de seguridad/tenant; `HD-15` aprueba o reemplaza duración y criterio. El cutover firmado registra SHA,
