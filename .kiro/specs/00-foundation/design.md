@@ -13,7 +13,7 @@ Una petición solo alcanza datos institucionales cuando todas las capas derivan 
 confiable. La autenticación establece prerrequisitos; la autorización funcional sigue el orden vinculante:
 
 ```text
-HostAuthority → GlobalUser vivo → Membership viva
+HostAuthority → User vivo → Membership viva
   → policy de lifecycle por operación
       (negocio: ACTIVE; recovery: allowlist explícita para SUSPENDED/CANCELLED)
   → módulo/plan → capability → scope → relación → estado → política de operación
@@ -225,7 +225,8 @@ implementable; no autoriza schema ni migración.
 ### 7.1 Identidad, membership y roles
 
 ```text
-GlobalUser
+User
+  -- única raíz de identidad; evoluciona in-place desde User legacy y conserva sus IDs
   id PK
   emailOriginal
   emailCanonical UNIQUE (mecanismo/version HD-12)
@@ -236,32 +237,32 @@ GlobalUser
 
 ProviderAccount
   id PK
-  globalUserId NOT NULL FK GlobalUser
+  userId NOT NULL FK User
   provider GOOGLE|MICROSOFT
   providerAccountId NOT NULL
   providerEmailObserved nullable
   createdAt, updatedAt, revokedAt nullable
   UNIQUE (provider, providerAccountId)
-  INDEX (globalUserId, provider, revokedAt)
+  INDEX (userId, provider, revokedAt)
   -- tokens cifrados/revocables en límite auth; nunca tenant/reporting
 
 AuthSession
   id PK
-  globalUserId NOT NULL FK GlobalUser
+  userId NOT NULL FK User
   sessionVersionAtIssue NOT NULL
   expiresAt, revokedAt nullable
-  -- migración aditiva desde Account/Session→User legacy; no contract hasta paridad
+  -- adaptación aditiva de Account/Session hacia el mismo User evolucionado; sin segunda raíz ni contract hasta paridad
 
 Membership
   id PK
   institutionId NOT NULL FK Institution
-  globalUserId NOT NULL FK GlobalUser
+  userId NOT NULL FK User
   status INVITED|ACTIVE|SUSPENDED|LEFT
   version integer NOT NULL
   createdAt, updatedAt, endedAt nullable
-  UNIQUE (institutionId, globalUserId)
+  UNIQUE (institutionId, userId)
   UNIQUE (institutionId, id)
-  INDEX (institutionId, status, globalUserId)
+  INDEX (institutionId, status, userId)
 
 SystemRoleTemplate
   id PK
@@ -303,9 +304,11 @@ con esta opción en un contrato READY.
 `HD-12` debe elegir una canonicalización versionada idéntica en app/DB (whitespace, Unicode, local-part, IDNA y límites).
 Google/Microsoft solo crean identidad con claims verificados aprobados y `emailCanonical` libre. Una colisión nunca enlaza:
 requiere autenticación del método existente y reautenticación reciente. Provider email change no rekeyea ni fusiona.
-Unlink conserva un método usable, revoca tokens, incrementa `sessionVersion` y audita. `ProviderAccount`, `AuthSession` y
-recovery migran aditivamente desde relaciones `Account`/`Session`/tokens a `User` legacy con backfill, shadow parity y
-N/N-1 explícitos. Rollback apaga proveedores/linking sin borrar vínculos; takeover recovery y last-method tienen oráculos.
+Unlink conserva un método usable, revoca tokens, incrementa `sessionVersion` y audita. La tabla `User` existente es la
+única raíz: conserva IDs, se expande in-place y deja `institutionId/role` como campos legacy durante N/N-1. Membership se
+backfillea con `(institutionId,userId,...)`; `ProviderAccount`, `AuthSession` y recovery se adaptan aditivamente desde
+`Account`/`Session`/tokens hacia ese mismo `User`, con shadow parity. No se crea otra tabla raíz de usuario. Rollback
+apaga proveedores/linking sin borrar vínculos; takeover recovery y last-method tienen oráculos.
 
 ### 7.2 Scope tipado
 
@@ -369,14 +372,14 @@ InstitutionDomain
   -- lifecycle source y proyección se actualizan atómicamente; authority cache queda deshabilitada hasta HD-11/26
 
 PlatformPrincipal
-  globalUserId
+  userId
   platformRoleId
   status
   validUntil nullable
 
 ImpersonationSession
   id PK
-  operatorGlobalUserId
+  operatorUserId
   targetInstitutionId
   targetMembershipId
   targetRoleAssignmentId
@@ -397,13 +400,13 @@ ImpersonationApproval
   id PK
   targetInstitutionId NOT NULL
   impersonationSessionId NOT NULL
-  approverGlobalUserId NOT NULL FK GlobalUser
+  approverUserId NOT NULL FK User
   approverKind INSTITUTION_OWNER|PLATFORM
   decision APPROVED|REJECTED
   approvedScopeHash, createdAt, expiresAt
   correlationId
   UNIQUE (targetInstitutionId, id)
-  UNIQUE (targetInstitutionId, impersonationSessionId, approverGlobalUserId, approverKind)
+  UNIQUE (targetInstitutionId, impersonationSessionId, approverUserId, approverKind)
   FK (targetInstitutionId, impersonationSessionId) → ImpersonationSession(targetInstitutionId,id)
   -- append-only; policy exige 1 OWNER_CONSENT o 2 PLATFORM distintos antes de ACTIVE
 
@@ -411,7 +414,7 @@ ImpersonationApprovalRevocation
   id PK
   targetInstitutionId NOT NULL
   impersonationApprovalId NOT NULL
-  revokedByGlobalUserId NOT NULL FK GlobalUser
+  revokedByUserId NOT NULL FK User
   reason, createdAt, correlationId
   UNIQUE (targetInstitutionId, impersonationApprovalId)
   FK (targetInstitutionId, impersonationApprovalId) → ImpersonationApproval(targetInstitutionId,id)
@@ -423,7 +426,7 @@ AuditEvent
   id PK
   eventClass TENANT|PLATFORM|SERVICE|SECURITY
   targetInstitutionId nullable
-  realActorGlobalUserId nullable
+  realActorUserId nullable
   platformPrincipalId nullable
   effectiveMembershipId nullable
   impersonationSessionId nullable
@@ -451,7 +454,7 @@ plataforma/preauth. Cada excepción incluye consulta, cardinalidad, plan y grant
 
 ### 7.5 Excepciones globales candidatas y límite auth
 
-Allowlist sujeta a `HD-07`: `Institution`, GlobalUser/Identity, Auth.js estrictamente global, SystemRoleTemplate,
+Allowlist sujeta a `HD-07`: `Institution`, User/Identity, Auth.js estrictamente global, SystemRoleTemplate,
 PermissionDefinition, Plan, roles de plataforma, metadata de migración y LoginAttempt con hashes/retención.
 `InstitutionDomain` sigue siendo tenant-owned, pero expone solo la función bootstrap estrecha descrita abajo.
 
@@ -522,12 +525,12 @@ No se define el header/hop final por inferencia. Ese valor bloquea READY mediant
 ## 9. Sesión, cookies y transición de host
 
 - JWT contiene solo IDs estables, `sessionVersion`, timestamps, audience y session identifier.
-- Por petición se releen GlobalUser, Membership, RoleAssignment, Institution, roles, permissions, scopes, modules y plan.
+- Por petición se releen User, Membership, RoleAssignment, Institution, roles, permissions, scopes, modules y plan.
 - `/api/auth/session`, páginas, actions, APIs y jobs que actúan por una persona aplican la misma revalidación viva; la
   primera petición nueva después de una revocación falla cerrada según `HD-04`.
 - Cookie tenant candidata: `__Host-edukana.session`, `Secure`, `HttpOnly`, `SameSite=Lax`, `Path=/`, sin `Domain`.
 - CSRF valida Origin contra host canónico. Return target solo acepta path relativo o host exacto allowlisted.
-- La transición PLATFORM→TENANT emite secreto aleatorio; persiste solo hash, issuer session, GlobalUser, Membership destino,
+- La transición PLATFORM→TENANT emite secreto aleatorio; persiste solo hash, issuer session, User, Membership destino,
   host destino, nonce, `issuedAt`, `expiresAt≤60s`, `consumedAt`.
 - Redemption bloquea/actualiza una sola fila atómicamente, revalida todo, rota session ID y rechaza replay/concurrencia.
 - UNKNOWN nunca redirige ni consume sesión tenant.
@@ -540,7 +543,7 @@ produzcan una matriz con una fila por claim y versión:
 
 | Caso | Lookup obligatorio | Resultado cerrado |
 |---|---|---|
-| `sub` + `idn` + `sv` | `sub`→User legacy, `idn`→identidad global, igualdad y mapping único a Membership/asignación activa | missing, mismatch, duplicado, estado/version stale o assignment ambiguo niega. |
+| `sub` + `idn` + `sv` | `sub`→`User` existente/evolucionado; `idn`→`Identity` transitoria si esa versión la emite; ambos deben mapear al mismo `User` y a una Membership/asignación activa única | missing, mismatch, duplicado, estado/version stale o assignment ambiguo niega. |
 | `sub` sin `idn` | Solo durante ventana aprobada y únicamente si backfill demuestra mapping global único | ausencia/colisión o ventana vencida niega; no infiere por email del token. |
 | `sv` ausente | Puede tratarse como 0 solo si la entidad viva elegida por HD-05 tiene versión 0 y mapping único | live≠0, entidad sin versión o shape desconocido niega. |
 | Token objetivo consumido por N-1 | HD-15 decide si hay dual-issue compatible o si N-1 se drena antes de emitirlo | nunca se presupone que N-1 entiende Membership/assignment locators. |
@@ -691,7 +694,7 @@ La lista se amplía desde el schema inventariado. Ninguna fila puede omitirse po
 
 | Tabla destino | Fuentes autoritativas candidatas | Igualdades obligatorias | Categoría de anomalía |
 |---|---|---|---|
-| `Membership` | `Identity` + cada `User` legacy | email/global identity reconciliada; un Institution por User | missing_identity, email_collision, duplicate_membership |
+| `Membership` | cada `User` existente; `Identity` solo como evidencia transitoria de reconciliación cuando exista | conservar `User.id`; `(institutionId,userId)` deriva de pertenencia legacy única y colisiones de email se resuelven por la política aprobada | missing_identity_mapping, email_collision, duplicate_membership |
 | `CourseModule` | `Course` | module.courseId→course.id; tenant=course.institutionId | missing_course, duplicate_parent |
 | `Enrollment` | `Course` + student/User | course.tenant=student.tenant=target tenant | missing_course, missing_student, mixed_tenant |
 | `Assignment` | `Course` | assignment.courseId→course.id | missing_course, existing_tenant_mismatch |
@@ -880,7 +883,7 @@ type AccessViewState =
 
 - OFFLINE nunca encola una mutación sensible ni muestra éxito.
 - **Authorization lease CANDIDATE (`HD-36`):** solo shell y lecciones de texto ya autorizadas pueden almacenarse cifradas
-  para offline. Cada entrada queda ligada a GlobalUser, session ID/version, Institution, resource ID/version y device ID,
+  para offline. Cada entrada queda ligada a User, session ID/version, Institution, resource ID/version y device ID,
   con `issuedAt`/`expiresAt`; la duración permanece abierta hasta decisión aprobada y no se inventa aquí.
 - La apertura offline verifica integridad, binding, versión y tiempo confiable. Reloj atrasado, rollback de reloj o falta de
   una señal temporal confiable invalida la lease. Logout y cambios de sesión/rol/relación/tenant/lifecycle observados

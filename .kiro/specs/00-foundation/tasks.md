@@ -31,7 +31,7 @@ Ningún harness nuevo, código, schema, migración, cambio de entorno o implemen
 | G-READY | Cero HD-01..26 fundacional abierto + cinco aprobaciones same-commit + autoridad HD-24 | T04–T07 | Transición documental separada |
 | T04 harness/evidence | G-READY | T05–T11 | Solo en claim de implementación |
 | T05 frontera S1 transicional | G-READY + T04 + HD-01/02/04/26 | T05A | Host, sesión legacy viva y contexto transicional; no crea identidad S2 |
-| T05A integración post-S2 | T05 + identity/Membership producer S2 DONE + HD-04/05/12/15 | T06/T07/T08/T09 | Integra GlobalUser/Membership/ProviderAccount/AuthSession ya producidos por S2 |
+| T05A integración post-S2 | T05 + identity/Membership producer S2 DONE + HD-04/05/12/15 | T06/T07/T08/T09 | Integra el `User` existente ya evolucionado a identidad global y los modelos Membership/ProviderAccount/AuthSession producidos por S2 |
 | T06 authz/navigation/atomicity | T05A + T04 | T07/T11 | Código futuro autorizado |
 | T07 DAL/auth/Storage | T05A + T06 | T09/T11 | Código futuro autorizado |
 | T08 DB expand/backfill | G-READY + T01 + T04 + T05A + identity/Membership producer S2 DONE + HD-05..15 | T09 | Schema/migration futura autorizada; spec00 integra, no posee el modelo identity |
@@ -249,7 +249,7 @@ Hasta entonces, T04–T12 están bloqueadas.
 - [ ] Devolver 404 UNKNOWN antes de branding/login/session/tenant lookup.
 - [ ] Deshabilitar signup por config ausente/inválida.
 - [ ] Implementar `getRequestContext()` per-request transicional contra `User`/`Identity` legacy, sin global transaction
-  client y sin crear `GlobalUser`, `Membership`, `ProviderAccount` ni `AuthSession`.
+  client, sin convertir todavía `User` en raíz global y sin crear `Membership`, `ProviderAccount` ni `AuthSession`.
 - [ ] Unificar live revalidation legacy para `/api/auth/session`, pages, actions, APIs y jobs: los claims
   `role`/`institutionId` son solo hints comparados con autoridad server-side y nunca autorizan.
 - [ ] Implementar cookie y one-use hashed transition ticket ligado al identificador legacy único durante S1.
@@ -263,11 +263,13 @@ password field/log o revocation fuera de SLA.
 
 ## T05A · Integración de sesión post-S2
 
-- [ ] Iniciar solo cuando la spec S2 entregue `GlobalUser`, `Membership`, role assignments, `ProviderAccount` y
+- [ ] Iniciar solo cuando la spec S2 haya evolucionado la tabla `User` existente, conservando IDs, hasta convertirla en
+  la única identidad global y entregue `Membership(institutionId,userId,...)`, role assignments, `ProviderAccount` y
   `AuthSession` como productor `DONE`, con claves y contrato de compatibilidad aprobados.
-- [ ] Integrar `getRequestContext()` y todas las superficies con esos modelos sin duplicarlos ni modificar su ownership.
+- [ ] Integrar `getRequestContext()` y todas las superficies con esos modelos sin duplicarlos, crear otra raíz de identidad
+  ni modificar su ownership.
 - [ ] Implementar la matriz final `HD-04/HD-05/HD-15`: token N-1 `sub/idn/sv/role/institutionId`, mapping único hacia
-  GlobalUser/Membership/asignación, missing/ambiguous deny, version-zero prerequisites, emisión/consumo N/N-1, reissue,
+  User/Membership/asignación, missing/ambiguous deny, version-zero prerequisites, emisión/consumo N/N-1, reissue,
   drain, cutover y rollback. `role`/`institutionId` legacy nunca son fallback de autoridad.
 - [ ] Migrar los consumidores Auth.js al contrato S2 aditivamente; habilitar password/Google/Microsoft solo tras
   verified-claim, collision/no-auto-link, reauth-link, email-change, unlink/last-method, token-revoke, takeover,

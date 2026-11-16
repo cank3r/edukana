@@ -176,8 +176,9 @@ producción, no la promoción de la fundación.
 
 ### R-03 · Identidad, membresía, rol y scope
 
-1. La identidad global representa autenticación; Membership representa pertenencia a una Institution.
-2. **CANDIDATE `HD-05`:** una Membership por `(institutionId, globalUserId)` y una o más asignaciones de rol.
+1. `User` es la única raíz de identidad global y evoluciona aditivamente desde la tabla existente; Membership representa
+   pertenencia a una Institution. No se crea una segunda tabla raíz de usuario.
+2. **CANDIDATE `HD-05`:** una Membership por `(institutionId, userId)` y una o más asignaciones de rol.
 3. La selección activa identifica una sola asignación viva, se valida por petición y se audita al cambiar.
 4. Una plantilla global nunca se asigna directamente. Se instancia como rol institucional antes de asignarse.
 5. Cada rol institucional y scope tiene `institutionId`; las asignaciones usan FK compuestas tenant-aware.
@@ -189,9 +190,11 @@ producción, no la promoción de la fundación.
 
 #### R-03.11–R-03.16 · Password, Google y Microsoft sin linking implícito
 
-11. **CANDIDATE `HD-12`:** `ProviderAccount` pertenece a la identidad global, nunca a una Membership, y es globalmente
-   único por `(provider, providerAccountId)`. `Account`, `Session` y recovery migran de `User` legacy a identidad global
-   mediante expansión, backfill, comparación y compatibilidad N/N-1; ningún FK legacy se retira durante expansión.
+11. **CANDIDATE `HD-12`:** `ProviderAccount` pertenece a `User`, nunca a una Membership, y es globalmente único por
+   `(provider, providerAccountId)`. La tabla `User` existente conserva sus IDs y se expande en el lugar hasta ser global;
+   `Membership(institutionId,userId,...)` se backfillea desde `User.institutionId/role`. `Account`, `Session` y recovery
+   se adaptan a esa misma raíz mediante expansión, comparación y compatibilidad N/N-1. Ningún FK ni campo legacy se
+   retira durante expansión y está prohibido crear una segunda raíz de identidad.
 12. Google y Microsoft solo pueden autenticar con el conjunto de claims verificados que `HD-12` apruebe por proveedor.
    Un email de proveedor nuevo puede crear identidad únicamente cuando su `emailCanonical` está libre.
 13. Si `emailCanonical` ya pertenece a otra identidad, el proveedor nunca se auto-enlaza ni fusiona cuentas. La persona
@@ -393,7 +396,7 @@ producción, no la promoción de la fundación.
    `Domain`. Cualquier excepción exige decisión y threat model específico.
 5. La transición plataforma→tenant valida Origin/CSRF y un return target relativo o host exacto allowlisted; evita login
    CSRF, open redirect y session fixation.
-6. El ticket se almacena solo como hash, se consume atómicamente una vez y se liga a sesión emisora, GlobalUser,
+6. El ticket se almacena solo como hash, se consume atómicamente una vez y se liga a sesión emisora, User,
    Membership destino, host destino, nonce, issuedAt y expiresAt ≤ 60 s. Canjearlo rota el identificador de sesión.
 7. Se prueban replay, robo por otro usuario/host, redención concurrente, expiración, header contradictorio y redirect
    externo.
@@ -450,7 +453,7 @@ producción, no la promoción de la fundación.
 9. El release manifest congela N contra la fecha candidata y registra versiones completas. PWA exige HTTPS, manifest
    scoped, `start_url`, standalone, colores, iconos 192/512 y maskable, service worker controlador y update determinista.
    Offline solo abre shell y lecciones de texto previamente autorizadas con `lastUpdated` bajo una
-   **authorization lease CANDIDATE de `HD-36`** ligada a GlobalUser, sesión, Institution, recurso+versión y dispositivo.
+   **authorization lease CANDIDATE de `HD-36`** ligada a User, sesión, Institution, recurso+versión y dispositivo.
    La lease tiene `issuedAt` y `expiresAt`; su duración final queda abierta y no se infiere en esta spec. Un reloj local
    atrasado, rollback de reloj o imposibilidad de demostrar tiempo confiable invalida la lease. Login, contenido no
    cacheado, exports, notas, pagos y toda mutación sensible fallan claramente y no se encolan. Logout y cambios de
