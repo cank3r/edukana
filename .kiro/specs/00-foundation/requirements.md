@@ -1,8 +1,10 @@
 # 00 · Límite institucional confiable y autorización de petición — Requisitos
 
 **Estado:** DRAFT-CANDIDATE
-**Base autoritativa auditada:** `origin/todo/tanda-4` en `21b6b71ab166d7bfbad23d9c43a829f7afc17354`
-**Fecha de evidencia:** 2026-11-15
+**Base autoritativa auditada:** `origin/todo/tanda-4` en `d16502906aaba04f7fdad2323a1152f3efeb1794`
+**Baseline documental pre-Phase B:** PR #130 en `bdb1a9d8844af7bc2e2817903d9dd37492a79523`
+**Candidato actual:** diff local autorizado, aún sin commit inmutable; sus hashes y revisiones exactas se registrarán después de un commit separado autorizado.
+**Fecha de evidencia:** 2026-11-16
 **Claim:** `SPEC00-TRUSTED-BOUNDARY-20261115`
 **Autoridad:** propuesta documental; no autoriza implementación, migración, merge ni despliegue.
 
@@ -83,7 +85,15 @@ Quedan fuera de esta spec:
 | Control positivo | `src/server/family/guardian-portal.ts::authorizeChildren()` combina capability, vínculo, tenant y estado. | El vínculo sigue siendo requisito para datos del hijo. |
 | Hecho verificado | PR #129 cambia 19 archivos, ninguno de schema, migraciones, auth o `src/server`. | No constituye evidencia de readiness fundacional. |
 | Inferencia pendiente | El flujo de PR #129 que excluye un adjunto y edita de inmediato podría reutilizar un ID histórico. | Requiere reproducción con backend real; no se declara defecto confirmado. |
+| Hecho verificado | La cadena contiene 16 migraciones inmutables. En PostgreSQL 16.16 local desechable, una base limpia aplica las 16; un predecesor alpha poblado con `Attendance` falla en `20261001193000_real_edukana_mvp` porque agrega claves obligatorias sin backfill. | `HD-13` debe incluir o excluir ese predecesor y definir reconciliación sin reescribir historia. |
+| Hecho verificado | El seed actual deja tres `User` sin `Identity`; `Enrollment`, `Assignment`, `Submission` y `ExamQuestion` conservan claves tenant nulas. | Backfill, normal writes y compatibilidad N/N-1 deben alcanzar cero anomalías antes de `NOT NULL` o RLS. |
+| Hecho verificado | El catálogo local tiene 54 tablas con `institutionId`, cero FK tenant compuestas y cero padres `UNIQUE(institutionId,id)`; probes locales aceptaron cuatro grafos mixtos. | El manifest de relaciones debe ser generado y completo; una lista manual parcial no cierra `HD-07/HD-08`. |
+| Hecho verificado | `Course` todavía concentra contenido reusable, ejecución, matrícula, staff, horario, evaluación, notas y asistencia; no existen `Offering`, `MeetingPattern` ni `ClassSession`. | Aula debe avanzar por el DAG de R-16 y no puede migrar productores mientras su ownership siga ambiguo. |
+| Hecho verificado | Reportería actual es síncrona, usa permisos legacy, carece de registry/job/artifact/snapshot/lineage y puede sumar monedas distintas. | R-15 y R-16 mantienen reportería como gate bloqueante de preproducción. |
 | Desconocido | Roles, grants, ownership, BYPASSRLS, pooler y políticas fuera del repositorio. | Exigen inventario read-only autorizado; no se asumen. |
+
+Los ensayos de migración anteriores fueron locales y desechables. No prueban tamaños, datos, pooler, roles, backups,
+Storage ni capacidad de ningún entorno remoto.
 
 ## 5. Reconciliación de contratos DRAFT vecinos
 
@@ -93,7 +103,7 @@ cláusula incompatible pueda dirigir una implementación distinta.
 | Documento y cláusula observada | Autoridad actual | Reemplazo candidato en spec 00 | Reconciliación posterior requerida |
 |---|---|---|---|
 | `01-platform-tenancy/design.md`, “Resolución de tenant” y rename a `Tenant/tenantId`. | DRAFT; contradice `current-state.md`. | Conservar `Institution/institutionId`; resolver host triestado y bootstrap mínimo. | Spec 01 debe eliminar rename, caché ambigua e inyección de `x-tenant-id` como autoridad. |
-| `02-identity-auth/requirements.md`, Requisito 5 permite hasta cinco minutos al suspender cuenta. | DRAFT; `HD-04` sigue abierto. | Una sola semántica viva para página, action, API y `/api/auth/session`, con plazo aprobado. | Spec 02 debe adoptar el valor final de `HD-04`. |
+| `02-identity-auth/requirements.md`, Requisito 5 permite hasta cinco minutos al suspender cuenta. | DRAFT; contradice la revalidación viva aprobada, pero la compatibilidad física sigue abierta. | Primera petición nueva falla cerrada en página, action, API, job por usuario y `/api/auth/session`; `HD-04` permanece abierto hasta cerrar el adaptador N/N-1 con `HD-05/HD-15`. | Spec 02 debe adoptar la decisión de revalidación y, después, el cierre compatible de `HD-04`. |
 | `03-roles-settings/design.md`, unión de roles y `tenantId`, scope en Membership. | DRAFT; modelo físico no aprobado. | Selección explícita de una asignación activa; roles tenant y scope con FK enforceable. | Spec 03 debe adoptar `HD-05/HD-06` y `Institution`. |
 | `15-ops-privacy-quality/requirements.md`, WCAG 2.1 AA. | DRAFT; steering `tech.md` exige WCAG 2.2 AA. | WCAG 2.2 AA es el objetivo normativo de esta frontera. | Spec 15 debe elevar su cláusula y conservar evidencia humana. |
 
@@ -133,15 +143,20 @@ opción, autoridad y fecha en `design.md` y regenerar requisitos, diseño, tarea
 6. La búsqueda preautenticación usa exclusivamente `resolve_verified_institution_host(normalized_host)`, una función
    `SECURITY DEFINER` revisada, propiedad de `edukana_host_resolution_owner` (`NOLOGIN`, `NOBYPASSRLS`), con
    `search_path` fijo, SQL estático y EXECUTE concedido solo al caller `edukana_host_resolver`.
-7. En este candidato, `InstitutionDomain` tiene RLS habilitado pero no FORCE RLS: el owner-definer posee únicamente la
-   tabla de mapeo y la función, y ningún otro dato tenant. Todos los roles runtime carecen de acceso directo. Esta única
-   excepción debe ratificarse en `HD-11`; si se rechaza, READY exige una vista/tabla de control-plane equivalente.
-8. La función solo devuelve `institutionId`, `canonicalHost`, `domainStatus` e `institutionStatus`; no devuelve marca,
-   identidad, membership, plan, correo ni datos académicos. Cero o más de una coincidencia produce resultado cerrado.
+7. **CANDIDATE `HD-11/HD-25`:** `InstitutionDomain` mantiene una proyección mínima `institutionRoutingStatus`, separada
+   de los demás datos de Institution. Toda transición de lifecycle actualiza esa proyección y su versión en la misma
+   transacción que el estado fuente y el AuditEvent/outbox. El owner-definer posee únicamente la tabla de mapeo y la
+   función, y ningún otro dato tenant.
+8. La función solo devuelve `institutionId`, `canonicalHost`, `domainStatus` e `institutionRoutingStatus`; no devuelve
+   marca, identidad, membership, plan, correo ni datos académicos. Cero o más de una coincidencia, estado no enrutable o
+   versiones contradictorias producen resultado cerrado.
 9. El caller resolver es no-owner y `NOBYPASSRLS`; solo puede ejecutar la función. La función no expone un cliente general
-   de plataforma y registra métricas agregadas sin PII; cambios/revocaciones de dominio sí generan auditoría.
-10. Normalización, caché y revocación usan una clave canónica única. Una revocación invalida la caché antes de confirmar el
-    cambio; el TTL positivo y negativo queda medido y aprobado.
+   de plataforma y registra métricas agregadas sin PII; cambios de dominio o lifecycle sí generan auditoría.
+10. Mientras `HD-11/HD-26` no aprueben un mecanismo distribuido de consistencia, autoridad de host no usa cache positiva
+    ni negativa: cada petición consulta la proyección transaccional. Cualquier cache futura es solo una optimización,
+    versiona la clave canónica y debe demostrar invalidación/ack de todas las réplicas antes de confirmar revocación o
+    lifecycle change; una versión stale niega. Las pruebas intercalan resolución con suspensión, cancelación, reactivación
+    y revocación y demuestran que ningún request posterior al commit obtiene autoridad obsoleta.
 11. La topología de proxy, header aceptado y hop count se cierra en `HD-26`. Hasta entonces, headers forwarded
     contradictorios o no verificables se tratan como `UNKNOWN`.
 
@@ -165,6 +180,24 @@ opción, autoridad y fecha en `design.md` y regenerar requisitos, diseño, tarea
 9. Estado y versión de identidad, membership, asignación, Institution y `sessionVersion` se releen por petición.
 10. La base impide asignar un rol o scope de otra Institution y prueba INSERT/UPDATE negativos.
 
+#### R-03.11–R-03.16 · Password, Google y Microsoft sin linking implícito
+
+11. **CANDIDATE `HD-12`:** `ProviderAccount` pertenece a la identidad global, nunca a una Membership, y es globalmente
+   único por `(provider, providerAccountId)`. `Account`, `Session` y recovery migran de `User` legacy a identidad global
+   mediante expansión, backfill, comparación y compatibilidad N/N-1; ningún FK legacy se retira durante expansión.
+12. Google y Microsoft solo pueden autenticar con el conjunto de claims verificados que `HD-12` apruebe por proveedor.
+   Un email de proveedor nuevo puede crear identidad únicamente cuando su `emailCanonical` está libre.
+13. Si `emailCanonical` ya pertenece a otra identidad, el proveedor nunca se auto-enlaza ni fusiona cuentas. La persona
+   autentica primero el método existente y confirma el vínculo con reautenticación reciente y protección CSRF.
+14. Un cambio de email en el proveedor no rekeyea, fusiona ni cambia Institution/Membership automáticamente. Las colisiones
+   quedan en cuarentena redactada y siguen el recovery aprobado; nunca se elige una identidad por orden de consulta.
+15. Unlink exige reautenticación reciente, conserva al menos un método usable, revoca tokens del proveedor, incrementa
+   `sessionVersion` global y emite un evento de seguridad global sin tokens. Linking, unlinking y recovery no crean ni
+   seleccionan Membership por sí mismos.
+16. Rollback deshabilita Google/Microsoft y linking por flags default-off sin borrar vínculos ni fusionar identidades.
+   La matriz N/N-1 define qué versión emite/consume cada referencia y niega formas desconocidas; takeover recovery,
+   last-method protection y provider compromise tienen pruebas negativas antes de habilitar cada proveedor.
+
 ### R-04 · Contexto único y atomicidad de mutación
 
 1. `getRequestContext()` es la única fuente memoizada por petición para host, Institution, identidad, membership,
@@ -178,6 +211,19 @@ opción, autoridad y fecha en `design.md` y regenerar requisitos, diseño, tarea
 6. La mutación, su evento de auditoría y la **fila de outbox** se confirman en la misma transacción. Solo el dispatcher
    procesa efectos externos después del commit; no se envía correo, archivo, notificación o job si la autorización o la
    escritura transaccional falla.
+7. Toda mutación de matrícula, materialización de sesión, submission/answer, nota, asistencia, mensaje/notificación y
+   metadata de archivo recibe `mutationId` estable, payload canónico versionado y `payloadHash` ligado a Institution,
+   actor, operación y recurso. La unicidad aplicable garantiza un solo efecto lógico.
+8. Repetir el mismo `mutationId` con el mismo hash devuelve el resultado confirmado original; reutilizarlo con otro
+   payload devuelve `CONFLICT` y produce cero cambios, AuditEvent de éxito, outbox, objeto, correo, notificación o job.
+9. Si el cliente pierde la respuesta, consulta un status endpoint/policy por `mutationId`; nunca crea una segunda
+   mutación para adivinar el resultado. El status reautoriza identidad, Membership, scope, relación y recurso.
+10. Retries usan presupuesto y backoff aprobados, estados monotónicos y compare-and-set/lease cuando existe worker. Un
+    timeout local no significa fracaso ni éxito y no autoriza side effects adicionales.
+11. El oracle por operación declara deltas exactos de filas, revisiones, AuditEvent, outbox, objetos y entregas para
+    primer intento, duplicate, payload conflict, response loss, retry concurrente, revocación y otro tenant.
+12. Este contrato es transversal a los productores de R-16; cada spec productora fija payload y estado concretos antes
+    de READY. No autoriza colas offline para mutaciones sensibles.
 
 ### R-05 · Autorización central y orden vinculante
 
@@ -197,6 +243,29 @@ opción, autoridad y fecha en `design.md` y regenerar requisitos, diseño, tarea
 10. Una Institution suspendida bloquea toda escritura. Lecturas y export dependen de `HD-25`; mientras siga abierta, el
     comportamiento cerrado es negar acceso de estudiante/guardian y permitir únicamente metadatos de plataforma y export
     del OWNER con `tenant.data.export` mediante operación separada y auditada.
+
+#### R-05.11–R-05.17 · Impersonación CANDIDATE, no soporte ordinario
+
+11. `HD-17` permanece abierto. Solo un principal de plataforma activo con `platform.support.impersonate` puede solicitar
+   una sesión con Institution, Membership/asignación objetivo, motivo de 20–500 caracteres, ticket, duración y modo de
+   autoridad. `OWNER_CONSENT` exige un registro append-only de aprobación vigente del OWNER; `BREAK_GLASS` exige dos
+   registros de aprobadores de plataforma independientes y nunca concede counseling. Cada approval liga approver,
+   sesión, mode, scope hash, decisión, creación, expiración/revocación y correlation ID mediante FK.
+12. `expiresAt = min(createdAt + requestedDuration, createdAt + 1800 s)` se impone con constraint DB. No hay extensión ni
+   renovación; una nueva sesión requiere nueva autoridad. Cada operador puede tener como máximo una sesión activa.
+13. Permisos efectivos son la intersección del rol/asignación objetivo vigente, estado de Institution y allowlist
+   inmutable versionada: `support.dashboard.summary.read`, `support.institution.profile.read`,
+   `support.navigation.read`, `support.system.health.read` y `support.audit.metadata.read`.
+14. La denylist absoluta cubre toda creación/cambio/borrado/publicación, notas, asistencia, matrícula, roles, identidad,
+   pagos, exports, archivos/URLs firmadas, counseling, secretos, jobs/webhooks, legal hold/purge, backups/restore,
+   migración, deploy/release y cualquier operación no registrada.
+15. Cada request relee operador, autoridad/aprobaciones, asignación objetivo, Institution, allowlist version, expiración,
+   estado y revocación. Revoca de inmediato por cambio de cualquiera de ellos, logout o `sessionVersion`.
+16. Estados terminales `REVOKED`, `EXPIRED` y `ENDED` no regresan. Se registran `REQUESTED`, `APPROVED`, `STARTED`, `READ`,
+   `DENIED`, `REVOKED`, `EXPIRED` y `ENDED` con actor real/efectivo, autoridad, asignación, operación, resultado,
+   correlation ID y tiempos, sin valores sensibles ni URLs.
+17. Pruebas de reloj, concurrent revoke/read y cada operación permitida/prohibida demuestran la intersección y cero efectos
+   DB/Storage/outbox/email/notificación/job al negar. Un banner o cookie nunca crea autoridad.
 
 ### R-06 · Navegación y no divulgación
 
@@ -275,12 +344,37 @@ opción, autoridad y fecha en `design.md` y regenerar requisitos, diseño, tarea
    Se prohíbe volver a owner, BYPASSRLS o credencial desconocida.
 9. Si no existe rollback que preserve aislamiento después de activar RLS, la fase se declara forward-fix-only y exige
    go/no-go humano antes de activarla.
-10. Upgrade y rollback se prueban desde cada predecesor poblado aprobado con conteos, checksums, interrupción, reentrada y
-    prueba post-rollback de lectura/escritura.
+10. Upgrade y rollback se prueban desde cada uno de los 16 estados post-migración y el seed/demo actual. Cada estado
+    recibe `SUPPORTED` o `EXCLUDED`, supuestos de población, fixture ID, postflight ID y evidencia. `EXCLUDED` exige
+    prueba de que no pudo contener datos o decisión humana explícita de desoporte; no puede desaparecer por selección.
+11. Si alpha poblado es `SUPPORTED`, una reconciliación separada e inmutable permite continuar tras el fallo conocido de
+    `20261001193000_real_edukana_mvp`; su rehearsal y aprobación no cambian, renombran ni reemplazan esa migración.
+12. Mientras N-1 sirve tráfico, legacy sigue autoritativo. N dual-writea atómicamente y shadow-read; un catch-up
+    idempotente recurrente absorbe writes N-1. N-1 se drena antes de una ventana estable **CANDIDATE de 24 horas**
+    con cero divergencia; `HD-15` debe aprobar o reemplazar duración y criterio. Cutover registra versiones, SHA y
+    autoridad; rollback pre-cutover restaura reads N-1 conservando schema aditivo. Después de cutover se usa forward-fix
+    salvo rollback compatible aprobado por separado.
+13. `AuditLog` legacy forma parte del manifest. Cada fila se clasifica de forma determinista como evento tenant con
+    Institution derivable, evento platform/global válido con `targetInstitutionId` nulo, o anomalía huérfana/ambigua en
+    cuarentena. Se conservan actor, destino, checksum y retención; nunca se descarta una fila. El oracle exige cero nulls
+    inexplicados en claves que el modelo aprobado declare tenant-required, no cero nulls legítimos de eventos globales.
+14. Por relación, el rollout crea/verifica primero el índice padre candidato `UNIQUE(institutionId,id)` con el método de
+    bajo lock aprobado; luego índice hijo `(institutionId,parentId,...)`; adjunta candidate key; agrega FK compuesta
+    inicialmente no validada cuando PostgreSQL lo permita; y valida solo con null/orphan/mixed counts en cero. FKs
+    simples y acciones `ON DELETE/ON UPDATE` existentes se preservan durante N/N-1; solo se retiran tras cutover,
+    revisión de retención y evidencia `EXPLAIN`.
+15. `HD-14` registra por entorno: `lock_timeout` y `statement_timeout` separados para metadata DDL, índices concurrentes y
+    validación; lote inicial/mínimo/máximo y objetivo de duración transaccional; SQLSTATE retryables, backoff y máximo de
+    intentos; write-pause, ventana de mantenimiento, umbrales de abort y medidas de tamaño/tráfico que justifican cada
+    valor. Sin todos esos campos no existe presupuesto aprobado.
 
 ### R-11 · Sesión, proxy, cookies y ticket de transición
 
-1. `/api/auth/session`, páginas, actions y APIs usan la misma revalidación viva y plazo de `HD-04`.
+1. **Decisión de producto aprobada; cierre técnico `HD-04` abierto:** `/api/auth/session`, páginas, actions, APIs y jobs
+   que actúan por una persona deben usar la misma revalidación viva. La primera petición nueva después de revocar
+   identidad, Membership, asignación o Institution falla cerrada. El JWT objetivo es solo localizador de identidad
+   global, Membership, asignación activa y `sessionVersion`; ningún rol, scope, Institution o capability del token es
+   autoridad. La implementación y compatibilidad dependen de `HD-05/HD-15`.
 2. Un token válido no concede acceso si cambió estado/versión de identidad, Membership, asignación o Institution.
 3. El adaptador de autoridad recibe una sola fuente efectiva definida por `HD-26`. Si `Host`, `Forwarded` y
    `X-Forwarded-Host` contradicen la topología o el hop count, responde `UNKNOWN`; no aplica precedencia oportunista.
@@ -292,6 +386,15 @@ opción, autoridad y fecha en `design.md` y regenerar requisitos, diseño, tarea
    Membership destino, host destino, nonce, issuedAt y expiresAt ≤ 60 s. Canjearlo rota el identificador de sesión.
 7. Se prueban replay, robo por otro usuario/host, redención concurrente, expiración, header contradictorio y redirect
    externo.
+8. Compatibilidad N/N-1 permanece **OPEN_BLOCKING**. El token legacy observado usa `sub`, `idn`, `sv`, `role` e
+   `institutionId`, y puede carecer de `idn`/`sv`; el objetivo añade localizadores de Membership y asignación aún no
+   definidos por `HD-05`. Antes de cerrar `HD-04`, una matriz claim-by-claim debe fijar emisión y consumo por N/N-1,
+   lookup determinista hacia identidad/Membership/asignación vivas, rechazo de ausencia o ambigüedad, condiciones de
+   version 0, reemisión, incremento de versiones por cada cambio de autoridad, duración, drain, cutover y rollback de
+   `HD-15`. Ninguna implementación puede usar `role` o `institutionId` legacy como autoridad de fallback.
+9. Ante indisponibilidad del almacén de identidad, la frontera falla cerrada. El rollback no puede restaurar autorización
+   stale desde JWT. Hasta cerrar la matriz, todo token sin mapping único se rechaza; después del cutover definido, el
+   endpoint se corrige hacia delante y solo un rollback compatible aprobado puede consumir formas anteriores.
 
 ### R-12 · Auditoría, privacidad y confidencialidad
 
@@ -323,26 +426,84 @@ opción, autoridad y fecha en `design.md` y regenerar requisitos, diseño, tarea
 7. WCAG 2.2 AA es normativo para esta frontera. Se prueban landmarks/headings, nombres/descripciones, asociación de error,
    orden/restauración de foco, selectores/dialogs, live regions, contraste, no depender del color, text spacing y reflow a
    320 CSS px, además de 360 px, 200 % y objetivos de 44 px.
-8. `HD-23` elige combinaciones browser/OS/AT; automatización no sustituye revisión humana.
+8. `HD-23` mantiene abierta la aprobación de dispositivos, versiones y evidencia humana. La matriz candidata mínima es:
+
+| Plataforma | Browser/AT | Viewports y modos mínimos | Evidencia requerida |
+|---|---|---|---|
+| Windows 11 soportado | Chrome N/N-1 y Edge N/N-1 con NVDA; Firefox Stable/ESR con NVDA | 320x568, 360x800, 1280x720, 1440x900 cuando aplique; 200 %, teclado, reduced motion, high contrast, online/offline; instalación standalone en Chrome/Edge | Versiones exactas, script manual, transcript, capturas y pass/fail por paso. |
+| macOS actual y anterior | Safari soportado con VoiceOver | 1280x800, 1440x900; 200 %, teclado, reduced motion, increased contrast, online y fallback offline | Versiones exactas y revisión manual VoiceOver. |
+| iOS/iPadOS actual y anterior | Safari con VoiceOver | 390x844 y 768x1024, portrait/landscape, touch/teclado, reduced motion, cached text lesson, Add to Home Screen y standalone | Dispositivo/OS/browser exactos, instalación, offline y revisión manual. |
+| Android actual y anterior | Chrome N/N-1 con TalkBack | 360x800 y 412x915, portrait/landscape, touch/teclado, reduced motion, cached text lesson, install prompt y standalone | Dispositivo/OS/browser exactos, instalación, offline y revisión manual. |
+| Automatización | Chromium, Firefox y WebKit fijados por Playwright; árbol accesible y axe | 320x568, 360x800, 390x844, 768x1024 y 1280x720; reflow, 200 %, reduced motion, portrait/landscape | Cero hallazgos serious/critical y artefactos exact-SHA; no sustituye AT manual. |
+
+9. El release manifest congela N contra la fecha candidata y registra versiones completas. PWA exige HTTPS, manifest
+   scoped, `start_url`, standalone, colores, iconos 192/512 y maskable, service worker controlador y update determinista.
+   Offline solo abre shell y lecciones de texto previamente autorizadas con `lastUpdated`; login, contenido no cacheado,
+   exports, notas, pagos y mutaciones sensibles fallan claramente y no se encolan. Logout, revocación, cambio de rol,
+   suspensión y cancelación purgan caches protegidos.
+10. **CANDIDATE `HD-25`:** la matriz de Institution siguiente no es autoridad hasta aprobación de producto, privacidad,
+    seguridad, billing y retención:
+
+| Operación | SUSPENDED | CANCELLED | ARCHIVED_READ_ONLY |
+|---|---|---|---|
+| Login/sesión | Niega login y acceso tenant en la primera petición; reactivación invalida sesiones previas y exige login. | Niega login normal incluso OWNER; no restaura una sesión previa. | La sesión puede seguir viva si el recurso y la relación siguen autorizados. |
+| Reads/writes | Niega UI ordinaria y toda escritura; solo metadata plataforma y recovery export OWNER separado. | Niega UI y writes; solo metadata lifecycle/billing y operaciones de recovery/hold/purge autorizadas. | Permite solo lectura histórica aprobada; nunca mutación. |
+| Jobs/notificaciones/integraciones | No inicia jobs de negocio; jobs en curso releen estado antes de commit y paran sin efectos. Audit/hold/recovery pueden seguir. | Cancela o termina jobs de negocio y delivery; solo audit/hold/export-recovery/retention/purge. | Solo jobs de conservación/reconciliación expresamente registrados. |
+| Export/download | OWNER mediante superficie recovery separada, capability y reautorización; expiración normal no cambia. | Recovery verificado hasta `cancelledAt+30d`; artefacto nunca después de `purgeAt`; reautorización por request/download. | Solo si la política del recurso y retención lo permiten. |
+| Retención/hold | No inicia el reloj de 90 días; hold solo pausa purge. | `cancelledAt` inicia reloj operacional de 90 días; hold pausa purge, no acceso. | La clase de dato aprobada gobierna retención; archive no equivale a purge. |
+| Reactivar/restaurar/purge | Reactivación plataforma con razón/audit; login nuevo obligatorio. | Antes de `purgeAt`, consentimiento OWNER + platform owner + reviewer independiente; después de `PURGED` no restaura. | Desarchivar exige capability, razón e historia; no cambia Institution lifecycle. |
+| Auditoría | Transición, cada denial y recovery autorizado. | Cancelación, denial, recovery, hold, retention y purge. | Archive/read/unarchive según policy; nunca se confunde con lifecycle institucional. |
 
 ### R-14 · Evidencia, SLO, restore y gate de release
 
-1. Una matriz de trazabilidad mapea requisito/policy a unit, integración HTTP, policy DB y E2E exact-SHA.
+1. Antes de G-READY existe un manifest de trazabilidad con una fila por **cada cláusula** R-01.1..R-16.8. Cada fila
+   contiene requirement/policy/test IDs, capa, fixture determinista, oracle positivo/negativo, deltas esperados de DB,
+   AuditEvent, outbox, Storage y delivery, owner, comando o `NOT_YET_IMPLEMENTED`, artefacto, estado, dependencia externa
+   y stop condition. Una fila ausente o que agrupe obligaciones con oráculos distintos bloquea READY.
 2. Unit prueba funciones puras sin DB; integración HTTP usa PostgreSQL real y no mockea authz/DAL; policy DB corre como
    rol app; E2E usa despliegue aislado autorizado. Cada capa declara comando, versiones, artefacto y dueño.
 3. Fixtures machine-readable fijan IDs, timestamps, locale, timezone, seed, bytes/hashes de archivos, roles, scopes,
    relaciones, filas/anomalías/checksums esperados, estado migratorio y teardown con cero residuo.
 4. Cada caso negativo declara status HTTP, schema/action result, redirect/cookie, concealment, audit requerido/prohibido y
    cero side effects de DB, Storage, email, notificación y job.
-5. SLI define evento, numerador, denominador, ventana, percentil, exclusiones, dimensiones y fórmula de error budget.
-   `HD-20` fija umbrales. Alert tests inyectan señal y miden detección/notificación y correlación app/DB/job con redacción.
-6. Restore drill no destructivo registra backup IDs/timestamps, fingerprints origen/destino, aislamiento destino, conteos,
-   hashes de DB/Storage, smoke auth/authz, RPO/RTO logrados, inicio/fin, prueba de no mutación de origen y limpieza.
-   `HD-21` fija umbrales y autoridad.
-7. Un release-evidence manifest versionado fija comandos, tool/runner/browser versions, checks obligatorios, terminal
-   success, cero skips, retry/flaky policy, vulnerabilidad máxima y excepciones, vínculo deployment→commit, artefactos,
-   hashes, provenance, retención y revisores.
-8. Ningún Preview, backup, bucket ni credencial se usa sin autorización `HD-22`.
+5. **CANDIDATE SLI-1 / `HD-20`:** la ventana es mes calendario UTC. El denominador cuenta outcomes del edge confiable
+   para rutas registradas de HTML core, auth/session, Server Actions, APIs y assets críticos de tráfico humano. Excluye
+   health/operator, probes sintéticos, abuso verificado y conexiones abandonadas antes de headers, siempre con reason code
+   retenido. Cero requests elegibles produce `UNKNOWN`, nunca PASS.
+6. El numerador cuenta requests elegibles terminados en ≤10 s con success, redirect, validation rejection o policy denial
+   normalizados y sin error server. 5xx, edge 502/503/504, timeout, outcome no clasificado y 429 por capacidad para usuario
+   legítimo fallan. Deploy, mantenimiento, provider, overload, bugs y error operador no se excluyen. Disponibilidad `N/D`
+   debe ser ≥0.999; error observado `(D-N)/D`; consumo `error/0.001`.
+7. Probes desde dos operadores/ubicaciones, una US East: cada 60 s login HTML+asset; cada 5 min password auth,
+   `/api/auth/session`, dashboard autorizado, read DB tenant y logout; cada 15 min objeto privado sin retener URL.
+   Page con ventanas 5m+1h a burn ≥14.4, 30m+6h a ≥6; warning 6h+3d a ≥1; dos fallos consecutivos desde ambas
+   ubicaciones page inmediato. Evidencia incluye señal/detección/notificación, route, burn, correlation, redacción,
+   destino, ack y resolución. Destino, retención e instrumentación siguen abiertos hasta aprobación.
+8. **CANDIDATE REC-1 / `HD-21/HD-22`:** para cutoff declarado `T0`, DB RPO=`T0` menos el commit marker restaurado más
+   nuevo ≤`T0`; object RPO=`T0` menos el object-manifest event restaurado más nuevo ≤`T0`; achieved RPO es el peor y
+   debe ser ≤3600 s. RTO inicia al declarar drill/incidente y tratar el origen como indisponible.
+9. RTO termina solo cuando el destino aislado completa startup, password auth, live-session revocation, denegaciones
+   cross-Institution, reads/writes representativos, seguridad de jobs, retrieval privado, replay de hold/purge/artifact
+   expiry/revocation y aceptación de release owner; debe ser ≤14400 s. El drill usa restore DB provider-native más restore
+   independiente de objetos, staging US East pago y destino separado; el origen permanece read-only.
+10. Evidencia REC-1 fija backup/PITR IDs, fingerprints, migration SHA, counts/checksums, object manifest/hashes/missing,
+    tiempos, achieved RPO/RTO, auth/authz, source write counters, approvers y cleanup disposition. Requiere owner de
+    recovery, reviewer data/security independiente y release authority. Ningún drill real se infiere de este candidato.
+11. Un release-evidence manifest versionado fija comandos, tool/runner/browser versions, checks obligatorios, terminal
+    success, cero skips, retry/flaky policy, vulnerabilidad máxima y excepciones, vínculo deployment→commit, artefactos,
+    hashes, provenance, retención y revisores.
+12. Ningún Preview, backup, bucket ni credencial se usa sin autorización `HD-22`.
+13. **CANDIDATE REL-1 / `HD-19/HD-24`:** READY, inicio de implementación, merge, migración, deploy, release, restore,
+    purge y rollback son aprobaciones distintas sobre el mismo commit/evidence manifest. Una nunca implica otra.
+14. Writer/migration author no puede ser independent reviewer; deployment executor no aprueba ese deploy; release owner
+    autoriza al final. Merge conserva la autoridad humana designada por repositorio; migración exige data owner,
+    migration reviewer, restore probado, ventana compatible y release manager; purge/contracción exige aprobación
+    irreversible adicional.
+15. Incident Commander solo puede rollbackear aplicación a un last-known-good compatible. Restore DB, policy rollback,
+    purge reversal o cualquier rollback que debilite aislamiento exige data+security authority; si no existe rollback
+    seguro, solo forward-fix. El ledger machine-readable registra actor, rol, transición, entorno, commit/deployment,
+    scope, timestamp, evidence-manifest hash, decisión, expiry y correlation ID. Las identidades y enforcement externos
+    permanecen abiertos.
 
 ### R-15 · Frontera auditada y bloqueante de reportería
 
@@ -352,10 +513,20 @@ opción, autoridad y fecha en `design.md` y regenerar requisitos, diseño, tarea
    El catálogo mínimo no puede cerrarse omitiendo: académico, asistencia, evaluación, progreso/finalización, carga docente,
    admisiones, finanzas **por moneda**, uso/límites y auditoría/seguridad. Cada familia fija productor, campos,
    granularidad, dimensiones, owner y criterio de reconciliación.
-2. El acceso usa exclusivamente el catálogo cerrado vigente: `report.academic`, `report.finance` o `report.sales` para su
-   dominio y `report.export` adicional para exportar. Scheduling y delivery permanecen CANDIDATE de spec 14: hasta que
-   gobernanza apruebe permisos nuevos, requieren `report.export` y una policy más restrictiva registrada; tener acceso a
-   una pantalla, entidad o dominio nunca concede exportación ni entrega.
+2. **CANDIDATE `HD-39`:** el acceso usa exclusivamente el catálogo cerrado y una capability de familia explícita;
+   `report.export` es adicional para exportar. Scheduling/delivery requieren `report.export` más policy más restrictiva
+   hasta que spec 14 apruebe capabilities separadas. Acceso a pantalla, entidad o dominio nunca concede otra operación.
+
+| Familia | Capability mínima candidata de view/request | Controles adicionales |
+|---|---|---|
+| Académico, asistencia, evaluación, progreso/finalización, carga docente | `report.academic` | Scope/relación, field projection y estado del productor. |
+| Admisiones | `report.sales` | Funnel/PII por scope; ninguna lectura académica implícita. |
+| Finanzas por moneda | `report.finance` | Separación por moneda y proyección financiera. |
+| Uso/límites | `report.usage` | Metadata operacional mínima; sin contenido ni identidades innecesarias. |
+| Auditoría/seguridad | `report.audit` | Principal privilegiado, redacción y policy por event class; counseling excluido. |
+
+Para todas, view/request/download/schedule/delivery/cancel/retry se autorizan por separado en registry; field projection,
+filters, impersonation y service jobs no heredan acceso. `report.export` no concede view de una familia.
 3. Cada salida usa una proyección de campos específica y allowlisted. Todo campo tiene clase de sensibilidad y reglas de
    redacción; identidad, counseling, credenciales y datos de menores conservan sus fronteras más restrictivas. Cada
    versión también allowlista claves de filtro, orden y agrupación, tipos, operadores, límites, defaults y normalización;
@@ -396,13 +567,62 @@ opción, autoridad y fecha en `design.md` y regenerar requisitos, diseño, tarea
     descarga, delivery, cancelación, retry, expiración, saved views, schedules y denegaciones. Cada evento aplicable incluye
     actor real/efectivo, impersonación/motivo, Institution, `reportId`/versión, snapshot, parámetros canónicos redactados,
     destino, resultado y correlation ID; el oracle también declara cuándo **no** debe existir evento.
-16. Exportaciones y sus artefactos expiran exactamente a los 30 días aprobados, salvo legal hold autorizado y auditado.
-    Los 90 días aplican solo a clases de datos operacionales incluidas en una matriz aprobada; evidencia académica o clase
-    no clasificada queda excluida del purge por defecto. Legal hold fija alcance, motivo, autoridad, inicio, liberación,
-    auditoría y precedencia, y un restore no puede resucitar datos cuyo purge ya fue confirmado.
+16. Exportaciones y sus artefactos dejan de estar disponibles exactamente a los 30 días aprobados, incluso bajo legal
+    hold. A partir de `expiresAt` no se emite signed URL ni delivery ordinario. El hold solo pausa purge físico; no
+    restaura ni prolonga download, delivery, login o impersonación. Una retrieval por autoridad legal, si se aprueba,
+    usa una superficie separada, principal/capability propios, doble aprobación, motivo, TTL y auditoría; no reutiliza la
+    autorización del usuario ni cambia `expiresAt`. Los 90 días aplican solo a clases operacionales de matriz aprobada;
+    evidencia académica o no clasificada se excluye por defecto. Hold registra alcance, clases, autoridad, aprobadores,
+    inicio/fin y correlation ID, y un restore reproduce hold/tombstone antes de abrir acceso.
 17. Esta frontera bloquea producción. La implementación pertenece a una spec 14 dedicada y no puede iniciar hasta que
     todas las specs productoras de datos consumidos por el registro estén `DONE`, exista un dependency manifest cerrado y
     la spec 14 obtenga su propio claim, revisión y transición READY. Este paquete no implementa reportes ni edita spec 14.
+
+### R-16 · DAG bloqueante de aula y reportería
+
+1. La ejecución respeta este orden y no usa un nodo posterior para justificar que su productor está completo:
+
+```text
+FND foundation + identidad/Membership + estructura académica
+  → CO Course/Offering
+      → EN OfferingStaff + Enrollment
+          → CS MeetingPattern + ClassSession
+          → AS Assignment + SubmissionAttempt
+          → EX Exam + ExamAttempt
+          → AT Attendance sobre ClassSession
+      AS + EX → GR gradebook + publicación + cierre/reapertura
+      CS + D05 content/calendar/files + AS + EX + AT + GR → CM anuncios + mensajes + outbox
+  CO + EN + CS + AS + EX + GR + AT + CM → J4 recorridos ADMIN/TEACHER/STUDENT/GUARDIAN
+  J4 → UX resiliencia + accesibilidad + PWA/offline
+  FND + todos los productores DONE → RM manifest de productores de nueve familias
+  RM → S14 claim, revisión y READY propios de spec 14
+  S14 + FND → RR registry + consulta + seguridad por campo
+  RR + CM → RJ exports + artefactos + vistas guardadas + schedules/delivery
+  RJ + UX → RA aceptación multi-tenant de las nueve familias
+  RA + recovery/SLO/release gates → PB bloqueo de preproducción satisfecho
+```
+
+2. `HD-27..HD-37` deben cerrar, respectivamente: ownership/versionado Course/Offering; estados de matrícula/finalización;
+   materialización y excepciones ClassSession; intentos de tareas; intentos/autosave de exámenes; cálculo/publicación/cierre
+   de notas; modos/correcciones de asistencia; anuncios/mensajes; calendario/deduplicación; frontera PWA/offline; y un
+   recorrido acotado por cada rol. Cada cierre incluye migración compatible, rollback o forward-fix y oráculos.
+3. `HD-38` cierra el inventario `ReportRegistry` de nueve familias y su manifest de productores. Ninguna familia puede
+   sustituirse por un KPI: académico; asistencia; evaluación; progreso/finalización; carga docente; admisiones; finanzas
+   por moneda; uso/límites; auditoría/seguridad.
+4. `HD-39` cierra operación y seguridad por campo: permisos de view/request/download/schedule/delivery/cancel/retry,
+   proyecciones, sensibilidad, scope, relación, impersonación y prevención de inferencia por filtros/agregados ocultos.
+5. `HD-40` cierra filtros y semántica temporal/financiera: parámetros allowlisted, snapshot/watermark común, timezone,
+   intervalos, `asOf`, aggregate version, freshness SLO por familia, linaje y reconciliación. Diferencia no aprobada o
+   total mixed-currency bloquea publicación.
+6. `HD-41` cierra job/artefacto/vista/schedule/delivery: payload canónico, idempotencia, lease, heartbeat, retry,
+   cancelación, progreso, CSV, PDF accesible, checksum, Storage privado, expiración exacta, legal hold, destinatarios,
+   reautorización y objetivos de servicio.
+7. La aceptación de reportería ejecuta las nueve familias con admin, líder/docente scoped, finanzas, registro,
+   estudiante/tutor denegados, plataforma metadata-only, impersonación, service job y dos Institutions. Cubre seguridad
+   por rol/campo, IDs/URLs/filtros falsificados, freshness, lineage, producer reconciliation, monedas, retries concurrentes,
+   cancelación/expiración, auditoría, accesibilidad, offline/reconnect y cero efectos en denegación.
+8. Specs 05–10, 14 y 15 permanecen sin cambios bajo este claim. Los nodos describen dependencias y gates, no transfieren
+   ownership, no marcan productores `DONE` y no autorizan implementación.
 
 ## 7. Matriz mínima de permiso, recurso y estado
 
@@ -441,12 +661,19 @@ host, sesión, Institution, módulo/plan, capability, scope, relación, estado y
 
 ## 8. Recorridos esenciales acotados
 
-| Actor | Recorrido con rutas/semántica existente | Éxito verificable | Negativas mínimas |
+Estos son contratos candidatos de alcance, no evidencia de finalización. `HD-37` mantiene abiertos rutas finales,
+fixtures, asignación de clientes y owner humano; ninguna fila puede aceptarse parcialmente ni sustituirse con SQL manual.
+
+| Actor | Estado inicial y acciones visibles | Outputs persistidos y comprobación | Negativas/degradación y evidencia |
 |---|---|---|---|
-| ADMIN | Entra a su Institution, abre `/dashboard/gestion/accesos` o `/dashboard/configuracion/roles` y gestiona una Membership ajena sin elevarse a sí mismo. | Cambio confirmado y auditado persiste tras sesión fresca. | Rol propio, último OWNER, cross-tenant, conflicto concurrente y suspensión. |
-| TEACHER | Abre `/dashboard/aula/[courseId]` de un Course asignado y ejecuta una acción ya permitida del dominio. | Resultado confirmado persiste al recargar. | Course no asignado, rol cambiado, cerrado/archivado y otro tenant. |
-| STUDENT | Abre `/dashboard/aula/[courseId]` estando matriculado y ejecuta una acción sobre recurso propio ya existente. | Estado servidor persiste tras sesión fresca. | Otro estudiante, sin matrícula, cerrado, offline y otro tenant. |
-| GUARDIAN | Abre `/dashboard/hijos`, elige `/dashboard/hijos/[studentId]` vinculado y lee un área permitida. | Solo proyección autorizada; el selector conserva accesibilidad. | Sin vínculo conserva perfil/avisos, vínculo revocado, área no autorizada, otro hijo/tenant. |
+| ADMIN | Autentica en Institution activa; desde inicio abre estructura académica, crea/selecciona Course reusable y Offering, asigna staff, matricula grupo, publica semana híbrida, resuelve una excepción de ClassSession, revisa cierre de asistencia/notas, comunica y solicita reportes autorizados. Las rutas exactas salen de los registries READY de D02-D10. | Course y Offering quedan separados; staff/enrollments/sessions/audit/outbox persisten; report request referencia producers/versiones. Reload y sesión fresca muestran el mismo resultado y ninguna operación depende de un toast. | Último OWNER, autoelevación, role/scope ajeno, cross-user/Offering/Institution IDs, capacity race, revoked/suspended/cancelled, stale form, lost response y 320/360/offline. Owner de aceptación y cliente exacto quedan en `HD-37/HD-23`. |
+| TEACHER | Autentica; abre Today, entra a Offering/ClassSession asignada, publica contenido/archivo, crea tarea y examen, observa submission/attempt, toma asistencia de 30 estudiantes, califica/corrige con motivo, publica/recalcula, comunica y consulta reporte de su scope. | Versiones de contenido, attempts, answer acknowledgements, attendance corrections, grade snapshot/revisions, messages y AuditEvent/outbox persisten tras reload y sesión fresca; archivo se reautoriza. | Offering/session no asignada, estudiante/attempt ajeno, close/reopen no autorizado, stale roster, duplicate/lost response, revoked relation, otro tenant, offline sin write queued; objetivo de asistencia <1 min y clientes asignados por `HD-37/23`. |
+| STUDENT | Autentica; Today muestra ubicación/join en ≤2 acciones; abre contenido/archivo autorizado, entrega tarea con retry seguro, inicia/autoguarda/reconecta/finaliza examen, consulta calendario/mensajes y solo notas publicadas más asistencia/progreso propio. | SubmissionAttempt y ExamAttempt conservan IDs/versiones; status lookup resuelve respuesta perdida; respuestas confirmadas, progreso y estado publicado persisten tras reload/sesión fresca sin duplicar. | Otro estudiante, sin Enrollment, Offering cerrada, artifact/file ajeno, answer stale, retry concurrente, unpublished grade, revoked/suspended/cancelled, cross-tenant y offline/reconnect conforme R-04/R-13. |
+| GUARDIAN | Autentica; abre `/dashboard/hijos`, selecciona `/dashboard/hijos/[studentId]` vinculado, consulta schedule/ClassSession, asistencia, tareas, notas publicadas, archivos, anuncios/mensajes permitidos y envía una justificación de asistencia si el productor la autoriza. | Solo proyección del hijo/área autorizados; justificación, audit/outbox y estado resultante persisten tras reload/sesión fresca; selector y flujo cumplen teclado/AT. | Sin vínculo conserva solo perfil/avisos generales; vínculo o área revocados, otro hijo, dato counseling/peer, direct IDs, otro tenant, response loss, suspended/cancelled y offline sin cola sensible. |
+
+Cada recorrido registra start fixture, route/surface IDs, acciones, row/object/outbox/audit deltas, reload/fresh-session,
+identidades negativas, viewport/browser/OS/AT, tester/owner, exact SHA y artefactos en el manifest de R-14. Un productor
+D02-D10 no READY/DONE, una ruta no congelada o owner ausente mantiene `HD-37` abierto.
 
 ## 9. Estados y texto exacto
 
@@ -518,21 +745,27 @@ Para cada negativa, el manifest declara como mínimo:
 ## 11. Criterios medibles de aceptación
 
 El paquete no puede proponerse como READY hasta registrar G0 por mecanismo autoritativo o excepción trazable, cerrar
-`HD-01..HD-26`, actualizar cláusulas condicionales y obtener aprobaciones humanas sobre el contrato resultante. La
-excepción G0 del 2026-11-16 ya permite esta iteración documental y su handoff `S0-GOV`, pero no satisface los demás gates.
-Una implementación futura tampoco puede aceptarse hasta que:
+`HD-01..HD-41`, actualizar cláusulas condicionales, completar el manifest de trazabilidad pre-READY y obtener aprobaciones
+humanas sobre el contrato resultante. La decisión de revocación viva está aprobada, pero `HD-04` permanece abierto por su
+adaptador N/N-1 dependiente de `HD-05/HD-15`. La excepción G0 del 2026-11-16 ya permite esta iteración documental y su
+handoff `S0-GOV`, pero no satisface los demás gates. Una implementación futura tampoco puede aceptarse hasta que:
 
 1. Un manifest cubra 100 % de páginas, layouts, navegación, actions, APIs, jobs y DAL con policy ID.
 2. Existan cero imports Prisma fuera de allowlists tenant/auth/platform/migration aprobadas.
 3. El manifest de tablas muestre 100 % de claves, accesos tenant-first, FK aplicables y policies por operación.
-4. Nulls, huérfanos, tuplas mixtas y divergencias no explicadas sean cero; ninguna fila se descarte sin ledger.
+4. Nulls inexplicados en claves tenant-required, huérfanos, tuplas mixtas y divergencias sean cero; nulls globales
+   aprobados se clasifiquen; ninguna fila se descarte sin ledger.
 5. Unit, integración HTTP, DB-policy y E2E pasen con comandos/versiones/artefactos declarados y cero skips no aprobados.
-6. Cada predecesor aprobado migre y haga rollback dual con conteos/checksums exactos e interrupción reproducible.
-7. Locks, timeouts, lotes, write pause y divergencia estén dentro de presupuestos aprobados.
-8. Revocación cumpla `HD-04` en página, action, API y `/api/auth/session` con petición/sesión fresca.
+6. Los 16 estados post-migración y el demo actual tengan disposition `SUPPORTED|EXCLUDED` con evidencia; cada supported
+   migre y haga rollback dual con conteos/checksums exactos e interrupción reproducible, incluida reconciliación alpha si aplica.
+7. Locks, timeouts, lotes, retries, write pause, ventana y abort thresholds estén dentro del presupuesto completo de R-10.15.
+8. Revocación falla cerrada en la primera petición nueva de página, action, API, job actuando por una persona y
+   `/api/auth/session`; la matriz N/N-1 de `HD-04/HD-05/HD-15` prueba cada claim, mapping, reissue, drain y cutover sin
+   usar role/Institution del token como autoridad.
 9. El SHA exacto pase el release manifest; todo check requerido termina SUCCESS y deployment identity coincide con commit.
 10. Los artefactos de **evidencia de release** tienen hash/provenance, redacción verificada y retención aprobada no menor
-    de 14 días. Los artefactos de **exportación de reportes** siguen R-15 y expiran exactamente a 30 días salvo legal hold.
+    de 14 días. Los artefactos de **exportación de reportes** dejan de estar disponibles exactamente a 30 días incluso
+    bajo legal hold; cualquier conservación o retrieval legal separada cumple R-15.16.
 11. Los cuatro recorridos de §8 pasan en entorno aislado `HD-22`, incluida persistencia, Storage y cross-tenant.
 12. SLI/alertas producen evidencia conforme a semántica de R-14 y umbrales `HD-20`.
 13. Restore drill de DB+Storage mide RPO/RTO `HD-21`, conserva origen y limpia destino.
