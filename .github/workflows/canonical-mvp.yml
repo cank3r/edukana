@@ -1,0 +1,100 @@
+name: Canonical MVP from empty PostgreSQL
+
+on:
+  push:
+    branches: ["mvp/canonical-acceptance-20261012"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: canonical-mvp-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  canonical:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    services:
+      postgres:
+        image: postgres:16.4
+        env:
+          POSTGRES_USER: canonical
+          POSTGRES_PASSWORD: canonical_fixture_only
+          POSTGRES_DB: canonical_mvp
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U canonical -d canonical_mvp"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      CANONICAL_MVP_ISOLATED: "1"
+      CANONICAL_MVP_SOURCE_SHA: ${{ github.sha }}
+      CANONICAL_MVP_SOURCE_DIRTY: "0"
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - name: Select isolated temporary run directory
+        run: echo "CANONICAL_MVP_RUN_DIR=$RUNNER_TEMP/canonical-mvp" >> "$GITHUB_ENV"
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - name: Install locked dependencies and Chromium
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+      - name: Verify local isolation and mail interception
+        run: node --test tests/canonical-mvp-harness.test.mjs
+      - name: Require proxy logout race and Auth.js handler regressions
+        run: node --import tsx --test tests/auth-proxy-logout.test.ts
+      - name: Apply existing migrations and build against empty disposable PostgreSQL
+        run: node scripts/canonical-mvp-run.mjs prepare
+      - name: Complete the canonical UI journey and negative cases
+        run: node scripts/canonical-mvp-run.mjs test
+      - name: Publish outcome without mailbox, tokens, sessions, traces or private files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: canonical-mvp-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/canonical-mvp/public/summary.json
+          if-no-files-found: warn
+          retention-days: 14
+
+  storage-atomicity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16.4
+        env:
+          POSTGRES_USER: fixture
+          POSTGRES_PASSWORD: fixture
+          POSTGRES_DB: edukana_persistence_proof
+        options: >-
+          --health-cmd "pg_isready -U fixture -d edukana_persistence_proof"
+          --health-interval 5s --health-timeout 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+        with: { persist-credentials: false }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Require real concurrent submission, discard and asset access regressions
+        env:
+          POSTGRES_CONTAINER_ID: ${{ job.services.postgres.id }}
+        run: |
+          docker run --rm --network "container:$POSTGRES_CONTAINER_ID" \
+            --workdir /app --volume "$GITHUB_WORKSPACE:/app" \
+            --env CANONICAL_SUBMISSION_RACE_PROOF=ISOLATED_POSTGRES_ONLY \
+            --env EDUKANA_INTEGRATION_DB=1 \
+            --env 'DATABASE_URL=postgresql://fixture:fixture@127.0.0.1:5432/edukana_persistence_proof?connection_limit=8' \
+            --env 'DIRECT_URL=postgresql://fixture:fixture@127.0.0.1:5432/edukana_persistence_proof?connection_limit=8' \
+            --env APP_URL=http://127.0.0.1:3169 \
+            node:22.20-bookworm-slim sh -ec '
+              apt-get update -qq
+              apt-get install -y --no-install-recommends openssl ca-certificates >/dev/null
+              node node_modules/prisma/build/index.js migrate deploy
+              node --require ./tests/integration/stub-server-only.cjs --import tsx --test \
+                --test-concurrency=1 --test-reporter=spec \
+                tests/integration/canonical-submission-races.proof.ts tests/integration/uploads.test.ts
+            '

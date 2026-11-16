@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useActionState, useState } from "react";
+import { useActionState, useRef, useState, type FormEvent } from "react";
 import { deleteAttendanceSessionAction, saveAttendanceAction, type AttendanceState } from "@/server/actions/attendance";
 
 const primary = "min-h-11 rounded-lg bg-blue-600 px-4 py-2.5 font-semibold text-white disabled:opacity-60";
@@ -9,6 +9,48 @@ const secondary = "min-h-11 rounded-lg border border-slate-300 bg-white px-4 py-
 const danger = "min-h-11 rounded-lg bg-red-600 px-4 py-2.5 font-semibold text-white disabled:opacity-60";
 const field = "min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-base outline-none focus:border-blue-500";
 const empty: AttendanceState = { ok: false, message: "" };
+
+function useAttendanceForm(
+  serverAction: (state: AttendanceState, data: FormData) => Promise<AttendanceState>,
+  uncertainMessage: string,
+) {
+  const sending = useRef(false);
+  const [showResult, setShowResult] = useState(false);
+  const [result, action, pending] = useActionState(async (previous: AttendanceState, data: FormData) => {
+    try {
+      return await serverAction(previous, data);
+    } catch {
+      // A lost response does not tell us whether the server committed the operation.
+      return { ok: false, message: uncertainMessage };
+    } finally {
+      sending.current = false;
+      setShowResult(true);
+    }
+  }, empty);
+  const onSubmit = (event: FormEvent<HTMLFormElement>) => {
+    // React queues actions; block a second submit before pending has rendered.
+    if (sending.current || pending) {
+      event.preventDefault();
+      return;
+    }
+    sending.current = true;
+    setShowResult(false);
+  };
+  return {
+    action, pending, onSubmit,
+    state: { ...result, message: showResult && !pending ? result.message : "" },
+    clearSuccess: () => { if (result.ok) setShowResult(false); },
+  };
+}
+
+// React resets forms during commit, when its synthetic event handlers are disabled.
+// A stable native listener keeps controlled radios aligned with marks and hidden JSON.
+function preserveDraftOnReset(form: HTMLFormElement | null) {
+  if (!form) return;
+  const preventReset = (event: Event) => event.preventDefault();
+  form.addEventListener("reset", preventReset);
+  return () => form.removeEventListener("reset", preventReset);
+}
 
 type Status = "PRESENT" | "ABSENT" | "LATE" | "EXCUSED";
 const OPTIONS: Array<{ value: Status; label: string; on: string }> = [
@@ -43,7 +85,7 @@ export function DatePicker({ courseId, date, today }: { courseId: string; date: 
   );
 }
 
-type Row = { studentId: string; name: string; status: Status; note: string; withdrawn: boolean };
+type Row = { studentId: string; name: string; status: Status; note: string; withdrawn: boolean; completed: boolean };
 
 export function TakeAttendance({
   courseId,
@@ -62,9 +104,18 @@ export function TakeAttendance({
   classTitles: string[];
   rows: Row[];
 }) {
-  const [state, action, pending] = useActionState(saveAttendanceAction, empty);
+  const { state, action, pending, onSubmit, clearSuccess } = useAttendanceForm(
+    saveAttendanceAction,
+    "No pudimos confirmar si se guardó la asistencia. Tus marcas siguen aquí. " +
+      "Revisa el historial en otra pestaña antes de volver a guardar.",
+  );
   const [title, setTitle] = useState(initialTitle);
   const [marks, setMarks] = useState(() => Object.fromEntries(rows.map((row) => [row.studentId, { status: row.status, note: row.note }])));
+
+  const changeTitle = (value: string) => {
+    clearSuccess();
+    setTitle(value);
+  };
 
   const markOf = (row: Row) => marks[row.studentId] ?? { status: row.status, note: row.note };
   const count = (status: Status) => rows.filter((row) => markOf(row).status === status).length;
@@ -77,25 +128,29 @@ export function TakeAttendance({
     .filter(Boolean)
     .join(" · ");
   const entries = rows.map((row) => ({ studentId: row.studentId, status: markOf(row).status, note: markOf(row).note }));
-  const set = (row: Row, change: Partial<{ status: Status; note: string }>) =>
+  const set = (row: Row, change: Partial<{ status: Status; note: string }>) => {
+    clearSuccess();
     setMarks((current) => ({ ...current, [row.studentId]: { ...(current[row.studentId] ?? { status: row.status, note: row.note }), ...change } }));
+  };
   const suggestions = classTitles.filter((item) => item !== title);
 
   return (
-    <form action={action}>
+    <form ref={preserveDraftOnReset} action={action} onSubmit={onSubmit} aria-busy={pending}>
       <input type="hidden" name="courseId" value={courseId} />
       <input type="hidden" name="date" value={date} />
       <input type="hidden" name="entries" value={JSON.stringify(entries)} />
 
       <label className="block text-sm font-medium text-slate-900">
         Título de la clase (opcional)
-        <input name="title" value={title} onChange={(event) => setTitle(event.target.value)} maxLength={120} className={`${field} mt-1`} placeholder="Ejemplo: Repaso del capítulo 2" autoComplete="off" />
+        <input name="title" value={title} onChange={(event) => changeTitle(event.target.value)} disabled={pending}
+          maxLength={120} className={`${field} mt-1`} placeholder="Ejemplo: Repaso del capítulo 2" autoComplete="off" />
       </label>
       {suggestions.length > 0 && (
         <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-slate-600">
           <span>Clase en vivo de este día:</span>
           {suggestions.map((item) => (
-            <button key={item} type="button" className={`${secondary} text-left`} onClick={() => setTitle(item.slice(0, 120))}>Usar «{item}»</button>
+            <button key={item} type="button" className={`${secondary} text-left`} disabled={pending}
+              onClick={() => changeTitle(item.slice(0, 120))}>Usar «{item}»</button>
           ))}
         </div>
       )}
@@ -107,10 +162,11 @@ export function TakeAttendance({
           const mark = markOf(row);
           return (
             <li key={row.studentId} className={`rounded-xl border p-3 sm:p-4 ${mark.status === "PRESENT" ? "border-slate-200" : "border-amber-300 bg-amber-50/50"}`}>
-              <fieldset>
+              <fieldset disabled={pending}>
                 <legend className="font-semibold text-slate-950">
                   {row.name}
                   {row.withdrawn && <span className="ml-2 rounded-full bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700">Ya no está en el curso</span>}
+                  {row.completed && <span className="ml-2 rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-800">Completó el curso</span>}
                 </legend>
                 <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
                   {OPTIONS.map((option) => (
@@ -150,7 +206,10 @@ export function TakeAttendance({
 /** Borrar la asistencia de un día, con confirmación que dice el impacto. */
 export function DeleteSession({ courseId, sessionId, dateLabel, total }: { courseId: string; sessionId: string; dateLabel: string; total: number }) {
   const [asking, setAsking] = useState(false);
-  const [state, action, pending] = useActionState(deleteAttendanceSessionAction, empty);
+  const { state, action, pending, onSubmit } = useAttendanceForm(
+    deleteAttendanceSessionAction,
+    "No pudimos confirmar si se borró la asistencia. Actualiza el historial antes de repetir el borrado.",
+  );
   if (!asking) {
     return (
       <>
@@ -160,7 +219,7 @@ export function DeleteSession({ courseId, sessionId, dateLabel, total }: { cours
     );
   }
   return (
-    <form action={action} className="w-full rounded-lg bg-red-50 p-4">
+    <form action={action} onSubmit={onSubmit} aria-busy={pending} className="w-full rounded-lg bg-red-50 p-4">
       <input type="hidden" name="courseId" value={courseId} />
       <input type="hidden" name="sessionId" value={sessionId} />
       <p className="text-sm font-semibold text-red-900">

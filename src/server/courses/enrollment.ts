@@ -365,7 +365,7 @@ export async function reinstateStudent(actor: Actor, courseId: string, enrollmen
     if (!enrollment) return { ok: false, message: "No encontramos a ese estudiante en este curso." } as const;
     if (enrollment.status !== "DROPPED") return { ok: true } as const;
     if (locked.archivedAt) return { ok: false, message: "Este curso está archivado. Recupéralo antes de reincorporar estudiantes." } as const;
-    if (enrollment.student.status !== "ACTIVE") return { ok: false, message: "Esta persona tiene el acceso suspendido. Reactívala primero en Personas y acceso." } as const;
+    if (enrollment.student.status !== "ACTIVE") return { ok: false, message: "Esta persona tiene el acceso suspendido. Reactívala primero en Personas." } as const;
     if (locked.maxStudents !== null) {
       const active = await tx.enrollment.count({ where: { courseId: course.id, status: "ACTIVE" } });
       if (active >= locked.maxStudents) return { ok: false, message: "El curso está lleno: ya no quedan cupos para reincorporar a este estudiante." } as const;

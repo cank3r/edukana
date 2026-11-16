@@ -11,12 +11,17 @@ export type TeacherCourse = {
   toGrade: number;
 };
 
+/** Examen con intentos cuyas respuestas cortas esperan revisión del docente. */
+export type TeacherExamReview = { courseId: string; courseName: string; examId: string; examTitle: string; attempts: number };
+
 export type TeacherHome = {
   timezone: string;
   courses: TeacherCourse[];
   /** Solo los cursos con entregas por calificar. */
   toGrade: TeacherCourse[];
   toGradeTotal: number;
+  /** Exámenes con respuestas cortas por revisar (intentos entregados aún sin nota final). */
+  toReview: TeacherExamReview[];
   liveClasses: HomeLiveClass[];
 };
 
@@ -26,16 +31,22 @@ export type TeacherHome = {
  */
 export async function getTeacherHome(actor: HomeActor, now = new Date()): Promise<TeacherHome> {
   const ownCourse = { institutionId: actor.institutionId, teacherId: actor.id, archivedAt: null };
-  const [institution, courseRows, gradingRows, liveRows] = await Promise.all([
+  const [institution, courseRows, gradingRows, reviewRows, liveRows] = await Promise.all([
     db.institution.findUnique({ where: { id: actor.institutionId }, select: { timezone: true } }),
     db.course.findMany({
       where: ownCourse,
-      select: { id: true, name: true, code: true, isPublished: true, _count: { select: { enrollments: { where: { status: "ACTIVE" } } } } },
+      // Quien completó el curso sigue siendo estudiante del curso; solo quien se retiró deja de contar.
+      select: { id: true, name: true, code: true, isPublished: true, _count: { select: { enrollments: { where: { status: { in: ["ACTIVE", "COMPLETED"] } } } } } },
       orderBy: [{ name: "asc" }, { id: "asc" }],
     }),
     db.assignment.findMany({
       where: { course: ownCourse, submissions: { some: { status: "SUBMITTED" } } },
       select: { courseId: true, _count: { select: { submissions: { where: { status: "SUBMITTED" } } } } },
+    }),
+    db.exam.findMany({
+      where: { institutionId: actor.institutionId, course: ownCourse, attempts: { some: { status: "SUBMITTED" } } },
+      select: { id: true, title: true, courseId: true, course: { select: { name: true } }, _count: { select: { attempts: { where: { status: "SUBMITTED" } } } } },
+      orderBy: [{ title: "asc" }, { id: "asc" }],
     }),
     db.liveClass.findMany({
       where: { institutionId: actor.institutionId, course: ownCourse, startsAt: liveClassWindow(now) },
@@ -63,6 +74,7 @@ export async function getTeacherHome(actor: HomeActor, now = new Date()): Promis
     courses,
     toGrade,
     toGradeTotal: toGrade.reduce((sum, course) => sum + course.toGrade, 0),
+    toReview: reviewRows.map((row) => ({ courseId: row.courseId, courseName: row.course.name, examId: row.id, examTitle: row.title, attempts: row._count.attempts })),
     liveClasses: toHomeLiveClasses(liveRows, now, timezone),
   };
 }

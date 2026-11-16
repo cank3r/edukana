@@ -1,6 +1,7 @@
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { plural } from "@/lib/ux";
 import { notifyEnrolledWithinTransaction } from "@/server/notifications/events";
 import { cleanIds, fail, isUniqueViolation, type AcademicActor, type AcademicResult } from "./programs";
 
@@ -142,7 +143,7 @@ export async function updateGroup(actor: AcademicActor, groupId: string, input: 
       if (!(await programBelongs(tx, actor.institutionId, data.programId))) return fail("Ese programa ya no existe. Elige otro o deja el grupo sin programa.");
       const members = await tx.studentGroupMember.count({ where: { groupId } });
       if (data.capacity !== null && data.capacity < members) {
-        return fail(`El grupo ya tiene ${members} estudiantes. El cupo no puede ser menor; quita estudiantes primero o deja un cupo mayor.`);
+        return fail(`El grupo ya tiene ${plural(members, "estudiante", "estudiantes")}. El cupo no puede ser menor; quita estudiantes primero o deja un cupo mayor.`);
       }
       await tx.studentGroup.update({ where: { id: groupId }, data });
       await tx.auditLog.create({
@@ -203,7 +204,7 @@ export async function addGroupMembers(actor: AcademicActor, groupId: string, use
       return fail(
         left === 0
           ? "El grupo está lleno: no quedan cupos. Sube el cupo del grupo o quita a alguien primero."
-          : `Solo ${left === 1 ? "queda 1 cupo" : `quedan ${left} cupos`} y elegiste ${fresh.length} estudiantes. Elige menos o sube el cupo del grupo.`,
+          : `Solo ${left === 1 ? "queda 1 cupo" : `quedan ${left} cupos`} y elegiste ${plural(fresh.length, "estudiante", "estudiantes")}. Elige menos o sube el cupo del grupo.`,
       );
     }
     if (fresh.length) {

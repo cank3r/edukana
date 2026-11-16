@@ -101,14 +101,14 @@ type Candidate = { id: string; name: string; email: string };
 
 function StudentPicker({ selected, onSelect }: { selected: Candidate | null; onSelect: (student: Candidate | null) => void }) {
   const [query, setQuery] = useState("");
-  const [found, setFound] = useState<{ students: Candidate[]; more: boolean; error: string; loaded: boolean }>({ students: [], more: false, error: "", loaded: false });
+  const [found, setFound] = useState<{ students: Candidate[]; more: boolean; error: string; loaded: boolean; query: string }>({ students: [], more: false, error: "", loaded: false, query: "" });
 
   useEffect(() => {
     if (selected) return;
     let cancelled = false;
     const timer = setTimeout(async () => {
       const result = await searchChargeStudentsAction(query);
-      if (!cancelled) setFound({ students: result.students, more: result.more, error: result.ok ? "" : result.message, loaded: true });
+      if (!cancelled) setFound({ students: result.students, more: result.more, error: result.ok ? "" : result.message, loaded: true, query: query.trim() });
     }, 250);
     return () => {
       cancelled = true;
@@ -135,8 +135,16 @@ function StudentPicker({ selected, onSelect }: { selected: Candidate | null; onS
       <input id="buscar-estudiante-cargo" type="search" value={query} onChange={(event) => setQuery(event.target.value)} className={`${field} mt-1`} placeholder="Busca por nombre o correo…" autoComplete="off" />
       {found.error && <Notice ok={false} message={found.error} />}
       {found.loaded && !found.error && found.students.length === 0 && (
-        <p className="mt-2 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">No encontramos estudiantes activos con ese nombre. Revisa cómo está escrito.</p>
+        found.query ? (
+          <p className="mt-2 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">No encontramos estudiantes activos con «{found.query}». Revisa cómo está escrito.</p>
+        ) : (
+          <p className="mt-2 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
+            Aún no hay estudiantes. Agrégalos en{" "}
+            <Link href="/dashboard/gestion" className="inline-flex min-h-11 items-center font-semibold text-blue-700 underline">Personas</Link>.
+          </p>
+        )
       )}
+      {!found.loaded && <p className="mt-2 text-sm text-slate-600">Escribe parte del nombre o del correo y elige al estudiante de la lista.</p>}
       {found.students.length > 0 && (
         <ul className="mt-2 max-h-64 divide-y divide-slate-100 overflow-y-auto rounded-lg border border-slate-200">
           {found.students.map((student) => (
@@ -312,22 +320,23 @@ export function ChargeItem({ charge, todayKey }: { charge: ChargeView; todayKey:
 
   return (
     <li className={`rounded-xl border p-4 md:rounded-none md:border-0 md:px-0 md:py-4 ${charge.status === "OVERDUE" ? "border-red-200 bg-red-50/40 md:bg-transparent" : "border-slate-200"}`}>
-      <div className="md:grid md:grid-cols-[minmax(0,2fr)_minmax(0,1.6fr)_auto] md:items-center md:gap-4">
+      {/* Los montos nunca se encogen: si no caben junto a los botones, los botones pasan abajo. */}
+      <div className="md:grid md:grid-cols-[minmax(0,1fr)_auto] md:items-center md:gap-4 xl:grid-cols-[minmax(0,1fr)_auto_auto]">
         <div className="min-w-0">
           <p className="truncate font-semibold text-slate-950">{charge.studentName}</p>
           <p className="text-sm text-slate-700">{charge.concept}{charge.periodName ? ` · ${charge.periodName}` : ""}</p>
           <p className="mt-1 flex flex-wrap items-center gap-2 text-xs font-semibold">
             <span className={`rounded-full px-2 py-1 ${status.className}`}>{status.label}</span>
-            {charge.dueKey && <span className="font-normal text-slate-600">{charge.status === "OVERDUE" ? "Venció el" : "Vence el"} {formatDateKey(charge.dueKey)}</span>}
+            {charge.dueKey && charge.status !== "PAID" && !cancelled && <span className="font-normal text-slate-600">{charge.status === "OVERDUE" ? "Venció el" : "Vence el"} {formatDateKey(charge.dueKey)}</span>}
           </p>
         </div>
-        <dl className="mt-3 grid grid-cols-3 gap-2 text-sm md:mt-0">
+        <dl className="mt-3 grid grid-cols-3 gap-2 text-sm md:mt-0 md:grid-cols-[repeat(3,max-content)] md:gap-x-6">
           <div><dt className="text-xs text-slate-500">Monto</dt><dd className="font-semibold text-slate-950">{money(charge.amountCents)}</dd></div>
           <div><dt className="text-xs text-slate-500">Pagado</dt><dd className="font-medium text-slate-900">{money(charge.paidCents)}</dd></div>
           <div><dt className="text-xs text-slate-500">Debe</dt><dd className="font-semibold text-slate-950">{money(charge.balanceCents)}</dd></div>
         </dl>
         {!panel && (
-          <div className="mt-3 flex flex-wrap gap-2 md:mt-0 md:justify-end">
+          <div className="mt-3 flex flex-wrap gap-2 md:col-span-2 md:justify-end xl:col-span-1 xl:mt-0">
             {!cancelled && charge.balanceCents > 0 && <button type="button" className={primary} onClick={() => open("pay")}>Registrar pago</button>}
             {!cancelled && <button type="button" className={secondary} onClick={() => open("edit")}>Editar</button>}
             {!cancelled && <button type="button" className={secondary} onClick={() => open("cancel")}>Anular</button>}

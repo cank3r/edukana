@@ -193,7 +193,7 @@ test("inicio del docente: ve solo sus cursos, sus entregas por calificar y sus c
   const home = await getTeacherHome(A.teacher, now);
   assert.deepEqual(home.courses.map((course) => course.courseId).sort(), [A.courseId, P + "draft"].sort());
   const own = home.courses.find((course) => course.courseId === A.courseId);
-  assert.equal(own?.students, await db.enrollment.count({ where: { courseId: A.courseId, status: "ACTIVE" } }));
+  assert.equal(own?.students, await db.enrollment.count({ where: { courseId: A.courseId, status: { in: ["ACTIVE", "COMPLETED"] } } }));
   assert.equal(home.courses.find((course) => course.courseId === P + "draft")?.isPublished, false);
   assert.deepEqual(home.toGrade.map((course) => [course.courseId, course.toGrade]), [[A.courseId, 1]]);
   assert.equal(home.toGradeTotal, 1);
@@ -202,6 +202,7 @@ test("inicio del docente: ve solo sus cursos, sus entregas por calificar y sus c
   const second = await getTeacherHome(A.teacher2, now);
   assert.deepEqual(second.courses.map((course) => course.courseId).sort(), [A.course2Id, P + "done"].sort());
   assert.deepEqual(second.toGrade.map((course) => [course.courseId, course.toGrade]), [[A.course2Id, 1]]);
+  assert.equal(second.courses.find((course) => course.courseId === P + "done")?.students, 1, "quien completó el curso sigue contando como estudiante");
   assert.deepEqual(second.liveClasses.map((item) => item.id), [P + "c_other"]);
 
   const otherInstitution = await getTeacherHome(B.teacher, now);
@@ -211,4 +212,19 @@ test("inicio del docente: ve solo sus cursos, sus entregas por calificar y sus c
 
   const crossed = await getTeacherHome({ id: A.teacher.id, institutionId: B.institutionId }, now);
   assert.deepEqual(crossed.courses, []);
+});
+
+test("inicio del docente: cuenta los exámenes con respuestas cortas por revisar", async () => {
+  assert.deepEqual((await getTeacherHome(A.teacher, now)).toReview, []);
+  await db.examAttempt.create({
+    data: { id: P + "att_review", institutionId: A.institutionId, examId: P + "x_closed", enrollmentId: "a_enrollment", studentId: A.student.id, attemptNumber: 1, status: "SUBMITTED", submittedAt: now },
+  });
+  try {
+    const home = await getTeacherHome(A.teacher, now);
+    assert.deepEqual(home.toReview, [{ courseId: A.courseId, courseName: "course A", examId: P + "x_closed", examTitle: "Examen cerrado", attempts: 1 }]);
+    assert.deepEqual((await getTeacherHome(A.teacher2, now)).toReview, [], "otro docente no lo ve");
+    assert.deepEqual((await getTeacherHome(B.teacher, now)).toReview, [], "otra institución no lo ve");
+  } finally {
+    await db.examAttempt.delete({ where: { id: P + "att_review" } });
+  }
 });

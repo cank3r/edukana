@@ -20,6 +20,8 @@ export const dynamic = "force-dynamic";
 const dayFormat = new Intl.DateTimeFormat("es", { timeZone: "UTC", weekday: "long", day: "numeric", month: "long", year: "numeric" });
 /** «martes, 14 de octubre de 2026» a partir de `AAAA-MM-DD`. */
 const dayLabel = (date: string) => dayFormat.format(new Date(`${date}T00:00:00.000Z`));
+/** Mayúscula solo en la primera letra («Martes, 14 de octubre»); la clase CSS `capitalize` daría «De Octubre De». */
+const upperFirst = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);
 
 const STATUS: Record<AttendanceStatus, { label: string; className: string }> = {
   PRESENT: { label: "Presente", className: "bg-emerald-50 text-emerald-800" },
@@ -123,7 +125,7 @@ function Take({ sheet }: { sheet: AttendanceSheet }) {
         {sheet.session ? "Corregir asistencia" : isToday ? "Tomar asistencia de hoy" : "Tomar asistencia"}
       </h2>
       <p className="mt-1 text-sm text-slate-600">
-        <span className="capitalize">{label}</span>
+        <span>{upperFirst(label)}</span>
         {sheet.session ? " · ya está guardada; lo que cambies la corrige." : ""}
       </p>
       <div className="mt-3 max-w-xs">
@@ -140,7 +142,7 @@ function Take({ sheet }: { sheet: AttendanceSheet }) {
           </div>
         ) : (
           <TakeAttendance
-            key={`${sheet.date}:${sheet.session?.id ?? "nueva"}`}
+            key={sheet.date}
             courseId={sheet.course.id}
             date={sheet.date}
             dateLabel={label}
@@ -170,7 +172,7 @@ function History({ data }: { data: AttendanceOverview }) {
           {data.sessions.map((session) => (
             <li key={session.id} className="flex flex-wrap items-center gap-3 py-3">
               <div className="min-w-0 flex-1 basis-56">
-                <p className="font-semibold capitalize text-slate-950">{dayLabel(session.date)}</p>
+                <p className="font-semibold text-slate-950">{upperFirst(dayLabel(session.date))}</p>
                 {session.title && <p className="text-sm text-slate-700">{session.title}</p>}
                 <p className="text-sm text-slate-600">{countsText(session)}</p>
               </div>
@@ -252,7 +254,7 @@ function StudentView({ data }: { data: MyAttendance }) {
               {data.days.map((day) => (
                 <li key={day.date} className="flex flex-wrap items-center justify-between gap-2 py-3">
                   <div className="min-w-0">
-                    <p className="font-medium capitalize text-slate-950">{dayLabel(day.date)}</p>
+                    <p className="font-medium text-slate-950">{upperFirst(dayLabel(day.date))}</p>
                     {day.title && <p className="text-sm text-slate-600">{day.title}</p>}
                   </div>
                   <span className={`rounded-full px-3 py-1 text-sm font-semibold ${STATUS[day.status].className}`}>{STATUS[day.status].label}</span>

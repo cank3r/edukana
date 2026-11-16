@@ -1,4 +1,6 @@
+import { withRequestHost } from "../helpers/request-host-context";
 import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
 import { mkdtemp, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -13,6 +15,7 @@ import { removeAvatar, removeCourseImage, removeInstitutionLogo, setAvatar, setC
 import { submissionFilesForManager, submissionFilesForStudent, submitAssignmentWithFiles } from "@/server/courses/submission-files";
 import { assetReadAccess, confirmUpload, discardUpload, prepareUpload, publicImageAsset, type UploadActor } from "@/server/courses/uploads";
 import type { EdukanaRole } from "@/types/next-auth";
+import type { AssetKind, AssetVisibility } from "@prisma/client";
 import { A, B, ensureSeed } from "./setup";
 
 const actor = (user: { id: string; institutionId: string; role: EdukanaRole }): UploadActor => ({ ...user, capabilities: resolveEffectiveCapabilities(user.role) });
@@ -27,12 +30,35 @@ const adminB = actor(B.admin);
 const ASSIGNMENT = "it_up_assignment";
 const ENROLLMENT2 = "it_up_enrollment2";
 const AUDIT_ACTIONS = ["COURSE_IMAGE_CHANGED", "INSTITUTION_LOGO_CHANGED"];
+const withoutCourseView = (who: UploadActor): UploadActor => ({
+  ...who, capabilities: new Set([...who.capabilities].filter((capability) => capability !== "course.view")),
+});
+
+/** Metadata fixtures for authorization only; real upload bytes are exercised by upload() below. */
+async function readFixture(kind: AssetKind, visibility: AssetVisibility, courseId: string | null = A.courseId,
+  announcementId: string | null = null) {
+  return db.storageAsset.create({
+    data: {
+      institutionId: A.institutionId, uploaderId: teacher.id, courseId, announcementId,
+      objectPath: `${A.institutionId}/${courseId ?? "announcements"}/read-${randomUUID()}`,
+      originalName: kind === "VIDEO" ? "read-access.webm" : "read-access.pdf",
+      mimeType: kind === "VIDEO" ? "video/webm" : "application/pdf", sizeBytes: 1,
+      kind, visibility, confirmedAt: new Date(),
+    },
+    select: { id: true, visibility: true },
+  });
+}
 
 const PDF = new TextEncoder().encode("%PDF-1.7\n1 0 obj << >> endobj\n%%EOF\n");
 const PNG = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13, 0x49, 0x48, 0x44, 0x52, 0, 0, 0, 1]);
 const EXE = new TextEncoder().encode("MZ\x90\x00 este no es un PDF");
 
 let root = "";
+
+function readPublicImage(assetId: string) {
+  const url = new URL(`/api/public-images/${assetId}`, process.env.APP_URL!);
+  return withRequestHost(url.host, () => publicImageGet(new Request(url), { params: Promise.resolve({ assetId }) }));
+}
 
 /** Sube como lo haría el navegador: reserva, PUT a la URL firmada y confirmación. */
 async function upload(who: UploadActor, purpose: UploadPurpose, file: { name: string; type: string; bytes: Uint8Array }, target: { assignmentId?: string; courseId?: string } = {}) {
@@ -182,25 +208,133 @@ test("al reenviar, la versión anterior conserva sus archivos", async () => {
   assert.equal((await discardUpload(student, firstFile)).ok, false, "lo que ya fue entregado no se borra");
 });
 
+test("propietario del curso: perder capacidad o asignación revoca lectura; restaurarlas la recupera", async () => {
+  const files = await Promise.all((["DOCUMENT", "VIDEO"] as const).flatMap((kind) =>
+    (["COURSE", "PRIVATE"] as const).map((visibility) => readFixture(kind, visibility))));
+  const readOnlyOwner: UploadActor = { ...teacher, capabilities: new Set(["course.view"]) };
+  const readAllOther: UploadActor = { ...teacher2, capabilities: new Set(["course.view", "course.view.all"]) };
+  try {
+    assert.equal((await assetReadAccess(readOnlyOwner, firstFile)).status, 403, "leer curso no permite PRIVATE ajena");
+    for (const file of files) {
+      assert.equal((await assetReadAccess(teacher, file.id)).status, 200);
+      assert.equal((await assetReadAccess(withoutCourseView(teacher), file.id)).status, 403, "propiedad no suple course.view");
+      assert.equal((await assetReadAccess(teacher, file.id)).status, 200, "capacidad restaurada");
+      assert.equal((await assetReadAccess(readOnlyOwner, file.id)).status, 200, "dueño no necesita course.manage para leer");
+      assert.equal((await assetReadAccess(readAllOther, file.id)).status, file.visibility === "PRIVATE" ? 403 : 200);
+      assert.equal((await assetReadAccess(admin, file.id)).status, 200);
+      assert.equal((await assetReadAccess(teacherB, file.id)).status, 404);
+    }
+    await db.course.update({ where: { id: A.courseId }, data: { teacherId: teacher2.id } });
+    for (const file of files) {
+      assert.equal((await assetReadAccess(teacher, file.id)).status, 403, "uploader dejó de ser docente del curso");
+      assert.equal((await assetReadAccess(teacher2, file.id)).status, 200, "gestión vigente conserva acceso");
+    }
+    await db.course.update({ where: { id: A.courseId }, data: { teacherId: teacher.id } });
+    for (const file of files) assert.equal((await assetReadAccess(teacher, file.id)).status, 200, "asignación restaurada");
+  } finally {
+    await db.course.update({ where: { id: A.courseId }, data: { teacherId: teacher.id } });
+    await db.storageAsset.deleteMany({ where: { id: { in: files.map((file) => file.id) } } });
+  }
+});
+
+test("matrícula COMPLETED conserva archivos actuales e históricos; retiro y capacidad revocan nuevas lecturas", async () => {
+  const current = await db.storageAsset.findMany({ where: { submissionId }, select: { id: true } });
+  assert.equal(current.length, 1);
+  const files = [firstFile, current[0].id];
+  const historical = await db.storageAsset.findUniqueOrThrow({ where: { id: firstFile } });
+  assert.equal(historical.submissionId, null);
+  assert.equal(historical.assignmentId, null);
+  assert.equal(historical.courseId, A.courseId);
+  assert.equal(historical.uploaderId, student.id);
+  try {
+    for (const status of ["ACTIVE", "COMPLETED", "DROPPED", "ACTIVE"] as const) {
+      await db.enrollment.update({ where: { id: "a_enrollment" }, data: { status } });
+      for (const id of files) {
+        assert.equal((await assetReadAccess(student, id)).status, status === "DROPPED" ? 403 : 200, status);
+        assert.equal((await assetReadAccess(student2, id)).status, 403, "privado de otro alumno");
+        assert.equal((await assetReadAccess(teacher, id)).status, 200, "docente conserva evidencia");
+      }
+    }
+    await db.enrollment.update({ where: { id: "a_enrollment" }, data: { status: "COMPLETED" } });
+    for (const id of files) {
+      assert.equal((await assetReadAccess(withoutCourseView(student), id)).status, 403);
+      assert.equal((await assetReadAccess(student, id)).status, 200, "capacidad restaurada con COMPLETED");
+    }
+  } finally {
+    await db.enrollment.update({ where: { id: "a_enrollment" }, data: { status: "ACTIVE" } });
+  }
+});
+
+test("aviso con o sin courseId conserva precedencia de propietario y audiencia sobre el curso", async () => {
+  const files = await Promise.all([A.courseId, null].map((courseId) =>
+    readFixture("DOCUMENT", "INSTITUTION", courseId, A.announcementId)));
+  const parent = actor(A.parent);
+  const courseReaderOnly: UploadActor = { ...teacher2, capabilities: new Set(["course.view", "course.view.all"]) };
+  try {
+    for (const file of files) {
+      assert.equal((await assetReadAccess(withoutCourseView(teacher), file.id)).status, 200, "propietario del aviso");
+      assert.equal((await assetReadAccess(parent, file.id)).status, 200, "tutor destinatario sin scope de curso");
+      assert.equal((await assetReadAccess(student, file.id)).status, 200);
+      assert.equal((await assetReadAccess(courseReaderOnly, file.id)).status, 403, "leer curso no salta audiencia");
+      assert.equal((await assetReadAccess(adminB, file.id)).status, 404);
+    }
+    await db.guardianship.update({ where: { id: A.guardianshipId }, data: { canViewAnnouncements: false } });
+    for (const file of files) assert.equal((await assetReadAccess(parent, file.id)).status, 403);
+    await db.guardianship.update({ where: { id: A.guardianshipId }, data: { canViewAnnouncements: true } });
+    for (const file of files) assert.equal((await assetReadAccess(parent, file.id)).status, 200);
+  } finally {
+    await db.guardianship.update({ where: { id: A.guardianshipId }, data: { canViewAnnouncements: true } });
+    await db.storageAsset.deleteMany({ where: { id: { in: files.map((file) => file.id) } } });
+  }
+});
+
+test("lectura sigue negando registros inexistentes, pendientes y rutas fuera de la institución", async () => {
+  const file = await readFixture("DOCUMENT", "COURSE");
+  try {
+    assert.equal((await assetReadAccess(teacher, "")).status, 404);
+    assert.equal((await assetReadAccess(teacher, "read-not-found")).status, 404);
+    await db.storageAsset.update({ where: { id: file.id }, data: { confirmedAt: null } });
+    assert.equal((await assetReadAccess(teacher, file.id)).status, 404);
+    await db.storageAsset.update({ where: { id: file.id }, data: { confirmedAt: new Date(), objectPath: `${B.institutionId}/bad` } });
+    assert.equal((await assetReadAccess(teacher, file.id)).status, 404);
+  } finally { await db.storageAsset.delete({ where: { id: file.id } }); }
+});
+
 test("la ruta pública solo sirve la imagen del curso o el logo en uso", async () => {
   assert.equal(await publicImageAsset(firstFile), null, "un archivo de entrega no es público");
-  assert.equal((await publicImageGet(new Request("http://localhost/"), { params: Promise.resolve({ assetId: firstFile }) })).status, 404);
+  assert.equal((await readPublicImage(firstFile)).status, 404);
 
   const avatar = await uploaded(student, "avatar", png("yo.png"));
   assert.equal((await setAvatar(student, avatar)).ok, true);
   assert.equal(await publicImageAsset(avatar), null, "una foto de perfil no es pública");
+  assert.equal((await assetReadAccess(withoutCourseView(student), avatar)).status, 200, "avatar propio no depende del curso");
   assert.equal((await assetReadAccess(student2, avatar)).status, 403);
 
   // Subida de portada aún sin usar: tampoco se sirve.
   const cover = await uploaded(teacher, "course-image", png(), { courseId: A.courseId });
   assert.equal(await publicImageAsset(cover), null);
   assert.equal((await setCourseImage(teacher, A.courseId, cover)).ok, true);
+  assert.equal((await assetReadAccess(withoutCourseView(teacher), cover)).status, 403, "URL privada exige scope vigente");
   assert.equal((await db.course.findUniqueOrThrow({ where: { id: A.courseId }, select: { imageUrl: true } })).imageUrl, publicImageUrl(cover));
-  const response = await publicImageGet(new Request("http://localhost/"), { params: Promise.resolve({ assetId: cover }) });
+  const response = await readPublicImage(cover);
   assert.equal(response.status, 200);
   assert.equal(response.headers.get("content-type"), "image/png");
   assert.match(response.headers.get("cache-control") ?? "", /public/);
   assert.deepEqual(new Uint8Array(await response.arrayBuffer()), PNG);
+
+  const previousRoot = process.env.PLATFORM_ROOT_DOMAIN;
+  process.env.PLATFORM_ROOT_DOMAIN = "upload-host.test";
+  try {
+    const b = await db.institution.findUniqueOrThrow({ where: { id: B.institutionId }, select: { slug: true } });
+    const host = `${b.slug}.upload-host.test`;
+    const foreign = await withRequestHost(host, () => publicImageGet(new Request(`https://${host}/`), {
+      params: Promise.resolve({ assetId: cover }),
+    }));
+    assert.equal(foreign.status, 404, "el dominio de B no sirve la imagen pública de A");
+  } finally {
+    if (previousRoot === undefined) delete process.env.PLATFORM_ROOT_DOMAIN;
+    else process.env.PLATFORM_ROOT_DOMAIN = previousRoot;
+  }
 });
 
 test("permisos de imagen: solo quien edita el curso o la configuración de la institución", async () => {
@@ -231,6 +365,8 @@ test("quitar la imagen limpia el campo y borra el archivo", async () => {
 
   const logo = await uploaded(admin, "logo", png("logo.png"));
   assert.equal((await setInstitutionLogo(admin, logo)).ok, true);
+  assert.equal((await assetReadAccess(withoutCourseView(admin), logo)).status, 200, "logo propio no depende del curso");
+  assert.equal((await assetReadAccess(teacher, logo)).status, 403, "logo ajeno conserva política privada");
   assert.notEqual(await publicImageAsset(logo), null);
   assert.equal((await setInstitutionLogo(adminB, logo)).ok, false);
   assert.equal((await removeInstitutionLogo(admin)).ok, true);

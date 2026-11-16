@@ -13,7 +13,7 @@ export function RecoverForm() {
     return (
       <div className="space-y-4">
         <AuthMessage ok message={state.message} />
-        <p className="text-sm text-slate-600">Revisa tu correo, también la carpeta de no deseados. El enlace vence en una hora.</p>
+        <p className="text-sm text-slate-600">Revisa también la carpeta de no deseados. Si recibes el enlace, úsalo cuanto antes: vence una hora después de solicitarlo.</p>
         <Link className={authLink} href="/login">Volver a iniciar sesión</Link>
       </div>
     );
@@ -25,7 +25,7 @@ export function RecoverForm() {
         <input className={authInput} name="email" type="email" required maxLength={200} autoComplete="email" inputMode="email" placeholder="tu@correo.com" />
       </label>
       <AuthMessage ok={false} message={state.message} />
-      <button className={authButton} type="submit" disabled={pending}>{pending ? "Enviando…" : "Enviarme el enlace"}</button>
+      <button className={authButton} type="submit" disabled={pending}>{pending ? "Solicitando…" : "Solicitar enlace"}</button>
       <Link className="block text-center text-sm font-medium text-blue-700 underline" href="/login">Volver a iniciar sesión</Link>
     </form>
   );

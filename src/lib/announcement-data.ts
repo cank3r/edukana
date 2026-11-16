@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { Role } from "@prisma/client";
+import { getEffectiveCapabilities } from "@/lib/authorization";
 import { db } from "@/lib/db";
 import { announcementVisibilityWhere, recipientCourseIds, type AnnouncementRecipient } from "@/lib/announcements";
 
@@ -28,6 +29,12 @@ export async function getAnnouncementRecipient(identity: Identity, linkedStudent
 }
 
 export async function getCommunityAnnouncementWhere(identity: Identity, access: { canManage: boolean; canPublish: boolean }) {
+  if (identity.role === "PARENT") {
+    const capabilities = await getEffectiveCapabilities(identity.institutionId, identity.role);
+    if (!capabilities.has("child.portal.view") || !capabilities.has("child.announcements.view")) {
+      return { institutionId: identity.institutionId, id: "__restricted__" } as const;
+    }
+  }
   const linkedStudentIds = identity.role === "PARENT"
     ? (await db.guardianship.findMany({
         where: { institutionId: identity.institutionId, parentId: identity.id, status: "ACTIVE", canViewAnnouncements: true, parent: { institutionId: identity.institutionId, role: "PARENT", status: "ACTIVE" }, student: { institutionId: identity.institutionId, role: "STUDENT", status: "ACTIVE" } },

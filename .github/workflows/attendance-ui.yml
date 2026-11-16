@@ -1,0 +1,43 @@
+name: Attendance UI
+
+on:
+  push:
+    paths:
+      - "src/app/dashboard/aula/**/asistencia/**"
+      - "tests/ui/attendance-*"
+      - "playwright.attendance.config.ts"
+      - ".github/workflows/attendance-ui.yml"
+      - "package.json"
+      - "package-lock.json"
+      - "src/app/globals.css"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: attendance-ui-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  attendance-ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      # Real React components, in-memory actions and loopback-only browser requests.
+      # No application server, external database, seed or deployment.
+      - run: npx playwright test --config=playwright.attendance.config.ts
+        env:
+          ATTENDANCE_UI_OUTPUT: ${{ runner.temp }}/attendance-ui-artifacts
+      - name: Guardar resultados del navegador
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: attendance-ui-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/attendance-ui-artifacts/
+          if-no-files-found: warn
+          retention-days: 14

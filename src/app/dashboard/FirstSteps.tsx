@@ -1,10 +1,9 @@
 import Link from "next/link";
 import { CheckCircle2, Circle } from "lucide-react";
-import { getFirstSteps } from "@/server/first-steps";
+import type { FirstStep } from "@/server/first-steps";
 
-/** Guía de arranque para quien administra. Desaparece sola cuando todos los pasos están hechos. */
-export async function FirstSteps({ institutionId }: { institutionId: string }) {
-  const steps = await getFirstSteps(institutionId);
+/** Guía de arranque para quien administra. Quien la muestra decide si toca verla (ver `getFirstStepsGuide`). */
+export function FirstSteps({ steps }: { steps: FirstStep[] }) {
   const done = steps.filter((step) => step.done).length;
   if (done === steps.length) return null;
   const next = steps.find((step) => !step.done);

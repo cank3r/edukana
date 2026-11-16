@@ -1,6 +1,10 @@
 import { db } from "@/lib/db";
 import { getEmailProvider } from "@/server/integrations/email";
-import { appUrl, hashToken, issuePasswordToken } from "@/server/password-reset";
+import { hashToken, issuePasswordToken } from "@/server/password-reset";
+
+import { invitationEmail } from "@/server/email/access";
+import { emailBrandSelect } from "@/server/platform/branded-email";
+import { institutionBaseUrl } from "@/server/platform/domain-policy";
 
 export const INVITATION_DAYS = 7;
 /** Tope por llamada: mantiene cada envío dentro del tiempo de una petición y del ritmo del proveedor. */
@@ -14,7 +18,7 @@ const targetSelect = {
   id: true,
   name: true,
   email: true,
-  institution: { select: { name: true } },
+  institution: { select: emailBrandSelect },
   identity: { select: { passwordHash: true, status: true } },
 } as const;
 
@@ -43,19 +47,23 @@ export async function sendInvitations(actor: Actor, userIds: string[], now = new
     let token: string | null = null;
     const lines = [`Hola, ${user.name}:`, "", `${user.institution.name} te dio acceso a Edukana.`];
     try {
+      const base = institutionBaseUrl(user.institution);
       if (user.identity.passwordHash) {
-        lines.push("Ya tienes una cuenta con este correo: entra con tu contraseña de siempre.", "", `${appUrl()}/login`);
+        lines.push("Ya tienes una cuenta con este correo: entra con tu contraseña de siempre.", "", `${base}/login`);
       } else {
         token = await issuePasswordToken(db, { userId: user.id, minutes: INVITATION_DAYS * 24 * 60 }, now);
         lines.push(
           `Abre este enlace para crear tu contraseña. Vence en ${INVITATION_DAYS} días y solo funciona una vez:`,
           "",
-          `${appUrl()}/restablecer/${token}`,
+          `${base}/restablecer/${token}`,
           "",
-          `Si vence, entra a ${appUrl()}/recuperar y pide uno nuevo con este mismo correo.`,
+          `Si vence, entra a ${base}/recuperar y pide uno nuevo con este mismo correo.`,
         );
       }
-      await getEmailProvider().send({ to: user.email, subject: `Tu acceso a ${user.institution.name} en Edukana`, text: lines.join("\n") });
+      await getEmailProvider().send(invitationEmail(user.institution, { to: user.email, subject: `Tu acceso a ${user.institution.name}`, text: lines.join("\n") }, {
+        name: user.name, href: user.identity.passwordHash ? `${base}/login` : `${base}/restablecer/${token}`,
+        days: INVITATION_DAYS, existing: Boolean(user.identity.passwordHash),
+      }));
       result.sent += 1;
       invited.push(user.id);
     } catch (error) {

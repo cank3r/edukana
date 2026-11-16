@@ -1,0 +1,8 @@
+Asunto: Ya tienes nota en «Actividad de práctica»
+
+Ya tienes nota en «Actividad de práctica»
+Curso: Introducción a la informática. Abre la tarea para ver tu nota y los comentarios.
+https://campus.example.test/dashboard
+https://campus.example.test/dashboard/notificaciones/preferencias
+
+Hecho con Edukana

@@ -185,9 +185,19 @@ test("cursos: una fila por curso con sus conteos, y se ordena por enlaces", asyn
   );
   close(first.averageProgress, 50);
   close(first.averageGrade, 70);
-  assert.equal(first.enrolled, await db.enrollment.count({ where: { courseId: C1, status: "ACTIVE" } }));
+  assert.equal(first.enrolled, await db.enrollment.count({ where: { courseId: C1, status: { in: ["ACTIVE", "COMPLETED"] } } }));
   assert.equal(first.pendingGrading, await db.submission.count({ where: { assignment: { courseId: C1 }, status: "SUBMITTED" } }));
   assert.deepEqual({ enrolled: second.enrolled, lowProgress: second.lowProgress, averageGrade: second.averageGrade }, { enrolled: 1, lowProgress: true, averageGrade: null });
+
+  // Quien completó el curso sigue contando como inscrito: el curso no queda «Sin inscritos».
+  await db.enrollment.update({ where: { id: "rp_e5" }, data: { status: "COMPLETED", completedAt: new Date() } });
+  try {
+    const completed = (await getCourseReport(admin, filters, { sort: { key: "nombre", desc: true } })).rows[1];
+    assert.equal(completed.enrolled, 1);
+    close(completed.averageProgress, 20);
+  } finally {
+    await db.enrollment.update({ where: { id: "rp_e5" }, data: { status: "ACTIVE", completedAt: null } });
+  }
 
   const byProgress = await getCourseReport(admin, filters, { sort: parseSort("avance", ["avance", "nombre"] as const, { key: "nombre", desc: false }) });
   assert.deepEqual(byProgress.rows.map((row) => row.id), [C2, C1], "el de menor avance primero");

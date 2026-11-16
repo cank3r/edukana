@@ -27,15 +27,15 @@ const membershipSelect = {
   email: true,
   role: true,
   institutionId: true,
-  institution: { select: { slug: true, name: true } },
+  institution: { select: { slug: true, name: true, status: true } },
 } satisfies Prisma.UserSelect;
 
 export type Membership = Prisma.UserGetPayload<{ select: typeof membershipSelect }>;
 
 /** Instituciones a las que una identidad puede entrar ahora mismo, la más antigua primero. */
-export function listActiveMemberships(identityId: string): Promise<Membership[]> {
+export function listActiveMemberships(identityId: string, includeSuspendedInstitutions = false): Promise<Membership[]> {
   return db.user.findMany({
-    where: { identityId, status: "ACTIVE" },
+    where: { identityId, status: "ACTIVE", ...(!includeSuspendedInstitutions ? { institution: { status: "ACTIVE" as const } } : {}) },
     select: membershipSelect,
     orderBy: [{ createdAt: "asc" }, { id: "asc" }],
   });
@@ -44,5 +44,5 @@ export function listActiveMemberships(identityId: string): Promise<Membership[]>
 /** La membresía destino solo si pertenece a esa identidad y está activa; si no, null. */
 export async function findOwnMembership(identityId: string, userId: string): Promise<Membership | null> {
   if (!identityId || !userId) return null;
-  return db.user.findFirst({ where: { id: userId, identityId, status: "ACTIVE" }, select: membershipSelect });
+  return db.user.findFirst({ where: { id: userId, identityId, status: "ACTIVE", institution: { status: "ACTIVE" } }, select: membershipSelect });
 }

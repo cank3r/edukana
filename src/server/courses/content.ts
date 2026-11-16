@@ -3,6 +3,8 @@ import { z } from "zod";
 import { getEffectiveCapabilities } from "@/lib/authorization";
 import { courseWhereForScope, resolveCourseWriteScope } from "@/lib/course-scope";
 import { db } from "@/lib/db";
+import { lessonVideoUrlSchema } from "@/lib/lesson-video";
+import { recalculateCourseProgress } from "@/server/courses/lesson-progress";
 import type { EdukanaRole } from "@/types/next-auth";
 
 /**
@@ -13,9 +15,12 @@ import type { EdukanaRole } from "@/types/next-auth";
  *
  * Formato de `Lesson.content` según el tipo:
  * - TEXT, DOCUMENT, ACTIVITY: texto libre (se muestra respetando los saltos de línea).
- * - VIDEO: únicamente el enlace del video, una sola línea que empieza por `http://` o `https://`
- *   (por ejemplo un enlace de YouTube o Vimeo). La explicación del video va en `summary`.
- *   `videoLinkFromContent` devuelve ese enlace o null si el contenido no lo es.
+ * - VIDEO: el video va en `videoUrl` y `content` es el texto opcional debajo del video.
+ *   Formato anterior (se sigue aceptando): `content` era solo el enlace, una sola línea que empieza
+ *   por `http://` o `https://`; `videoLinkFromContent` devuelve ese enlace o null si no lo es.
+ *
+ * Cualquier tipo de lección puede llevar `videoUrl` (además del texto). Se guarda ya normalizado por
+ * `src/lib/lesson-video.ts` (YouTube, Vimeo, Google Drive o archivo .mp4); otro enlace se rechaza.
  *
  * Un estudiante ve una lección solo si la lección y su capítulo están publicados.
  * El `order` de capítulos (por curso) y de lecciones (por capítulo) queda siempre 0,1,2… sin huecos.
@@ -43,19 +48,20 @@ export const lessonSchema = z
     summary: z.string().trim().max(500, "El resumen es demasiado largo.").optional(),
     type: z.enum(LESSON_TYPES, { error: "Elige el tipo de lección." }),
     content: z.string().trim().max(50000, "El contenido es demasiado largo.").optional(),
+    videoUrl: lessonVideoUrlSchema,
     estimatedMinutes: z.coerce
       .number({ error: "Escribe los minutos con números." })
       .int("Escribe los minutos sin decimales.")
       .min(1, "La duración mínima es 1 minuto.")
       .max(600, "La duración máxima es 600 minutos."),
   })
-  .refine((lesson) => lesson.type !== "VIDEO" || videoLinkFromContent(lesson.content) !== null, {
+  .refine((lesson) => lesson.type !== "VIDEO" || lesson.videoUrl !== null || videoLinkFromContent(lesson.content) !== null, {
     message: "Pega el enlace completo del video. Debe empezar por https://",
-    path: ["content"],
+    path: ["videoUrl"],
   });
 
 export type ChapterInput = { title: string; description?: string };
-export type LessonInput = { title: string; summary?: string; type: string; content?: string; estimatedMinutes: number | string };
+export type LessonInput = { title: string; summary?: string; type: string; content?: string; videoUrl?: string; estimatedMinutes: number | string };
 
 /** Enlace de una lección de video, o null si `content` no es un enlace válido de una sola línea. */
 export function videoLinkFromContent(content: string | null | undefined): string | null {
@@ -121,6 +127,7 @@ export async function getCourseContent(actor: Actor, courseId: string) {
               title: true,
               summary: true,
               content: true,
+              videoUrl: true,
               type: true,
               estimatedMinutes: true,
               isPublished: true,
@@ -172,6 +179,7 @@ export async function setChapterPublished(actor: Actor, chapterId: string, publi
     const chapter = await tx.courseSection.findFirst({ where: { id: chapterId, institutionId: actor.institutionId, course: where }, select: { id: true, courseId: true } });
     if (!chapter) return { ok: false, message: NOT_FOUND_CHAPTER } as const;
     await tx.courseSection.update({ where: { id: chapter.id }, data: { isPublished: publish } });
+    await recalculateCourseProgress(tx, actor.institutionId, chapter.courseId);
     await audit(tx, actor, publish ? "COURSE_CHAPTER_PUBLISHED" : "COURSE_CHAPTER_HIDDEN", "CourseSection", chapter.id, { courseId: chapter.courseId });
     return { ok: true, courseId: chapter.courseId, id: chapter.id } as const;
   });
@@ -217,13 +225,14 @@ export async function deleteChapter(actor: Actor, chapterId: string): Promise<Co
     if (!chapter) return { ok: false, message: NOT_FOUND_CHAPTER } as const;
     await tx.courseSection.delete({ where: { id: chapter.id } });
     await renumberChapters(tx, actor.institutionId, chapter.courseId);
+    await recalculateCourseProgress(tx, actor.institutionId, chapter.courseId);
     await audit(tx, actor, "COURSE_CHAPTER_DELETED", "CourseSection", chapter.id, { courseId: chapter.courseId, title: chapter.title, lessonsDeleted: chapter._count.lessons });
     return { ok: true, courseId: chapter.courseId } as const;
   });
 }
 
 function lessonData(data: z.infer<typeof lessonSchema>) {
-  return { title: data.title, summary: data.summary || null, type: data.type, content: data.content || null, estimatedMinutes: data.estimatedMinutes };
+  return { title: data.title, summary: data.summary || null, type: data.type, content: data.content || null, videoUrl: data.videoUrl, estimatedMinutes: data.estimatedMinutes };
 }
 
 export async function createLesson(actor: Actor, chapterId: string, input: LessonInput): Promise<ContentResult> {
@@ -239,6 +248,7 @@ export async function createLesson(actor: Actor, chapterId: string, input: Lesso
       data: { institutionId: actor.institutionId, courseId: chapter.courseId, sectionId: chapter.id, order: (last?.order ?? -1) + 1, ...lessonData(parsed.data) },
       select: { id: true },
     });
+    await recalculateCourseProgress(tx, actor.institutionId, chapter.courseId);
     await audit(tx, actor, "COURSE_LESSON_CREATED", "Lesson", lesson.id, { courseId: chapter.courseId, chapterId: chapter.id, title: parsed.data.title, type: parsed.data.type });
     return { ok: true, courseId: chapter.courseId, id: lesson.id } as const;
   });
@@ -250,10 +260,16 @@ export async function updateLesson(actor: Actor, lessonId: string, input: Lesson
   const where = await manageWhere(actor);
   if (!where) return { ok: false, message: NOT_FOUND_LESSON };
   return db.$transaction(async (tx) => {
-    const lesson = await tx.lesson.findFirst({ where: { id: lessonId, institutionId: actor.institutionId, course: where }, select: { id: true, courseId: true, title: true, type: true } });
+    const lesson = await tx.lesson.findFirst({ where: { id: lessonId, institutionId: actor.institutionId, course: where }, select: { id: true, courseId: true, title: true, type: true, videoUrl: true } });
     if (!lesson) return { ok: false, message: NOT_FOUND_LESSON } as const;
     await tx.lesson.update({ where: { id: lesson.id }, data: lessonData(parsed.data) });
-    await audit(tx, actor, "COURSE_LESSON_UPDATED", "Lesson", lesson.id, { courseId: lesson.courseId, titleChanged: lesson.title !== parsed.data.title, typeFrom: lesson.type, typeTo: parsed.data.type });
+    await audit(tx, actor, "COURSE_LESSON_UPDATED", "Lesson", lesson.id, {
+      courseId: lesson.courseId,
+      titleChanged: lesson.title !== parsed.data.title,
+      typeFrom: lesson.type,
+      typeTo: parsed.data.type,
+      videoChanged: lesson.videoUrl !== parsed.data.videoUrl,
+    });
     return { ok: true, courseId: lesson.courseId, id: lesson.id } as const;
   });
 }
@@ -265,6 +281,7 @@ export async function setLessonPublished(actor: Actor, lessonId: string, publish
     const lesson = await tx.lesson.findFirst({ where: { id: lessonId, institutionId: actor.institutionId, course: where }, select: { id: true, courseId: true } });
     if (!lesson) return { ok: false, message: NOT_FOUND_LESSON } as const;
     await tx.lesson.update({ where: { id: lesson.id }, data: { isPublished: publish } });
+    await recalculateCourseProgress(tx, actor.institutionId, lesson.courseId);
     await audit(tx, actor, publish ? "COURSE_LESSON_PUBLISHED" : "COURSE_LESSON_HIDDEN", "Lesson", lesson.id, { courseId: lesson.courseId });
     return { ok: true, courseId: lesson.courseId, id: lesson.id } as const;
   });
@@ -303,6 +320,7 @@ export async function deleteLesson(actor: Actor, lessonId: string): Promise<Cont
     if (!lesson) return { ok: false, message: NOT_FOUND_LESSON } as const;
     await tx.lesson.delete({ where: { id: lesson.id } });
     await renumberLessons(tx, actor.institutionId, lesson.sectionId);
+    await recalculateCourseProgress(tx, actor.institutionId, lesson.courseId);
     await audit(tx, actor, "COURSE_LESSON_DELETED", "Lesson", lesson.id, { courseId: lesson.courseId, chapterId: lesson.sectionId, title: lesson.title });
     return { ok: true, courseId: lesson.courseId } as const;
   });

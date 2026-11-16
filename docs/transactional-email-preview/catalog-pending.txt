@@ -1,0 +1,5 @@
+Asunto: Tu pedido de Informática
+
+Pedido ficticio PED-000. Total: RD$ 1,500.00.
+
+Hecho con Edukana

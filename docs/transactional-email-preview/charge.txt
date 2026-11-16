@@ -1,0 +1,8 @@
+Asunto: Nuevo cargo en tu cuenta
+
+Nuevo cargo en tu cuenta
+Importe: RD$ 1,500.00. Revisa los detalles y el vencimiento en Mi cuenta.
+https://campus.example.test/dashboard
+https://campus.example.test/dashboard/notificaciones/preferencias
+
+Hecho con Edukana

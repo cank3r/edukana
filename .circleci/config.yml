@@ -34,7 +34,7 @@ jobs:
             dockerize -wait tcp://127.0.0.1:5432 -timeout 60s
             npx prisma migrate deploy
             npx prisma migrate status
-      - run: { name: Ejecutar pruebas, command: npm test }
+      - run: { name: Ejecutar pruebas, command: npm test && npm run test:backoffice }
       - run: { name: Esperar PostgreSQL, command: dockerize -wait tcp://127.0.0.1:5432 -timeout 60s }
       - run: { name: Aplicar migraciones en PostgreSQL real, command: npx prisma migrate deploy }
       - run:
@@ -70,6 +70,8 @@ jobs:
       LOCAL_STORAGE_SECRET: circleci-local-storage-secret-at-least-32-characters
       EDUKANA_INTEGRATION_DB: "1"
       SMOKE_BASE_URL: http://127.0.0.1:3000
+      INDEPENDENT_SIGNUP_ENABLED: "true"
+      PLATFORM_OPERATOR_EMAILS: "direccion@colegio-nuevo.test"
     steps:
       - checkout
       - restore_cache:
@@ -85,6 +87,13 @@ jobs:
             dockerize -wait tcp://127.0.0.1:5432 -timeout 60s
             npx prisma migrate deploy
       - run: { name: Sembrar el Instituto Demo, command: npm run test:smoke:seed }
+      # Galería de la demo en uso (tests/e2e/smoke/demo-galeria.smoke.ts) con una contraseña aleatoria que no se imprime.
+      - run:
+          name: Cargar «Instituto Técnico Demo» para la galería
+          command: |
+            echo "export DEMO_PASSWORD=$(openssl rand -hex 12)" >> "$BASH_ENV"
+            source "$BASH_ENV"
+            node --require ./tests/integration/stub-server-only.cjs --import tsx tests/e2e/smoke/demo-load.ts
       - run: { name: Compilar producción, command: npm run build }
       - run:
           name: Arrancar la aplicación

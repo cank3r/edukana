@@ -25,7 +25,7 @@ export type AttendanceSheet = {
   session: { id: string; title: string } | null;
   /** Títulos de las clases en vivo de ese día, para ofrecerlos como título de la sesión. */
   classTitles: string[];
-  rows: Array<{ studentId: string; name: string; status: AttendanceStatus; note: string; withdrawn: boolean }>;
+  rows: Array<{ studentId: string; name: string; status: AttendanceStatus; note: string; withdrawn: boolean; completed: boolean }>;
 };
 export type AttendanceSessionSummary = { id: string; date: string; title: string; total: number } & AttendanceCounts;
 export type StudentAttendanceSummary = {
@@ -149,7 +149,7 @@ export async function getAttendanceSheet(actor: Actor, courseId: string, date?: 
 
   const rows = new Map<string, AttendanceSheet["rows"][number]>();
   for (const enrollment of active) {
-    rows.set(enrollment.studentId, { studentId: enrollment.studentId, name: enrollment.student.name, status: "PRESENT", note: "", withdrawn: false });
+    rows.set(enrollment.studentId, { studentId: enrollment.studentId, name: enrollment.student.name, status: "PRESENT", note: "", withdrawn: false, completed: false });
   }
   // Lo ya guardado manda; quien se retiró después conserva su registro de ese día y se puede corregir.
   for (const record of session?.records ?? []) {
@@ -158,7 +158,9 @@ export async function getAttendanceSheet(actor: Actor, courseId: string, date?: 
       name: record.enrollment.student.name,
       status: record.status as AttendanceStatus,
       note: record.notes ?? "",
-      withdrawn: record.enrollment.status !== "ACTIVE",
+      // «Ya no está» es solo para quien se retiró; quien terminó el curso lo completó.
+      withdrawn: record.enrollment.status === "DROPPED",
+      completed: record.enrollment.status === "COMPLETED",
     });
   }
 

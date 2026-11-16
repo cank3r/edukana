@@ -159,12 +159,27 @@ export async function submitExamAttempt(
   now = new Date(),
 ): Promise<SubmitExamResult> {
   return db.$transaction(async (tx) => {
+    const notFound = { ok: false, reason: "not_found", message: "No hay un intento en curso para enviar." } as const;
+    // Igual que al iniciar: matrícula antes del intento. El retiro usa esta misma fila,
+    // por lo que no puede revocar el acceso entre la comprobación y la escritura.
+    const activeEnrollment = await tx.$queryRaw<Array<{ id: string }>>`
+      SELECT e."id" FROM "enrollments" e
+      JOIN "exam_attempts" a ON a."enrollmentId" = e."id"
+      JOIN "exams" x ON x."id" = a."examId" AND x."courseId" = e."courseId"
+      JOIN "courses" c ON c."id" = e."courseId"
+      WHERE a."id" = ${attemptId} AND a."studentId" = ${actor.id}
+        AND a."institutionId" = ${actor.institutionId} AND a."status" = 'IN_PROGRESS'
+        AND e."studentId" = ${actor.id} AND e."institutionId" = ${actor.institutionId}
+        AND e."status" = 'ACTIVE' AND x."institutionId" = ${actor.institutionId}
+        AND c."institutionId" = ${actor.institutionId}
+      FOR UPDATE OF e`;
+    if (!activeEnrollment.length) return notFound;
+
     const locked = await tx.$queryRaw<Array<{ id: string }>>`
       SELECT "id" FROM "exam_attempts"
       WHERE "id" = ${attemptId} AND "studentId" = ${actor.id} AND "institutionId" = ${actor.institutionId}
         AND "status" = 'IN_PROGRESS'
       FOR UPDATE`;
-    const notFound = { ok: false, reason: "not_found", message: "No hay un intento en curso para enviar." } as const;
     if (!locked.length) return notFound;
 
     const attempt = await tx.examAttempt.findUniqueOrThrow({

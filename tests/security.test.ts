@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { createRequire } from "node:module";
 import { canAccessDashboardPath, isPublicPath } from "../src/lib/access";
+import { resolveEffectiveCapabilities } from "../src/lib/capabilities";
+import type { EdukanaRole } from "../src/types/next-auth";
 import { loginSchema } from "../src/lib/validation";
 
 test("normaliza un login válido", () => {
@@ -65,17 +68,89 @@ test("reserva el portal personal para estudiantes", () => {
 
 
 
-test("usa cargas directas firmadas y restringe quién puede prepararlas", () => {
-  const route = readFileSync(join(process.cwd(), "src", "app", "api", "assets", "route.ts"), "utf8");
-  const form = readFileSync(join(process.cwd(), "src", "app", "dashboard", "aula", "[courseId]", "contenido", "ContentEditor.tsx"), "utf8");
-  assert.match(route, /createPrivateAssetUpload/);
-  assert.match(route, /getEffectiveCapabilities\(user\.institutionId, user\.role\)/);
-  assert.match(route, /capabilities\.has\("course\.manage"\)/);
-  assert.match(route, /courseWhereForParticipation\(user\.institutionId, user, capabilities\)/);
-  assert.doesNotMatch(route, /staffRoles/);
-  assert.doesNotMatch(route, /request\.formData\(\)/);
-  assert.match(form, /intent\.uploadUrl/);
-  assert.match(form, /method: "PATCH"/);
+test("usa cargas directas firmadas y restringe quién puede prepararlas", async () => {
+  const { loadWithStubs } = createRequire(import.meta.url)("./helpers/load-with-stubs.cjs");
+  let user: { id: string; institutionId: string; role: EdukanaRole } | null = {
+    id: "teacher-a", institutionId: "institution-a", role: "TEACHER",
+  };
+  let capabilities = resolveEffectiveCapabilities("TEACHER");
+  const writes: Record<string, unknown>[] = [];
+  const signatures: unknown[] = [];
+  type Row = Record<string, unknown>;
+  const course = { id: "course-a", institutionId: "institution-a", teacherId: "teacher-a",
+    enrollments: [{ studentId: "student-a", status: "ACTIVE" }] };
+  const submission = { id: "submission-a", studentId: "student-a", assignmentId: "assignment-a",
+    assignment: { courseId: course.id, course } };
+  const matches = (row: Row, where: Row): boolean => Object.entries(where).every(([key, expected]) => {
+    const actual = row[key];
+    if (expected === null || typeof expected !== "object") return actual === expected;
+    if ("some" in expected) return Array.isArray(actual) && actual.some((item) => matches(item, expected.some as Row));
+    return actual !== null && typeof actual === "object" && matches(actual as Row, expected as Row);
+  });
+  // Keep validation and course policy real; simulate only session, DB and private storage boundaries.
+  const route: typeof import("../src/app/api/assets/route") = loadWithStubs("src/app/api/assets/route.ts", {
+    "@/lib/auth": { auth: async () => user ? { user } : null },
+    "@/lib/authorization": { getEffectiveCapabilities: async (institutionId: string, role: EdukanaRole) => {
+      assert.equal(institutionId, user?.institutionId);
+      assert.equal(role, user?.role);
+      return capabilities;
+    } },
+    "@/lib/db": { db: {
+      course: { findFirst: async ({ where }: { where: Row }) => matches(course, where) ? course : null },
+      submission: { findFirst: async ({ where }: { where: Row }) => matches(submission, where) ? submission : null },
+      lesson: { findFirst: async ({ where }: { where: { id: string; institutionId: string; course: Record<string, unknown> } }) =>
+        where.id === "lesson-a" && where.institutionId === course.institutionId && matches(course, where.course)
+          ? { courseId: course.id } : null },
+      storageAsset: { create: async ({ data }: { data: Record<string, unknown> }) => {
+        writes.push(data);
+        return { id: "asset-a", ...data };
+      } },
+    } },
+    "@/lib/storage": { createPrivateAssetUpload: async (input: unknown) => {
+      signatures.push(input);
+      return { bucket: "fixture-private", objectPath: "institution-a/course-a/fixture.pdf",
+        signedUrl: "https://storage.example.invalid/fixture-upload" };
+    } },
+  });
+  const post = (fields: Record<string, unknown> = {}) => route.POST(new Request("https://app.example.invalid/api/assets", {
+    method: "POST", headers: { "content-type": "application/json" },
+    body: JSON.stringify({ name: "fixture.pdf", type: "application/pdf", size: 32, kind: "DOCUMENT",
+      courseId: "course-a", ...fields }),
+  }));
+  const denied = async (status: number, fields: Record<string, unknown> = {}) => {
+    assert.equal((await post(fields)).status, status);
+    assert.deepEqual(signatures, [], "denied requests must not issue upload signatures");
+    assert.deepEqual(writes, [], "denied requests must not reserve asset metadata");
+  };
+  user = null;
+  await denied(401);
+  user = { id: "student-a", institutionId: "institution-a", role: "STUDENT" };
+  capabilities = resolveEffectiveCapabilities("STUDENT");
+  await denied(403, { submissionId: "submission-a" });
+  await denied(403);
+  user = { ...user, id: "teacher-a", role: "TEACHER" };
+  capabilities = resolveEffectiveCapabilities("TEACHER");
+  await denied(403, { submissionId: "submission-a" });
+  for (const revoked of ["course.view", "course.manage"]) {
+    capabilities = new Set([...resolveEffectiveCapabilities("TEACHER")].filter((capability) => capability !== revoked));
+    await denied(403);
+  }
+  capabilities = resolveEffectiveCapabilities("TEACHER");
+  user.institutionId = "institution-b";
+  await denied(403);
+  user.institutionId = "institution-a";
+  user.id = "other-teacher";
+  await denied(403);
+  user.id = "teacher-a";
+  const response = await post({ lessonId: "lesson-a" });
+  assert.equal(response.status, 201);
+  assert.deepEqual(await response.json(), { assetId: "asset-a", uploadUrl: "https://storage.example.invalid/fixture-upload",
+    retrievalUrl: "/api/assets/asset-a" });
+  assert.deepEqual(signatures, [{ institutionId: "institution-a", courseId: "course-a", fileName: "fixture.pdf" }]);
+  assert.deepEqual(writes, [{ institutionId: "institution-a", courseId: "course-a", lessonId: "lesson-a",
+    assignmentId: null, submissionId: null, uploaderId: "teacher-a", bucket: "fixture-private",
+    objectPath: "institution-a/course-a/fixture.pdf", originalName: "fixture.pdf", mimeType: "application/pdf",
+    sizeBytes: 32, kind: "DOCUMENT", visibility: "COURSE" }]);
 });
 
 
@@ -102,7 +177,7 @@ test("aísla finanzas y horarios en todas las capas visibles", () => {
   assert.match(analytics, /getEffectiveCapabilities\(user\.institutionId, user\.role\)/);
   assert.match(analytics, /capabilities\.has\("analytics\.view"\)/);
   assert.match(studentDetail, /canViewFinance = capabilities\.has\("finance\.manage"\)/);
-  assert.match(studentDetail, /\{canViewFinance && <section>/);
+  // people-profile-ui.test.ts verifies finance query/render permission gates without relying on JSX whitespace or layout.
   assert.match(calendar, /if \(!capabilities\.has\("schedule\.view"\)\) notFound\(\)/);
   assert.match(dashboard, /getCommunityAnnouncementWhere\(user, \{ canManage:/);
   assert.doesNotMatch(dashboard, /title: "Consultar calendario"/);

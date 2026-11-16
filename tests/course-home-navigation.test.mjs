@@ -57,6 +57,7 @@ function as(role, id = role === "TEACHER" ? "teacher" : role.toLowerCase()) {
 beforeEach(() => {
   as("STUDENT");
   fixture.enrollmentStatus = "ACTIVE";
+  fixture.isPublic = false;
   fixture.queries = [];
   const models = {
     course: { findFirst: async (args) => {
@@ -68,7 +69,7 @@ beforeEach(() => {
         !where.enrollments.some.status.in.includes(fixture.enrollmentStatus))) return null;
       return {
         id: "course", name: "Curso de prueba", code: "CUR", description: "Descripción", teacherId: "teacher",
-        isPublished: true, archivedAt: null, completionThreshold: 100,
+        isPublished: true, archivedAt: null, completionThreshold: 100, isPublic: Boolean(fixture.isPublic), institution: { slug: "instituto" },
         teacher: { name: "Docente" }, period: { name: "Período" }, scheduleSlots: [],
         _count: { lessons: 1, assignments: 1, exams: 1, questionBank: 1, liveClasses: 0 },
       };
@@ -111,6 +112,13 @@ test("estudiante: la portada enlaza a sus áreas sin leer evaluaciones ni ofrece
   assert.equal(enrollment.studentId, "student", "solo su propia inscripción");
 });
 
+test("estudiante: «Opinar sobre este curso» solo si el curso está en el catálogo público", async () => {
+  assert.doesNotMatch(await render(), /Opinar sobre este curso/);
+  fixture.isPublic = true;
+  const html = await render();
+  assert.match(html, /<a [^>]*href="\/catalogo\/instituto\/course#resena"[^>]*>.*Opinar sobre este curso/);
+});
+
 test("estudiante con el curso completado: aviso de solo consulta y acceso a sus resultados", async () => {
   fixture.enrollmentStatus = "COMPLETED";
   const html = await render();
@@ -141,6 +149,9 @@ test("docente: ve las áreas de gestión y el horario, no las vistas del estudia
   for (const path of [...MANAGEMENT, "/tareas", "/clases", "/asistencia", "/certificados"]) assert.match(html, link(path), path);
   assert.doesNotMatch(html, link("/presentar"));
   assert.doesNotMatch(html, link("/mis-notas"));
-  assert.match(html, /SCHEDULE_FORM/);
+  // El horario ya no se edita en la portada: se organiza en su propia pantalla `/horario`.
+  assert.match(html, link("/horario"), "el horario se organiza en su propia pantalla");
+  assert.match(html, /Organizar el horario/);
+  assert.doesNotMatch(html, /SCHEDULE_FORM|<form/);
   assert.equal(fixture.queries.some((query) => query.model === "courseSection"), false, "el temario del estudiante no se consulta");
 });

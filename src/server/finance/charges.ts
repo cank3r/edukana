@@ -3,6 +3,7 @@ import { getEffectiveCapabilities } from "@/lib/authorization";
 import { db } from "@/lib/db";
 import { canViewGuardianArea, type GuardianLink } from "@/lib/guardianship-policy";
 import { zonedDateKey } from "@/lib/timezone";
+import { deliverEmails, type EmailRequest } from "@/server/notifications";
 import { notifyChargeCreated, notifyChargesWithinTransaction } from "@/server/notifications/events";
 import type { EdukanaRole } from "@/types/next-auth";
 import {
@@ -547,7 +548,9 @@ export async function createGroupCharges(
   if (studentIds.length > MAX_GROUP) return { ok: false, message: `Son demasiados estudiantes para una sola operación (máximo ${MAX_GROUP}).` };
   const { currency } = await institutionContext(institutionId, new Date());
 
-  return db.$transaction(async (tx) => {
+  // El correo sale solo después de confirmar la transacción (si se deshace, no se envía nada).
+  const pending: { email: EmailRequest | null } = { email: null };
+  const result = await db.$transaction(async (tx) => {
     // Serializa las repeticiones de la misma operación: la segunda espera y encuentra el registro de la primera.
     await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`finance-batch:${institutionId}:${key}`}))`;
     const previous = await tx.auditLog.findFirst({
@@ -599,9 +602,11 @@ export async function createGroupCharges(
         },
       },
     });
-    await notifyChargesWithinTransaction(tx, institutionId, { studentIds, concept: fields.concept, amountCents: fields.amountCents, currency, dueDate: input.dueDate });
+    pending.email = await notifyChargesWithinTransaction(tx, institutionId, { studentIds, concept: fields.concept, amountCents: fields.amountCents, currency, dueDate: input.dueDate });
     return { ok: true, created: rows.length, repeated: false, amountCents: fields.amountCents, currency, targetName } as const;
   }, rowLocked);
+  await deliverEmails(pending.email);
+  return result;
 }
 
 /** Bloquea la fila del cargo (FOR UPDATE) y lee sus pagos con la fila ya bloqueada. */

@@ -224,13 +224,22 @@ export async function discardUpload(actor: UploadActor, assetId: string): Promis
   if (!asset || !purpose) return fail(404, "Ese archivo ya no está.");
   const pendingSubmissionFile = purpose === "submission" && Boolean(asset.assignmentId);
   if (asset.confirmedAt && !pendingSubmissionFile) return fail(409, "Este archivo está en uso y no se puede quitar desde aquí.");
-  await destroyAsset(asset);
+  // Claim the still-unused row before removing bytes. PostgreSQL rechecks these predicates
+  // after a concurrent attachment commits; a stale preflight must not delete delivered evidence.
+  const discarded = await db.storageAsset.deleteMany({ where: {
+    id: asset.id, institutionId: actor.institutionId, uploaderId: actor.id, announcementId: null, submissionId: null,
+    ...(pendingSubmissionFile ? { assignmentId: asset.assignmentId } : { confirmedAt: null }),
+  } });
+  if (discarded.count !== 1) return fail(404, "Ese archivo ya no está disponible para quitarlo.");
+  // The row is already committed as deleted, so a cleanup failure cannot expose a delivered file.
+  await removePrivateAsset(asset.bucket, asset.objectPath)
+    .catch((error) => console.error("removePrivateAsset failed", { assetId: asset.id, error }));
   return { ok: true };
 }
 
 /**
- * Quién puede abrir un archivo privado (`/api/assets/[assetId]`): quien lo subió, el estudiante
- * dueño de la entrega, quien gestiona el curso, y quien puede ver el curso si el archivo no es privado.
+ * Los archivos de curso exigen alcance vigente también a su propietario; los PRIVATE ajenos
+ * requieren gestión. Los avisos conservan su propia audiencia y precedencia sobre courseId.
  */
 export async function assetReadAccess(actor: UploadActor, assetId: string): Promise<
   { status: 200; asset: { bucket: string; kind: AssetKind; objectPath: string } } | { status: 403 | 404 }
@@ -248,12 +257,12 @@ export async function assetReadAccess(actor: UploadActor, assetId: string): Prom
   if (asset.announcementId && !owner) {
     const recipientWhere = await getCommunityAnnouncementWhere(actor, { canManage: actor.capabilities.has("announcement.manage"), canPublish: actor.capabilities.has("announcement.publish") });
     allowed = Boolean(await db.announcement.findFirst({ where: { AND: [{ id: asset.announcementId }, recipientWhere] }, select: { id: true } }));
-  } else if (asset.courseId && !owner) {
+  } else if (asset.courseId && !asset.announcementId) {
     const readWhere = courseWhereForScope(actor.institutionId, resolveCourseReadScope(actor, actor.capabilities));
     const writeWhere = courseWhereForScope(actor.institutionId, resolveCourseWriteScope(actor, actor.capabilities));
     const readableCourse = readWhere ? Boolean(await db.course.findFirst({ where: { id: asset.courseId, ...readWhere }, select: { id: true } })) : false;
     const manageableCourse = writeWhere ? Boolean(await db.course.findFirst({ where: { id: asset.courseId, ...writeWhere }, select: { id: true } })) : false;
-    allowed = manageableCourse || (asset.visibility !== "PRIVATE" && readableCourse);
+    allowed = manageableCourse || (readableCourse && (owner || asset.visibility !== "PRIVATE"));
   }
   if (!allowed) return { status: 403 };
   return { status: 200, asset: { bucket: asset.bucket, kind: asset.kind, objectPath: asset.objectPath } };
@@ -266,10 +275,10 @@ const PUBLIC_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
  * carpeta pública de su institución Y es hoy la imagen de un curso o el logo de esa institución.
  * Cualquier otro archivo (entregas, fotos de perfil, lecciones, avisos) responde como inexistente.
  */
-export async function publicImageAsset(assetId: string) {
+export async function publicImageAsset(assetId: string, institutionId?: string) {
   if (!assetId || !/^[a-z0-9]{10,40}$/i.test(assetId)) return null;
   const asset = await db.storageAsset.findFirst({
-    where: { id: assetId, kind: "IMAGE", confirmedAt: { not: null }, announcementId: null, submissionId: null },
+    where: { id: assetId, ...(institutionId ? { institutionId } : {}), kind: "IMAGE", confirmedAt: { not: null }, announcementId: null, submissionId: null },
     select: { id: true, institutionId: true, bucket: true, objectPath: true, mimeType: true, courseId: true },
   });
   if (!asset || !PUBLIC_IMAGE_TYPES.has(asset.mimeType)) return null;

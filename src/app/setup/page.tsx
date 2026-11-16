@@ -9,7 +9,7 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
   if (await db.institution.count()) redirect("/login");
   const { token: rawToken } = await searchParams;
   const token = typeof rawToken === "string" ? rawToken : "";
-  if (checkSetupToken(token) === "invalid") notFound();
+  if (checkSetupToken(token) !== "valid") notFound();
   return (
     <main className="min-h-screen bg-slate-50 px-4 py-12">
       <div className="mx-auto max-w-xl">

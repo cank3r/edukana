@@ -59,11 +59,13 @@ function InstitutionLogo({ institution, size }: { institution: SidebarInstitutio
   return <img src={institution.logoUrl} alt={`Logo de ${institution.name}`} width={size} height={size} className="shrink-0 rounded bg-white object-contain p-0.5" style={{ width: size, height: size }} />;
 }
 
-export default function Sidebar({ user, capabilities, unreadNotifications = 0, institution, isPlatformOperator = false }: {
+export default function Sidebar({ user, capabilities, unreadNotifications = 0, institution, isPlatformOperator = false, independent = false }: {
   user: SidebarUser; capabilities: Capability[]; unreadNotifications?: number; institution?: SidebarInstitution; isPlatformOperator?: boolean;
+  /** Espacio de docente independiente: menú reducido a lo que usa quien enseña por su cuenta. */
+  independent?: boolean;
 }) {
   const pathname = usePathname();
-  const { main, more } = groupNavigation(navigationForRole(user.role, capabilities));
+  const { main, more } = groupNavigation(navigationForRole(user.role, capabilities, { independent }));
   const isActive = (item: NavigationItem) => pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
   const moreActive = more.some(isActive);
   const notificationsActive = pathname.startsWith("/dashboard/notificaciones");

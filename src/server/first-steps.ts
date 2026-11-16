@@ -8,13 +8,32 @@ export type FirstStep = { id: string; title: string; detail: string; href: strin
  * Cada uno se marca solo a partir de los datos reales: nadie tiene que "darlo por hecho".
  */
 export async function getFirstSteps(institutionId: string): Promise<FirstStep[]> {
-  const [periods, people, courses, enrollments, pendingInvitations] = await Promise.all([
+  return (await getFirstStepsGuide(institutionId)).steps;
+}
+
+export type FirstStepsGuide = { steps: FirstStep[]; visible: boolean };
+
+/**
+ * Los pasos y si la guía se debe mostrar. La guía se ve mientras falte algún paso, salvo que la
+ * institución ya esté funcionando: con período, personas, un curso con inscritos y al menos una
+ * persona que ya creó su contraseña. Desde ahí, quien quede sin invitación se avisa en «Requiere
+ * tu atención» y la guía no vuelve a aparecer.
+ */
+export async function getFirstStepsGuide(institutionId: string): Promise<FirstStepsGuide> {
+  const [periods, people, courses, enrollments, pendingInvitations, withPassword] = await Promise.all([
     db.academicPeriod.count({ where: { institutionId } }),
     db.user.count({ where: { institutionId, role: { in: ["STUDENT", "TEACHER"] } } }),
     db.course.count({ where: { institutionId } }),
     db.enrollment.count({ where: { course: { institutionId } } }),
     countPendingInvitations(institutionId),
+    db.user.count({ where: { institutionId, role: { in: ["STUDENT", "TEACHER"] }, identity: { passwordHash: { not: null } } } }),
   ]);
+  const running = periods > 0 && people > 0 && courses > 0 && enrollments > 0 && withPassword > 0;
+  const steps = buildSteps({ periods, people, courses, enrollments, pendingInvitations });
+  return { steps, visible: !running && steps.some((step) => !step.done) };
+}
+
+function buildSteps({ periods, people, courses, enrollments, pendingInvitations }: Record<string, number>): FirstStep[] {
   return [
     {
       id: "period",

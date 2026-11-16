@@ -4,10 +4,10 @@ import { auth } from "@/lib/auth";
 import { getEffectiveCapabilities } from "@/lib/authorization";
 import { listPrograms } from "@/server/academic/programs";
 import { ProgramForm } from "./ProgramTools";
+import { plural } from "@/lib/ux";
 
 export const dynamic = "force-dynamic";
 
-const plural = (count: number, one: string, many: string) => (count === 1 ? `1 ${one}` : `${count} ${many}`);
 
 export default async function ProgramsPage({ searchParams }: { searchParams: Promise<{ crear?: string }> }) {
   const user = (await auth())?.user;

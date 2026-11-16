@@ -6,6 +6,7 @@ import { getEffectiveCapabilities } from "@/lib/authorization";
 import { sendInvitations, sendPendingInvitations } from "@/server/people/invitations";
 import { updatePerson } from "@/server/people/profile";
 import { setPersonStatus } from "@/server/people/status";
+import { plural } from "@/lib/ux";
 import type { EdukanaRole } from "@/types/next-auth";
 
 export type PeopleActionState = { ok: boolean; message: string; remaining?: number };
@@ -20,6 +21,13 @@ async function requirePeopleManager(): Promise<Guard> {
   return { actor: { id: user.id, institutionId: user.institutionId, role: user.role }, error: null };
 }
 
+/** Lista, importar e invitar y la ficha de cada persona muestran el acceso: todas se refrescan. */
+function refreshPeople() {
+  revalidatePath("/dashboard/gestion");
+  revalidatePath("/dashboard/gestion/accesos");
+  revalidatePath("/dashboard/gestion/personas/[userId]", "page");
+}
+
 function failure(name: string, error: unknown): PeopleActionState {
   const correlationId = crypto.randomUUID();
   console.error(`${name} failed`, { correlationId, error });
@@ -32,7 +40,10 @@ export async function invitePersonAction(_state: PeopleActionState, formData: Fo
   if (guard.error !== null) return { ok: false, message: guard.error };
   try {
     const result = await sendInvitations(guard.actor, [String(formData.get("userId") ?? "")]);
-    if (result.sent === 1) return { ok: true, message: "Invitación enviada." };
+    if (result.sent === 1) {
+      refreshPeople();
+      return { ok: true, message: "Invitación enviada." };
+    }
     if (result.failed) return { ok: false, message: "No se pudo enviar el correo. Intenta de nuevo en unos minutos." };
     return { ok: false, message: "Esa persona no puede recibir invitaciones: no existe aquí o está suspendida." };
   } catch (error) {
@@ -53,13 +64,13 @@ export async function invitePendingPeopleAction(): Promise<PeopleActionState> {
       return {
         ok: false,
         remaining: result.remaining,
-        message: `Se enviaron ${result.sent} invitaciones y ${result.failed} fallaron. Intenta de nuevo en unos minutos.`,
+        message: `Se ${result.sent === 1 ? "envió" : "enviaron"} ${plural(result.sent, "invitación", "invitaciones")} y ${result.failed === 1 ? "1 falló" : `${result.failed} fallaron`}. Intenta de nuevo en unos minutos.`,
       };
     }
     return {
       ok: true,
       remaining: result.remaining,
-      message: result.remaining ? `Enviadas ${result.sent}. Faltan ${result.remaining}.` : `Listo: ${result.sent} invitaciones enviadas.`,
+      message: result.remaining ? `Enviadas ${result.sent}. Faltan ${result.remaining}.` : `Listo: ${plural(result.sent, "invitación enviada", "invitaciones enviadas")}.`,
     };
   } catch (error) {
     return failure("invitePendingPeopleAction", error);
@@ -79,8 +90,7 @@ export async function setPersonStatusAction(_state: PeopleActionState, formData:
       reason: String(formData.get("reason") ?? ""),
     });
     if (!result.ok) return result;
-    revalidatePath("/dashboard/gestion");
-    revalidatePath("/dashboard/gestion/accesos");
+    refreshPeople();
     return { ok: true, message: status === "SUSPENDED" ? "Acceso suspendido." : "Acceso reactivado." };
   } catch (error) {
     return failure("setPersonStatusAction", error);
@@ -99,8 +109,7 @@ export async function updatePersonAction(_state: PeopleActionState, formData: Fo
       role: String(formData.get("role") ?? ""),
     });
     if (!result.ok) return result;
-    revalidatePath("/dashboard/gestion");
-    revalidatePath("/dashboard/gestion/accesos");
+    refreshPeople();
     return { ok: true, message: "Datos guardados." };
   } catch (error) {
     return failure("updatePersonAction", error);
@@ -125,8 +134,7 @@ export async function createPersonAction(_state: PeopleActionState, formData: Fo
     });
     if (!result.ok) return result;
     userId = result.userId;
-    revalidatePath("/dashboard/gestion");
-    revalidatePath("/dashboard/gestion/accesos");
+    refreshPeople();
   } catch (error) {
     return failure("createPersonAction", error);
   }

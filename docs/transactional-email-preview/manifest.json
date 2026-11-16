@@ -1,0 +1,33 @@
+{
+  "sourceBase": "463625296f3393e2aeb7b5e5f659f64f13a89489",
+  "branch": "m3/transactional-email-local-20261016",
+  "integrated": true,
+  "blocked": null,
+  "samples": 19,
+  "renders": 76,
+  "unitTests": 16,
+  "regressionTests": 29,
+  "typecheck": "PASS",
+  "lint": "PASS",
+  "files": {
+    "src/server/email/access.ts": "b17f4cb59eb6ef9b4ff12e271b248e17dc7fc41877ecb1d6e10d6172692d454c",
+    "src/server/email/catalog.ts": "679c3c89f858775e05976ff083ddc043f87737aeabfe7420e8bc25a008f2fd9c",
+    "src/server/email/layout.ts": "bbc3dd26bef1b89c4825a0ca3f47c1543d295baf7459a1d0306956dc4df60d52",
+    "src/server/email/links.ts": "b3c93071841437f5ecee68ab8d793094959657c7f049785a1453a3c6b2f85436",
+    "src/server/email/notice.ts": "a401d9286c04582ea57c87e6a6a38282fc689b267dac926aea4bdceca5bc078c",
+    "src/server/people/invitations.ts": "eaf88c3f112103aad33c273f72bbee65d584ab3518bdaf7d371799b395ab32ae",
+    "src/server/password-reset.ts": "a0db24b2f99db3be5f5f9af71f6357a87456381b38efd9ebf87461292aa7e2c2",
+    "src/server/catalog/checkout.ts": "2288d0eb1da114c21f2baa26bd25a664a314d8dda6c2c9cc86121141c3bbcb48",
+    "src/server/notifications/email-template.ts": "715e01e01388ffc8b2a890f93b9aa23484500c29e1cb98ac8569bf6294e4c917",
+    "tests/platform-password-reset-observability.test.ts": "e00dc83db925ad8e40d0879c2d08f68715c757fe29e87adc19ddfebf5b610c6c"
+  },
+  "deliveryTests": 10,
+  "generalTests": 188,
+  "backoffice": {
+    "pass": 200,
+    "fail": 0,
+    "skip": 0
+  },
+  "build": "PASS Webpack 20/20 pages",
+  "ci": "See PR for terminal result and exact SHA"
+}

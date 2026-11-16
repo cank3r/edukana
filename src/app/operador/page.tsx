@@ -1,21 +1,24 @@
+import { IndependentTeachersList } from "@/components/platform/IndependentTeachersList";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { INSTITUTION_TYPE_OPTIONS } from "@/server/platform/institution-settings";
 import { listInstitutionsForOperator, OPERATOR_LIST_LIMIT } from "@/server/platform/operator";
 import { getOperatorEmail } from "@/server/platform/operator-session";
 import { formatOperatorDate } from "./format";
+import { plural } from "@/lib/ux";
 
 export const dynamic = "force-dynamic";
 
 const primary = "inline-flex min-h-11 items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 font-semibold text-white";
 const fieldClass = "min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-base outline-none focus:border-blue-500";
 const typeLabel = (type: string) => INSTITUTION_TYPE_OPTIONS.find((option) => option.value === type)?.label ?? "Otro";
-const plural = (count: number, one: string, many: string) => `${count} ${count === 1 ? one : many}`;
 
-export default async function OperatorHomePage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
+export default async function OperatorHomePage({ searchParams }: { searchParams: Promise<{ q?: string; estado?: string; tipo?: string }> }) {
   const params = await searchParams;
   const q = typeof params.q === "string" ? params.q.trim().slice(0, 100) : "";
-  const institutions = await listInstitutionsForOperator(await getOperatorEmail(), q);
+  const independent = params.tipo === "independientes";
+  const status = params.estado === "ACTIVE" || params.estado === "SUSPENDED" ? params.estado : "";
+  const institutions = await listInstitutionsForOperator(await getOperatorEmail(), q, status);
   if (!institutions) notFound();
 
   return (
@@ -28,13 +31,21 @@ export default async function OperatorHomePage({ searchParams }: { searchParams:
         <Link href="/operador/nueva" className={primary}>Crear institución</Link>
       </header>
 
-      <form role="search" className="flex gap-2 rounded-xl border border-slate-200 bg-white p-3">
+      <form role="search" className="flex flex-wrap gap-2 rounded-xl border border-slate-200 bg-white p-3">
         <label className="sr-only" htmlFor="buscar-institucion">Buscar institución</label>
         <input id="buscar-institucion" name="q" defaultValue={q} placeholder="Buscar por nombre o identificador" className={fieldClass} />
+        <label className="sr-only" htmlFor="tipo-institucion">Tipo</label>
+        <select id="tipo-institucion" name="tipo" defaultValue={independent ? "independientes" : ""} className={fieldClass}>
+          <option value="">Todas las instituciones</option><option value="independientes">Docentes independientes</option>
+        </select>
+        <label className="sr-only" htmlFor="estado-institucion">Estado</label>
+        <select id="estado-institucion" name="estado" defaultValue={status} className={fieldClass}>
+          <option value="">Todos los estados</option><option value="ACTIVE">Activas</option><option value="SUSPENDED">Suspendidas</option>
+        </select>
         <button type="submit" className="min-h-11 shrink-0 rounded-lg border border-slate-300 bg-white px-4 font-semibold text-slate-800">Buscar</button>
       </form>
 
-      {institutions.length === 0 ? (
+      {independent ? <IndependentTeachersList query={q} status={status} /> : institutions.length === 0 ? (
         <div className="rounded-xl border border-dashed border-slate-300 bg-white p-6 text-center">
           <p className="font-semibold text-slate-900">{q ? "Ninguna institución coincide con la búsqueda." : "Todavía no hay instituciones."}</p>
           <p className="mt-1 text-sm text-slate-600">{q ? "Prueba con otra parte del nombre." : "Crea la primera y su administrador recibirá la invitación."}</p>
@@ -48,6 +59,7 @@ export default async function OperatorHomePage({ searchParams }: { searchParams:
               <Link href={`/operador/${institution.id}`} className="block rounded-xl border border-slate-200 bg-white p-4 hover:border-blue-500">
                 <span className="flex flex-wrap items-baseline justify-between gap-x-3">
                   <span className="text-base font-semibold text-slate-950">{institution.name}</span>
+                  {institution.status === "SUSPENDED" && <span className="rounded bg-amber-100 px-2 py-1 text-sm text-amber-900">Suspendida</span>}
                   <span className="text-sm text-slate-600">{typeLabel(institution.type)}</span>
                 </span>
                 <span className="mt-1 block text-sm text-slate-700">
@@ -59,7 +71,7 @@ export default async function OperatorHomePage({ searchParams }: { searchParams:
           ))}
         </ul>
       )}
-      {institutions.length === OPERATOR_LIST_LIMIT && (
+      {!independent && institutions.length === OPERATOR_LIST_LIMIT && (
         <p className="text-sm text-slate-600">Se muestran las {OPERATOR_LIST_LIMIT} más recientes. Usa la búsqueda para encontrar otras.</p>
       )}
     </div>

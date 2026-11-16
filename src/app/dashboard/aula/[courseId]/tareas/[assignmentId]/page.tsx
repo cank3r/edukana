@@ -50,7 +50,7 @@ export default async function AssignmentPage({ params, searchParams }: { params:
           <h1 className="text-2xl font-bold" style={{ color: "var(--navy)" }}>{assignment.title}</h1>
           <p className="mt-1 text-sm text-slate-600">
             {dueLabel(assignment.dueDate, now, zone)}
-            {assignment.dueDate ? ` (${formatDateTime(assignment.dueDate, zone)})` : ""} · Vale {assignment.maxScore} puntos
+            {assignment.dueDate && assignment.dueDate < now ? ` (${formatDateTime(assignment.dueDate, zone)})` : ""} · Vale {assignment.maxScore} puntos
             {assignment.dueDate ? (assignment.allowLate ? " · Acepta entregas tarde" : " · No acepta entregas tarde") : ""}
           </p>
         </header>
@@ -114,7 +114,7 @@ export default async function AssignmentPage({ params, searchParams }: { params:
         </div>
         <p className="mt-1 text-sm text-slate-600">
           {dueLabel(assignment.dueDate, now, zone)}
-          {assignment.dueDate ? ` (${formatDateTime(assignment.dueDate, zone)})` : ""} · Puntaje máximo: {assignment.maxScore}
+          {assignment.dueDate && assignment.dueDate < now ? ` (${formatDateTime(assignment.dueDate, zone)})` : ""} · Puntaje máximo: {assignment.maxScore}
         </p>
         <p className="mt-1 text-sm font-medium text-slate-800">
           {delivered} de {students.length} {students.length === 1 ? "estudiante entregó" : "estudiantes entregaron"} · {waiting.length} por calificar
@@ -122,6 +122,11 @@ export default async function AssignmentPage({ params, searchParams }: { params:
         {!assignment.isPublished && <p className="mt-2 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">Esta tarea está en borrador: los estudiantes no la ven. Publícala desde la lista de tareas.</p>}
         {!selected && nextId && <Link className="mt-3 inline-flex min-h-11 items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 font-semibold text-white" href={open(nextId)}>Siguiente por calificar</Link>}
       </header>
+
+      <section className={card} aria-labelledby="instrucciones">
+        <h2 id="instrucciones" className="text-lg font-bold text-slate-950">Instrucciones</h2>
+        <p className="mt-2 whitespace-pre-wrap break-words text-sm text-slate-800">{assignment.instructions || "Esta tarea no tiene instrucciones."}</p>
+      </section>
 
       {selected?.submission && (
         <section id="entrega" className={`${card} scroll-mt-4`} aria-labelledby="entrega-titulo">

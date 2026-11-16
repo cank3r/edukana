@@ -13,9 +13,9 @@ type Props = { params: Promise<{ institutionSlug: string }>; searchParams: Promi
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const brand = await findBrand((await params).institutionSlug);
   if (!brand) return { title: "Catálogo no encontrado" };
-  const title = `Cursos de ${brand.name}`;
+  const title = `${brand.name} · Cursos`;
   const description = `Mira los cursos que ofrece ${brand.name} e inscríbete en línea.`;
-  return { title, description, openGraph: { title, description, type: "website", ...(brand.logoUrl?.startsWith("https://") ? { images: [brand.logoUrl] } : {}) } };
+  return { title: { absolute: title }, description, openGraph: { title, description, type: "website", ...(brand.logoUrl?.startsWith("https://") ? { images: [brand.logoUrl] } : {}) } };
 }
 
 export default async function CatalogPage({ params, searchParams }: Props) {

@@ -34,6 +34,7 @@ export default async function CourseContentPage({ params }: { params: Promise<{ 
             <Link className={linkButton} href={`/dashboard/aula/${course.id}/leccion/${firstVisibleLesson.id}`}>Ver como estudiante</Link>
           </div>
         )}
+        {lessonCount > 0 && <Link className={`${linkButton} mt-2`} href={`/dashboard/aula/${course.id}/generar-preguntas`}>Generar preguntas con IA</Link>}
         {!firstVisibleLesson && lessonCount > 0 && (
           <p className="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-900">
             Los estudiantes todavía no ven nada: publica un capítulo y al menos una de sus lecciones.
@@ -69,6 +70,7 @@ export default async function CourseContentPage({ params }: { params: Promise<{ 
                     title: lesson.title,
                     summary: lesson.summary ?? "",
                     content: lesson.content ?? "",
+                    videoUrl: lesson.videoUrl ?? "",
                     type: lesson.type,
                     estimatedMinutes: lesson.estimatedMinutes,
                     isPublished: lesson.isPublished,

@@ -1,109 +1,93 @@
 # Guion canónico del MVP: institución piloto
 
-Este guion es la definición de terminado del MVP y tiene dos ejecuciones complementarias. `bootstrap` recorre una instalación controlada desde una base PostgreSQL vacía; `existing` valida el Preview sobre el staging persistente de Edukana mediante datos exclusivos del run, sin borrar información existente. El recorrido no usa `prisma/seed.ts`, SQL manual ni datos preparados.
+La aceptación requiere que Carlos pueda recorrer un curso completo en Preview y confirme que se entiende. Este documento separa el ensayo desde una base vacía, la validación desplegada y la aceptación humana. Un smoke con datos sembrados no sustituye el recorrido desde la interfaz. La creación de datos del recorrido no usa `prisma/seed.ts`, SQL manual ni datos preparados.
 
-## Precondiciones desplegables
+## Estado del runner
 
-1. Configurar `DATABASE_URL`, `DIRECT_URL` y `AUTH_SECRET`. Para staging/producción, configurar `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` y `SUPABASE_STORAGE_BUCKET`. Para un piloto local aislado se permite el backend privado en disco con `LOCAL_STORAGE_ROOT`, `LOCAL_STORAGE_SECRET` y `APP_URL`; sus URLs también son firmadas y vencen.
-2. Ejecutar `npx prisma migrate deploy` como parte del despliegue.
-3. Iniciar la aplicación con `npm run build` y `npm run start`.
-4. Confirmar que la base no contiene instituciones y abrir `/setup`.
+El runner `tests/e2e/canonical-pilot.spec.mjs` está obsoleto: utiliza pantallas retiradas y no contempla el token actual de `/setup`. No reactivarlo ni utilizar su antiguo bypass de Vercel. El smoke `tests/e2e/smoke/recorrido.smoke.ts` sigue siendo una regresión útil con datos preparados.
+
+El nuevo recorrido `tests/e2e/canonical-mvp/` usa producción Next, Chromium, PostgreSQL desechable y archivos privados locales. Crea los datos académicos exclusivamente desde la interfaz; el harness aplica únicamente las migraciones ya versionadas. Las invitaciones se capturan en un buzón local de prueba: no se entregan a Resend ni acreditan entrega real de correo.
 
 ## Recorrido desde cero
 
-### 1. Crear el espacio y el administrador
+### 1. Espacio y administrador
 
-1. En `/setup`, registrar “Colegio Piloto”, el identificador `colegio-piloto`, un nombre y correo administrativos y una contraseña de 10 o más caracteres con letra y número.
-2. Resultado esperado: aparece “Institución creada”; `/setup` deja de estar disponible y redirige a `/login` en visitas posteriores.
-3. Iniciar sesión como administrador, cerrar sesión y volver a entrar. La institución y la cuenta deben persistir.
+Abrir `/setup` sin token debe denegar. En la instalación temporal, abrir `/setup?token=<token de prueba>` y registrar institución, identificador, administrador y contraseña. Después de crear la primera institución, setup queda cerrado. Iniciar sesión, cerrarla y volver a entrar debe conservar la cuenta y la institución.
 
-### 2. Configurar institución, personas, permisos y departamento
+### 2. Institución, personas, permisos y departamento
 
-1. En **Configuración**, guardar nombre, tipo, dominio opcional, zona horaria e idioma.
-2. Abrir **Puesta en marcha del piloto**. Crear exactamente una cuenta de docente, una de estudiante y una de tutor. Crear y activar un período académico.
-3. Abrir **Roles y permisos**. Revisar la matriz; conservar para el docente `course.view`, `course.manage`, `course.roster.view` y `schedule.view`. Confirmar que el tutor no tiene `course.view`, `people.view` ni permisos institucionales.
-4. Abrir **Departamentos y unidades**. Crear “Departamento Académico” y asignar al docente.
-5. Resultado esperado: el checklist marca docente, estudiante, tutor, período y departamento. Cada cuenta puede iniciar sesión después de cerrar la sesión anterior.
+Guardar configuración institucional y comprobarla al recargar. En **Personas**, agregar docente, estudiante y tutor mediante **Revisar → Agregar y enviar invitación**. Cada cuenta define su contraseña desde su enlace de invitación y entra por el login normal. En **Configuración → Períodos**, crear un período con fechas relativas al ensayo y marcarlo actual.
 
-### 3. Crear el curso como docente
+Revisar permisos: docente con acceso a cursos, gestión, listas y horarios; tutor sin acceso institucional a cursos ni personas. Crear una unidad/departamento, asignar al docente y comprobar persistencia. El recorrido no introduce contraseñas ni tokens mediante SQL o Prisma.
 
-1. Iniciar sesión como docente y abrir **Mis cursos**.
-2. Elegir **Crear un curso**, seleccionar el período activo y registrar “Curso Piloto” con código `PIL-101`.
-3. Abrir el curso. Crear una sección publicada, una lección publicada de tipo actividad y contenido de texto.
-4. Crear el libro de calificaciones y una asignación publicada dentro de la categoría de asignaciones.
-5. Resultado esperado: el docente solo ve y modifica `PIL-101`; no ve Configuración, Personas, Cobros ni cursos de otro docente/tenant.
+### 3. Curso, contenido y evaluación
 
-### 4. Matricular y vincular como administrador
+El docente crea un curso, selecciona el período y obtiene su identificador de la navegación real. Publica explícitamente curso, capítulo y lección de actividad: nacen como borrador. Configura el libro de calificaciones con **Usar configuración sencilla**, crea una tarea calificable y la publica.
 
-1. Volver a iniciar sesión como administrador, abrir `PIL-101` y usar **Matricular estudiante**.
-2. En **Configuración → Tutores y estudiantes**, crear el vínculo tutor–estudiante con acceso a progreso, asistencia y avisos, sin finanzas. El vínculo debe nacer pendiente; activarlo explícitamente.
-3. Resultado esperado: el checklist de puesta en marcha marca el vínculo activo. El tutor sin vínculo activo o con bandera desactivada no recibe el área correspondiente.
+El docente debe tener acceso a su curso y carecer de acceso a Configuración, Personas, Cobros y cursos de otra institución.
 
-### 5. Actividad, asistencia, nota y progreso
+### 4. Matrícula y tutor
 
-1. Como docente, registrar asistencia del estudiante en `PIL-101`.
-2. Como estudiante, abrir `PIL-101`, marcar la actividad/lección como completada y entregar la asignación.
-3. Cerrar sesión y volver a entrar como estudiante. Confirmar que el progreso y la entrega persisten.
-4. Como docente, calificar la entrega y publicar el período de notas.
-5. Como estudiante, volver a entrar y confirmar que ve su progreso, asistencia y nota publicada, pero ningún nombre ni correo de compañeros.
-6. Como tutor, entrar en **Mis hijos** y confirmar que ve exclusivamente el progreso, asistencia y notas publicadas del estudiante vinculado; no hay acceso directo a `/dashboard/aula`, Personas, Cobros ni datos institucionales no autorizados.
+El administrador usa **Inscribir estudiantes**, busca a la persona y confirma la inscripción. En **Configuración → Tutores y estudiantes**, crea un vínculo pendiente con académico, asistencia y avisos habilitados, y finanzas deshabilitadas. Antes de activarlo, el tutor no recibe datos del estudiante; después de la activación explícita sí.
 
-### 6. Anuncio segmentado y archivos persistentes
+### 5. Asistencia, actividad, entrega y notas
 
-1. Como administrador, abrir **Avisos** y crear un anuncio con título, texto con negrita/lista, curso relacionado `PIL-101`, enlace HTTPS y una imagen o video permitido.
-2. Seleccionar como audiencia el curso `PIL-101`, revisar y confirmar la publicación.
-3. Resultado esperado: docente y estudiante del curso lo ven; el tutor lo ve únicamente por el vínculo activo y `canViewAnnouncements`; el autor/manager lo ve por su función administrativa. Una cuenta fuera de la audiencia no lo recibe.
-4. Cerrar todas las sesiones y volver a entrar con cada rol. El anuncio, su formato, enlace y archivo deben persistir. La descarga usa una URL privada firmada después de autorizar usuario, tenant y audiencia.
+El docente registra asistencia. El estudiante completa la lección y entrega la tarea. Tras cerrar sesión y volver a entrar, ambas operaciones persisten. El docente califica, comprueba la diferencia entre nota oculta y publicada, y publica las notas de la actividad.
 
-## Pruebas negativas obligatorias
+El estudiante ve su nota, comentario, progreso y asistencia. El tutor ve solamente las áreas habilitadas del estudiante vinculado. La evidencia debe comprobar los valores guardados, no únicamente un mensaje de éxito.
 
-- Repetir una acción con un ID de usuario, curso, unidad, vínculo o archivo de otro tenant: debe responder no encontrado/sin acceso y no escribir nada.
-- Abrir directamente rutas ocultas para tutor, estudiante y docente: debe devolver 404 o redirigir sin datos.
-- Revocar el vínculo: el portal del tutor debe cortar inmediatamente nuevas consultas de cursos, asistencia, notas y anuncios. Una URL privada ya emitida puede seguir válida durante su TTL nominal de hasta 300 segundos; S1 debe medir ambos backends y reducir o mediar esa ventana según sensibilidad.
-- Completar el curso: tareas, exámenes y progreso pasan a consulta y no admiten nuevas escrituras.
-- Desactivar una capability del docente: navegación, página, acción y archivo deben aplicar la misma denegación.
+### 6. Avisos y archivos privados
 
-## Puerta automatizada
+El administrador crea un aviso con título, negrita, lista, enlace HTTPS y una imagen o video permitido; selecciona el curso como audiencia y confirma. Administrador, docente, estudiante y tutor autorizado vuelven a iniciar sesión y conservan acceso al contenido y a los bytes del archivo.
 
-```powershell
-npx prisma validate
-npx prisma generate
-npm test
-npm run test:auth
-npm run typecheck
-npm run lint
-npm run build
-git diff --check
+Una cuenta activa fuera de la audiencia no recibe el aviso ni una URL privada. La autorización debe validar institución, usuario y audiencia antes de emitir la URL firmada.
+
+## Negativas obligatorias
+
+- Otra institución no puede leer curso, persona o archivo de A, ni escribir mediante identificadores ajenos de unidad o vínculo. Comprobar respuesta y ausencia de cambios desde una sesión autorizada.
+- Docente, estudiante y tutor reciben denegación al abrir directamente rutas ocultas.
+- Al desactivar las banderas del tutor se retira el área correspondiente. Al revocar el vínculo se cortan inmediatamente nuevas consultas y autorizaciones de archivos.
+- Una URL ya emitida conserva su ventana residual. El contrato actual usa 60 segundos para documentos/imágenes y 300 para video; medir vencimiento real, sin adelantar el reloj. Una prueba local no acredita Supabase.
+- Al completar una matrícula, formularios de tarea, progreso y examen abiertos previamente deben rechazar escrituras. Lectura y evidencia histórica se conservan.
+- Al retirar acceso a cursos al docente, menú, página, acción pendiente y archivo propio deben aplicar la misma denegación. No omitir el archivo del que el docente es propietario.
+
+## Ejecución aislada y evidencia
+
+El workflow `.github/workflows/canonical-mvp.yml` crea PostgreSQL 16.4 exclusivo del job, instala Node 22 y Chromium, y ejecuta:
+
+```sh
+node --test tests/canonical-mvp-harness.test.mjs
+node --import tsx --test tests/auth-proxy-logout.test.ts
+node scripts/canonical-mvp-run.mjs prepare
+node scripts/canonical-mvp-run.mjs test
 ```
 
-El recorrido solo se declara aprobado si, además de esa puerta, se ejecutan los seis bloques en un entorno desplegado o equivalente con PostgreSQL y Supabase Storage reales. Un build verde sin autenticación, persistencia, archivos y cambio de sesiones no completa el MVP.
+Estos comandos requieren `CANONICAL_MVP_ISOLATED=1`, un directorio absoluto nuevo en `CANONICAL_MVP_RUN_DIR` y el PostgreSQL temporal exacto definido en `scripts/canonical-mvp-config.mjs`. No tienen modo remoto. El launcher construye un entorno de fixtures sin heredar credenciales, opciones de Node, proxies o proveedores reales. Rechaza archivos `.env` de runtime, endpoints distintos y configuración Supabase/bypass.
 
+Antes de migrar, una consulta de solo lectura exige ausencia de tablas de aplicación. Antes del recorrido exige ausencia de instituciones, identidades y usuarios; rechaza resultados reutilizados y puerto ocupado. No ejecuta seed, reset ni cambios al schema. El proceso Next carga un interceptor de correo exclusivo del harness: acepta destinatarios ficticios bajo `example.test`, captura mensajes y bloquea HTTP externo. Ningún cambio se incorpora al proveedor de producción.
 
-## Runner de aceptación en Preview
+`private/` contiene buzón, identificadores del ensayo, logs, resultados y capturas de diagnóstico. No se publica. El artifact de CI contiene exclusivamente `public/summary.json`, con SHA, estado del árbol, run ID, URL local, entorno, fecha, nombres de casos y resultados, sin mensajes, enlaces de invitación, sesiones ni archivos. Para ejecución local registrar `CANONICAL_MVP_SOURCE_SHA` completo y `CANONICAL_MVP_SOURCE_DIRTY=0|1`; ausencia significa desconocido. El responsable conserva los fallos como evidencia y no los convierte en omisiones o éxitos esperados.
 
-El Preview de la rama usa el Supabase staging de Edukana. El modo `existing` inicia sesión con un administrador vigente, confirma el slug institucional y ejecuta un preflight de solo lectura. Rechaza la ejecución antes de escribir si ya existen los correos, código de curso o unidad del run. Cada ejecución necesita un `PILOT_RUN_ID` nuevo, genera nombres exclusivos y reutiliza un período activo sin crearlo, desactivarlo ni editarlo.
+El recorrido principal espera que termine la navegación antes de cerrar sesión. La regresión separada
+`logout-race.spec.ts` compara tres cierres inmediatos y tres quiescentes; cualquier muestra fallida
+mantiene el gate rojo. Una prueba de logout quiescente no acredita ausencia de carreras. El diagnóstico
+inicial con una respuesta retenida por CDP no demostraba el orden del almacén de cookies y fue reemplazado.
 
-Chromium incluido es el navegador predeterminado; `PILOT_BROWSER_CHANNEL=msedge` permite una aceptación local específica con Edge. El runner se niega a operar si el host no es un deployment Vercel Preview `-git-` confirmado dos veces. El bypass de Deployment Protection se añade únicamente a solicitudes HTTPS del host Preview confirmado y nunca a Supabase ni a otros orígenes.
+Las pruebas de calificaciones conservan las verificaciones originales de teclado a 360 y 1280 px.
+Un proyecto adicional comprueba entrada directa, recarga y navegación del historial del navegador
+sin guardar cambios. Después del login, ambas auditorías bloquean cualquier intento de escritura.
 
-```powershell
-$env:PILOT_BASE_URL = "https://edukana-git-<rama>-<cuenta>.vercel.app"
-$env:PILOT_EXPECTED_HOST = "edukana-git-<rama>-<cuenta>.vercel.app"
-$env:PILOT_CONFIRM = "PREVIEW_ONLY"
-$env:PILOT_MODE = "existing"
-$env:PILOT_RUN_ID = "s0-<fecha-o-id-unico>"
-$env:PILOT_INSTITUTION_SLUG = "demo"
-$env:PILOT_ADMIN_EMAIL = "<administrador existente de Edukana>"
-$env:PILOT_ADMIN_PASSWORD = "<contraseña del administrador existente>"
-$env:PILOT_TEACHER_EMAIL = "<docente nuevo y exclusivo del run>"
-$env:PILOT_STUDENT_EMAIL = "<estudiante nuevo y exclusivo del run>"
-$env:PILOT_PARENT_EMAIL = "<tutor nuevo y exclusivo del run>"
-$env:PILOT_USER_PASSWORD = "<contraseña temporal segura para las cuentas nuevas>"
-# Solo si Vercel Deployment Protection está habilitado:
-$env:VERCEL_AUTOMATION_BYPASS_SECRET = "<secreto de automatización de Vercel>"
-```
+El job separado de archivos usa otro PostgreSQL desechable y ejecuta explícitamente las regresiones
+concurrentes de entrega/descarte y `tests/integration/uploads.test.ts`. Sus fixtures de integración
+no preparan datos del recorrido principal. Este gate cubre también la pérdida y recuperación de
+acceso vigente del propietario, conservando los contratos de avisos y lectura histórica.
 
-> **Obsoleto:** el runner `tests/e2e/canonical-pilot.spec.mjs` recorría pantallas que ya no existen y se retiró el script `npm run test:pilot:preview`. El recorrido vigente en navegador es `tests/e2e/smoke/recorrido.smoke.ts` (`npm run test:smoke`).
+Los recursos locales deben ser contenedores recién creados y propios del ensayo. Al terminar, retirar únicamente esos contenedores y sus volúmenes efímeros, verificando primero sus identificadores y etiqueta de propiedad. Nunca apuntar estos comandos a una base persistente aunque esté en loopback.
 
-`PILOT_HEADLESS=false` permite observar el recorrido. Las capturas y trazas de fallos se escriben en `$env:KIROCREW_SCRATCH`; no se guardan dentro del repositorio. `npm run test:pilot:config` valida las protecciones sin acceder a ningún entorno.
+## Preview y aceptación pendientes
 
-La cadena de migraciones desde una base vacía se valida por separado en PostgreSQL 16 temporal dentro de CircleCI. El modo `bootstrap` del runner se conserva para un entorno vacío controlado, pero nunca se ejecuta contra staging. El recorrido desplegado cubre los seis bloques principales, cambios de sesión, persistencia, restricciones de rutas y multimedia privada. Aún requieren una prueba separada: IDs pertenecientes a un segundo tenant y una cuenta activa fuera de la audiencia del anuncio.
+Preview requiere acceso existente autorizado. Si la protección de Vercel impide entrar o el navegador de control no funciona, registrar el error exacto y pedir la intervención mínima; no crear bypasses, copiar cookies, extraer contraseñas ni modificar variables, usuarios o permisos persistentes.
+
+Antes de crear datos nuevos en Preview: presentar el alcance exacto, confirmar que DB y Storage sean el destino de pruebas aislado autorizado y usar nombres exclusivos. No ejecutar setup sobre una base existente, seed, reset, borrados ni cambios de usuarios o datos anteriores. La autorización de este PR no incluye integrar ni desplegar.
+
+El resultado debe indicar por separado: bloques UI ejecutados desde cero, negativas ejecutadas, backend de archivos probado, CI por SHA, fallos abiertos y pruebas autenticadas en Preview. Carlos realiza la aceptación final; un porcentaje estimado no constituye evidencia de cierre.

@@ -54,7 +54,7 @@ export async function saveChapterAction(_state: ContentActionState, formData: Fo
   );
 }
 
-/** Crea o corrige una lección. Campos: `chapterId` (al crear) o `lessonId` (al editar), `title`, `summary`, `type`, `content`, `estimatedMinutes`. */
+/** Crea o corrige una lección. Campos: `chapterId` (al crear) o `lessonId` (al editar), `title`, `summary`, `type`, `content`, `videoUrl`, `estimatedMinutes`. */
 export async function saveLessonAction(_state: ContentActionState, formData: FormData): Promise<ContentActionState> {
   const lessonId = text(formData, "lessonId");
   const input = {
@@ -62,6 +62,7 @@ export async function saveLessonAction(_state: ContentActionState, formData: For
     summary: text(formData, "summary"),
     type: text(formData, "type"),
     content: text(formData, "content"),
+    videoUrl: text(formData, "videoUrl"),
     estimatedMinutes: text(formData, "estimatedMinutes") || "10",
   };
   return run("saveLessonAction", lessonId ? "Lección guardada." : "Lección agregada.", (actor) =>

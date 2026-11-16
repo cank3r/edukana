@@ -22,11 +22,12 @@ const link = (overrides: Partial<GuardianLink> = {}): GuardianLink => ({
 const caps = (...values: Capability[]) => new Set(values);
 const parentCaps = caps("child.portal.view", "child.academics.view", "child.attendance.view", "child.schedule.view", "child.announcements.view", "child.finance.view");
 
-test("PARENT solo admite capacidades child y finanzas queda deshabilitada por defecto", () => {
+test("PARENT solo admite capacidades child; finanzas viene por omisión y la protección fina es el vínculo", () => {
   const effective = resolveEffectiveCapabilities("PARENT");
   assert.equal(effective.has("child.portal.view"), true);
   assert.equal(effective.has("child.academics.view"), true);
-  assert.equal(effective.has("child.finance.view"), false);
+  assert.equal(effective.has("child.finance.view"), true);
+  assert.equal(resolveEffectiveCapabilities("PARENT", [{ capability: "child.finance.view", enabled: false }]).has("child.finance.view"), false, "la institución puede quitarlo al rol");
   for (const forbidden of ["course.view", "course.manage", "course.roster.view", "people.view", "admissions.manage", "analytics.view", "tenant.settings.manage", "roles.permissions.manage"] as Capability[]) {
     assert.equal(ROLE_ALLOWED_CAPABILITIES.PARENT.has(forbidden), false);
   }
