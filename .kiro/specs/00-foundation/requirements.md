@@ -196,8 +196,9 @@ producción, no la promoción de la fundación.
    ser global; no se crea otra raíz. Cuando varias filas legacy representan la misma identidad, una regla versionada elige
    exactamente un `User.id` fuente como ID canónico. Cada ID fuente se captura primero en un snapshot inmutable;
    una clase resuelta recibe `UserIdentityRemap(migrationVersion,legacyUserId,canonicalUserId,sourceInstitutionId)` y una
-   clase no resuelta queda ligada a `IdentityMigrationAnomaly` tipada, sin remap, hasta resolución. Ningún ID fuente
-   desaparece: antes de cutover cada User debe tener exactamente un remap y cero anomalías OPEN.
+   clase no resuelta queda ligada a `IdentityMigrationAnomaly` tipada, sin remap, hasta resolución. Dos Users sin
+   Identity jamás se fusionan solo por email/credencial: requieren prueba por source account, recovery/reauth del usuario
+   y aprobación de la autoridad de datos de cada Institution afectada. Ningún ID fuente desaparece: antes de cutover cada User debe tener exactamente un remap y cero anomalías OPEN.
    `Membership(institutionId,userId,...)` se backfillea por pertenencia legacy y cada fuente recibe
    `MembershipSourceRemap`, por lo que duplicados resueltos conservan su cardinalidad. `Account`, `Session`, recovery y
    cada FK a `User` se remapean con el mismo ledger durante N/N-1. Las columnas existentes `User.status/sessionVersion`
@@ -205,8 +206,10 @@ producción, no la promoción de la fundación.
    `globalSessionVersionCandidate` almacenan el target hasta cutover. Status global proviene solo de `Identity.status` o
    una acción global auditada; cada status legacy alimenta únicamente Membership. Sin Identity, global inicia `INACTIVE`
    hasta recovery. Antes de autoridad cross-Institution, `users.institutionId→Institution` cambia CASCADE→RESTRICT y no
-   hay DELETE físico. El baseline de sessionVersion se congela una vez; revocaciones posteriores usan eventos CAS
-   idempotentes. Ningún FK/campo legacy se retira antes de paridad, cero pendientes, drain y cutover.
+   hay DELETE físico. El baseline de sessionVersion se establece antes de servir N; cada cambio posterior se registra como
+   delta ordenado y las revocaciones usan eventos CAS idempotentes. Cada `User.role` produce un role-source remap y una
+   asignación/scope target; cambios no representables one-to-one en N-1 quedan feature-off hasta cutover. Ningún FK/campo
+   legacy se retira antes de paridad, cero pendientes, drain y cutover.
 12. Google y Microsoft solo pueden autenticar con el conjunto de claims verificados que `HD-12` apruebe por proveedor.
    Un email de proveedor nuevo puede crear identidad únicamente cuando su `emailCanonical` está libre.
 13. Si `emailCanonical` ya pertenece a otra identidad, el proveedor nunca se auto-enlaza ni fusiona cuentas. La persona
@@ -378,11 +381,13 @@ producción, no la promoción de la fundación.
     prueba de que no pudo contener datos o decisión humana explícita de desoporte; no puede desaparecer por selección.
 11. Si alpha poblado es `SUPPORTED`, una reconciliación separada e inmutable permite continuar tras el fallo conocido de
     `20261001193000_real_edukana_mvp`; su rehearsal y aprobación no cambian, renombran ni reemplazan esa migración.
-12. Mientras N-1 sirve tráfico, legacy sigue autoritativo. N dual-writea atómicamente y shadow-read; un catch-up
-    idempotente recurrente absorbe writes N-1. N-1 se drena antes de una ventana estable **CANDIDATE de 24 horas**
-    con cero divergencia; `HD-15` debe aprobar o reemplazar duración y criterio. Cutover registra versiones, SHA y
-    autoridad; rollback pre-cutover restaura reads N-1 conservando schema aditivo. Después de cutover se usa forward-fix
-    salvo rollback compatible aprobado por separado.
+12. Antes de servir N, cada clase resuelta tiene baseline/candidates idempotentes. Mientras N-1 sirve, legacy sigue
+    autoritativo; cada write N y catch-up N-1 dual-writea legacy+target y un delta append-only en la misma transacción.
+    El fold de snapshot+delta, no el snapshot solo, define checksum actual. Status/profile/role/scope/sessionVersion
+    declaran paridad; una operación no representable en N-1 queda feature-off. N-1 se drena, catch-up llega a cero y se
+    congela `cutoverDeltaWatermark` antes de la ventana estable **CANDIDATE de 24 horas**. `HD-15` aprueba duración y
+    criterio. Cutover registra versiones/SHA/autoridad; rollback pre-cutover vuelve a filas legacy dual-written sin
+    invertir many-to-one. Después de cutover se usa forward-fix salvo rollback compatible aprobado por separado.
 13. `AuditLog` legacy forma parte del manifest. Cada fila se clasifica de forma determinista como evento tenant con
     Institution derivable, evento platform/global válido con `targetInstitutionId` nulo, o anomalía huérfana/ambigua en
     cuarentena. Se conservan actor, destino, checksum y retención; nunca se descarta una fila. El oracle exige cero nulls
@@ -816,11 +821,12 @@ satisface los demás gates. Una implementación futura tampoco puede aceptarse h
 6. Los 16 estados post-migración y el demo actual tengan disposition `SUPPORTED|EXCLUDED` con evidencia; cada supported
    migre y haga rollback dual con conteos/checksums exactos e interrupción reproducible, incluida reconciliación alpha si aplica.
 7. Locks, timeouts, lotes, retries, write pause, ventana y abort thresholds estén dentro del presupuesto completo de R-10.15.
-8. La evolución in-place demuestre source users=remaps+OPEN anomaly users y OPEN=0 antes de cutover;
-   clases=plans=consolidations=self-remaps; source Memberships=MembershipSourceRemaps+OPEN y target keys=Membership rows;
-   status/sessionVersion legacy permanecen para N-1 mientras candidates globales hacen shadow; baseline y revocaciones
-   CAS son idempotentes; cada FK conserva conteo; Institution usa RESTRICT; y checksum semántico incluye auth, recovery,
-   domain y anomaly/resolution. Rollback pre-cutover usa filas legacy dual-written y reproduce rows/sessions/authz.
+8. La evolución in-place demuestre source users=remaps+OPEN y OPEN=0 antes de cutover; clases=plans=consolidations=
+   self-remaps; source Memberships/roles=source-remaps+OPEN y target keys=Membership/assignment/scope rows;
+   status/sessionVersion legacy permanecen para N-1 mientras candidates globales hacen shadow; baseline existe antes de
+   N y snapshot+delta fold coincide con live/target en cada watermark; revocaciones distintas y duplicates son CAS
+   idempotentes; cada FK conserva conteo; Institution usa RESTRICT; checksum semántico incluye auth, recovery, roles,
+   scopes, domain y anomaly/resolution. Rollback usa filas legacy dual-written y reproduce rows/sessions/authz.
    Después, revocación falla cerrada en la primera petición nueva de página, action, API, job y `/api/auth/session`; la
    matriz `HD-04/05/12/15` prueba claims, mapping, reissue, drain y cutover sin usar role/Institution del token como
    autoridad.
